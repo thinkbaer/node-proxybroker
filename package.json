@@ -19,5 +19,20 @@
   "bugs": {
     "url": "https://github.com/thinkbaer/node-proxybroker/issues"
   },
-  "homepage": "https://github.com/thinkbaer/node-proxybroker#readme"
+  "homepage": "https://github.com/thinkbaer/node-proxybroker#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-typescript": "^3.0.2",
+    "gulp-util": "^3.0.7",
+    "gulp-watch": "^4.3.10",
+    "mocha": "^3.1.2",
+    "typescript": "^2.0.3",
+    "watchify": "^3.7.0"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "cheerio": "^0.22.0",
+    "request": "^2.75.0",
+    "request-promise": "^4.1.1"
+  }
 }

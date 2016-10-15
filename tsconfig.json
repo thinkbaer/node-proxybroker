@@ -1,0 +1,16 @@
+{
+  "files": [
+    "typings/index.d.ts",
+    "src/providers/proxy_listen.de.ts",
+    "src/main.ts"
+  ],
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "target": "es6",
+    "outDir":"dist/",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": true
+
+  }
+}
