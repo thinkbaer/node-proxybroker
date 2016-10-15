@@ -1,0 +1,23 @@
+{
+  "name": "node-proxybroker",
+  "version": "0.1.0",
+  "description": "Broker for anonymus proxies",
+  "main": "dist/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thinkbaer/node-proxybroker.git"
+  },
+  "keywords": [
+    "proxy",
+    "broker"
+  ],
+  "author": "Robert Kania",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/thinkbaer/node-proxybroker/issues"
+  },
+  "homepage": "https://github.com/thinkbaer/node-proxybroker#readme"
+}
