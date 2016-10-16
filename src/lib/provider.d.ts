@@ -6,5 +6,14 @@
 
 export interface Provider {
 
-    fetch(): any;
+    init(options : any) : any;
+
+    hasNext():any;
+
+    next(): any;
+}
+
+
+export class ProviderManager {
+
 }

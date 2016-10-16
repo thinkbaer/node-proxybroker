@@ -4,8 +4,6 @@
 "use strict";
 const Promise = require("bluebird");
 const fs = require("fs");
-class PageHandle {
-}
 class Main {
     constructor() {
         this.providerClasses = [];
@@ -35,17 +33,13 @@ class Main {
             let _path = './providers/' + filename;
             console.log(_path);
             let _provider = require(_path);
-            console.log(_path, _provider);
-            var names = Object.keys(_provider);
-            for (let name of names) {
-                self.providerClasses.push(new _provider[name]());
-            }
+            self.providerClasses.push(new _provider());
         })
             .then(() => {
             return self.providerClasses;
         })
             .map(function (providerInstance) {
-            return providerInstance.fetch();
+            return providerInstance.next();
         })
             .catch(function (err) {
             console.error(err);
@@ -58,4 +52,3 @@ class Main {
 }
 let main = new Main();
 main.boot();
-// .find() 
