@@ -15,18 +15,21 @@
     "broker"
   ],
   "author": "Robert Kania",
-  "license": "MIT",
+  "license": "TODO",
   "bugs": {
     "url": "https://github.com/thinkbaer/node-proxybroker/issues"
   },
   "homepage": "https://github.com/thinkbaer/node-proxybroker#readme",
   "devDependencies": {
     "gulp": "^3.9.1",
+    "gulp-clean": "^0.3.2",
     "gulp-typescript": "^3.0.2",
     "gulp-util": "^3.0.7",
     "gulp-watch": "^4.3.10",
     "mocha": "^3.1.2",
+    "ts-node": "^1.6.1",
     "typescript": "^2.0.3",
+    "typescript-require": "^0.2.9-1",
     "watchify": "^3.7.0"
   },
   "dependencies": {

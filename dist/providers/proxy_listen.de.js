@@ -3,12 +3,12 @@
  */
 "use strict";
 const request = require("request-promise");
-const cheerio = require('cheerio');
-const PROXY_LIST_DE = 'http://www.proxy-listen.de/Proxy/Proxyliste.html';
-let fs = require('fs');
+// import * as fs from "fs";
+const cheerio = require("cheerio");
+// const cheerio = require('cheerio')
+const BASE_URL = 'http://www.proxy-listen.de';
+const PROXY_LIST_DE = BASE_URL + '/Proxy/Proxyliste.html';
 class proxy_liste_de {
-    constructor() {
-    }
     newFormData() {
         let self = this;
         let form_data = {};
@@ -39,9 +39,9 @@ class proxy_liste_de {
             Object.keys(options.override).forEach(_key => self.form_data[_key] = options.override[_key]);
         }
         var c1 = request.cookie('cookieconsent_dismissed=yes');
-        this.cookies.setCookie(c1, 'http://www.proxy-listen.de');
+        this.cookies.setCookie(c1, BASE_URL);
         var c2 = request.cookie('_gat=1');
-        this.cookies.setCookie(c2, 'http://www.proxy-listen.de');
+        this.cookies.setCookie(c2, BASE_URL);
         return request.get(PROXY_LIST_DE, { jar: self.cookies })
             .then(html => {
             let $ = cheerio.load(html);

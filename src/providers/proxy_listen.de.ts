@@ -5,10 +5,14 @@
 import {Provider} from '../lib/provider'
 import {ProxySpec} from '../lib/proxy'
 import * as request from "request-promise";
+// import * as fs from "fs";
+import * as cheerio from "cheerio";
 
-const cheerio = require('cheerio')
-const PROXY_LIST_DE = 'http://www.proxy-listen.de/Proxy/Proxyliste.html'
-let fs = require('fs');
+// const cheerio = require('cheerio')
+
+const BASE_URL = 'http://www.proxy-listen.de'
+const PROXY_LIST_DE = BASE_URL + '/Proxy/Proxyliste.html'
+
 
 
 export default class proxy_liste_de implements Provider {
@@ -20,8 +24,6 @@ export default class proxy_liste_de implements Provider {
     form_data: {[key: string]: string}
 
 
-    constructor() {
-    }
 
     newFormData() : {[key: string]: string}{
         let self = this
@@ -57,9 +59,9 @@ export default class proxy_liste_de implements Provider {
         }
 
         var c1 = request.cookie('cookieconsent_dismissed=yes');
-        this.cookies.setCookie(c1, 'http://www.proxy-listen.de');
+        this.cookies.setCookie(c1, BASE_URL);
         var c2 = request.cookie('_gat=1');
-        this.cookies.setCookie(c2, 'http://www.proxy-listen.de');
+        this.cookies.setCookie(c2,  BASE_URL);
 
         return request.get(PROXY_LIST_DE,{jar: self.cookies})
             .then(html => {

@@ -1,12 +1,12 @@
-/**
- * Created by cezaryrk on 15.10.16.
- */
+/* Provider */
 
-// import * as Promise from "bluebird";
 
 export interface Provider {
 
     init(options : any) : any;
+
+
+
 
     hasNext():any;
 
@@ -14,6 +14,3 @@ export interface Provider {
 }
 
 
-export class ProviderManager {
-
-}
