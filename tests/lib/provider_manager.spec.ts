@@ -2,7 +2,7 @@
 import * as assert from 'assert'
 import {ProviderManager} from "../../src/lib/provider_manager";
 
-describe('ProviderManager tests', function () {
+describe('ProviderManager tests',  () =>  {
 
 
     /**
@@ -12,6 +12,7 @@ describe('ProviderManager tests', function () {
 
     it('init', function (done) {
         let providerManager = new ProviderManager()
+
         providerManager.addPathAsync(__dirname + '/../../dist/providers')
             .then(function(added) {
                 assert.equal(true,added)

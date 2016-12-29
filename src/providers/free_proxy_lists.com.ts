@@ -2,40 +2,41 @@
  * http://www.proxy-listen.de/Proxy/Proxyliste.html
  */
 
-import {ProviderSpec} from '../lib/provider_spec'
-import {ProxySpec} from '../lib/proxy_spec'
-import * as request from "request-promise";
-// import * as fs from "fs";
-import * as cheerio from "cheerio";
 
-// const cheerio = require('cheerio')
-
-const BASE_URL = 'http://www.proxy-listen.de'
-const PROXY_LIST_DE = BASE_URL + '/Proxy/Proxyliste.html'
+const BASE_URL = 'http://www.freeproxylists.com'
+// const PROXY_LIST_DE = BASE_URL + '/Proxy/Proxyliste.html'
 
 /*
+ * Multiple variant exist her
+ *
+ * Elite proxy servers hide your IP address and thereby prevent your from unauthorized access to your computer through the Internet. They do not provide anyone with your IP address and effectively hide any information about you and your reading interests. Besides that, they don't even let anyone know that you are surfing through a proxy server.
+ * http://www.freeproxylists.com/elite.html
+ * http://www.freeproxylists.com/load_elite_d[\d+].html => returns xml for detailed list with table [IP,Port,HTTPS,Latency,Date(checked),Country]
+ *
+ * Anonymous proxy servers hide your IP address or modify it in some way to prevent target server know about it. They may provide or may hide information about you and your reading interests. Besides that, they let anyone know that you are surfing through a proxy server.
+ * http://www.freeproxylists.com/anonymous.html
+ * http://www.freeproxylists.com/load_anon_d[\d+].html => returns xml for detailed list with table [IP,Port,HTTPS,Latency,Date(checked),Country]
+ *
+ *
+ *
+ */
+/*
+class PageHandler {
 
-export default class ProxyListen_De implements Provider {
+    short : string
 
 
-    inc: number
-    _hasNext: boolean
-    cookies: any;
-    form_data: {[key: string]: string}
+}
+
+export default class FreeProxyLists_Com implements Provider {
 
 
+   handler : Array<PageHandler>
 
-    newFormData() : {[key: string]: string}{
-        let self = this
-        let form_data: {[key: string]: string} = {}
-        Object.keys(this.form_data).forEach(key => {
-            form_data[key] = self.form_data[key]
-        })
-        return form_data
-    }
 
     init(options : any) {
         let self = this
+        self.handler.push(new PageHandler('http://www.freeproxylists.com/anonymous.html'))
         this._hasNext = false
         this.inc = 0
         options = options || {}
@@ -71,6 +72,8 @@ export default class ProxyListen_De implements Provider {
                 self._hasNext = true
             })
     }
+
+
 
     hasNext() {
         return Promise.resolve(this._hasNext)

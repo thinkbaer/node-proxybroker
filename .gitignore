@@ -41,3 +41,8 @@ jspm_packages
 
 # Temp directory
 tmp/
+
+# Dist directory
+dist/
+
+

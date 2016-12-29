@@ -52,3 +52,4 @@ class Main {
 }
 let main = new Main();
 main.boot();
+//# sourceMappingURL=main.js.map

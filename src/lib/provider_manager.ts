@@ -1,4 +1,4 @@
-import {Provider} from "./provider";
+import {ProviderSpec} from "./provider_spec";
 import * as fs from "fs";
 
 
@@ -6,7 +6,7 @@ export class ProviderManager {
 
     paths: Array<string>
 
-    providers: Array<Provider>
+    providers: Array<ProviderSpec>
 
     constructor() {
         this.paths = new Array<string>()
@@ -60,7 +60,7 @@ export class ProviderManager {
     }
 
 
-    add(provider: Provider) {
+    add(provider: ProviderSpec) {
 
     }
 
