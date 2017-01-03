@@ -29,12 +29,10 @@ export class ExtractExecutor extends Executor {
 
     exec(done: Function) {
         let self = this
-        console.log('EXTRACT')
-
-        //console.log(this.$parent.content)
 
         let $: any = cheerio.load(this.$parent.content)
         let context: any = null
+
         this.node.instructions.forEach(_=> {
             console.log('INST',_)
             if (_.hasOwnProperty('$match')) {
@@ -45,11 +43,10 @@ export class ExtractExecutor extends Executor {
         })
 
         let out: any = null
-
+        console.log(context)
         if (context.hasOwnProperty('_root')) {
-            out = context.html()
+            out = $.html(context)
         }else{
-
         }
 
         console.log(out)

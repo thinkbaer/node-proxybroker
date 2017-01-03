@@ -6,12 +6,12 @@ import * as Promise from "bluebird";
 import * as fs from "fs";
 
 
-import {Provider} from './lib/provider_spec'
+// import {Provider} from './lib/provider_spec'
 
 
 
 class Main {
-
+/*
     providerClasses: Array<Provider>
 
     constructor() {
@@ -62,8 +62,8 @@ class Main {
         console.log('find')
 
     }
-
+*/
 }
 
 let main = new Main()
-main.boot()
+// main.boot()

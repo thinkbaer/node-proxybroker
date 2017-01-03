@@ -5,15 +5,14 @@ import {Extract} from "../../src/lib/op_extract";
 
 
 
-
-
 describe('Test basic operations', () => {
 
     describe('op: extract', ()=> {
 
         /**
+         *
          * {
-         *      $url: http://de.wikipedia.org
+         *      $visit: http://de.wikipedia.org
          *      $extract: [
          *          {$match: 'CSS Selector' },
          *          {$match: 'CSS Selector' },
@@ -28,8 +27,7 @@ describe('Test basic operations', () => {
             let visitExec = visit.executor()
 
             let extract = new Extract([
-                {$match: 'div[id=hauptseite-ereignisse]'},
-                // {$match: 'mgdiv[id=hauptseite-ereignisse]'},
+                {$match: 'div#hauptseite-ereignisse'},
             ])
             visit.add(extract)
 
@@ -40,6 +38,7 @@ describe('Test basic operations', () => {
         })
 
         it('exec: simple extract list 2"', function (done) {
+            this.skip()
             let file = __dirname + '/../data/extract_content.html'
             let visit = new Visit(file)
             let visitExec = visit.executor()
@@ -57,6 +56,7 @@ describe('Test basic operations', () => {
         })
 
         it('exec: simple extract list 3"', function (done) {
+            this.skip()
             let file = __dirname + '/../data/extract_content.html'
             let visit = new Visit(file)
             let visitExec = visit.executor()

@@ -1,10 +1,5 @@
-/* Provider */
-
 
 import {ProxyType} from "./proxy_types";
-
-
-
 import {SpecNode} from "./op";
 import {Visit} from "./op_visit";
 
@@ -19,6 +14,7 @@ export class Root extends SpecNode {
     }
 
 }
+
 /*
  export class Context {
 

@@ -12,7 +12,7 @@ gulp.task('cleanup:dist', function () {
 gulp.task("compile:js", function () {
     return tsProject.src()
         .pipe(tsProject())
-        .js.pipe(gulp.dest("dist"));
+        .js.pipe(gulp.dest("build"));
 });
 
 gulp.task('watch:ts',['compile:js'], function () {

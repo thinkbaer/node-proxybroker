@@ -10,7 +10,7 @@
   "compilerOptions": {
     "noImplicitAny": true,
     "target": "es6",
-    "outDir":"dist/",
+    "outDir":"build/",
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true
