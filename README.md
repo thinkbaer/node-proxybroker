@@ -1,7 +1,10 @@
 # node-proxybroker
 
+## Install typings
 
-
+```
+typings install dt~node --global
+```
 
 ## Tests
 

@@ -3,7 +3,7 @@
     "typings/index.d.ts",
     "src/lib/provider_spec.ts",
     "src/lib/provider_manager.ts",
-    "src/lib/proxy_spec.d.ts",
+    "src/lib/proxy.ts",
     "src/providers/proxy_listen.de.ts",
     "src/main.ts"
   ],

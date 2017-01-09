@@ -3,7 +3,7 @@
  */
 
 import {ProviderSpec} from '../lib/provider_spec'
-import {ProxySpec} from '../lib/proxy_spec'
+import {ProxySpec} from '../lib/proxy'
 import * as request from "request-promise";
 // import * as fs from "fs";
 import * as cheerio from "cheerio";

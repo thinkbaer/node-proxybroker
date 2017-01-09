@@ -1,6 +1,6 @@
 {
-  "name": "node-proxybroker",
-  "version": "0.1.0",
+  "name": "proxybroker",
+  "version": "0.0.1",
   "description": "Broker for anonymus proxies",
   "main": "dist/main.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "broker"
   ],
   "author": "Robert Kania",
-  "license": "TODO",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/thinkbaer/node-proxybroker/issues"
   },
@@ -38,6 +38,7 @@
     "clone": "^2.0.0",
     "request": "^2.75.0",
     "request-promise": "^4.1.1",
+    "sqlite": "^2.2.4",
     "zombie": "^5.0.5"
   }
 }
