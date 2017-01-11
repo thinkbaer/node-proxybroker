@@ -3,7 +3,7 @@
  */
 
 import {ProviderSpec} from '../lib/provider_spec'
-import {ProxySpec} from '../lib/proxy'
+
 import * as request from "request-promise";
 // import * as fs from "fs";
 import * as cheerio from "cheerio";
@@ -12,6 +12,9 @@ import * as cheerio from "cheerio";
 
 const BASE_URL = 'http://www.proxy-listen.de'
 const PROXY_LIST_DE = BASE_URL + '/Proxy/Proxyliste.html'
+
+
+
 
 /*
 

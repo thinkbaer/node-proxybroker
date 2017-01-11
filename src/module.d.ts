@@ -1,0 +1,25 @@
+
+
+export interface API {
+
+    enqueue(ip: string, port: string|number, flags: number):Promise<any>;
+
+}
+
+export const enum ProxyType {
+
+    HTTP_ANON = 1,
+    HTTPS_ANON = 2
+
+    /*
+     HTTP_ANON = <string>'http_anon',
+     HTTPS_ANON = 'https_anon'
+     */
+}
+
+
+export interface ProxySpec {
+    ip:string,
+    port:number,
+    flags:number
+}

@@ -88,7 +88,6 @@ während der Verarbeitung werden gefundene Proxies erkannt und zurückgeliefert.
 geprüft, ob es sich um qualitativ gute Proxies handelt.
 
 
-
 CLI: fetch
   -> Worker (4) 
     # Start jobs {parameterized}
@@ -101,9 +100,6 @@ CLI: fetch
        * Queue <- adding Proxies
        | 
   
-     
-
-
 
 ## Frontend
 

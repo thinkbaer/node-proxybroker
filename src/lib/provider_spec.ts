@@ -1,7 +1,8 @@
 
-import {ProxyType} from "./proxy_types";
+
 import {SpecNode} from "../../../node-extract_pipeline/src/lib/op";
 import {Visit} from "../../../node-extract_pipeline/src/lib/op_visit";
+import {ProxyType} from "../module";
 
 
 export class Root extends SpecNode {
