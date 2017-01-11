@@ -81,8 +81,46 @@ proxyFetchJob.scrapJob(function(api, param, done){
 })
 ```
 
+## Worker 
+
+Jobs für die Aktualisierung der Proxies einplanen und ausführen. Hierbei werden die Jobs angestossen, 
+während der Verarbeitung werden gefundene Proxies erkannt und zurückgeliefert. Diese müssen zugleich (oder später) verifiziert werden und 
+geprüft, ob es sich um qualitativ gute Proxies handelt.
+
+
+
+CLI: fetch
+  -> Worker (4) 
+    # Start jobs {parameterized}
+    # - Jobs müssen definiert werden (mit Häufigkeit der Wiederholungen) 
+    ->* JobInstance
+       -> adding Proxies -> Inform. verifier
+         
+         
+  -> Verifier 
+       * Queue <- adding Proxies
+       | 
+  
+     
+
+
+
+## Frontend
+
++ per express und angular
+
+
+## ProxyServer
+
+
+## DB
+
+### Issue
+
+ * Aktuell wird nur sqlite als DB unterstützt, soll jedoch irgendwann abstrahiert werden, um beliebige backends zu ermöglichen
+ 
 
 ## Spinoff's
 
-- Page Extract Instruction Pipeline (extract_pipeline)
+ - Page Extract Instruction Pipeline (extract_pipeline)
 

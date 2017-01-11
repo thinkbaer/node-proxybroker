@@ -9,14 +9,6 @@ export interface Config {
     db_source: string
     server_ip?: string
     server_port?: number
-    /*
-     setIfExists(k:string,v:string){
-     //var pk = new PropertyKey(k)
-     if (this.hasOwnProperty(k)) {
-     this[k] = v
-     }
-     }
-     */
 }
 
 export default class ProxyBroker {

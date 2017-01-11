@@ -2,9 +2,11 @@
 
 import db_queries from "./migrations";
 import {Config} from "../lib/proxy_broker";
-import {DBObject} from "./schema";
+import {DBObject, SObject, VariableDBO, SVariable} from "./schema";
 
 import * as sdb from "sqlite"
+import {isNumber} from "util";
+import {createTable} from "./helper";
 
 interface Statement {
     sql: string;
@@ -47,25 +49,28 @@ export default class DB {
 
         let self = this
         let db_version: string = null
+        let v = new VariableDBO()
+        v.key = 'db_version'
         return this.open()
             .then((_db) => {
-                return _db.exec('CREATE TABLE IF NOT EXISTS variable (key VARCHAR(32) NOT NULL, value TEXT NOT NULL)')
+                let sql = createTable(SVariable);
+                return _db.exec(sql)
             })
             .then((_db) => {
-                return _db.get('SELECT * FROM variable WHERE key = ?', 'db_version')
+                return self.get(v)
             })
             .then((res: any) => {
-                db_version = '000'
+                v.value = db_version = '000'
                 if (res) {
-                    db_version = res.value
+                    v.value = res.value
                 } else {
-                    return self._db.exec('INSERT INTO variable (key, value) VALUES (\'db_version\',\'' + db_version + '\')')
+                    return self.insert(v)
                 }
             })
             .then(function () {
                 return self.migrate(db_version)
             })
-            .catch((err) => console.error(err))
+            .catch((err) => console.error(err.stack))
 
     }
 
@@ -116,15 +121,19 @@ export default class DB {
             let self = this
             migration_spec.queries.forEach((_q)=> {
                 $p = $p.then(()=> {
-                    self._db.exec(_q)
+                    return self._db.exec(_q)
                 })
             })
             $p = $p
                 .then(() => {
-                    return self._db.exec('UPDATE variable SET value=\'' + migration_spec.version + '\' WHERE key = \'db_version\'')
+                    let v = new VariableDBO()
+                    v.key = 'db_version'
+                    v.value = migration_spec.version
+                    return self.update(v)
                 })
                 .catch(function (err: Error) {
-                    console.error(err)
+                    console.error(err.stack)
+                    throw err
                 })
         }
 
@@ -137,16 +146,75 @@ export default class DB {
         return this._db
     }
 
+    exists(tmpl: DBObject): Promise<DBObject> {
+        return this.get(tmpl, true)
+    }
 
-    save(obj: DBObject) {
+    get(tmpl: DBObject, exists: boolean = false): Promise<DBObject> {
         let self = this
+        let keys: any[] = []
+        if (typeof tmpl._ctxt.pk === 'string') {
+            keys.push(tmpl._ctxt.pk)
+        } else {
+            keys = keys.concat(tmpl._ctxt.pk)
+        }
+
+        var args: any[] = []
+
+        for (let k of keys) {
+            var v = tmpl[k]
+            if (v) {
+                args.push(k + ' = \'' + (typeof v === 'string' ? v.replace('\'', '\\\'') : v) + '\'')
+            } else {
+                return Promise.resolve(null)
+            }
+        }
+
+        let select = '*'
+        if (exists) {
+            select = keys.join(',')
+        }
+
+        let str = 'SELECT ' + select + ' FROM ' + tmpl._ctxt.name + ' WHERE ' + args.join(' AND ')
+
         return Promise.resolve()
-            .then(()=> {
-                if (obj.id) {
-                    return self._db.get('SELECT id FROM ' + obj._ctxt.name + ' WHERE id = ?', obj.id)
+            .then(() => {
+                return self._db.get(str)
+            })
+            .then((res: any) => {
+                if (res) {
+                    for (let k in res) {
+                        var field = tmpl._ctxt.fields[k]
+                        if (field) {
+                            var v = res[k]
+
+                            if (v) {
+                                if (field.type == 'date') {
+                                    tmpl[k] = new Date(v)
+                                } else {
+                                    tmpl[k] = v
+                                }
+                            } else {
+                                tmpl[k] = null
+                            }
+
+                        } else {
+                            throw new Error('Unknown field')
+                        }
+                    }
+                    return tmpl
                 } else {
                     return null
                 }
+            })
+    }
+
+
+    save(obj: DBObject): Promise<DBObject> {
+        let self = this
+        return Promise.resolve()
+            .then(()=> {
+                return self.exists(obj)
             })
             .then((res: any)=> {
                 if (res) {
@@ -156,7 +224,7 @@ export default class DB {
                 }
             })
             .catch((err: Error) => {
-                console.error(err.stack)
+                console.error(err)
                 throw err
             })
     }
@@ -168,6 +236,7 @@ export default class DB {
 
         for (let f in obj._ctxt.fields) {
             let field = obj._ctxt.fields[f]
+            if (field.pk && field.auto) continue;
             _if.push(f)
             if (obj[f]) {
                 if (field.type == 'number') {
@@ -185,6 +254,7 @@ export default class DB {
         return sql
     }
 
+
     insert(obj: DBObject): Promise<DBObject> {
         let sql = this.buildInsert(obj)
         let self = this
@@ -193,16 +263,32 @@ export default class DB {
                 return self._db.run(sql)
             })
             .then((statemant: Statement) => {
-                obj.id = statemant.stmt.lastID;
+                if (obj._ctxt.hasAutoIncField()) {
+                    obj[obj._ctxt.getAutoIncField()] = statemant.stmt.lastID;
+                }
                 return obj
             })
     }
 
     buildUpdate(obj: DBObject) {
         let _iv: string[] = []
+        let where: any[] = []
 
         for (let f in obj._ctxt.fields) {
             let field = obj._ctxt.fields[f]
+            if (field.pk) {
+                if (obj[f]) {
+                    if (field.type == 'number') {
+                        where.push(f + '=' + obj[f])
+                    } else if (field.type == 'string') {
+                        where.push(f + '=\'' + obj[f] + '\'')
+
+                    }
+                } else {
+                    throw new Error('No valid pk found')
+                }
+                continue;
+            }
 
             if (obj[f]) {
                 if (field.type == 'number') {
@@ -216,11 +302,11 @@ export default class DB {
                 _iv.push(f + ' = NULL')
             }
         }
-        let sql = 'UPDATE ' + obj._ctxt.name + ' SET ' + _iv.join(',') + ' WHERE id = ' + obj.id
+        let sql = 'UPDATE ' + obj._ctxt.name + ' SET ' + _iv.join(',') + ' WHERE ' + where.join(' AND ')
         return sql
     }
 
-    update(obj: DBObject) {
+    update(obj: DBObject): Promise<DBObject> {
         let sql = this.buildUpdate(obj)
         let self = this
         return Promise.resolve().then(() => {
