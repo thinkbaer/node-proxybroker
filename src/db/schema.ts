@@ -3,7 +3,7 @@ export class SObject {
     fields: {[key: string]: {type: string,length?: number,default?:string,null?:boolean,auto?:boolean,pk?:boolean}}
     unique?:{[key: string]: string[]}
     pk: string|string[]
-    new: Function
+    // new: Function
 
     [k:string]:any
 
@@ -29,7 +29,6 @@ export class SObject {
 
 export interface DBObject {
     _ctxt: SObject
-
     [key:string]:any
 }
 
@@ -52,7 +51,7 @@ export const SProxy:SObject = new SObject({
         proxy_ip_port:['ip4','port']
     },
 
-    new:() => {return new ProxyDBO()}
+ //   new:() => {return new ProxyDBO()}
 })
 
 
@@ -66,7 +65,7 @@ export const SVariable:SObject = new SObject({
 
     pk: 'key',
 
-    new:() => {return new VariableDBO()}
+   // new:() => {return new VariableDBO()}
 })
 
 
@@ -85,7 +84,7 @@ export class ProxyDBO implements DBObject {
     protocols: Array<string>
     types: Array<string>
 
-    constructor(){}
+
 
 }
 

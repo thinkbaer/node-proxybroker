@@ -1,10 +1,12 @@
 import {API} from "../module";
 import DB from "../db/db";
 import * as events from 'events';
+import {ProxyDBO} from "../db/schema";
 
 class ProxyUpdate {
 
     id:string
+
 
     constructor($r:Registry, ip:string, port:number, flags:number = 0 ){
 
@@ -38,6 +40,13 @@ class ProxyUpdate {
 
 }
 
+class ProxyDef extends ProxyDBO {
+
+    key:string
+
+
+}
+
 export class Registry extends events.EventEmitter implements API {
 
     backend: DB
@@ -49,6 +58,16 @@ export class Registry extends events.EventEmitter implements API {
         super()
         this.backend = db
         this.on('enqueue', this.processEnqueue.bind(this))
+    }
+
+    lookup(ip,port){
+        let id = [ip,port].join(':')
+        if(this.objects[id]){
+            return Promise.resolve(this.objects[id])
+        }else {
+            let proxy = new ProxyDef()
+            return this.backend.findOne(proxy, {ip4:ip,port:port}).then(()=> {})
+        }
     }
 
     private doEnqueue() {

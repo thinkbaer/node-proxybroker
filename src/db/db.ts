@@ -182,31 +182,54 @@ export default class DB {
                 return self._db.get(str)
             })
             .then((res: any) => {
-                if (res) {
-                    for (let k in res) {
-                        var field = tmpl._ctxt.fields[k]
-                        if (field) {
-                            var v = res[k]
-
-                            if (v) {
-                                if (field.type == 'date') {
-                                    tmpl[k] = new Date(v)
-                                } else {
-                                    tmpl[k] = v
-                                }
-                            } else {
-                                tmpl[k] = null
-                            }
-
-                        } else {
-                            throw new Error('Unknown field')
-                        }
-                    }
-                    return tmpl
-                } else {
-                    return null
-                }
+                return self.convert(res,tmpl)
             })
+    }
+
+    private convert(res:any, tmpl:DBObject):DBObject {
+        if (res) {
+            for (let k in res) {
+                var field = tmpl._ctxt.fields[k]
+                if (field) {
+                    var v = res[k]
+
+                    if (v) {
+                        if (field.type == 'date') {
+                            tmpl[k] = new Date(v)
+                        } else {
+                            tmpl[k] = v
+                        }
+                    } else {
+                        tmpl[k] = null
+                    }
+                } else {
+                    throw new Error('Unknown field')
+                }
+            }
+            return tmpl
+        } else {
+            return null
+        }
+    }
+
+    findOne(tmpl: DBObject, query: any): Promise<DBObject> {
+        let self = this
+        let where:string[] = []
+        for(let k in query ){
+            let v = query[k]
+            where.push(k + ' = \'' + (typeof v === 'string' ? v.replace('\'', '\\\'') : v) + '\'')
+        }
+
+        let str = 'SELECT * FROM ' + tmpl._ctxt.name + ' WHERE ' + where.join(' AND ')
+
+        return Promise.resolve()
+            .then(() => {
+                return self._db.get(str)
+            })
+            .then((res: any) => {
+                return self.convert(res,tmpl)
+            })
+
     }
 
 

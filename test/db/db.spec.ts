@@ -8,19 +8,20 @@ import {ProxyDBO, VariableDBO} from "../../src/db/schema";
 
 describe('DB', () => {
 
-    describe('basic operation', () => {
+    describe('method tests', () => {
 
-        it('test insert build', function () {
+        it('buildInsert', function () {
             let $DB = new DB({db_source: ':memory:'})
             var p = new ProxyDBO()
             p.ip4 = '127.0.0.1'
             p.port = 8888
             let sql = $DB.buildInsert(p)
             assert.ok(sql)
+            assert.ok(sql.match(/^INSERT INTO/))
         })
 
 
-        it('migrate calc', function () {
+        it('migrate_operation', function () {
             var last = db_queries[db_queries.length - 1]
             var first = db_queries[0]
 
@@ -134,6 +135,71 @@ describe('DB', () => {
                     done(err)
                 })
         })
+    })
+
+    describe('Operations', () => {
+        let $DB = new DB({db_source: ':memory:'})
+
+        before(function (done) {
+            $DB.bootstrap()
+                .then((mig) => {
+                    assert.equal(mig, true, 'Migration initialized')
+                    done()
+                }).catch((err: Error)=>done(err))
+        })
+
+        it('save', function (done) {
+            var p = new ProxyDBO()
+            p.ip4 = '127.0.0.1'
+            p.port = 8889
+
+            $DB.save(p)
+                .then((o:ProxyDBO)=> {
+                    assert.equal(o.id, 1)
+                    assert.equal(o.ip4, '127.0.0.1')
+                    done()
+                })
+                .catch((err) => {
+                    console.error(err);
+                    done(err)
+                })
+        })
+
+        it('get', function (done) {
+            var p = new ProxyDBO()
+            p.id = 1
+
+            $DB.get(p)
+                .then((o:ProxyDBO)=> {
+                    assert.equal(o.id, 1)
+                    assert.equal(o.ip4, '127.0.0.1')
+                    assert.equal(o.port, 8889)
+                    done()
+                })
+                .catch((err) => {
+                    console.error(err);
+                    done(err)
+                })
+        })
+
+        it('findOne', function (done) {
+            var p = new ProxyDBO()
+
+
+            $DB.findOne(p, {ip4:'127.0.0.1',port:8889})
+                .then((o:ProxyDBO)=> {
+                    assert.equal(o.id, 1)
+                    assert.equal(o.ip4, '127.0.0.1')
+                    assert.equal(o.port, 8889)
+                    done()
+                })
+                .catch((err) => {
+                    console.error(err);
+                    done(err)
+                })
+        })
+
+
     })
 
 })
