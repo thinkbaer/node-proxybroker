@@ -39,6 +39,7 @@ export const SProxy:SObject = new SObject({
         id: {type:'number',auto:true,pk:true},
         ip4: {type: 'string', length: 15},
         port: {type: 'number'},
+        status: {type: 'number'},
         country: {type: 'string', length: 2, null:true},
         checked_at: {type: 'date',null:true},
         created_at: {type: 'date',default:'(datetime(\'now\',\'localtime\'))'},

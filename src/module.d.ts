@@ -2,7 +2,7 @@
 
 export interface API {
 
-    enqueue(ip: string, port: string|number, flags: number):Promise<any>;
+    enqueue(ip: string, port: string|number, flags: number) : string;
 
 }
 
