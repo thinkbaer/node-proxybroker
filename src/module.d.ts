@@ -18,8 +18,13 @@ export const enum ProxyType {
 }
 
 
-export interface ProxySpec {
-    ip:string,
-    port:number,
+export interface Addr {
+    ip: string
+    port: number
+}
+
+export interface ProxySpec extends Addr {
     flags:number
 }
+
+

@@ -1,20 +1,12 @@
 
 import {Judge} from "../../src/lib/judge";
-import * as request from "request-promise";
-import {Server} from "http";
-
 let mlog = require('mocha-logger')
 import * as assert from 'assert'
 import {Log} from "../../src/lib/logging";
 
-let localip: string = null
-let judge: Judge = null
-let server: Server = null
-
-
 describe('Judge', () => {
 
-    describe('Server',() => {
+    describe('service runtime',() => {
 
         beforeEach(()=>{
             Log.enable = false
@@ -40,7 +32,6 @@ describe('Judge', () => {
 
         it('wakeup, selftest and pending',(done) => {
             let judge = new Judge()
-            Log.enable = false
 
             judge['get_remote_accessible_ip']()
                 .then((erg) => {
@@ -69,13 +60,67 @@ describe('Judge', () => {
                 })
                 .then(()=>done())
                 .catch((err) => {
-                    Log.enable = true
+                    done(err)
+                })
+        })
+
+    })
+    describe('service bootstrap',() => {
+
+        it('bootstrap',(done) => {
+            let judge = new Judge()
+
+            judge.bootstrap()
+                .then((erg) => {
+                    assert.equal(erg,true)
+                    done()
+                })
+                .catch((err) => {
                     done(err)
                 })
         })
 
     })
 
+    describe('test proxy',() => {
+        let judge = new Judge()
+
+        before((done) => {
+            judge.bootstrap()
+                .then((erg) => {
+                    assert.equal(erg,true)
+                    return judge.wakeup()
+                })
+                .then((erg) => {
+                    assert.equal(erg,true)
+                    done()
+                })
+                .catch((err) => {
+                    done(err)
+                })
+        })
+
+
+        after((done)  => {
+            judge.pending().then(()=>done()).catch((err)=>done(err))
+        })
+
+        it('run test for telekom',function(done) {
+            this.timeout(40000)
+            judge.runTests({ip:'212.185.87.53',port:443})
+                .then((erg) => {
+                    console.log(erg)
+                    done()
+                })
+                .catch((err) => {
+                    done(err)
+                })
+        })
+
+
+
+
+    })
 
     /*
     // Get the eigen-IP ;)
