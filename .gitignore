@@ -45,3 +45,5 @@ dist/
 # Dist directory
 build/
 
+# AsciiDoc
+.asciidoctor
