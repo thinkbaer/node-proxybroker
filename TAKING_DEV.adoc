@@ -1,17 +1,83 @@
-# Development
+:toc:
 
-## ProxyServer
+= Development
+
+== Overview
+
+[plantuml, diagram-classes, png]
+....
+class ProxyServerBroker
+class Judge
+class API
+class Fetcher
+....
+
+
+
+== Judge
+
+Stellt ein Ziel-Server dar, der eine Anfrage die über einen Proxy umgeleitet wird
+bearbeitet und eine Antwort zurückliefert. Die Zeit die benötigt wird für die Übertragung
+( C -> P -> S -> P -> C ) kann hierbei gemessen werden (Erfassung der Anfrage-Metrik).
+Die Proxy-Spezifikationen/Parameter können anhand multipler Anfragen durchgetestet werden.
+
+* Parameter
+
+** Level des Proxies (L1-L4)
+** Herkunft Land/Unternehmen
+** Verschlüsselung http / https
+** Qualität (Latenz)
+** HTTP-Tunnel möglich?
+
+* Besonderheiten:
+
+** Wird nur während der Verarbeitung der Anfrage benötigt und kann damit jeweils nur dann
+    aktiviert werden
+
+=== Tasks / Issues
+
+* #? Impl: Direkte HTTP Anfrage über Socket für HTTP/HTTPS/HTTP-Tunnel +
+  Die Verarbeitung sollte protokolliert werden (siehe proxydb.net)
+
+* #? Tech: Wie kann die Qualität des Proxies bewertet werden?
+
+
+
+== Proxy fetching
+
+Die Informationen über den Bestand von Proxies werden auf unterschiedlichen Seiten im Netz publiziert.
+Nicht alle bereitgestellten Daten stellen auch aktive Proxies dar, diese müssen erstmal verifiziert
+werden.
+
+Über eine API können Jobs definiert werden, mittels derer die Proxies geladen werden können.
+
+
+=== Tasks / Issues
+
+* ?# Impl: CLI Befehl zum Laden von Proxies +
+
+  $ proxybroker update
+
+
+
+
+
+
+
+
+== ProxyServer
+
 
 Funktionsweisen:
 
-- Zufällige Adressedaten für einen/mehrere Proxy bei Anfrage erhalten (schnellster Proxy; )
-  bsp.: GET /api/proxy
+- Zufällige Adressedaten für einen/mehrere Proxy bei Anfrage
+erhalten (schnellster Proxy; ) bsp.: GET /api/proxy
   
 - Als echter ProxyServer, also Anfragen werden über die vorhandenen Adressen umgeleitet (mit caching / oder ohne)
   Was muss dafür unterstützt werden? (RFC)
  
   
-## ProxySelector 
+== ProxySelector
 
 Im Hintergrund Prüfung der Proxies nach Zuverlässigkeit
 
@@ -39,7 +105,9 @@ Request by providers must be done over a controlled fetch mechaniscm to prevent 
 The request method can differ in POST, GET, etc. 
 
 
-## ProxyBroker API
+
+
+== ProxyBroker API
 
 Hinzufügen von neuen Proxies:
 
@@ -81,7 +149,7 @@ proxyFetchJob.scrapJob(function(api, param, done){
 })
 ```
 
-## Worker 
+## Worker
 
 Jobs für die Aktualisierung der Proxies einplanen und ausführen. Hierbei werden die Jobs angestossen, 
 während der Verarbeitung werden gefundene Proxies erkannt und zurückgeliefert. Diese müssen zugleich (oder später) verifiziert werden und 
@@ -105,8 +173,6 @@ CLI: fetch
 
 + per express und angular
 
-
-## ProxyServer
 
 
 ## DB
