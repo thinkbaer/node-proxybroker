@@ -4,7 +4,7 @@
 
 == Overview
 
-[plantuml, diagram-classes, png]
+[plantuml, doc/dev/diagram-classes, png]
 ....
 class ProxyServerBroker
 class Judge
@@ -34,6 +34,9 @@ Die Proxy-Spezifikationen/Parameter können anhand multipler Anfragen durchgetes
 ** Wird nur während der Verarbeitung der Anfrage benötigt und kann damit jeweils nur dann
     aktiviert werden
 
+
+
+
 === Tasks / Issues
 
 * #? Impl: Direkte HTTP Anfrage über Socket für HTTP/HTTPS/HTTP-Tunnel +
@@ -41,28 +44,169 @@ Die Proxy-Spezifikationen/Parameter können anhand multipler Anfragen durchgetes
 
 * #? Tech: Wie kann die Qualität des Proxies bewertet werden?
 
+* #? Impl: CLI Befehl zum Testen eines IP:Port
+
+  $ proxybroker judge 127.0.0.1 8888
+
 
 
 == Proxy fetching
 
-Die Informationen über den Bestand von Proxies werden auf unterschiedlichen Seiten im Netz publiziert.
-Nicht alle bereitgestellten Daten stellen auch aktive Proxies dar, diese müssen erstmal verifiziert
-werden.
+Die Informationen über den Bestand von Proxies werden auf unterschiedlichen Seiten
+im Netz publiziert. Nicht alle bereitgestellten Daten stellen auch aktive Proxies dar,
+diese müssen erstmal verifiziert werden.
 
-Über eine API können Jobs definiert werden, mittels derer die Proxies geladen werden können.
+Über eine API können Jobs definiert werden, mittels derer die Proxies von externen
+Seiten nachgeladen werden können. An den Job wird die API jeweils bei Ausführung
+übergeben und kann zur Übergabe von identifizierten Proxy-Adressen genutzt werden.
+Die Implementierung des Jobs hängt jeweils von der zu analysierende Seite ab.
+(#? Idee - jobabhängige API; um die Herkunft zu protokollieren)
 
+
+=== Verarbeitung Jobs
+
+Jobs werden periodisch eingeplant und zur gegebenen Zeit ausgeführt. Wann ? Hierzu müsste die App
+als daemon laufen!
+
+Sammeln von Daten kann parallel ausgeführt werden (Parameter: max-concurrent-gather-jobs).
+
+Was passiert bei Fehlern ...
+
+[http://caolan.github.io/async/docs.html#]
+
+
+
+[plantuml, doc/dev/jobs-state, png]
+....
+(*) --> "a"
+-->[asd] "b"
+....
+
+
+
+=== Externe Seiten
+
+* http://www.freeproxylists.com
+* http://proxydb.net
+* http://www.proxy-listen.de/Proxy/Proxyliste.html
+
+
+
+
+=== WorkNotes
+
+* Aktualisierung der Daten als Daemon Task?
+* CLI soll mit daemon kommunizieren
+* Proxies in DB eintragen (verify-Tabelle)
+* Existierende Proxies ebenfalls eintragen, wenn die gegebene Zeit abgelaufen ist
+* Soll mittels der Jobs nur die Interne Datenbank aktualisiert werden
+
+* Proxy-Adresse testen
+  => Judge starten
+  => Anfrage senden
+  => Warten auf Antwort
+    *=> Abbruch
+    *=> Test erfolgreich
+  => Judge stoppen, falls keine laufenden Aufträge bzw. neu eingereiten
+
+* *F*: Wann sollen Jobs verarbeitet werden, bsp.: mit bei CLI "update" Befehl soll
+die DB aktualisiert werden, jedoch ist hier die Prüfung der Addresse noch nicht einkalkuliert
+
+* *F*: Wann / wie soll die Prüfung der Proxy-Adressen erfolgen? Gleich nach der Aktualisierung,
+ durch separaten Aufruf per CLI oder durch ein Hintergrundprozess (kann auch alles sein). +
+ Zwei Hintergrundjobs:
+** Verifizierung der Adressenbestands, also prüfe für neue / aktualisierte bzw.
+  Bestandsadressen (die abgelaufen sind) den Verbindungsstatus
+** Suche nach neuen Adressen
+
+
+Fälle für die Verarbeitung einer Adresse die in Frage kommen:
+
+** Proxy neu eingetragen => muss geprüft werden
+** Proxy existiert => wenn die Zeit (check-offset) abgelaufen ist
+** Proxy seit langem nicht mehr aktiv => muss gelöscht werden, wenn eine bestimmte
+Anzahl an Fehlern auftritt (fallout-check-limit)
+
+
+CAUTION: PB Config / Install so configuration can be saved | place config can be saved
+
+
+
+[plantuml, doc/dev/entity-diagramm, png]
+....
+'default
+top to bottom direction
+
+
+class ProxyAddr{
+  id: serial
+  key: string = (protocol, ip, port).join()
+  protocol: string
+  ip: string
+  port: number
+  level: number
+  status: enum(UNKNOWN,OKAY,ERROR,
+               REMOVEABLE, VERIFY)
+  created_at: Date
+  found_at: Date
+  last_checked_at: Date
+  found_count: int
+}
+
+class ProxyLog{
+  id: serial
+  proxy_addr_id: number
+  log: string
+  status: enum(OKAY,ERROR)
+  timestamp: Date
+  last_check: bool
+}
+
+class ProxyQueue {
+  id: serial
+  proxy_addr_id: number
+  timestamp: Date
+}
+
+ProxyAddr<-ProxyQueue
+
+ProxyAddr<-ProxyLog
+
+....
+
+
+
+
+NOTE: typeorm!!!
 
 === Tasks / Issues
 
-* ?# Impl: CLI Befehl zum Laden von Proxies +
+* ?# Impl: CLI Befehl zum Laden von Proxies in die Registry +
 
   $ proxybroker update
 
 
+== CLI
 
+```
+$ proxybroker help
 
+update [job name] - Aktualisierung der DB
 
+upgrade [--limit=100] - Prüfe, Adressen in DB
 
+list [options] - Liste den Datenbestand als CSV/JSON/XML, optional nach bestimmten Suchkritieren
+#Options:
+  [--format=format]
+  [--level=1|2|3|4]
+  [--country=DE]
+  [--limit=100]
+
+test [address = (protocol, ip, port).join(,) ] - Teste eine beliebige Adresse, ob Proxy
+
+server - Starte Server mit Backgroundaktualisierung
+
+```
 
 
 == ProxyServer

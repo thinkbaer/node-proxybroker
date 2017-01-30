@@ -5,7 +5,7 @@ import {Config} from "../lib/proxy_broker";
 import {DBObject, SObject, VariableDBO, SVariable} from "./schema";
 
 import * as sdb from "sqlite"
-import {isNumber} from "util";
+// import {isNumber} from "util"
 import {createTable} from "./helper";
 
 interface Statement {

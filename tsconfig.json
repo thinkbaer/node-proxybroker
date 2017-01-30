@@ -9,11 +9,29 @@
   ],
   "compilerOptions": {
     "noImplicitAny": true,
-    "target": "es6",
-    "outDir":"build/",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "sourceMap": true
+    "target": "ES6",
+    "module":"CommonJS",
+    "outDir": "build/",
 
-  }
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "lib": [
+      "dom",
+      "es2015.promise",
+      "es5"
+    ],
+    "types": [
+      "mocha",
+      "es6-promise",
+      "node",
+      "object-assign"
+    ]
+  },
+  "exclude": [
+    "node_modules",
+    "typings",
+    "build"
+  ]
 }

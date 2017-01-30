@@ -2,7 +2,9 @@
  * Created by cezaryrk on 15.10.16.
  */
 
-import * as Promise from "bluebird";
+import "reflect-metadata";
+
+// import * as Promise from "bluebird";
 import * as fs from "fs";
 
 
