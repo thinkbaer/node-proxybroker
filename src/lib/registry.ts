@@ -2,7 +2,7 @@ import {API} from "../module";
 import DB from "../db/db";
 import * as events from 'events';
 import {ProxyDBO, DBObject} from "../db/schema";
-import * as request from "request-promise";
+import * as request from "request-promise-native";
 
 
 export class ProxyHandle {
@@ -28,7 +28,7 @@ export class ProxyHandle {
     }
 
 
-    private load(): Promise<ProxyHandle> {
+    private async load(): Promise<ProxyHandle> {
         let self = this
         this.lock()
         let proxy = new ProxyDBO()
@@ -90,7 +90,7 @@ export class ProxyHandle {
 
     }
 
-    save(): Promise<ProxyHandle> {
+    async save(): Promise<ProxyHandle> {
         let self = this
         return this.ready()
             .then(()=> {
@@ -108,7 +108,7 @@ export class ProxyHandle {
         var r = request.defaults({'proxy':'http://localproxy.com'})
         // http
         //return request.get('http://www.wikipedia.org', {proxy:})
-
+        return null
     }
 
     /*

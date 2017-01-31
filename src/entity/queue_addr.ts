@@ -3,7 +3,7 @@ import {Entity, Column, PrimaryColumn} from "typeorm";
 import {ColumnTypes} from "typeorm/metadata/types/ColumnTypes";
 
 @Entity()
-export class Variable {
+export class UrlAddress {
 
     @PrimaryColumn(ColumnTypes.STRING, { length : 64 })
     key: string;

@@ -1,5 +1,5 @@
 import * as http from "http";
-import * as request from "request-promise";
+import * as request from "request-promise-native";
 import {Log} from "./logging";
 import {Addr} from "../module";
 
@@ -27,33 +27,28 @@ export class Judge {
 
     }
 
-    bootstrap(opts?: any):Promise<any> {
+
+    async bootstrap(opts?: any): Promise<boolean> {
         let self = this
-        return Promise.resolve()
-            .then(() => {
-                return self.get_remote_accessible_ip()
-            })
-            .then(() => {
-                return self.wakeup(true)
-            })
-            .then(() => {
-                return self.selftest()
-            })
-            .then((res) => {
-                self.runnable = res
-                return self.pending()
-            })
-            .then((res) => {
-                return self.runnable
-            })
-            .catch(err => {
-                Log.error(err)
-                throw err
-            })
+
+        try {
+            await this.get_remote_accessible_ip()
+            await this.wakeup(true)
+            this.runnable = await this.selftest()
+            await this.pending()
+            return this.runnable
+        } catch (err) {
+            Log.error(err)
+            throw err
+
+        }
     }
 
+    remote_ip() {
+        return this.server_remote_ip
+    }
 
-    private get_remote_accessible_ip(): Promise<any> {
+    private async get_remote_accessible_ip(): Promise<any> {
         let self = this
         // If IP is fixed, it should be configurable ...
         return request.get('https://api.ipify.org?format=json')
@@ -72,7 +67,7 @@ export class Judge {
     /**
      *  Check if Judge
      */
-    private selftest() : Promise<boolean>{
+    private async selftest(): Promise<boolean> {
         // Startup
         let self = this
         self.runnable = false
@@ -84,7 +79,7 @@ export class Judge {
                 var c_s = s.time - start.getTime()
                 var s_c = stop.getTime() - s.time
                 var full = stop.getTime() - start.getTime()
-                Log.log('Time: C -> S: ' + c_s + ', S -> C: ' + s_c + ', G:' + full)
+                Log.log('Self Time: C -> S: ' + c_s + ', S -> C: ' + s_c + ', G:' + full + ' on ' + self.url_remote())
                 return true
             })
             .catch(err => {
@@ -92,6 +87,7 @@ export class Judge {
                 return false
             })
     }
+
 
     public judge(req: http.IncomingMessage, res: http.ServerResponse) {
         if (this.enabled) {
@@ -114,10 +110,8 @@ export class Judge {
         return this.judge_protocol + '://' + this.server_remote_ip + ':' + this.judge_port
     }
 
-
     enable() {
         this.enabled = true
-
     }
 
     disable() {
@@ -129,51 +123,53 @@ export class Judge {
      *
      * @param proxy
      */
-    runTests(proxy: Addr): Promise<any> {
-        //
-        let self = this
-        let http_url = 'http://' + proxy.ip + ':' + proxy.port
-        let report:any = {}
-        var r = request.defaults({proxy: http_url})
-
+    async runTests(proxy: Addr): Promise<any> {
         let start = new Date()
-        return r.get(self.url_remote())
-            .then((r) => {
-                var s = JSON.parse(r)
-                var stop = new Date()
-                var c_s = s.time - start.getTime()
-                var s_c = stop.getTime() - s.time
-                var full = stop.getTime() - start.getTime()
-                console.log('Time: C -> S: ' + c_s + ', S -> C: ' + s_c + ', G:' + full);
-                report['http'] = {
-                    start: start,
-                    stop:stop,
-                    duration: full,
-                    success: true,
-                    log: ''
-                }
-                return true
-            })
-            .catch(err=>{
-                Log.error(err)
-                var stop = new Date()
-                var full = stop.getTime() - start.getTime()
-                report['http'] = {
-                    start: start,
-                    stop:stop,
-                    duration: full,
-                    success: false,
-                    log: ''
-                }
+        let report: any = {}
+        let self = this
 
-                return false
-            })
-            .then(() => {
-                return report
-            })
+        try {
+            let http_url = 'http://' + proxy.ip + ':' + proxy.port
+
+            console.log('ASD1')
+            let r = request.defaults({proxy: http_url})
+
+
+            console.log('ASD2')
+            let result = await r.get(self.url_remote())
+
+
+            console.log('ASD3')
+            var s = JSON.parse(result)
+            var stop = new Date()
+            var c_s = s.time - start.getTime()
+            var s_c = stop.getTime() - s.time
+            var full = stop.getTime() - start.getTime()
+            console.log('Time: C -> S: ' + c_s + ', S -> C: ' + s_c + ', G:' + full);
+            report['http'] = {
+                start: start,
+                stop: stop,
+                duration: full,
+                success: true,
+                log: ''
+            }
+
+        } catch (err) {
+            Log.error(err)
+            var stop = new Date()
+            var full = stop.getTime() - start.getTime()
+            report['http'] = {
+                start: start,
+                stop: stop,
+                duration: full,
+                success: false,
+                log: ''
+            }
+        }
+        return report
     }
 
-    wakeup(force: boolean = false): Promise<any> {
+    async wakeup(force: boolean = false): Promise<any> {
         let self = this
         return new Promise(function (resolve, reject) {
             try {
@@ -193,7 +189,7 @@ export class Judge {
         })
     }
 
-    pending(): Promise<http.Server> {
+    async pending(): Promise<any> {
         let self = this
         return new Promise(function (resolve, reject) {
             try {

@@ -1,4 +1,4 @@
-import {ProviderSpec} from "./provider_spec";
+//import {ProviderSpec} from "./provider_spec";
 import * as fs from "fs";
 
 
@@ -6,7 +6,7 @@ export class ProviderManager {
 
     paths: Array<string>
 
-    providers: Array<ProviderSpec>
+  //  providers: Array<ProviderSpec>
 
     constructor() {
         this.paths = new Array<string>()
@@ -45,6 +45,7 @@ export class ProviderManager {
                         }
                     })
                 })
+
             })
             .map((filename: string) => {
                 let _path = './providers/' + filename
@@ -59,9 +60,9 @@ export class ProviderManager {
 */
     }
 
-
+/*
     add(provider: ProviderSpec) {
 
     }
-
+*/
 }

@@ -2,13 +2,7 @@
  * http://www.proxy-listen.de/Proxy/Proxyliste.html
  */
 
-import {ProviderSpec} from '../lib/provider_spec'
-
-import * as request from "request-promise";
-// import * as fs from "fs";
-import * as cheerio from "cheerio";
-
-// const cheerio = require('cheerio')
+// import {ProviderSpec} from '../lib/provider_spec'
 
 const BASE_URL = 'http://www.proxy-listen.de'
 const PROXY_LIST_DE = BASE_URL + '/Proxy/Proxyliste.html'

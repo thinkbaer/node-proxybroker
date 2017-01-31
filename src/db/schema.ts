@@ -1,3 +1,5 @@
+
+
 export class SObject {
     name: string
     fields: {[key: string]: {type: string,length?: number,default?:string,null?:boolean,auto?:boolean,pk?:boolean}}

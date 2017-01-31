@@ -1,10 +1,8 @@
 
 
-import {SpecNode} from "../../../node-extract_pipeline/src/lib/op";
-import {Visit} from "../../../node-extract_pipeline/src/lib/op_visit";
 import {ProxyType} from "../module";
 
-
+/*
 export class Root extends SpecNode {
 
     base: any
@@ -87,7 +85,7 @@ export class Root extends SpecNode {
  }
 
  */
-
+/*
 export class ProviderSpec {
 
     private name: string
@@ -106,7 +104,6 @@ export class ProviderSpec {
         return provider;
     }
 
-    /*
      static build(provider : ProviderSpec) : ProcessNode {
      return new ProcessNode(provider.op)
 
@@ -114,10 +111,11 @@ export class ProviderSpec {
 
 
      }
-     */
+
     visit(url: string): SpecNode {
         let visitNode = new Visit(url);
         return this.op.add(visitNode)
     }
-
 }
+
+*/
