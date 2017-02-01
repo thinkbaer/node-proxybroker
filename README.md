@@ -1,14 +1,12 @@
 # node-proxybroker
 
-## Install typings
+Under deveploment.
 
-```
-typings install dt~node --global
-```
+
 
 ## Tests
 
 ```
-mocha --opts mocha.opts tests/lib/provider_manager.spec.ts
+mocha --opts mocha.opts test/lib/judge.spec.ts
 ```
 
