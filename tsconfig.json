@@ -12,9 +12,11 @@
     "noImplicitAny": true,
     "suppressImplicitAnyIndexErrors": true,
     "lib": [
+      "es6",
       "dom",
       "es2015",
       "es5"
+
     ],
     "types": [
       "mocha",

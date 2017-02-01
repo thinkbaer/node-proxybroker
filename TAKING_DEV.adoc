@@ -330,3 +330,19 @@ CLI: fetch
 
  - Page Extract Instruction Pipeline (extract_pipeline)
 
+
+
+== NOTES
+
+Transparenter Proxy: Der Header des Besuchers identifiziert sich gegenüber der Webseite als Proxy Server und übermittelt die eigentliche IP-Adresse. Besonders beliebt ist diese Methode bei Providern, die die Geschwindigkeit für die Nutzer erhöhen aber der Webseite deutlich mitteilen wollen, was auf der Seite gemacht wird.
+
+Anonymer Proxy: Auch dieser Proxy gibt sich gegenüber einer Webseite klar als Proxy zu erkennen, verschleiert aber die eigentliche IP-Adresse des Benutzers gegenüber der Seite. Das schützt die eigene Identität, gibt der Seite aber den klaren Hinweis darauf, dass es vielleicht nicht wirklich der Besucher selbst ist. Dieser Proxy wird benutzt, wenn Besucher ihre IP verschleiern wollen, aber es nicht nötig ist, die Aktionen zu verstecken. Es ist ein wenig wie die Streichung der Nummer aus dem Telefonbuch. Trotzdem würden einige Webseiten den Zugriff blockieren oder gefälschte Inhalte zeigen.
+
+Verschleiernder Proxy: Es handelt sich um eine Variation der anonymen Proxy. Zwar teilt man der Webseite weiterhin mit, dass es sich um einen Proxy handelt, aber anstatt die IP zu verschleiern benutzt man eine gefakte IP.
+
+Elite Proxy Server mit höchster Anonymität: Diese Server verraten nichts darüber, dass man einen Proxy benutzt. Es sieht aus wie eine normale Anfrage, allerdings wird die IP des Benutzers komplett verändert. Somit hat die Zielseite keine Ahnung über die echte Identität, den Host oder die normale IP-Adresse des Benutzers. Diese Art von Proxy Servern ist für SEOs die beste Variante, da die Webseiten nicht einfach blocken können oder gefälschten Traffic aufgrund der falschen Destination vorgeben.
+
+
+== Links
+
+* https://www.proxynova.com/proxy-articles/proxy-anonymity-levels-explained/

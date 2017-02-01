@@ -10,6 +10,7 @@ import * as http from 'http'
 import * as url from "url";
 
 
+
 describe('Judge', () => {
 
     describe('service runtime', () => {
@@ -24,9 +25,10 @@ describe('Judge', () => {
 
         it('get remote ip', async function () {
             let judge = new Judge()
-            expect(judge['server_remote_ip']).to.equal(null)
+            console.log(judge.remote_url)
+            expect(judge.remote_url.host).to.equal('127.0.0.1:8080')
             let erg = await judge['get_remote_accessible_ip']()
-            assert.ok(judge['server_remote_ip'])
+            expect(judge.remote_url.host).to.not.equal('127.0.0.1:8080')
             mlog.success('Remote IP = ' + judge['server_remote_ip'])
         })
 
@@ -36,7 +38,7 @@ describe('Judge', () => {
 
             try {
                 await judge['get_remote_accessible_ip']()
-                expect(judge.remote_ip()).to.be.ok
+                expect(judge.remote_url.host).to.not.equal('127.0.0.1:8080')
 
                 let r_wakedup = await judge.wakeup(true)
                 expect(r_wakedup).to.equal(true)
@@ -59,10 +61,8 @@ describe('Judge', () => {
 
 
     describe('service bootstrap', () => {
-
         it('bootstrap', (done) => {
             let judge = new Judge()
-
             judge.bootstrap()
                 .then((erg) => {
                     assert.equal(erg, true)
@@ -72,8 +72,8 @@ describe('Judge', () => {
                     done(err)
                 })
         })
-
     })
+
 
     describe('test proxy', () => {
         let judge = new Judge()
@@ -85,7 +85,7 @@ describe('Judge', () => {
             let erg = await judge.bootstrap()
             expect(erg).to.equal(true)
 
-            localip = judge.remote_ip()
+            localip = judge.remote_url.host
 
             erg = await judge.wakeup()
             expect(erg).to.equal(true)
@@ -108,7 +108,7 @@ describe('Judge', () => {
         })
 
         it('run test for local proxy', async function () {
-            let results = await judge.runTests({ip: localip, port: 8000})
+            let results = await judge.runTests(url.parse(`http://${localip}:8080`))
             console.log(results)
         })
 

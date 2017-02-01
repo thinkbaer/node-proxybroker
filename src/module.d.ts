@@ -19,6 +19,7 @@ export const enum ProxyType {
 
 
 export interface Addr {
+    protocol:string,
     ip: string
     port: number
 }
