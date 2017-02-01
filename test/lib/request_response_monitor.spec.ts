@@ -51,6 +51,7 @@ describe('Request Response Monitor', () => {
                 console.log(err)
             }
             await rrm.promise()
+
             console.log('WAITED', result, rrm.log)
         })
     })
