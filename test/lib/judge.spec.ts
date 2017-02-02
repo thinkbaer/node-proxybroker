@@ -4,8 +4,8 @@ import * as assert from 'assert'
 import * as chai from 'chai'
 let expect = chai.expect
 import {Log} from "../../src/lib/logging";
+import * as HttpProxy from "../../src/d/http_proxy";
 
-import * as HttpProxy from "http-proxy";
 import * as http from 'http'
 import * as url from "url";
 

@@ -4,104 +4,307 @@ import * as assert from 'assert'
 import * as chai from 'chai'
 let expect = chai.expect
 import {Log} from "../../src/lib/logging";
-import * as HttpProxy from "http-proxy";
+import * as HttpProxy from "../../src/d/http_proxy";
 import * as http from 'http'
+import * as https from 'https'
+import * as tls from 'tls'
+import * as fs from 'fs'
 import * as url from "url";
 import * as net from "net";
 import {RequestResponseMonitor} from "../../src/lib/request_response_monitor";
 import * as _request from "request-promise-native";
+import {shorthash} from "../../src/lib/crypt";
+import {DefaultHTTPServer, DefaultHTTPSServer} from "../helper/server";
 
+
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+//https.globalAgent.options.rejectUnauthorized = false;
 
 describe('Request Response Monitor', () => {
 
-
-    describe('default server connection', () => {
-        let server: net.Server = null
+    /**
+     * Server abort scenarios
+     */
+    describe('server abort', () => {
+        let port = 8000
+        let server: DefaultHTTPServer = new DefaultHTTPServer(port)
 
         before(function (done) {
-
-            server = http.createServer(function (req: http.IncomingMessage, res: http.ServerResponse) {
-                res.writeHead(200, {"Content-Type": "application/json"});
-                var data = {time: (new Date()).getTime(), headers: req.headers, rawHeaders: req.rawHeaders}
-                var json = JSON.stringify(data);
-                res.end(json);
-            }).listen(8000, '127.0.0.1', () => {
-
-                done()
-            })
-
+            server.start(done)
         })
 
         after(function (done) {
-            server.close(function () {
+            if (server) {
+                server.stop(done)
+            } else {
                 done()
-            })
+            }
         })
 
+        /**
+         * Test serversite request abort
+         */
+        it('request abort', async function () {
+            server.stall = 1000
 
-        it('simple request', async function () {
-            let result = null
-            let rrm = null
+            setTimeout(function () {
+                server.forcedShutdown()
+            }, 100)
 
-            try{
-                let req = _request.get('http://127.0.0.1:8000')
-                rrm = RequestResponseMonitor.monitor(req)
-                result = await req.promise()
-            }catch(err){
-                console.log(err)
+
+            let _url = server.url()
+            let req = _request.get(_url)
+            let rrm = RequestResponseMonitor.monitor(req)
+            // rrm._debug = true
+            try {
+                await req.promise()
+            } catch (err) {
+                expect(err.message).to.match(new RegExp("socket hang up"))
             }
             await rrm.promise()
 
-            console.log('WAITED', result, rrm.log)
+            let log: string = rrm.logToString()
+            /*
+             console.log('-------->')
+             console.log(log)
+             console.log('<--------')
+             */
+            expect(log).to.contain("Try connect to 127.0.0.1:8000")
+            expect(log).to.match(new RegExp("Connection aborted"))
+            expect(log).to.match(new RegExp("socket hang up"))
+
         })
     })
 
-
-    describe('server abort through timeout', () => {
-
-        let server: net.Server = null
+    /**
+     * Server abort scenarios
+     */
+    describe('server timeout', () => {
+        let port = 8000
+        let server: DefaultHTTPServer = new DefaultHTTPServer(port, "127.0.0.1", {timeout: 100})
 
         before(function (done) {
-
-            server = http.createServer(function (req: http.IncomingMessage, res: http.ServerResponse) {
-                setTimeout(function(){
-                    res.writeHead(200, {"Content-Type": "application/json"});
-                    var data = {time: (new Date()).getTime(), headers: req.headers, rawHeaders: req.rawHeaders}
-                    var json = JSON.stringify(data);
-                    res.end(json);
-                },2000)
-            }).listen(8000, '127.0.0.1', () => {
-                done()
-            })
-
+            server.start(done)
         })
 
         after(function (done) {
-            server.close(function () {
+            if (server) {
+                server.stop(done)
+            } else {
                 done()
-            })
+            }
         })
 
+        /**
+         * Test serversite request abort
+         */
+        it('request', async function () {
+            server.stall = 1000
 
-        it('timeout request', async function () {
-            this.timeout(4000)
+            let _url = server.url()
+            let req = _request.get(_url)
+            let rrm = RequestResponseMonitor.monitor(req)
+            // rrm._debug = true
+            try {
+                await req.promise()
+            } catch (err) {
+                //expect(err.message).to.match(new RegExp("socket hang up"))
+            }
+            await rrm.promise()
 
+            let log: string = rrm.logToString()
+
+            // console.log('-------->')
+            // console.log(log)
+            // console.log('<--------')
+
+            expect(log).to.contain("Try connect to 127.0.0.1:8000")
+            expect(log).to.match(new RegExp("Connection aborted"))
+            expect(log).to.match(new RegExp("socket hang up"))
+
+        })
+    })
+
+    describe('http server', () => {
+        let port = 8000
+        let server: DefaultHTTPServer = new DefaultHTTPServer(port)
+
+        before(function (done) {
+            server.start(done)
+        })
+
+        after(function (done) {
+            server.stop(done)
+        })
+
+        /**
+         * Test simple request to the server
+         */
+        it('simple request', async function () {
+            let _url = server.url()
+            let req = _request.get(server.url())
+            let rrm = RequestResponseMonitor.monitor(req)
+            await req.promise()
+            await rrm.promise()
+
+            let log: string = rrm.logToString()
+
+            /*
+             console.log('-------->')
+             console.log(log)
+             console.log('<--------')
+             */
+
+            expect(log).to.contain("Try connect to 127.0.0.1:8000")
+            expect(log).to.match(new RegExp("set TCP_NODELAY"))
+            expect(log).to.match(new RegExp("Received 285 byte from sender"))
+            expect(log).to.match(new RegExp("Connection closed to 127.0.0.1:8000 \\(\\d+ms\\)"))
+
+        })
+
+        /**
+         * Test Socket timeout exception handling, should be written in the log
+         */
+        it('socket timeout request', async function () {
+
+            // this.timeout(server.stall)
             let result = null
             let rrm = null
-
-            try{
-                let req = _request.get('http://127.0.0.1:8000',{timeout:500})
+            try {
+                server.stall = 500
+                let req = _request.get(server.url(), {timeout: 100})
                 rrm = RequestResponseMonitor.monitor(req)
                 result = await req.promise()
-            }catch(err){
+                server.stall = 0
+            } catch (err) {
                 expect(err.name).to.be.equal('RequestError')
                 expect(err.message).to.be.equal('Error: ESOCKETTIMEDOUT')
             }
-            await rrm.promise()
-            console.log('WAITED', result, rrm.log)
 
+            await rrm.promise()
+
+            let log: string = rrm.logToString()
+            /*
+             console.log('-------->')
+             console.log(log)
+             console.log('<--------')
+             */
+            expect(log).to.match(new RegExp("ESOCKETTIMEDOUT"))
+            expect(log).to.match(new RegExp("Socket timed out after \\d+ms"))
+        })
+
+
+        /**
+         * Test server socket timeout exception handling
+         *
+         * TODO!!!
+         */
+    })
+
+
+    describe('https server', () => {
+        let port = 8000
+        let server: DefaultHTTPSServer = new DefaultHTTPSServer(port)
+
+        before(function (done) {
+            server.start(done)
+        })
+
+        after(function (done) {
+            server.stop(done)
+        })
+
+
+        it('encrypted request', async function () {
+
+            // let suuid = shorthash('https://127.0.0.1:8000/judge' + (new Date().getTime()))
+
+            //_request.debug = true
+            let req = _request.get('https://127.0.0.1:8000/judge/')
+            //let req = _request.get('https://www.google.de?')
+            let rrm = RequestResponseMonitor.monitor(req)
+            // rrm._debug = true
+            let result = await req.promise()
+
+            await rrm.promise()
+            let log: string = rrm.logToString()
+
+            expect(log).to.match(new RegExp("Try handshake for secure connetion"))
+            expect(log).to.match(new RegExp("Secured connection established \\(\\d+ms\\)"))
+            // expect(log).to.not.match(new RegExp(""))
+
+            /*
+             console.log('==== LS ====>\n' + rrm.logToString() + '\n<============\n')
+             console.log(rrm.headers_request, rrm.headers_response, result)
+             */
         })
     })
+
+
+    describe('server not reachable', () => {
+
+        /**
+         * Test when server is not reachable or doesn't exists
+         */
+        it('http request', async function () {
+            let result = null
+            let rrm = null
+            try {
+                let req = _request.get('http://127.0.0.1:12345', {timeout: 1000})
+                rrm = RequestResponseMonitor.monitor(req)
+                // rrm._debug = true
+                result = await req.promise()
+            } catch (err) {
+                expect(err.message).to.match(new RegExp("Error: connect ECONNREFUSED 127.0.0.1:12345"))
+            }
+
+            await rrm.promise()
+
+            let log: string = rrm.logToString()
+            /*
+             console.log('-------->')
+             console.log(log)
+             console.log('<--------')
+             */
+            expect(rrm.connected).to.be.false
+
+            expect(log).to.match(new RegExp("Connection aborted through errors"))
+            expect(log).to.match(new RegExp("connect ECONNREFUSED 127.0.0.1:12345"))
+            expect(log).to.match(new RegExp("Connection not established"))
+        })
+
+
+        /**
+         * Test when server is not reachable or doesn't exists
+         */
+        it('https request', async function () {
+            let result = null
+            let rrm = null
+            try {
+                let req = _request.get('https://127.0.0.1:12345', {timeout: 1000})
+                rrm = RequestResponseMonitor.monitor(req)
+                //              rrm._debug = true
+                result = await req.promise()
+            } catch (err) {
+                expect(err.message).to.match(new RegExp("Error: connect ECONNREFUSED 127.0.0.1:12345"))
+            }
+
+            await rrm.promise()
+
+            let log: string = rrm.logToString()
+            /*
+             console.log('-------->')
+             console.log(log)
+             console.log('<--------')
+             */
+            expect(rrm.connected).to.be.false
+
+            expect(log).to.match(new RegExp("Connection aborted through errors"))
+            expect(log).to.match(new RegExp("connect ECONNREFUSED 127.0.0.1:12345"))
+            expect(log).to.match(new RegExp("Connection not established"))
+        })
+    })
+
 })
 
 process.on('uncaughtException', function (err: Error) {

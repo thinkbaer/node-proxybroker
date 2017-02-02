@@ -343,6 +343,30 @@ Verschleiernder Proxy: Es handelt sich um eine Variation der anonymen Proxy. Zwa
 Elite Proxy Server mit höchster Anonymität: Diese Server verraten nichts darüber, dass man einen Proxy benutzt. Es sieht aus wie eine normale Anfrage, allerdings wird die IP des Benutzers komplett verändert. Somit hat die Zielseite keine Ahnung über die echte Identität, den Host oder die normale IP-Adresse des Benutzers. Diese Art von Proxy Servern ist für SEOs die beste Variante, da die Webseiten nicht einfach blocken können oder gefälschten Traffic aufgrund der falschen Destination vorgeben.
 
 
+*Levels*
+
+* L4 - Elite proxies (High Anon)
+* L3 - Disorting
+* L2 - Anon
+* L1 - Transparent
+
+*Protocol*
+
+* HTTP
+* HTTPS
+* SOCK4
+* SOCK5
+
+== CURL Experiment for Output
+
+```
+curl -s -I -vvv http://www.google.de
+
+or
+
+curl -s -I -vvv https://www.google.de
+```
+
 == Links
 
 * https://www.proxynova.com/proxy-articles/proxy-anonymity-levels-explained/
