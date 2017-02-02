@@ -2,11 +2,11 @@ import * as http from 'http'
 import * as https from 'https'
 import * as net from 'net'
 import * as fs from 'fs'
-import {isNumber} from "util";
 import * as url from "url";
-import {Server} from "net";
+
 import Timer = NodeJS.Timer;
 
+import * as HttpProxy from "http-proxy"
 
 /**
  * Mock ProxyServer for the differnt proxy level types
@@ -26,7 +26,7 @@ export interface ServerOptions {
 }
 
 const defaultOptions: ServerOptions = {
-    variant: 'fallback',
+    variant: 'root',
     timeout: 120,
     stall: 0,
     cert_file: __dirname + '/../ssl/server.crt',
@@ -37,7 +37,7 @@ const defaultOptions: ServerOptions = {
 abstract class DefaultServer {
 
     inc: number = 0
-    cache: {[key: number]: {t: Timer,s:net.Socket}} = {}
+    cache: {[key: number]: {t: Timer, s: net.Socket}} = {}
     server: net.Server = null
     _url: url.Url = null
     options: ServerOptions = null
@@ -70,14 +70,14 @@ abstract class DefaultServer {
             clearTimeout(self.cache[inc].t)
             delete self.cache[inc]
         }, this.options.stall)
-        this.cache[inc] = {t: t, s:req.socket}
+        this.cache[inc] = {t: t, s: req.socket}
     }
 
 
     abstract createServer(): net.Server;
 
 
-    fallback(req: http.IncomingMessage, res: http.ServerResponse) {
+    root(req: http.IncomingMessage, res: http.ServerResponse) {
         this.log('process')
         res.writeHead(200, {"Content-Type": "application/json"});
         var data = {time: (new Date()).getTime(), headers: req.headers, rawHeaders: req.rawHeaders}
@@ -96,33 +96,52 @@ abstract class DefaultServer {
             }
             delete this.cache[x]
         }
-        this.stop(() => {})
+        this.stop(() => {
+        })
     }
 
-    start(done: Function) {
+    async start(done: Function = null): Promise<any> {
         let self = this
         this.server = this.createServer()
-        this.server = this.server.listen(parseInt(this._url.port), this._url.hostname, () => {
-            self.log('start server')
+
+        let p = new Promise(function (resolve) {
+            self.server = self.server.listen(parseInt(self._url.port), self._url.hostname, () => {
+                self.log('start server')
+                resolve()
+            });
+        })
+
+        if (done) {
+            await p
             done()
-        });
+        } else {
+            return p;
+        }
     }
 
-    stop(done: Function) {
-        if (this.server) {
+    async stop(done: Function = null): Promise<any> {
+        let self = this
+        let p = new Promise(function (resolve) {
+            if (self.server) {
+                self.server.close(function () {
+                    self.server = null
+                    resolve()
+                })
+            } else {
+                resolve()
+            }
+        })
 
-            let self = this
-            this.server.close(function () {
-                self.server = null
-                done()
-            })
-        } else {
+        if (done) {
+            await p
             done()
+        } else {
+            return p;
         }
     }
 
     log(msg: string) {
-       // console.log(msg)
+        // console.log(msg)
     }
 }
 
@@ -134,7 +153,7 @@ export class DefaultHTTPServer extends DefaultServer {
 
     createServer(): http.Server {
         let server = http.createServer(this.response.bind(this))
-        server.setTimeout(this.options.timeout, function (socket:net.Socket) {
+        server.setTimeout(this.options.timeout, function (socket: net.Socket) {
             socket.destroy();
         })
         return server
@@ -167,3 +186,95 @@ export class DefaultHTTPSServer extends DefaultServer {
 
 }
 
+
+export class HTTPProxyServer extends DefaultHTTPServer {
+
+    proxy: HttpProxy = null
+
+    constructor(port: number|string, hostname: string = "127.0.0.1", variant: string = 'L1', options: ServerOptions = {}) {
+        super(port, hostname, Object.assign(options, {variant: variant}))
+        this.proxy = HttpProxy.createProxyServer()
+    }
+
+    /*
+     response(req: http.IncomingMessage, res: http.ServerResponse) {
+     let _url = url.parse(req.url)
+     let target_url = _url.protocol + '//' + req.headers.host
+     console.log(_url, target_url)
+     this.proxy.web(req, res, {target: target_url})
+     }
+     */
+
+    /**
+     * L1 - Transparent proxy
+     */
+    L1(req: http.IncomingMessage, res: http.ServerResponse) {
+        let _url = url.parse(req.url)
+        let target_url = _url.protocol + '//' + req.headers.host
+        console.log(_url, target_url)
+        this.proxy.web(req, res, {target: target_url})
+    }
+
+    L2(req: http.IncomingMessage, res: http.ServerResponse) {
+        let _url = url.parse(req.url)
+        let target_url = _url.protocol + '//' + req.headers.host
+        console.log(_url, target_url)
+        this.proxy.web(req, res, {target: target_url})
+    }
+
+    L3(req: http.IncomingMessage, res: http.ServerResponse) {
+        let _url = url.parse(req.url)
+        let target_url = _url.protocol + '//' + req.headers.host
+        console.log(_url, target_url)
+        this.proxy.web(req, res, {target: target_url})
+    }
+
+    L4(req: http.IncomingMessage, res: http.ServerResponse) {
+        let _url = url.parse(req.url)
+        let target_url = _url.protocol + '//' + req.headers.host
+        console.log(_url, target_url)
+        this.proxy.web(req, res, {target: target_url})
+    }
+
+    /*
+     createServer(): http.Server {
+     let server = http.createServer(this.response.bind(this))
+     server.setTimeout(this.options.timeout, function (socket:net.Socket) {
+     socket.destroy();
+     })
+     return server
+     }
+     */
+}
+
+export class HTTPProxyServer_L1 extends HTTPProxyServer {
+
+    constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
+        super(port, hostname, 'L1', options)
+    }
+
+}
+
+export class HTTPProxyServer_L2 extends HTTPProxyServer {
+
+    constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
+        super(port, hostname, 'L2', options)
+    }
+
+}
+
+export class HTTPProxyServer_L3 extends HTTPProxyServer {
+
+    constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
+        super(port, hostname, 'L3', options)
+    }
+
+}
+
+export class HTTPProxyServer_L4 extends HTTPProxyServer {
+
+    constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
+        super(port, hostname, 'L4', options)
+    }
+
+}

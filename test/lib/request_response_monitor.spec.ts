@@ -1,19 +1,8 @@
-import {Judge} from "../../src/lib/judge";
 let mlog = require('mocha-logger')
-import * as assert from 'assert'
 import * as chai from 'chai'
 let expect = chai.expect
-import {Log} from "../../src/lib/logging";
-import * as HttpProxy from "../../src/d/http_proxy";
-import * as http from 'http'
-import * as https from 'https'
-import * as tls from 'tls'
-import * as fs from 'fs'
-import * as url from "url";
-import * as net from "net";
 import {RequestResponseMonitor} from "../../src/lib/request_response_monitor";
 import * as _request from "request-promise-native";
-import {shorthash} from "../../src/lib/crypt";
 import {DefaultHTTPServer, DefaultHTTPSServer} from "../helper/server";
 
 

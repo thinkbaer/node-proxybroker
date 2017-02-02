@@ -1,10 +1,11 @@
 import * as http from "http";
-import * as request from "request-promise-native";
+import * as _request from "request-promise-native";
 import {Log} from "./logging";
 
 import * as util from 'util'
 import * as url from 'url'
 import * as net from 'net'
+import {RequestResponseMonitor} from "./request_response_monitor";
 
 
 // interface JudgeConfig
@@ -12,10 +13,25 @@ import * as net from 'net'
 
 const IPCHECK_URL = 'https://api.ipify.org?format=json'
 
+export interface JudgeOptions {
+    selftest?: boolean
+    remote_lookup?: boolean
+    remote_url?: string
+    judge_url?: string
+}
+
+const defaultOptions: JudgeOptions = {
+    selftest: true,
+    remote_lookup: true,
+    remote_url: 'http://127.0.0.1:8080',
+    judge_url: 'http://0.0.0.0:8080'
+}
+
 export class Judge {
 
-    private server: http.Server = null
+    private options: JudgeOptions = defaultOptions
 
+    private server: net.Server = null
 
     private _remote_url: url.Url = null
     private _judge_url: url.Url = null
@@ -25,25 +41,32 @@ export class Judge {
     private running: boolean = false
 
 
-    constructor() {
-        this._remote_url = url.parse('http://127.0.0.1:8080')
-        this._judge_url = url.parse('http://0.0.0.0:8080')
+    constructor(options: JudgeOptions = {}) {
+        this.options = Object.assign(this.options, options)
+        this._remote_url = url.parse(this.options.remote_url)
+        this._judge_url = url.parse(this.options.judge_url)
 
     }
 
 
-    get remote_url() : url.Url {
+    get remote_url(): url.Url {
         return this._remote_url
     }
 
-    async bootstrap(opts?: any): Promise<boolean> {
+    async bootstrap(): Promise<boolean> {
         let self = this
 
         try {
-            await this.get_remote_accessible_ip()
-            await this.wakeup(true)
-            this.runnable = await this.selftest()
-            await this.pending()
+            if (this.options.remote_lookup) {
+                await this.get_remote_accessible_ip()
+            }
+            if (this.options.selftest) {
+                await this.wakeup(true)
+                this.runnable = await this.selftest()
+                await this.pending()
+            } else {
+                this.runnable = true
+            }
             return this.runnable
         } catch (err) {
             Log.error(err)
@@ -56,9 +79,9 @@ export class Judge {
 
         // If IP is fixed, it should be configurable ...
         try {
-            let response_data = await request.get(IPCHECK_URL)
+            let response_data = await _request.get(IPCHECK_URL)
             let json = JSON.parse(response_data)
-            this._remote_url = url.parse(this._remote_url.protocol+'//'+json.ip+':'+this._remote_url.port)
+            this._remote_url = url.parse(this._remote_url.protocol + '//' + json.ip + ':' + this._remote_url.port)
             Log.info('The accessible remote IP: ' + url.format(this._remote_url))
             return this._remote_url
         } catch (err) {
@@ -75,7 +98,7 @@ export class Judge {
         let self = this
         self.runnable = false
         let start = new Date()
-        return request.get(url.format(self._remote_url))
+        return _request.get(url.format(self._remote_url))
             .then((r) => {
                 var s = JSON.parse(r)
                 var stop = new Date()
@@ -118,7 +141,6 @@ export class Judge {
     }
 
 
-
     enable() {
         this.enabled = true
     }
@@ -127,11 +149,6 @@ export class Judge {
         this.enabled = false
     }
 
-
-    async testProxyLevel(): Promise<any> {
-
-
-    }
 
     /**
      * Test HTTP, HTTPS, ANONYMITY LEVEL
@@ -145,41 +162,14 @@ export class Judge {
 
         try {
             let http_url = url.format(proxy)
-            let r = request.defaults({proxy: http_url, timeout:10000})
+            let r = _request.defaults({proxy: http_url, timeout: 10000})
 
+            let requestPromise = r.get(url.format(self._remote_url), {resolveWithFullResponse: true})
+            let rrm = RequestResponseMonitor.monitor(requestPromise)
+            let response = await requestPromise
+            await rrm.promise()
 
-            let log : Array<any> = []
-
-            let promise = r.get(url.format(self._remote_url), {resolveWithFullResponse: true})
-                .on('connect',function(event:any){console.log('E: connect')})
-                .on('end',function(event:any){console.log('E: end')})
-                .on('upgrade',function(event:any){console.log('E: upgrade')})
-                .on('continue',function(event:any){console.log('E: continue')})
-                .on('socket',function(socket:net.Socket){
-                    console.log('E: socket')
-
-                    var connectListener = function(){
-                        let addr = socket.address()
-                        // socket.
-                        console.log('E: socket - connected')
-                        log.push(`CONNECTED TO ${socket.remoteAddress}:${socket.remotePort}`)
-                        socket.removeListener('connect',connectListener)
-                    }
-
-                    socket.on('connect',connectListener)
-                    socket.on('close',function(){console.log('E: socket - close')})
-                    socket.on('end',function(){console.log('E: socket - end')})
-                    socket.on('timeout',function(){console.log('E: socket - timeout')})
-                    socket.on('lookup',function(){console.log('E: socket - lookup')})
-                })
-                .on('error',function(event:any){console.log('E: error')})
-                .on('close',function(event:any){console.log('E: close')})
-                .promise();
-
-
-            let response = await promise
-
-            console.log('LOG', log )
+            console.log(rrm.logToString())
 
             var s = JSON.parse(response.body)
             var stop = new Date()
