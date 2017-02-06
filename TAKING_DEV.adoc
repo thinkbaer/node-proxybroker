@@ -345,10 +345,10 @@ Elite Proxy Server mit höchster Anonymität: Diese Server verraten nichts darü
 
 *Levels*
 
-* L4 - Elite proxies (High Anon)
+* L1 - Elite proxies (High Anon)
 * L3 - Disorting
 * L2 - Anon
-* L1 - Transparent
+* L3 - Transparent
 
 *Protocol*
 

@@ -2,10 +2,12 @@ import * as http from "http";
 import * as _request from "request-promise-native";
 import {Log} from "./logging";
 
-import * as util from 'util'
-import * as url from 'url'
+import * as mUrl from 'url'
 import * as net from 'net'
 import {RequestResponseMonitor} from "./request_response_monitor";
+import {shorthash} from "./crypt";
+
+import {JudgeRequest} from "./judge_request";
 
 
 // interface JudgeConfig
@@ -18,38 +20,53 @@ export interface JudgeOptions {
     remote_lookup?: boolean
     remote_url?: string
     judge_url?: string
+    cert_file?: string
+    cert?: string
+    key_file?: string
+    key?: string
 }
+
 
 const defaultOptions: JudgeOptions = {
     selftest: true,
     remote_lookup: true,
     remote_url: 'http://127.0.0.1:8080',
-    judge_url: 'http://0.0.0.0:8080'
+    judge_url: 'http://127.0.0.1:8080'
 }
+
+
+
 
 export class Judge {
 
+    private inc: number = 0
     private options: JudgeOptions = defaultOptions
 
     private server: net.Server = null
 
-    private _remote_url: url.Url = null
-    private _judge_url: url.Url = null
+    private _remote_url: mUrl.Url = null
+    private _judge_url: mUrl.Url = null
 
     private enabled: boolean = false
     private runnable: boolean = false
     private running: boolean = false
 
+    private cache: {[key: string]: JudgeRequest} = {}
+
 
     constructor(options: JudgeOptions = {}) {
         this.options = Object.assign(this.options, options)
-        this._remote_url = url.parse(this.options.remote_url)
-        this._judge_url = url.parse(this.options.judge_url)
+        this._remote_url = mUrl.parse(this.options.remote_url)
+        this._judge_url = mUrl.parse(this.options.judge_url)
 
     }
 
+    get ip(): string {
+        return this._remote_url.hostname
+    }
 
-    get remote_url(): url.Url {
+
+    get remote_url(): mUrl.Url {
         return this._remote_url
     }
 
@@ -71,7 +88,6 @@ export class Judge {
         } catch (err) {
             Log.error(err)
             throw err
-
         }
     }
 
@@ -81,8 +97,8 @@ export class Judge {
         try {
             let response_data = await _request.get(IPCHECK_URL)
             let json = JSON.parse(response_data)
-            this._remote_url = url.parse(this._remote_url.protocol + '//' + json.ip + ':' + this._remote_url.port)
-            Log.info('The accessible remote IP: ' + url.format(this._remote_url))
+            this._remote_url = mUrl.parse(this._remote_url.protocol + '//' + json.ip + ':' + this._remote_url.port)
+            Log.info('The accessible remote IP: ' + mUrl.format(this._remote_url))
             return this._remote_url
         } catch (err) {
             Log.error(err)
@@ -98,20 +114,32 @@ export class Judge {
         let self = this
         self.runnable = false
         let start = new Date()
-        return _request.get(url.format(self._remote_url))
+        return _request.get(mUrl.format(self._remote_url))
             .then((r) => {
                 var s = JSON.parse(r)
                 var stop = new Date()
                 var c_s = s.time - start.getTime()
                 var s_c = stop.getTime() - s.time
                 var full = stop.getTime() - start.getTime()
-                Log.log('Self Time: C -> S: ' + c_s + ', S -> C: ' + s_c + ', G:' + full + ' on ' + url.format(self._remote_url))
+                Log.log('Self Time: C -> S: ' + c_s + ', S -> C: ' + s_c + ', G:' + full + ' on ' + mUrl.format(self._remote_url))
                 return true
             })
             .catch(err => {
                 Log.error(err)
                 return false
             })
+    }
+
+
+    createRequest(proxy_url: string): JudgeRequest {
+        let judge_url = mUrl.format(this.remote_url)
+        let inc = this.inc++
+        let req_id = shorthash(judge_url + '-' + proxy_url + '-' + (new Date().getTime()) + '-' + inc)
+        judge_url += 'judge/' + req_id
+        this.debug('JUDGE_URL', judge_url)
+        let judgeReq = new JudgeRequest(this, req_id, judge_url, proxy_url)
+        this.cache[req_id] = judgeReq
+        return this.cache[req_id]
     }
 
 
@@ -122,18 +150,30 @@ export class Judge {
      * @param res
      */
     public judge(req: http.IncomingMessage, res: http.ServerResponse) {
-        console.log('JUDGE ============== ')
-        console.log(util.inspect(req.headers, false, 10))
-        console.log(util.inspect(req.connection.remoteAddress, false, 10))
-        console.log(util.inspect(req.socket.remoteAddress, false, 10))
-        console.log('JUDGE ==== START ')
+        let paths = req.url.split('/').filter((x) => {
+            return x || x.length != 0
 
-        if (this.enabled) {
+        })
+
+        let cached_req: JudgeRequest = null
+        if (paths.shift() === 'judge' && paths.length == 1) {
+            let req_id = paths.shift()
+            this.debug('JUDGE_ID: ' + req_id)
+
+            if (this.cache[req_id]) {
+                cached_req = this.cache[req_id]
+                delete this.cache[req_id]
+            }
+        }
+
+
+        if (cached_req && this.enabled) {
+            cached_req.onJudge(req, res)
             res.writeHead(200, {"Content-Type": "application/json"});
-            var data = {time: (new Date()).getTime(), headers: req.headers, rawHeaders: req.rawHeaders}
-            var json = JSON.stringify(data);
+            var json = JSON.stringify({time: (new Date()).getTime(), headers: req.headers});
             res.end(json);
         } else {
+            this.debug('deliver error')
             res.writeHead(404, {"Content-Type": "application/json"});
             var json = JSON.stringify({'404': 'Error'});
             res.end(json);
@@ -155,16 +195,16 @@ export class Judge {
      *
      * @param proxy
      */
-    async runTests(proxy: url.Url): Promise<any> {
+    async runTests(proxy: mUrl.Url): Promise < any > {
         let start = new Date()
         let report: any = {}
         let self = this
 
         try {
-            let http_url = url.format(proxy)
+            let http_url = mUrl.format(proxy)
             let r = _request.defaults({proxy: http_url, timeout: 10000})
 
-            let requestPromise = r.get(url.format(self._remote_url), {resolveWithFullResponse: true})
+            let requestPromise = r.get(mUrl.format(self._remote_url), {resolveWithFullResponse: true})
             let rrm = RequestResponseMonitor.monitor(requestPromise)
             let response = await requestPromise
             await rrm.promise()
@@ -201,7 +241,7 @@ export class Judge {
         return report
     }
 
-    async wakeup(force: boolean = false): Promise<any> {
+    wakeup(force: boolean = false): Promise < any > {
         let self = this
         return new Promise(function (resolve, reject) {
             try {
@@ -209,7 +249,7 @@ export class Judge {
                     self.server = http.createServer(self.judge.bind(self))
                     self.server.listen(parseInt(self._judge_url.port), self._judge_url.hostname, function () {
                         self.enable()
-                        Log.info('Judge service startup on ' + url.format(self._judge_url))
+                        Log.info('Judge service startup on ' + mUrl.format(self._judge_url))
                         resolve(true)
                     })
                 } else {
@@ -221,14 +261,15 @@ export class Judge {
         })
     }
 
-    async pending(): Promise<any> {
+
+    pending(): Promise < any > {
         let self = this
         return new Promise(function (resolve, reject) {
             try {
                 if (self.server) {
                     self.server.close(function () {
                         self.disable()
-                        Log.info('Judge service shutting down on ' + url.format(self._judge_url))
+                        Log.info('Judge service shutting down on ' + mUrl.format(self._judge_url))
                         resolve(true)
                     })
                 } else {
@@ -239,5 +280,9 @@ export class Judge {
             }
         })
 
+    }
+
+    debug(...msg: any[]) {
+        console.log.apply(console, msg)
     }
 }

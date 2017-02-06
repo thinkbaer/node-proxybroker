@@ -1,15 +1,17 @@
-import * as _request from "request-promise-native";
+import * as mRequest from "request-promise-native";
 import * as net from 'net'
 import * as http from 'http'
 import * as https from 'https'
+import * as mUrl from 'url'
 import * as tls from 'tls'
 import * as events from 'events'
 import {TLSSocket} from "tls";
 import {HttpHeaders} from "../d/http_headers";
+import {Url} from "url";
 
 
 interface LogEntry {
-    t: number, msg: string, s?: boolean, code?: string,i: number
+    t: number, msg: string, s: string, code?: string,i: number
 }
 
 
@@ -18,34 +20,53 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     // static cache:{[key:string]:RequestResponseMonitor} = {}
     _debug: boolean = false
-    inc: 0
+    inc: number = 0
     id: string = null
     log_arr: Array<LogEntry> = []
     length: number = 0
     errors: Array<Error> = []
     socket: net.Socket = null
+    request: mRequest.RequestPromise = null
     start: Date = new Date()
     end: Date = null
     duration: number = Infinity
     secured: boolean = false
-    connected:boolean = false
-    aborted:boolean = false
+    connected: boolean = false
+    aborted: boolean = false
     okay: boolean = false
+
+    sendedHead: string = ''
+    receivedHead: string = ''
+    receivedHeadDone: boolean = false
 
     headers_request: HttpHeaders = {}
     headers_response: HttpHeaders = {}
 
 
 
-//    private promise:Promise<any> = null
 
-    private constructor(request: _request.RequestPromise, id: string) {
+    private constructor(request: mRequest.RequestPromise, id: string) {
         super()
         request.on('socket', this.onSocket.bind(this))
         request.on('error', this.onError.bind(this))
         request.on('drain', this.onDrain.bind(this))
         request.on('request', this.onRequest.bind(this))
+
         this.id = id
+        this.request = request
+        //console.log(request)
+    }
+
+    get uri(): Url {
+        return this.request['uri']
+    }
+
+    get proxy(): Url {
+        return this.request['proxy']
+    }
+
+    get tunnel(): boolean {
+        return <boolean>this.request['tunnel']
     }
 
     /**
@@ -57,13 +78,24 @@ export class RequestResponseMonitor extends events.EventEmitter {
      * @param request
      */
     onRequest(request: http.ClientRequest) {
+        this.debug('onRequest')
 
-        this.addClientLog("Try connect to " + request.getHeader('host') + ' ...');
+        if (this.proxy) {
+            this.addLog(`Try connect to ${mUrl.format(this.uri)} over proxy ${mUrl.format(this.proxy)} ...`);
+        } else {
+            this.addLog(`Try connect to ${mUrl.format(this.uri)} ...`);
+        }
 
         request.setNoDelay(true)
-        this.addClientLog('set TCP_NODELAY')
+        this.addLog('set TCP_NODELAY')
 
-        this.debug('onRequest')
+        if (this.proxy && this.tunnel) {
+            this.addLog('HTTP-Tunneling enabled.')
+        }
+
+
+
+
         request.on('abort', this.onRequestAbort.bind(this))
         request.on('aborted', this.onRequestAborted.bind(this))
         request.on('connect', this.onRequestConnect.bind(this))
@@ -71,6 +103,8 @@ export class RequestResponseMonitor extends events.EventEmitter {
         request.once('response', this.onRequestResponse.bind(this))
         // request.on('socket', this.onRequestSocket.bind(this))
         request.on('upgrade', this.onRequestUpgrade.bind(this))
+
+
 
         for (let k in request['_headers']) {
             this.headers_request[k] = request.getHeader(k)
@@ -92,9 +126,13 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     onRequestResponse(response: http.IncomingMessage) {
         this.debug('onRequestResponse')
-
+        // console.log(response)
         response.on('aborted', this.onRequestResponseAborted.bind(this))
         response.on('close', this.onRequestResponseClose.bind(this))
+
+        let self = this
+
+
 
         for (let k in response.headers) {
             this.headers_response[k] = response.headers[k]
@@ -158,13 +196,19 @@ export class RequestResponseMonitor extends events.EventEmitter {
         this.debug('onSocket')
         this.socket = socket
 
-        // this.debug(socket)
+        if (socket['_pendingData']) {
+            this.sendedHead = socket['_pendingData']
+            this.sendedHead = this.sendedHead.split('\r\n\r\n').shift()
+        }
+
 
         socket.on('close', this.onSocketClose.bind(this))
         socket.on('connect', this.onSocketConnect.bind(this))
         socket.on('data', this.onSocketData.bind(this))
         socket.on('drain', this.onSocketDrain.bind(this))
         socket.on('end', this.onSocketEnd.bind(this))
+        socket.on('agentRemove', this.onSocketAgentRemove.bind(this))
+        //socket.on('agentRemove', this.onSocketAgentRemove.bind(this))
         socket.on('error', this.onSocketError.bind(this))
         socket.on('lookup', this.onSocketLookup.bind(this))
         socket.on('timeout', this.onSocketTimeout.bind(this))
@@ -179,29 +223,63 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     onSocketClose(had_error: boolean) {
         this.debug('onSocketClose')
-        if(!had_error && !this.errors.length){
-            this.addClientLog(`Received ${this.length} byte from sender.`)
-        }
         this.finished()
 
+    }
+
+
+    onSocketAgentRemove(): void {
+        this.debug('onSocketAgentRemove')
     }
 
     onSocketConnect() {
         this.debug('onSocketConnect')
         this.connected = true
-        this.addClientLog(`Connected to ${this.socket.remoteAddress}:${this.socket.remotePort}`)
-        if (this.secured) {
-            this.addClientLog(`Try handshake for secure connetion ...`)
+
+        if (this.proxy) {
+            this.addLog(`Connected to proxy ${mUrl.format(this.proxy)}`)
+        } else {
+            this.addLog(`Connected to ${this.socket.remoteAddress}:${this.socket.remotePort}`)
         }
+
+        if (this.secured) {
+            this.addLog(`Try handshake for secure connetion ...`)
+        }
+
+
+        this.addLog('','')
+        this.sendedHead.split('\n').map((x: string) => {
+            this.addClientLog(x.trim())
+        })
+        this.addLog('','')
+
+
+
     }
 
     onSocketData(data: Buffer) {
         this.debug('onSocketData', data.length)
-        /*
-         let tmp:Buffer = Buffer.allocUnsafe(data.length)
-         data.copy(tmp)
-         console.log(tmp.toString('utf8'))
-         */
+
+        if (!this.receivedHeadDone) {
+            let tmp: Buffer = Buffer.allocUnsafe(data.length)
+            data.copy(tmp)
+
+            this.receivedHead += tmp.toString('utf8')
+            if (this.receivedHead.match(/\r\n\r\n/)) {
+                this.receivedHead = this.receivedHead.split("\r\n\r\n").shift() // "\r\n\r\n"
+                this.receivedHeadDone = true
+
+            }
+
+            if(this.receivedHeadDone){
+                this.addLog('','')
+                this.receivedHead.split('\n').map((x: string) => {
+                    this.addServerLog(x.trim())
+                })
+                this.addLog('','')
+            }
+        }
+
         this.length += data.length
     }
 
@@ -229,7 +307,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     onSocketTimeout() {
         this.stop()
         this.debug('onSocketTimeout', `after ${this.duration}ms`)
-        this.addClientLog(`Socket timed out after ${this.duration}ms`)
+        this.addLog(`Socket timed out after ${this.duration}ms`)
     }
 
     onTLSSocketOCSPResponse(buffer: Buffer) {
@@ -239,18 +317,18 @@ export class RequestResponseMonitor extends events.EventEmitter {
     onTLSSocketSecureConnect() {
         this.debug('onTLSSocketSecureConnect')
         this.stop()
-        this.addClientLog(`Secured connection established (${this.duration}ms)`)
+        this.addLog(`Secured connection established (${this.duration}ms)`)
 
     }
 
 
-    private stop() {
+    stop() {
         this.end = new Date()
         this.duration = this.end.getTime() - this.start.getTime()
     }
 
 
-    static monitor(_request: _request.RequestPromise, id?: string): RequestResponseMonitor {
+    static monitor(_request: mRequest.RequestPromise, id?: string): RequestResponseMonitor {
         let rrm = new RequestResponseMonitor(_request, id)
         return rrm
     }
@@ -260,27 +338,38 @@ export class RequestResponseMonitor extends events.EventEmitter {
         let msg: Array<string> = []
 
         this.log_arr.sort(function (a: LogEntry, b: LogEntry) {
-            return a.i < b.i ? (b.i > a.i ? 1 : 0) : -1
+            return a.i < b.i ? (b.i > a.i ? -1 : 0) : 1
         })
 
-        for (let x in this.log_arr) {
-            msg.push(this.log_arr[x].s ? '< ' : '> ' + '' + this.log_arr[x].msg)
+        let ignore_emtpy = false
+        for (let entry of this.log_arr) {
+            let str = (entry.s + ' ' + entry.msg).trim()
+            if(str.length == 0 && ignore_emtpy){
+                continue
+            }else if(str.length == 0){
+                ignore_emtpy = true
+            }else{
+                ignore_emtpy = false
+            }
+            msg.push(str)
         }
 
         return msg.join(sep)
     }
 
 
+
     addClientLog(msg: string): void {
-        this.addLog(msg, false)
+        this.addLog(msg, '>')
     }
 
     addServerLog(msg: string): void {
-        this.addLog(msg, true)
+        this.addLog(msg, '<')
     }
 
-    addLog(msg: string, s: boolean = false): void {
+    addLog(msg: string, s: string = '*'): void {
         let _inc = this.inc++
+
         this.log_arr.push({
             i: _inc,
             t: new Date().getTime(),
@@ -290,25 +379,24 @@ export class RequestResponseMonitor extends events.EventEmitter {
     }
 
 
-    private handleError(error: Error):boolean {
+    private handleError(error: Error): boolean {
         if (error) {
             let exists = false
-            for(let i=0;i<this.errors.length;i++){
-                if(this.errors[i].message == error.message){
+            for (let i = 0; i < this.errors.length; i++) {
+                if (this.errors[i].message == error.message) {
                     exists = true
                     break;
                 }
             }
-            if(!exists) {
+            if (!exists) {
 
-                if (error.message.match(/ECONNREFUSED/)){
+                if (error.message.match(/ECONNREFUSED/)) {
                     this.connected = false
-                    this.addClientLog(`Connection refused.`)
-                }else if(error.message.match(/socket hang up/)){
+                    this.addLog(`Connection refused.`,'#')
+                } else if (error.message.match(/socket hang up/)) {
                     this.aborted = true
-                    this.addClientLog(`Connection aborted.`)
+                    this.addLog(`Connection aborted.`,'#')
                 }
-
 
                 this.errors.push(error)
                 return true
@@ -329,14 +417,26 @@ export class RequestResponseMonitor extends events.EventEmitter {
     finished() {
         this.stop()
 
-        let str:string = ''
+
+        let str: string = ''
         let last_error = this.lastError()
 
-        if(this.socket.remoteAddress){
-            str = `Connection closed to ${this.socket.remoteAddress}:${this.socket.remotePort} (${this.duration}ms)`
-        }else if(last_error){
+        let self = this
+
+
+        if (!this.errors.length) {
+            this.addLog(`Received ${this.length} byte from sender.`)
+        }
+
+        console.log(this.socket.remoteAddress)
+
+        if (!last_error) {
+            str = `Connection closed to ${mUrl.format(this.uri)} (${this.duration}ms)`
+        } else {
             str = 'Connection not established.'
         }
+
+        this.socket = null
 
         if (last_error) {
             this.addClientLog('Connection aborted through errors:')
@@ -345,15 +445,15 @@ export class RequestResponseMonitor extends events.EventEmitter {
             })
         }
 
-        this.addClientLog(str)
+        this.addLog(str)
         this.emit('finished', last_error)
     }
 
-    promise(): Promise<any> {
+    promise(): Promise<RequestResponseMonitor> {
         var self = this
         return new Promise(function (resolve, reject) {
             self.on('finished', function () {
-                resolve()
+                resolve(self)
             })
         })
 
