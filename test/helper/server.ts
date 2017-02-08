@@ -36,6 +36,8 @@ const defaultOptions: ServerOptions = {
 
 abstract class DefaultServer {
 
+    _debug: boolean = false
+
     inc: number = 0
     cache: {[key: number]: {t: Timer, s: net.Socket}} = {}
     server: net.Server = null
@@ -150,8 +152,10 @@ abstract class DefaultServer {
         //console.log(msg)
     }
 
-    debug(...msg:string[]){
-        console.log.apply(console,msg)
+    debug(...msg: string[]) {
+        if (this._debug) {
+            console.log.apply(console, msg)
+        }
     }
 }
 
@@ -185,24 +189,20 @@ export class DefaultHTTPSServer extends DefaultServer {
         if (this.options.key_file) {
             this.options.key = fs.readFileSync(this.options.key_file)
         }
-
-
     }
 
     createServer(): https.Server {
         return https.createServer(this.options, this.response.bind(this))
     }
-
-
 }
 
 
-abstract class HTTPProxyServer extends DefaultHTTPServer {
+export abstract class HTTPProxyServer extends DefaultHTTPServer {
 
     proxy: HttpProxy = null
 
     constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
-        super(port, hostname,options)
+        super(port, hostname, options)
         // this.options.variant = 'proxyResponse'
     }
 
@@ -237,10 +237,8 @@ abstract class HTTPProxyServer extends DefaultHTTPServer {
 
     root(req: http.IncomingMessage, res: http.ServerResponse): void {
         this.debug('proxyResponse')
-
         let _url = url.parse(req.url)
         let target_url = _url.protocol + '//' + req.headers.host
-        console.log(target_url)
         this.proxy.web(req, res, {target: target_url})
     }
 
@@ -256,9 +254,9 @@ abstract class HTTPProxyServer extends DefaultHTTPServer {
 }
 
 /**
- * L1 - Transparent proxy
+ * L3 - Transparent proxy
  */
-export class HTTPProxyServer_L1 extends HTTPProxyServer {
+export class HTTPProxyServer_L3 extends HTTPProxyServer {
 
     constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
         super(port, hostname, options)
@@ -274,71 +272,44 @@ export class HTTPProxyServer_L1 extends HTTPProxyServer {
         let proxy_port = req.socket.localPort
 
         proxyReq.setHeader('X-Forwarded-For', sender_ip);
-        proxyReq.setHeader('Via', 'proxybroker on '+proxy_ip+':'+proxy_port);
+        proxyReq.setHeader('Via', 'proxybroker on ' + proxy_ip + ':' + proxy_port);
 
         proxyReq.setHeader('X-Cache', 'DemoCache');
         proxyReq.setHeader('X-Cache-Lookup', 'MISSED');
         proxyReq.setHeader('X-Client-IP', sender_ip);
 
-
         // proxyReq.setHeader('X_CLUSTER_CLIENT_IP', sender_ip);
-
-
-        /*
-        X-Client-IP
-        X-Cache-Lookup
-
-         */
     }
 
 }
-/*
- export class HTTPProxyServer_L2 extends HTTPProxyServer {
-
- constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
- super(port, hostname, 'L2', options)
- }
+export class HTTPProxyServer_L2 extends HTTPProxyServer {
 
 
- L2(req: http.IncomingMessage, res: http.ServerResponse) {
- let _url = url.parse(req.url)
- let target_url = _url.protocol + '//' + req.headers.host
- console.log(_url, target_url)
- this.proxy.web(req, res, {target: target_url})
- }
+    onProxyRequest(proxyReq: http.ClientRequest, req: http.IncomingMessage, res: http.ServerResponse, options: HttpProxy.ServerOptions): void {
+        this.debug('onProxyRequest')
+
+        this.debug('PR: ' + req.url)
+
+        let sender_ip = req.socket.remoteAddress
+        let proxy_ip = req.socket.localAddress
+        let proxy_port = req.socket.localPort
+
+//        proxyReq.setHeader('X-Forwarded-For', sender_ip);
+        proxyReq.setHeader('Via', 'proxybroker on ' + proxy_ip + ':' + proxy_port);
+
+        proxyReq.setHeader('X-Cache', 'DemoCache');
+        proxyReq.setHeader('X-Cache-Lookup', 'MISSED');
+    }
 
 
- }
+}
 
- export class HTTPProxyServer_L3 extends HTTPProxyServer {
-
- constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
- super(port, hostname, 'L3', options)
- }
-
- L3(req: http.IncomingMessage, res: http.ServerResponse) {
- let _url = url.parse(req.url)
- let target_url = _url.protocol + '//' + req.headers.host
- console.log(_url, target_url)
- this.proxy.web(req, res, {target: target_url})
- }
-
- }
-
- export class HTTPProxyServer_L4 extends HTTPProxyServer {
-
- constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
- super(port, hostname, 'L4', options)
- }
-
- L4(req: http.IncomingMessage, res: http.ServerResponse) {
- let _url = url.parse(req.url)
- let target_url = _url.protocol + '//' + req.headers.host
- console.log(_url, target_url)
- this.proxy.web(req, res, {target: target_url})
- }
+export class HTTPProxyServer_L1 extends HTTPProxyServer {
 
 
- }
+    onProxyRequest(proxyReq: http.ClientRequest, req: http.IncomingMessage, res: http.ServerResponse, options: HttpProxy.ServerOptions): void {
+        this.debug('onProxyRequest')
+    }
 
- */
+
+}

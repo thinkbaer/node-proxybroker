@@ -54,7 +54,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
         this.id = id
         this.request = request
-        //console.log(request)
     }
 
     get uri(): Url {
@@ -114,9 +113,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     onRequestConnect(response: http.IncomingMessage, socket: net.Socket, head: Buffer) {
         this.debug('onRequestConnect')
-
-        //response.on('aborted', this.onRequestResponseAborted.bind(this))
-        // response.on('close', this.onRequestResponseClose.bind(this))
     }
 
     onRequestContinue() {
@@ -126,13 +122,8 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     onRequestResponse(response: http.IncomingMessage) {
         this.debug('onRequestResponse')
-        // console.log(response)
         response.on('aborted', this.onRequestResponseAborted.bind(this))
         response.on('close', this.onRequestResponseClose.bind(this))
-
-        let self = this
-
-
 
         for (let k in response.headers) {
             this.headers_response[k] = response.headers[k]
@@ -427,8 +418,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
         if (!this.errors.length) {
             this.addLog(`Received ${this.length} byte from sender.`)
         }
-
-        console.log(this.socket.remoteAddress)
 
         if (!last_error) {
             str = `Connection closed to ${mUrl.format(this.uri)} (${this.duration}ms)`

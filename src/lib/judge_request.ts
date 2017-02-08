@@ -16,19 +16,35 @@ import {Judge} from "./judge";
 const httpForwardHeader = ['forwarded-for', 'http-x-forwarded-for', 'x-forwarded-for', 'http-client-ip', 'x-client-ip', 'x-http-forwarded-for']
 const httpViaHeader = ['via', 'http-via', 'proxy-connection', 'forwarded', 'http-forwarded']
 const ignore_headers = ['host']
+
 /*
- * L1 - no forward and no proxy
- * L2 - no forward
- * L3 - transparent
+ * TODO: Search in header data for domains which must be resolve to check them against proxy and local ip
+ */
+const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/
+const IP_REGEX = /\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}/
+
+
+/*
+ * L1 - elite - no forward and no proxy
+ * L2 - anonymus - no forward, but proxy info
+ * L3 - transparent - both ip and proxy
  * */
 
 export class JudgeRequest {
+
+    _debug:boolean = false
+    private timeout:number = 10000
 
     private id: string
     private url: string
     private proxy_url: string
     private judge: Judge
 
+    is_ip_present:string[] = []
+    is_ip_of_proxy:string[] = []
+    forward_headers:string[] = []
+    via_headers:string[] = []
+    level: number = -1
 
     response: any = null
     request: _request.RequestPromise = null
@@ -53,7 +69,7 @@ export class JudgeRequest {
         this.proxy_url = proxy_url
         this.proxy_ip = mUrl.parse(proxy_url).hostname
 
-        if (!this.proxy_ip.match('\d+\.\d+\.\d+\.\d+')) {
+        if (!this.proxy_ip.match(IP_REGEX)) {
             // TODO Throw Exception? or resolve per DNS!
         }
 
@@ -64,18 +80,21 @@ export class JudgeRequest {
         this.request = _request.get(this.url, {
             resolveWithFullResponse: true,
             proxy: this.proxy_url,
-            timeout: 10000
+            timeout: this.timeout
         })
         this.monitor = RequestResponseMonitor.monitor(this.request, this.id)
         this.response = await this.request.promise()
         return this.monitor.promise()
     }
 
+    get duration(){
+        return this.monitor.duration
+    }
+
 
     onJudge(req: http.IncomingMessage, res: http.ServerResponse) {
-        //this.monitor.judgeConnected = true
+        this.judgeConnected = true
         this.judgeDate = new Date()
-
 
         this.monitor.stop()
         this.monitor.addLog(`Judge connected. (${this.monitor.duration}ms)`, '*')
@@ -88,59 +107,58 @@ export class JudgeRequest {
             return ignore_headers.indexOf(x) == -1
         })
 
-        let is_ip_present = []
-        let is_ip_of_proxy = []
-        let forward_headers = []
-        let via_headers = []
-
-
         for (let k of keys) {
             let entry = req.headers[k]
-            console.log(entry)
+
             /*
              * TODO Resolve domain names if present!
              */
             this.headers_judge[k] = entry
             if (rx_ip.exec(entry)) {
-                is_ip_present.push(k)
+                this.is_ip_present.push(k)
             }
 
             if (rx_proxy_ip.exec(entry)) {
-                is_ip_of_proxy.push(k)
+                this.is_ip_of_proxy.push(k)
             }
 
             if (httpForwardHeader.indexOf(k) > -1) {
-                forward_headers.push(k)
+                this.forward_headers.push(k)
             }
 
             if (httpViaHeader.indexOf(k) > -1) {
-                via_headers.push(k)
+                this.via_headers.push(k)
             }
         }
 
-        if (is_ip_of_proxy.length == 0 && is_ip_present.length == 0) {
+        if (this.is_ip_of_proxy.length == 0 && this.is_ip_present.length == 0) {
             this.monitor.addLog(`Proxy is L1 - elite (high anonymus):`, '*')
+            this.level = 1
 
-        } else if (is_ip_of_proxy.length > 0 && is_ip_present.length == 0) {
+        } else if (this.is_ip_of_proxy.length > 0 && this.is_ip_present.length == 0) {
             this.monitor.addLog(`Proxy is L2 - anonymus:`, '*')
             //} else if(is_ip_of_proxy.length == 0 && is_ip_present.length > 0){
             //    this.monitor.addLog(`Proxy is L3 - :`, '*')
+            this.level = 2
         }else{
             this.monitor.addLog(`Proxy is L3 - transparent:`, '*')
+            this.level = 3
         }
 
-        if (is_ip_present.length > 0) {
-            this.monitor.addLog(`- IP in headers: ${is_ip_present.join(', ')}`, '*')
+        if (this.is_ip_present.length > 0) {
+            this.monitor.addLog(`- IP in headers: ${this.is_ip_present.join(', ')}`, '*')
         }
 
-        if (is_ip_of_proxy.length > 0) {
-            this.monitor.addLog(`- IP of proxy in headers: ${is_ip_of_proxy.join(', ')}`, '*')
+        if (this.is_ip_of_proxy.length > 0) {
+            this.monitor.addLog(`- IP of proxy in headers: ${this.is_ip_of_proxy.join(', ')}`, '*')
         }
-        if (via_headers.length > 0) {
-            this.monitor.addLog(`- HTTP "via" headers used: ${via_headers.join(', ')}`, '*')
+
+        if (this.via_headers.length > 0) {
+            this.monitor.addLog(`- HTTP "via" headers used: ${this.via_headers.join(', ')}`, '*')
         }
-        if (forward_headers.length > 0) {
-            this.monitor.addLog(`- HTTP "forward" headers used: ${forward_headers.join(', ')}`, '*')
+
+        if (this.forward_headers.length > 0) {
+            this.monitor.addLog(`- HTTP "forward" headers used: ${this.forward_headers.join(', ')}`, '*')
         }
     }
 

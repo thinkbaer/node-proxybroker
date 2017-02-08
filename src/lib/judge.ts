@@ -39,6 +39,8 @@ const defaultOptions: JudgeOptions = {
 
 export class Judge {
 
+    _debug:boolean = false
+
     private inc: number = 0
     private options: JudgeOptions = defaultOptions
 
@@ -249,7 +251,8 @@ export class Judge {
                     self.server = http.createServer(self.judge.bind(self))
                     self.server.listen(parseInt(self._judge_url.port), self._judge_url.hostname, function () {
                         self.enable()
-                        Log.info('Judge service startup on ' + mUrl.format(self._judge_url))
+
+                        self.info('Judge service startup on ' + mUrl.format(self._judge_url))
                         resolve(true)
                     })
                 } else {
@@ -269,7 +272,7 @@ export class Judge {
                 if (self.server) {
                     self.server.close(function () {
                         self.disable()
-                        Log.info('Judge service shutting down on ' + mUrl.format(self._judge_url))
+                        self.info('Judge service shutting down on ' + mUrl.format(self._judge_url))
                         resolve(true)
                     })
                 } else {
@@ -282,7 +285,14 @@ export class Judge {
 
     }
 
-    debug(...msg: any[]) {
-        console.log.apply(console, msg)
+    private info(...msg: any[]) {
+        Log.info.apply(Log, msg)
+    }
+
+    private debug(...msg: any[]) {
+        if(this._debug){
+            Log.debug.apply(Log, msg)
+        }
+
     }
 }

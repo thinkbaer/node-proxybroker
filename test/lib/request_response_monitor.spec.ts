@@ -44,7 +44,8 @@ describe('Request Response Monitor', () => {
             let _url = server.url()
             let req = _request.get(_url)
             let rrm = RequestResponseMonitor.monitor(req)
-            // rrm._debug = true
+            rrm._debug = false
+
             try {
                 await req.promise()
             } catch (err) {
@@ -53,12 +54,12 @@ describe('Request Response Monitor', () => {
             await rrm.promise()
 
             let log: string = rrm.logToString()
-            /*
-             console.log('-------->')
-             console.log(log)
-             console.log('<--------')
-             */
-            expect(log).to.contain("Try connect to 127.0.0.1:8000")
+            if (rrm._debug) {
+                console.log('-------->')
+                console.log(log)
+                console.log('<--------')
+            }
+            expect(log).to.contain("Try connect to "+_url)
             expect(log).to.match(new RegExp("Connection aborted"))
             expect(log).to.match(new RegExp("socket hang up"))
 
@@ -93,21 +94,21 @@ describe('Request Response Monitor', () => {
             let _url = server.url()
             let req = _request.get(_url)
             let rrm = RequestResponseMonitor.monitor(req)
-            // rrm._debug = true
+            rrm._debug = false
             try {
                 await req.promise()
             } catch (err) {
                 //expect(err.message).to.match(new RegExp("socket hang up"))
             }
             await rrm.promise()
-
             let log: string = rrm.logToString()
 
-            // console.log('-------->')
-            // console.log(log)
-            // console.log('<--------')
-
-            expect(log).to.contain("Try connect to 127.0.0.1:8000")
+            if (rrm._debug) {
+                console.log('-------->')
+                console.log(log)
+                console.log('<--------')
+            }
+            expect(log).to.contain("Try connect to "+_url)
             expect(log).to.match(new RegExp("Connection aborted"))
             expect(log).to.match(new RegExp("socket hang up"))
 
@@ -133,21 +134,23 @@ describe('Request Response Monitor', () => {
             let _url = server.url()
             let req = _request.get(server.url())
             let rrm = RequestResponseMonitor.monitor(req)
+            rrm._debug = false
             await req.promise()
             await rrm.promise()
 
             let log: string = rrm.logToString()
 
-            /*
-             console.log('-------->')
-             console.log(log)
-             console.log('<--------')
-             */
+            if(rrm._debug){
+                console.log('-------->')
+                console.log(log)
+                console.log('<--------')
 
-            expect(log).to.contain("Try connect to 127.0.0.1:8000")
+            }
+
+            expect(log).to.contain("Try connect to "+_url)
             expect(log).to.match(new RegExp("set TCP_NODELAY"))
             expect(log).to.match(new RegExp("Received 285 byte from sender"))
-            expect(log).to.match(new RegExp("Connection closed to 127.0.0.1:8000 \\(\\d+ms\\)"))
+            expect(log).to.match(new RegExp("Connection closed to "+_url+" \\(\\d+ms\\)"))
 
         })
 
