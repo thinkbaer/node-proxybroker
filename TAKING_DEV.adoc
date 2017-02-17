@@ -331,6 +331,28 @@ CLI: fetch
  - Page Extract Instruction Pipeline (extract_pipeline)
 
 
+== SSL for Testing
+
+=== Certificate Authority
+
+```
+$ echo 01 | sudo tee ca.srl
+$ sudo openssl genrsa -des3 -out ca-key.pem
+# PW: proxybroker-testing
+$ sudo openssl req -new -x509 -days 3650 -key ca-key.pem -out ca.pem
+```
+
+=== Server certificate
+
+```
+$ sudo openssl genrsa -des3 -out server-key.pem
+# PW: proxybroker-testing
+$ sudo openssl req -new -key server-key.pem -out server.csr
+$ sudo openssl x509 -req -days 3650 -in server.csr -CA ca.pem -CAkey ca-key.pem -out server-cert.pem
+$ sudo openssl rsa -in server-key.pem -out server-key.pem
+```
+
+
 
 == NOTES
 

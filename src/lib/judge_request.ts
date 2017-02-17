@@ -25,6 +25,11 @@ const IP_REGEX = /\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}/
 
 
 /*
+ * TODO: Lookup IP Location
+ *  - https://extreme-ip-lookup.com/json/63.70.164.200
+ */
+
+/*
  * L1 - elite - no forward and no proxy
  * L2 - anonymus - no forward, but proxy info
  * L3 - transparent - both ip and proxy

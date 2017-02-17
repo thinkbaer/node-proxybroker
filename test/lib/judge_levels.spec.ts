@@ -17,6 +17,7 @@ describe('Judge level', () => {
 
     let tests = [
         {
+            // HTTP:C -> HTTP:PSL3 -> HTTP:S
             title: 'HTTP L3 transparent proxy',
             level: 3,
             server: HTTPProxyServer_L3,
@@ -24,6 +25,7 @@ describe('Judge level', () => {
 
         },
         {
+            // HTTP:C -> HTTP:PSL2 -> HTTP:S
             title: 'HTTP L2 anonymus proxy',
             level: 2,
             server: HTTPProxyServer_L2,
@@ -31,11 +33,22 @@ describe('Judge level', () => {
 
         },
         {
+            // HTTP:C -> HTTP:PSL1 -> HTTP:S
             title: 'HTTP L1 anonymus proxy',
             level: 1,
             server: HTTPProxyServer_L1,
             debug: false
         }
+        // ,
+        // {
+        //     // HTTP:C -> HTTPS:PSL3 -> HTTP:S
+        //     title: 'HTTP L3 transparent proxy',
+        //     level: 3,
+        //     server: HTTPSProxyServer_L3,
+        //     debug: true
+        //
+        // },
+
     ]
 
 

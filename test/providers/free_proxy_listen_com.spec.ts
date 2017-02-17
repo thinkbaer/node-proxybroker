@@ -4,7 +4,7 @@ import * as assert from 'assert'
 import {anonJob} from "../../src/providers/free_proxy_lists.com";
 import {API} from "../../src/module";
 
-
+/*
 class MockAPI implements API {
     count: number = 0
 
@@ -48,3 +48,4 @@ describe('Proxy provider: freeproxylisten.com tests', () => {
 
 
 })
+*/

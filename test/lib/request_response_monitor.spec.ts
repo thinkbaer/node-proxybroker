@@ -7,6 +7,7 @@ import {DefaultHTTPServer, DefaultHTTPSServer} from "../helper/server";
 
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 //https.globalAgent.options.rejectUnauthorized = false;
 
 describe('Request Response Monitor', () => {
@@ -39,7 +40,6 @@ describe('Request Response Monitor', () => {
             setTimeout(function () {
                 server.forcedShutdown()
             }, 100)
-
 
             let _url = server.url()
             let req = _request.get(_url)
@@ -209,10 +209,12 @@ describe('Request Response Monitor', () => {
 
         it('encrypted request', async function () {
 
+            let options = {}
+
             // let suuid = shorthash('https://127.0.0.1:8000/judge' + (new Date().getTime()))
 
             //_request.debug = true
-            let req = _request.get('https://127.0.0.1:8000/judge/')
+            let req = _request.get(server.url() + '/judge/DUMMY',options)
             //let req = _request.get('https://www.google.de?')
             let rrm = RequestResponseMonitor.monitor(req)
             // rrm._debug = true
