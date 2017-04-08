@@ -90,25 +90,22 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
         if (this.proxy && this.tunnel) {
             this.addLog('HTTP-Tunneling enabled.')
+            this.debug('tunneling enabled')
+
+            // let socket = request['agent'].sockets[0]
+
         }
-
-
-
 
         request.on('abort', this.onRequestAbort.bind(this))
         request.on('aborted', this.onRequestAborted.bind(this))
         request.on('connect', this.onRequestConnect.bind(this))
         request.on('continue', this.onRequestContinue.bind(this))
         request.once('response', this.onRequestResponse.bind(this))
-        // request.on('socket', this.onRequestSocket.bind(this))
         request.on('upgrade', this.onRequestUpgrade.bind(this))
-
-
 
         for (let k in request['_headers']) {
             this.headers_request[k] = request.getHeader(k)
         }
-
     }
 
     onRequestConnect(response: http.IncomingMessage, socket: net.Socket, head: Buffer) {
@@ -118,7 +115,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
     onRequestContinue() {
         this.debug('onRequestContinue')
     }
-
 
     onRequestResponse(response: http.IncomingMessage) {
         this.debug('onRequestResponse')
@@ -319,8 +315,11 @@ export class RequestResponseMonitor extends events.EventEmitter {
     }
 
 
-    static monitor(_request: mRequest.RequestPromise, id?: string): RequestResponseMonitor {
+    static monitor(_request: mRequest.RequestPromise, id?: string, options?:{debug?:boolean}): RequestResponseMonitor {
         let rrm = new RequestResponseMonitor(_request, id)
+        if(options.debug){
+            rrm._debug = options.debug
+        }
         return rrm
     }
 
@@ -372,6 +371,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     private handleError(error: Error): boolean {
         if (error) {
+            this.debug('error: '+error.message)
             let exists = false
             for (let i = 0; i < this.errors.length; i++) {
                 if (this.errors[i].message == error.message) {
@@ -411,9 +411,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
         let str: string = ''
         let last_error = this.lastError()
-
-        let self = this
-
 
         if (!this.errors.length) {
             this.addLog(`Received ${this.length} byte from sender.`)

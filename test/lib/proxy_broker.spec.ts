@@ -2,7 +2,7 @@ import * as assert from 'assert'
 import ProxyBroker from "../../src/lib/proxy_broker";
 
 
-describe('ProxyBroker', () => {
+xdescribe('ProxyBroker', () => {
 
     let PB: ProxyBroker = null
 

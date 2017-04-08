@@ -8,6 +8,8 @@ import Timer = NodeJS.Timer;
 
 import * as HttpProxy from "http-proxy"
 
+const PROXY_HOST:string = 'proxy.local'
+
 /**
  * Mock ProxyServer for the differnt proxy level types
  *
@@ -33,10 +35,10 @@ const defaultOptions: ServerOptions = {
     variant: 'root',
     timeout: 120,
     stall: 0,
-    cert_file: __dirname + '/../ssl/server-cert.pem',
-    key_file: __dirname + '/../ssl/server-key.pem',
-    ca_key_file: __dirname + '/../ssl/ca-key.pem',
-    ca_file: __dirname + '/../ssl/ca.pem',
+    cert_file: __dirname + '/../ssl/proxy/server-cert.pem',
+    key_file: __dirname + '/../ssl/proxy/server-key.pem',
+    ca_key_file: __dirname + '/../ssl/proxy/ca-key.pem',
+    ca_file: __dirname + '/../ssl/proxy/ca.pem',
     strictSSL: true
 }
 
@@ -51,8 +53,7 @@ abstract class DefaultServer {
     options: ServerOptions = null
     _abort: boolean = false
 
-
-    constructor(port: number|string, hostname: string = "127.0.0.1", protocol: string = 'http', options: ServerOptions = {}) {
+    constructor(port: number|string, hostname: string = PROXY_HOST, protocol: string = 'http', options: ServerOptions = {}) {
         this._url = url.parse(protocol + '://' + hostname + ':' + port)
         this.options = Object.assign(options, defaultOptions)
     }
@@ -60,6 +61,7 @@ abstract class DefaultServer {
     url(): string {
         return url.format(this._url)
     }
+
 
     set stall(n: number) {
         this.options.stall = n
@@ -71,7 +73,7 @@ abstract class DefaultServer {
 
     response(req: http.IncomingMessage, res: http.ServerResponse) {
         let inc = this.inc++
-        this.log('request')
+        this.debug('request')
         let self = this
         let t = setTimeout(function () {
             self[self.options.variant](req, res)
@@ -86,7 +88,7 @@ abstract class DefaultServer {
 
 
     root(req: http.IncomingMessage, res: http.ServerResponse) {
-        this.log('process')
+        this.debug('process')
         res.writeHead(200, {"Content-Type": "application/json"});
         var data = {time: (new Date()).getTime(), headers: req.headers, rawHeaders: req.rawHeaders}
         var json = JSON.stringify(data);
@@ -104,8 +106,7 @@ abstract class DefaultServer {
             }
             delete this.cache[x]
         }
-        this.stop(() => {
-        })
+        this.stop(() => {})
     }
 
     async start(done: Function = null): Promise<any> {
@@ -114,7 +115,7 @@ abstract class DefaultServer {
 
         let p = new Promise(function (resolve) {
             self.server = self.server.listen(parseInt(self._url.port), self._url.hostname, () => {
-                self.log('start server')
+                self.debug('start server on ' + url.format(self._url))
                 resolve()
             });
         })
@@ -133,10 +134,10 @@ abstract class DefaultServer {
             if (self.server) {
                 self.server.close(function () {
                     self.server = null
+                    self.debug('stop server')
                     resolve()
                 })
             } else {
-
                 resolve()
             }
         })
@@ -154,9 +155,6 @@ abstract class DefaultServer {
     finalize(): void {
     }
 
-    log(msg: string) {
-        //console.log(msg)
-    }
 
     debug(...msg: string[]) {
         if (this._debug) {
@@ -167,7 +165,7 @@ abstract class DefaultServer {
 
 export class DefaultHTTPServer extends DefaultServer {
 
-    constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
+    constructor(port: number|string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
         super(port, hostname, 'http', options)
     }
 
@@ -179,13 +177,15 @@ export class DefaultHTTPServer extends DefaultServer {
         return server
     }
 
+    get protocol():string{return 'http:'}
+
 }
 
 
 export class DefaultHTTPSServer extends DefaultServer {
 
 
-    constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
+    constructor(port: number|string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
         super(port, hostname, 'https', options)
 
         if (this.options.cert_file) {
@@ -204,6 +204,8 @@ export class DefaultHTTPSServer extends DefaultServer {
     createServer(): https.Server {
         return https.createServer(this.options, this.response.bind(this))
     }
+
+    get protocol():string{return 'https:'}
 }
 
 
@@ -211,7 +213,7 @@ export abstract class HTTPProxyServer extends DefaultHTTPServer {
 
     proxy: HttpProxy = null
 
-    constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
+    constructor(port: number|string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
         super(port, hostname, options)
         // this.options.variant = 'proxyResponse'
     }
@@ -270,7 +272,7 @@ export abstract class HTTPSProxyServer extends DefaultHTTPSServer {
 
     proxy: HttpProxy = null
 
-    constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
+    constructor(port: number|string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
         super(port, hostname, options)
         // this.options.variant = 'proxyResponse'
     }
@@ -346,7 +348,7 @@ function onProxyRequest_L3(proxyReq: http.ClientRequest, req: http.IncomingMessa
  */
 export class HTTPProxyServer_L3 extends HTTPProxyServer {
 
-    constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
+    constructor(port: number|string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
         super(port, hostname, options)
     }
 
@@ -362,7 +364,7 @@ export class HTTPProxyServer_L3 extends HTTPProxyServer {
  */
 export class HTTPSProxyServer_L3 extends HTTPSProxyServer {
 
-    constructor(port: number|string, hostname: string = "127.0.0.1", options: ServerOptions = {}) {
+    constructor(port: number|string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
         super(port, hostname, options)
     }
 

@@ -7,9 +7,9 @@ import {ProxyDBO, VariableDBO} from "../../src/db/schema";
 import {Registry, ProxyHandle} from "../../src/lib/registry";
 
 
-describe('Registry', () => {
+xdescribe('Registry', () => {
 
-    describe('Operations', () => {
+    xdescribe('Operations', () => {
 
         let $DB = new DB({db_source: ':memory:'})
 

@@ -23,7 +23,7 @@ const BASE_URL = 'http://www.freeproxylists.com'
 export function createScrapJob(opts: any): Function {
     return (api: API, done: Function = null): Promise<any> => {
         var cookies = request.jar()
-        var p = request
+        var p:any = request
             .get(BASE_URL + '/' + opts.path, {jar: cookies})
             .then((html: string) => {
 
@@ -59,7 +59,7 @@ export function createScrapJob(opts: any): Function {
                 .then(()=> {
                     done()
                 })
-                .catch((err) => {
+                .catch((err:Error) => {
                     done(err)
                 })
         }

@@ -37,18 +37,18 @@ const IP_REGEX = /\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}/
 
 export class JudgeRequest {
 
-    _debug:boolean = false
-    private timeout:number = 10000
+    _debug: boolean = false
+    private timeout: number = 10000
 
     private id: string
     private url: string
     private proxy_url: string
     private judge: Judge
 
-    is_ip_present:string[] = []
-    is_ip_of_proxy:string[] = []
-    forward_headers:string[] = []
-    via_headers:string[] = []
+    is_ip_present: string[] = []
+    is_ip_of_proxy: string[] = []
+    forward_headers: string[] = []
+    via_headers: string[] = []
     level: number = -1
 
     response: any = null
@@ -82,17 +82,28 @@ export class JudgeRequest {
 
 
     async performRequest(): Promise<any> {
-        this.request = _request.get(this.url, {
+        let opts = {
             resolveWithFullResponse: true,
             proxy: this.proxy_url,
             timeout: this.timeout
-        })
-        this.monitor = RequestResponseMonitor.monitor(this.request, this.id)
-        this.response = await this.request.promise()
+        }
+
+        // if(this.judge.isSecured){
+        // opts.ca
+        // }
+
+        this.request = _request.get(this.url, opts)
+        this.monitor = RequestResponseMonitor.monitor(this.request, this.id, {debug: this._debug})
+        try {
+            this.response = await this.request.promise()
+        } catch (err) {
+            // TODO How to handle request errors?
+            throw err
+        }
         return this.monitor.promise()
     }
 
-    get duration(){
+    get duration() {
         return this.monitor.duration
     }
 
@@ -145,7 +156,7 @@ export class JudgeRequest {
             //} else if(is_ip_of_proxy.length == 0 && is_ip_present.length > 0){
             //    this.monitor.addLog(`Proxy is L3 - :`, '*')
             this.level = 2
-        }else{
+        } else {
             this.monitor.addLog(`Proxy is L3 - transparent:`, '*')
             this.level = 3
         }
