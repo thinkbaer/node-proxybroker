@@ -1,6 +1,6 @@
 // process.env.NODE_DEBUG = 'request|tunnel'
-process.env.NODE_DEBUG = ' request tunnel node '
-
+// process.env.NODE_DEBUG = ' request tunnel node '
+// process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 import * as net from 'net'
 import * as http from 'http'
@@ -44,36 +44,35 @@ const PROXY_LOCAL_HOST: string = 'proxy.local'
 describe('Judge proxy variations tests', () => {
 
     let variations = [
-        /*
-         {
-         title: 'HTTP Client <-> HTTP Proxy L3 <-> HTTP Judge',
-         level: 3,
-         server: HTTPProxyServer_L3,
-         debug: false,
-         judge_secured: false,
-         judge_options: {}
-         },
-         {
-         title: 'HTTP Client <-> HTTP Proxy L2 <-> HTTP Judge',
-         level: 2,
-         server: HTTPProxyServer_L2,
-         debug: false,
-         judge_secured: false,
-         judge_options: {}
-
-         },
-         {
-         title: 'HTTP Client <-> HTTP Proxy L1 <-> HTTP Judge',
-         level: 1,
-         server: HTTPProxyServer_L1,
-         judge_secured: false,
-         debug: false,
-         judge_options: {}
-         },*/
         {
-            title: 'HTTP Client <-> HTTP Proxy L3 <-> HTTPS Judge',
+            title: 'HTTP Client <-> HTTP Proxy L3 <-> HTTP Judge',
             level: 3,
             server: HTTPProxyServer_L3,
+            debug: true,
+            judge_secured: false,
+            judge_options: {}
+        },
+        {
+            title: 'HTTP Client <-> HTTP Proxy L2 <-> HTTP Judge',
+            level: 2,
+            server: HTTPProxyServer_L2,
+            debug: false,
+            judge_secured: false,
+            judge_options: {}
+
+        },
+        {
+            title: 'HTTP Client <-> HTTP Proxy L1 <-> HTTP Judge',
+            level: 1,
+            server: HTTPProxyServer_L1,
+            judge_secured: false,
+            debug: false,
+            judge_options: {}
+        },
+        {
+            title: 'HTTP Client <-> HTTP Proxy L1 <-> HTTPS Judge (only L1)',
+            level: 1,
+            server: HTTPProxyServer_L1,
             debug: true,
             judge_secured: true,
             judge_options: {
@@ -134,54 +133,43 @@ describe('Judge proxy variations tests', () => {
                 proxy_server = null
                 judge = null
             })
+            /*
+             xit(protocol + ' request 2', async function () {
+             try {
+             let rp = _request({
+             url: 'https://judge.local:8080/ping',
+             method: 'GET',
+             proxy: proxy_server.url(),
+             ca: judge.options.ssl_options.cert,
+             })
 
-            it(protocol + ' request 2', async function () {
-                try {
-                    let rp = _request({
-                        url: 'https://judge.local:8080/ping',
-                        method: 'GET',
-                        proxy: proxy_server.url(),
-                        // ca: judge.options.ssl_options.cert,
-//                        forever:false,
-                    })
+             rp.once('connect', function (res: any, socket: net.Socket, head: Buffer) {
+             console.log('CONNECT')
+             rp.removeAllListeners()
+             socket.removeAllListeners()
+             })
 
-                    rp.once('connect', function (res: any, socket: net.Socket, head: Buffer) {
-                        console.log('CONNECT')
-                        rp.removeAllListeners()
-                        socket.removeAllListeners()
-                    })
+             rp.once('response', function (res: any) {
+             console.log('RESPONSE')
+             })
 
-                    rp.once('response', function (res: any) {
-                        console.log('RESPONSE')
-                    })
+             rp.once('error', function (err: any) {
+             console.error('ERROR',err)
+             })
 
-                    rp.once('error', function (err: any) {
-                        console.error('ERROR',err)
-                    })
+             let response = await rp.promise()
 
-                    let response = await rp.promise()
+             } catch (err) {
+             throw err
+             }
+             })
+             */
 
-                } catch (err) {
-                    throw err
-                }
-            })
-
-
-            xit(protocol + ' request', async function () {
-                /*
-                 let test = request({uri: 'https://judge.local:8080', method: 'CONNECT', ca: judge.options.ssl_options.cert})
-
-                 try {
-                 await test
-                 } catch (err) {
-                 throw err
-                 }
-                 */
+            it(protocol + ' request', async function () {
 
                 let proxy_url = proxy_server.url()
-                console.log('PROXY=' + proxy_url + ' TO ' + judge.remote_url_f)
-
-                let judgeReq = judge.createRequest(proxy_url)
+                // console.log('PROXY=' + proxy_url + ' TO ' + judge.remote_url_f)
+                let judgeReq = judge.createRequest(proxy_url,{local_ip : '127.0.0.1' })
                 judgeReq._debug = data.debug
 
                 try {

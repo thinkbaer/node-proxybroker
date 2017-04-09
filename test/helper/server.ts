@@ -1,4 +1,5 @@
 import * as http from 'http'
+import * as tls from 'tls'
 import * as https from 'https'
 import * as net from 'net'
 import * as fs from 'fs'
@@ -8,7 +9,7 @@ import Timer = NodeJS.Timer;
 
 import * as HttpProxy from "http-proxy"
 
-const PROXY_HOST:string = 'proxy.local'
+const PROXY_HOST: string = 'proxy.local'
 
 /**
  * Mock ProxyServer for the differnt proxy level types
@@ -20,13 +21,13 @@ export interface ServerOptions {
     variant?: string
     stall?: number
     cert_file?: string
-    cert?: string|Buffer
+    cert?: string | Buffer
     key_file?: string
-    key?: string|Buffer,
+    key?: string | Buffer,
     ca_file?: string
-    ca?: string|Buffer
+    ca?: string | Buffer
     ca_key_file?: string
-    ca_key?: string|Buffer,
+    ca_key?: string | Buffer,
     strictSSL?: boolean,
     timeout?: number
 }
@@ -47,13 +48,14 @@ abstract class DefaultServer {
     _debug: boolean = false
 
     inc: number = 0
-    cache: {[key: number]: {t: Timer, s: net.Socket}} = {}
+    cache: { [key: number]: { t: Timer, s: net.Socket } } = {}
     server: net.Server = null
     _url: url.Url = null
     options: ServerOptions = null
     _abort: boolean = false
 
-    constructor(port: number|string, hostname: string = PROXY_HOST, protocol: string = 'http', options: ServerOptions = {}) {
+    constructor(port: number
+                    | string, hostname: string = PROXY_HOST, protocol: string = 'http', options: ServerOptions = {}) {
         this._url = url.parse(protocol + '://' + hostname + ':' + port)
         this.options = Object.assign(options, defaultOptions)
     }
@@ -73,7 +75,7 @@ abstract class DefaultServer {
 
     response(req: http.IncomingMessage, res: http.ServerResponse) {
         let inc = this.inc++
-        this.debug('request')
+        this.debug('incoming request')
         let self = this
         let t = setTimeout(function () {
             self[self.options.variant](req, res)
@@ -106,12 +108,65 @@ abstract class DefaultServer {
             }
             delete this.cache[x]
         }
-        this.stop(() => {})
+        this.stop(() => {
+        })
     }
+
+    /**
+     *
+     *
+     * @see https://nodejs.org/api/http.html#http_event_connect
+     *
+     * @param request
+     * @param upstream
+     * @param head
+     */
+    private onServerConnect(request: http.IncomingMessage, upstream: net.Socket, head: Buffer): void {
+        this.debug('onServerConnect')
+        let self = this
+        let rurl:url.Url  = url.parse(`https://${request.url}`);
+
+        let downstream = net.connect(parseInt(rurl.port), rurl.hostname, function () {
+            self.debug('downstream connected to '+request.url);
+            upstream.write(
+                'HTTP/'+request.httpVersion+' 200 Connection Established\r\n'+
+                'Proxy-agent: Proxybroker\r\n' +
+                '\r\n')
+            downstream.write(head)
+            downstream.pipe(upstream)
+            upstream.pipe(downstream)
+        });
+    }
+
+    private onServerConnectData(data: Buffer): void {
+        this.debug('onServerConnectData ' + data.toString('utf-8'))
+    }
+
+    private onServerUpgrade(request: http.IncomingMessage, socket: net.Socket, head: Buffer): void {
+        this.debug('onServerUpgrade')
+    }
+
+    private onServerClientError(exception: Error, socket: net.Socket): void {
+        this.debug('onServerClientError')
+    }
+
+    private onServerClose(): void {
+        this.debug('onServerClose')
+    }
+
+    // private onServerConnection(socket: net.Socket): void {  }
 
     async start(done: Function = null): Promise<any> {
         let self = this
         this.server = this.createServer()
+        //      this.server.on('checkContinue',this.onServerCheckContinue.bind(this))
+        //      this.server.on('checkExpectation',this.onServerCheckExpectation.bind(this))
+        this.server.on('clientError', this.onServerClientError.bind(this))
+        this.server.on('close', this.onServerClose.bind(this))
+        //this.server.on('connection', this.onServerConnection.bind(this))
+        this.server.on('upgrade', this.onServerUpgrade.bind(this))
+        //      this.server.on('request',this.onServerRequest.bind(this))
+        this.server.on('connect', this.onServerConnect.bind(this))
 
         let p = new Promise(function (resolve) {
             self.server = self.server.listen(parseInt(self._url.port), self._url.hostname, () => {
@@ -165,19 +220,23 @@ abstract class DefaultServer {
 
 export class DefaultHTTPServer extends DefaultServer {
 
-    constructor(port: number|string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
+    constructor(port: number | string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
         super(port, hostname, 'http', options)
     }
 
     createServer(): http.Server {
+        let self = this
         let server = http.createServer(this.response.bind(this))
         server.setTimeout(this.options.timeout, function (socket: net.Socket) {
+            self.debug('server timeout reached: ' + this.options.timeout)
             socket.destroy();
         })
         return server
     }
 
-    get protocol():string{return 'http:'}
+    get protocol(): string {
+        return 'http:'
+    }
 
 }
 
@@ -185,7 +244,7 @@ export class DefaultHTTPServer extends DefaultServer {
 export class DefaultHTTPSServer extends DefaultServer {
 
 
-    constructor(port: number|string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
+    constructor(port: number | string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
         super(port, hostname, 'https', options)
 
         if (this.options.cert_file) {
@@ -205,7 +264,9 @@ export class DefaultHTTPSServer extends DefaultServer {
         return https.createServer(this.options, this.response.bind(this))
     }
 
-    get protocol():string{return 'https:'}
+    get protocol(): string {
+        return 'https:'
+    }
 }
 
 
@@ -213,7 +274,7 @@ export abstract class HTTPProxyServer extends DefaultHTTPServer {
 
     proxy: HttpProxy = null
 
-    constructor(port: number|string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
+    constructor(port: number | string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
         super(port, hostname, options)
         // this.options.variant = 'proxyResponse'
     }
@@ -272,7 +333,7 @@ export abstract class HTTPSProxyServer extends DefaultHTTPSServer {
 
     proxy: HttpProxy = null
 
-    constructor(port: number|string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
+    constructor(port: number | string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
         super(port, hostname, options)
         // this.options.variant = 'proxyResponse'
     }
@@ -325,7 +386,7 @@ export abstract class HTTPSProxyServer extends DefaultHTTPSServer {
 }
 
 
-function onProxyRequest_L3(proxyReq: http.ClientRequest, req: http.IncomingMessage, res: http.ServerResponse, options: HttpProxy.ServerOptions){
+function onProxyRequest_L3(proxyReq: http.ClientRequest, req: http.IncomingMessage, res: http.ServerResponse, options: HttpProxy.ServerOptions) {
     this.debug('onProxyRequest')
 
     this.debug('PR: ' + req.url)
@@ -336,7 +397,6 @@ function onProxyRequest_L3(proxyReq: http.ClientRequest, req: http.IncomingMessa
 
     proxyReq.setHeader('X-Forwarded-For', sender_ip);
     proxyReq.setHeader('Via', 'proxybroker on ' + proxy_ip + ':' + proxy_port);
-
     proxyReq.setHeader('X-Cache', 'DemoCache');
     proxyReq.setHeader('X-Cache-Lookup', 'MISSED');
     proxyReq.setHeader('X-Client-IP', sender_ip);
@@ -348,12 +408,12 @@ function onProxyRequest_L3(proxyReq: http.ClientRequest, req: http.IncomingMessa
  */
 export class HTTPProxyServer_L3 extends HTTPProxyServer {
 
-    constructor(port: number|string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
+    constructor(port: number | string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
         super(port, hostname, options)
     }
 
     onProxyRequest(proxyReq: http.ClientRequest, req: http.IncomingMessage, res: http.ServerResponse, options: HttpProxy.ServerOptions): void {
-        onProxyRequest_L3.call(this,proxyReq,req,res,options)
+        onProxyRequest_L3.call(this, proxyReq, req, res, options)
         // proxyReq.setHeader('X_CLUSTER_CLIENT_IP', sender_ip);
     }
 
@@ -364,12 +424,12 @@ export class HTTPProxyServer_L3 extends HTTPProxyServer {
  */
 export class HTTPSProxyServer_L3 extends HTTPSProxyServer {
 
-    constructor(port: number|string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
+    constructor(port: number | string, hostname: string = PROXY_HOST, options: ServerOptions = {}) {
         super(port, hostname, options)
     }
 
     onProxyRequest(proxyReq: http.ClientRequest, req: http.IncomingMessage, res: http.ServerResponse, options: HttpProxy.ServerOptions): void {
-        onProxyRequest_L3.call(this,proxyReq,req,res,options)
+        onProxyRequest_L3.call(this, proxyReq, req, res, options)
         // proxyReq.setHeader('X_CLUSTER_CLIENT_IP', sender_ip);
     }
 

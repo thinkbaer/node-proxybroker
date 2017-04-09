@@ -1,15 +1,15 @@
-import * as http from "http";
-import * as _request from "request-promise-native";
-import {Log} from "./logging";
-
 import * as util from 'util'
+import * as http from "http";
+import * as dns from "dns";
 import * as mUrl from 'url'
 import * as net from 'net'
+
+import * as _request from "request-promise-native";
+import {Log} from "./logging";
 import {RequestResponseMonitor} from "./request_response_monitor";
 import {shorthash} from "./crypt";
 import {HttpHeaders} from "../d/http_headers";
 import {Judge} from "./judge";
-
 
 // interface JudgeConfig
 
@@ -61,36 +61,55 @@ export class JudgeRequest {
     headers_judge: HttpHeaders = {}
 
     local_ip: string = null
-    //local_hostname:string = null
+    local_regex:string = null
     proxy_ip: string = null
+    proxy_regex:string = null
     // proxy_hostname:string = null
 
-
-    constructor(judge: Judge, id: string, url: string, proxy_url: string) {
+    constructor(judge: Judge, id: string, options: {url:string, local_ip?:string, proxy_url:string}) {
         this.judge = judge
-        this.url = url
+        this.url = options.url
         this.id = id
-        this.local_ip = this.judge.ip
-        this.proxy_url = proxy_url
-        this.proxy_ip = mUrl.parse(proxy_url).hostname
+        this.local_ip = options.local_ip || this.judge.ip
+        this.proxy_url = options.proxy_url
+        this.proxy_ip = mUrl.parse(this.proxy_url).hostname
+    }
 
-        if (!this.proxy_ip.match(IP_REGEX)) {
-            // TODO Throw Exception? or resolve per DNS!
-        }
+    private async _prepare(){
+        this.local_regex = '('+this.local_ip+'(\\s|$|:))'
+        let result = await this._lookup(this.local_ip)
+        this.local_regex += '|(' + result.addr +'(\\s|$|:))'
 
+        this.proxy_regex = '('+this.proxy_ip+'(\\s|$|:))'
+        result = await this._lookup(this.proxy_ip)
+        this.proxy_regex += '|(' + result.addr +'(\\s|$|:))'
+    }
+
+    private _lookup(domain:string):Promise<{addr:string,family:string}>{
+        return new Promise(function(resolve, reject){
+            dns.lookup(domain,function(err, address, family){
+                if(err){
+                    reject(err)
+                }else{
+                    resolve({addr:address, family:family})
+                }
+            })
+        })
     }
 
 
     async performRequest(): Promise<any> {
-        let opts = {
+        await this._prepare()
+
+        let opts : _request.RequestPromiseOptions = {
             resolveWithFullResponse: true,
             proxy: this.proxy_url,
             timeout: this.timeout
         }
 
-        // if(this.judge.isSecured){
-        // opts.ca
-        // }
+        if(this.judge.isSecured && this.judge.options.ssl_options.cert){
+            opts.ca = this.judge.options.ssl_options.cert
+        }
 
         this.request = _request.get(this.url, opts)
         this.monitor = RequestResponseMonitor.monitor(this.request, this.id, {debug: this._debug})
@@ -108,6 +127,8 @@ export class JudgeRequest {
     }
 
 
+
+
     onJudge(req: http.IncomingMessage, res: http.ServerResponse) {
         this.judgeConnected = true
         this.judgeDate = new Date()
@@ -115,8 +136,8 @@ export class JudgeRequest {
         this.monitor.stop()
         this.monitor.addLog(`Judge connected. (${this.monitor.duration}ms)`, '*')
 
-        let rx_ip = new RegExp((this.local_ip).replace('.', '\\.'))
-        let rx_proxy_ip = new RegExp(this.proxy_ip.replace('.', '\\.'))
+        let rx_ip = new RegExp((this.local_regex).replace('.', '\\.'))
+        let rx_proxy_ip = new RegExp(this.proxy_regex.replace('.', '\\.'))
         let keys = Object.keys(req.headers)
 
         keys = keys.filter((x) => {
@@ -125,16 +146,17 @@ export class JudgeRequest {
 
         for (let k of keys) {
             let entry = req.headers[k]
+            this.debug('header=>',k,entry)
 
             /*
              * TODO Resolve domain names if present!
              */
             this.headers_judge[k] = entry
-            if (rx_ip.exec(entry)) {
+            if (rx_ip.test(entry)) {
                 this.is_ip_present.push(k)
             }
 
-            if (rx_proxy_ip.exec(entry)) {
+            if (rx_proxy_ip.test(entry)) {
                 this.is_ip_of_proxy.push(k)
             }
 
@@ -178,4 +200,18 @@ export class JudgeRequest {
         }
     }
 
+    private info(...msg: any[]) {
+        Log.info.apply(Log, msg)
+    }
+
+    private debug(...msg: any[]) {
+        if (this._debug) {
+            Log.debug.apply(Log, msg)
+        }
+    }
+
+    private throwedError(err: Error, ret?: any): any {
+        Log.error(err)
+        return ret
+    }
 }

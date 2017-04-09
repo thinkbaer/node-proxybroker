@@ -70,7 +70,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     /**
      *
-     * see https://nodejs.org/api/http.html#http_event_response
+     * @see https://nodejs.org/api/http.html#http_event_response
      *
      * TODO: lookup tunneling!
      *
@@ -211,9 +211,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     onSocketClose(had_error: boolean) {
         this.debug('onSocketClose')
         this.finished()
-
     }
-
 
     onSocketAgentRemove(): void {
         this.debug('onSocketAgentRemove')
@@ -233,15 +231,11 @@ export class RequestResponseMonitor extends events.EventEmitter {
             this.addLog(`Try handshake for secure connetion ...`)
         }
 
-
         this.addLog('','')
         this.sendedHead.split('\n').map((x: string) => {
             this.addClientLog(x.trim())
         })
         this.addLog('','')
-
-
-
     }
 
     onSocketData(data: Buffer) {
@@ -255,7 +249,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
             if (this.receivedHead.match(/\r\n\r\n/)) {
                 this.receivedHead = this.receivedHead.split("\r\n\r\n").shift() // "\r\n\r\n"
                 this.receivedHeadDone = true
-
             }
 
             if(this.receivedHeadDone){
