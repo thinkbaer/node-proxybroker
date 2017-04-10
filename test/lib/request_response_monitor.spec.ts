@@ -1,14 +1,15 @@
-let mlog = require('mocha-logger')
 import * as chai from 'chai'
 let expect = chai.expect
 import {RequestResponseMonitor} from "../../src/lib/request_response_monitor";
 import * as _request from "request-promise-native";
-import {DefaultHTTPServer, DefaultHTTPSServer} from "../helper/server";
+import {Server} from "../../src/lib/server";
+//import {DefaultHTTPServer, DefaultHTTPSServer} from "../helper/server";
 
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+//process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 //https.globalAgent.options.rejectUnauthorized = false;
+const PROXY_LOCAL_HOST: string = 'proxy.local'
 
 describe('Request Response Monitor', () => {
 
@@ -16,14 +17,13 @@ describe('Request Response Monitor', () => {
      * Server abort scenarios
      */
     describe('server abort', () => {
-        let port = 8000
-        let server: DefaultHTTPServer = new DefaultHTTPServer(port)
+        let server: Server = new Server({url: 'http://localhost:8000'})
 
-        before(function (done) {
+        beforeEach(function (done) {
             server.start(done)
         })
 
-        after(function (done) {
+        afterEach(function (done) {
             if (server) {
                 server.stop(done)
             } else {
@@ -59,7 +59,7 @@ describe('Request Response Monitor', () => {
                 console.log(log)
                 console.log('<--------')
             }
-            expect(log).to.contain("Try connect to "+_url)
+            expect(log).to.contain("Try connect to " + _url)
             expect(log).to.match(new RegExp("Connection aborted"))
             expect(log).to.match(new RegExp("socket hang up"))
 
@@ -70,8 +70,7 @@ describe('Request Response Monitor', () => {
      * Server abort scenarios
      */
     describe('server timeout', () => {
-        let port = 8000
-        let server: DefaultHTTPServer = new DefaultHTTPServer(port, "127.0.0.1", {timeout: 100})
+        let server: Server = new Server({url: 'http://127.0.0.1:8000', timeout: 100})
 
         before(function (done) {
             server.start(done)
@@ -108,7 +107,7 @@ describe('Request Response Monitor', () => {
                 console.log(log)
                 console.log('<--------')
             }
-            expect(log).to.contain("Try connect to "+_url)
+            expect(log).to.contain("Try connect to " + _url)
             expect(log).to.match(new RegExp("Connection aborted"))
             expect(log).to.match(new RegExp("socket hang up"))
 
@@ -116,14 +115,16 @@ describe('Request Response Monitor', () => {
     })
 
     describe('http server', () => {
-        let port = 8000
-        let server: DefaultHTTPServer = new DefaultHTTPServer(port)
 
-        before(function (done) {
+        let server: Server = new Server({url: 'http://127.0.0.1:8000', _debug: true})
+
+
+        beforeEach(function (done) {
+
             server.start(done)
         })
 
-        after(function (done) {
+        afterEach(function (done) {
             server.stop(done)
         })
 
@@ -132,25 +133,26 @@ describe('Request Response Monitor', () => {
          */
         it('simple request', async function () {
             let _url = server.url()
-            let req = _request.get(server.url())
+            console.log(_url)
+            let req = _request.get(_url)
             let rrm = RequestResponseMonitor.monitor(req)
-            rrm._debug = false
+            rrm._debug = true
             await req.promise()
             await rrm.promise()
 
             let log: string = rrm.logToString()
 
-            if(rrm._debug){
+            if (rrm._debug) {
                 console.log('-------->')
                 console.log(log)
                 console.log('<--------')
 
             }
 
-            expect(log).to.contain("Try connect to "+_url)
+            expect(log).to.contain("Try connect to " + _url)
             expect(log).to.match(new RegExp("set TCP_NODELAY"))
             expect(log).to.match(new RegExp("Received 285 byte from sender"))
-            expect(log).to.match(new RegExp("Connection closed to "+_url+" \\(\\d+ms\\)"))
+            expect(log).to.match(new RegExp("Connection closed to " + _url + " \\(\\d+ms\\)"))
 
         })
 
@@ -195,8 +197,11 @@ describe('Request Response Monitor', () => {
 
 
     describe('https server', () => {
-        let port = 8000
-        let server: DefaultHTTPSServer = new DefaultHTTPSServer(port)
+        let server: Server = new Server({
+            url: 'https://'+PROXY_LOCAL_HOST+':8000',
+            key_file: __dirname + '/../ssl/proxy/server-key.pem',
+            cert_file: __dirname + '/../ssl/proxy/server-cert.pem',
+        })
 
         before(function (done) {
             server.start(done)
@@ -209,12 +214,12 @@ describe('Request Response Monitor', () => {
 
         it('encrypted request', async function () {
 
-            let options = {}
+            let options = {ca:server._options.cert}
 
             // let suuid = shorthash('https://127.0.0.1:8000/judge' + (new Date().getTime()))
 
             //_request.debug = true
-            let req = _request.get(server.url() + '/judge/DUMMY',options)
+            let req = _request.get(server.url() + '/judge/DUMMY', options)
             //let req = _request.get('https://www.google.de?')
             let rrm = RequestResponseMonitor.monitor(req)
             // rrm._debug = true

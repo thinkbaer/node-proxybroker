@@ -310,7 +310,8 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     static monitor(_request: mRequest.RequestPromise, id?: string, options?:{debug?:boolean}): RequestResponseMonitor {
         let rrm = new RequestResponseMonitor(_request, id)
-        if(options.debug){
+        options = options || {}
+        if(options && options.debug){
             rrm._debug = options.debug
         }
         return rrm

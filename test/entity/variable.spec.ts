@@ -12,9 +12,7 @@ describe('Entity: Variable', () => {
         async dsa(){}
 
         async abc(){
-
             await this.dsa()
-
             return ''
         }
     }

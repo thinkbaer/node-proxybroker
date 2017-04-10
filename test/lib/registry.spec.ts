@@ -42,8 +42,6 @@ xdescribe('Registry', () => {
                 .catch(err=>done(err))
         })
 
-
-
         it('enqueue', function (done) {
             let registry = new Registry($DB)
             registry.on('waiting', () => done())

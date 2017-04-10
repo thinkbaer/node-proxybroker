@@ -9,16 +9,14 @@ import * as mUrl from 'url'
 import * as tls from 'tls'
 
 import {Judge} from "../../src/lib/judge";
-let mlog = require('mocha-logger')
+
 import * as chai from 'chai'
 let expect = chai.expect
 import * as url from "url";
 
-import {HTTPProxyServer_L3, HTTPProxyServer_L2, HTTPProxyServer_L1, HTTPProxyServer} from "../helper/server";
-import * as _request from "request-promise-native";
-import {RequestResponseMonitor} from "../../src/lib/request_response_monitor";
+
 import {Log} from "../../src/lib/logging";
-import {RequestResponse} from "request";
+import {ProxyServer, ProxyServerOptions} from "../../src/lib/proxy_server";
 
 // https://www.proxynova.com/proxy-articles/proxy-anonymity-levels-explained
 
@@ -43,37 +41,38 @@ const PROXY_LOCAL_HOST: string = 'proxy.local'
 
 describe('Judge proxy variations tests', () => {
 
+    let debug = true
+
     let variations = [
         {
             title: 'HTTP Client <-> HTTP Proxy L3 <-> HTTP Judge',
-            level: 3,
-            server: HTTPProxyServer_L3,
-            debug: true,
+            proxy_options: {level: 3},
+            debug: debug,
             judge_secured: false,
             judge_options: {}
-        },
+        }
+        ,
         {
             title: 'HTTP Client <-> HTTP Proxy L2 <-> HTTP Judge',
-            level: 2,
-            server: HTTPProxyServer_L2,
-            debug: false,
+            proxy_options: {level: 2},
+            debug: debug,
             judge_secured: false,
             judge_options: {}
 
-        },
+        }
+        ,
         {
             title: 'HTTP Client <-> HTTP Proxy L1 <-> HTTP Judge',
-            level: 1,
-            server: HTTPProxyServer_L1,
+            proxy_options: {level: 1},
             judge_secured: false,
-            debug: false,
+            debug: debug,
             judge_options: {}
-        },
+        }
+        ,
         {
             title: 'HTTP Client <-> HTTP Proxy L1 <-> HTTPS Judge (only L1)',
-            level: 1,
-            server: HTTPProxyServer_L1,
-            debug: true,
+            proxy_options: {level: 1},
+            debug: debug,
             judge_secured: true,
             judge_options: {
                 key_file: __dirname + '/../ssl/judge/server-key.pem',
@@ -100,13 +99,18 @@ describe('Judge proxy variations tests', () => {
             let proxy_ip: string = PROXY_LOCAL_HOST
 
             let judge: Judge = null
-            let proxy_server: HTTPProxyServer = null
+            let proxy_server: ProxyServer = null
             let protocol = (data.judge_secured ? 'https' : 'http')
 
             before(async function () {
                 Log.enable = data.debug
-                proxy_server = new data.server(proxy_port, proxy_ip, {})
-                proxy_server._debug = data.debug
+
+                let proxy_options = Object.assign({}, data.proxy_options,{
+                    url: 'http://' + proxy_ip + ':' + proxy_port,
+                    _debug: data.debug,
+                })
+                proxy_server = new ProxyServer(proxy_options)
+
                 let opts = {
                     selftest: false,
                     remote_lookup: false,
@@ -169,7 +173,7 @@ describe('Judge proxy variations tests', () => {
 
                 let proxy_url = proxy_server.url()
                 // console.log('PROXY=' + proxy_url + ' TO ' + judge.remote_url_f)
-                let judgeReq = judge.createRequest(proxy_url,{local_ip : '127.0.0.1' })
+                let judgeReq = judge.createRequest(proxy_url, {local_ip: '127.0.0.1'})
                 judgeReq._debug = data.debug
 
                 try {
@@ -182,9 +186,9 @@ describe('Judge proxy variations tests', () => {
                         console.log('<--------')
                     }
 
-                    expect(judgeReq.level).to.be.equal(data.level)
+                    expect(judgeReq.level).to.be.equal(data.proxy_options.level)
                     expect(log).to.match(/Judge connected/)
-                    expect(log).to.match(new RegExp('Proxy is L' + data.level))
+                    expect(log).to.match(new RegExp('Proxy is L' + data.proxy_options.level))
                 } catch (err) {
                     console.error(err)
                     throw err
