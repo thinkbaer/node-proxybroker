@@ -1,5 +1,5 @@
 
-import DB from "../db/db";
+
 
 
 export interface Config {

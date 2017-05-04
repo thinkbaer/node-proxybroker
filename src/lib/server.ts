@@ -11,7 +11,6 @@ import * as url from "url";
 
 import Timer = NodeJS.Timer;
 
-
 export interface ServerOptions {
     stall?: number
     cert_file?: string
