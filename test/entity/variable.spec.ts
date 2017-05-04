@@ -1,27 +1,15 @@
 import * as assert from 'assert'
 
 
-import {Variable} from "../../src/entity/variable";
+import {Variable} from "../../src/entity/Variable";
 import {createConnection, getConnectionManager} from "typeorm";
 
 
 describe('Entity: Variable', () => {
 
 
-    class Test {
-        async dsa(){}
 
-        async abc(){
-            await this.dsa()
-            return ''
-        }
-    }
-
-    it('memory', async function () {
-
-        let t = new Test()
-
-        await t.abc()
+    it('memory',  function () {
 
         let variable = new Variable()
 
