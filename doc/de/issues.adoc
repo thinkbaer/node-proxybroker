@@ -1,0 +1,35 @@
+== Issues
+
+* Datenmodell erarbeiten und erzeugen
+
+* CLI
+
+** judge :proxy_ip :proxy_port +
+  Ausführen eines Tests für die jeweilige IP + Port
+** update [:task] +
+  Aktualisierung der ProxyListe
+** start +
+  Starten des ProxyServers
+** stop +
+  Stoppen des ProxyServers
+** print +
+  CSV, JSON, Liste Ausgabe der aktuellen Liste
+
+
+* Konfiguration +
+  Default-Konfiguration unter ${HOME}/.proxybroker/config +
+  Ansonsten Angabe des Pfades bzw. direkt zur config-Datei
+
+** Backend
+*** Tabelle-Prefix (npb_*)
+*** Job automatation
+**** refresh - time / schedule
+
+** Proxy-Server
+*** Aktivierung/Deaktivierung
+*** IP/Port/Path
+
+** Frontend
+*** aktivieren/deaktiviern
+*** IP/Port/Path
+

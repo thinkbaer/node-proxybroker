@@ -1,0 +1,100 @@
+== Datamodel
+
+
+[plantuml, images/datamodel, png]
+....
+!define table(x) class x << (T,#FFAAAA) >>
+!define primary_key(x) <u>x</u>
+!define unique(x) <u><i>x</i></u>
+hide methods
+hide stereotypes
+
+table(IpAddr) {
+  primary_key(id) : int [autoinc]
+' Concatation of ip and port
+  key : string
+  ip : char\n
+  // Version of IP Protocol
+  ip_version : int = 4\n
+  port : int\n
+  // SSL Value
+  // 0 => none [http],
+  // 1 => only [https],
+  // 2 => both [http,https]
+  ssl : int\n
+
+  // Level types:
+  // 1 => Elite,
+  // 2 => Anonym,
+  // 3 => Transparent
+  level : int\n
+  active: boolean
+  created_at : date
+  updated_at : date
+}
+
+table(IpMeta){
+  primary_key(ip) : char
+  ip4 : int
+  country : string
+  state : string
+  city : string
+}
+
+IpAddr .right.> IpMeta : IP Metainformation
+
+
+table(AddrLog){
+  primary_key(id) : int
+  addr_id : int
+  seqnr : int
+  duration : int
+  error: int
+  timestamp:int
+  content : string
+  created_at: date
+  updated_at:date
+}
+
+AddrLog --> IpAddr
+
+table(JobLog){
+  primary_key(id) : int
+  amount : int
+  created_at : date
+  updated_at : date
+}
+
+table(Addr_JobLog) {
+  // Adress ID ist immer eindeutig
+  // es wird immer auf den letzten
+  // Job verwiesen
+  primary_key(id):int
+  unique(addr_id):int
+  joblog_id:int
+}
+
+
+Addr_JobLog --> IpAddr
+Addr_JobLog -left-> JobLog
+
+table(UsageLog) {
+  primary_key(id) : int\n
+  // Ref to IpAddr
+  addr_id : int
+  timestamp : date
+  duration :
+}
+
+UsageLog -> IpAddr
+
+table(RotateLog) {
+  primary_key(id)
+  addr_id: int
+  timestamp:int
+}
+
+RotateLog --> IpAddr
+
+....
+
