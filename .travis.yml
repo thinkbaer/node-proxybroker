@@ -1,9 +1,17 @@
 language: node_js
+sudo: required
 
 node_js:
   - "7"
 
+before_install:
+
+
+install:
+  - npm install -g typings
+  - typings install
+
 addons:
   hosts:
-    - 127.0.0.1
-    - 127.0.0.2
+    - proxy.local
+    - judge.local
