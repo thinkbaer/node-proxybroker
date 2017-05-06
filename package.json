@@ -4,7 +4,7 @@
   "description": "Broker for anonymus proxies",
   "main": "dist/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --opts mocha.all.opts"
   },
   "repository": {
     "type": "git",
@@ -40,6 +40,7 @@
     "ts-node": "^1.6.1",
     "typeorm": "0.0.8",
     "typescript": "^2.1.5",
+    "typescript-object-utils": "^0.2.6",
     "typescript-require": "^0.2.9-1",
     "watchify": "^3.7.0"
   },
@@ -54,7 +55,6 @@
     "reflect-metadata": "^0.1.9",
     "request": "^2.79.0",
     "request-promise-native": "^1.0.3",
-    "sqlite": "^2.2.4",
     "sqlite3": "^3.1.8"
   }
 }

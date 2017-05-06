@@ -1,0 +1,9 @@
+language: node_js
+
+node_js:
+  - "7"
+
+addons:
+  hosts:
+    - travis.dev
+    - joshkalderimis.com

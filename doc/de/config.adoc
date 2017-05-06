@@ -1,0 +1,19 @@
+== Konfiguration
+
+
+Default-Konfiguration unter ${HOME}/.proxybroker/config +
+Ansonsten Angabe des Pfades bzw. direkt zur config-Datei
+
+
+* Backend
+** Tabelle-Prefix (npb_*)
+** Job automatation
+*** refresh - time / schedule
+
+* Proxy-Server
+** Aktivierung/Deaktivierung
+** IP/Port/Path
+
+* Frontend
+** aktivieren/deaktiviern
+** IP/Port/Path
