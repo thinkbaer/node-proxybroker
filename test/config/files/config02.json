@@ -1,0 +1,10 @@
+{
+  "workdir": "/tmp",
+  "storage": {
+    "driver": {
+      "type": "sqlite",
+      "storage": ":memory:",
+      "tablesPrefix": "npb_"
+    }
+  }
+}
