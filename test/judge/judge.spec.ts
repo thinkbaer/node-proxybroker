@@ -172,7 +172,7 @@ describe('Judge', () => {
 
     describe('test service default bootstrap (no SSL)', () => {
         beforeEach(() => {
-            Log.enable = false
+            //Log.enable = false
         })
 
         afterEach(() => {
