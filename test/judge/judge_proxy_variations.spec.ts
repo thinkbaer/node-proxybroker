@@ -41,7 +41,7 @@ const PROXY_LOCAL_HOST: string = 'proxy.local'
 
 describe('Judge proxy variations tests', () => {
 
-    let debug = true
+    let debug = false
 
     let variations = [
         {
@@ -137,37 +137,7 @@ describe('Judge proxy variations tests', () => {
                 proxy_server = null
                 judge = null
             })
-            /*
-             xit(protocol + ' request 2', async function () {
-             try {
-             let rp = _request({
-             url: 'https://judge.local:8080/ping',
-             method: 'GET',
-             proxy: proxy_server.url(),
-             ca: judge.options.ssl_options.cert,
-             })
 
-             rp.once('connect', function (res: any, socket: net.Socket, head: Buffer) {
-             console.log('CONNECT')
-             rp.removeAllListeners()
-             socket.removeAllListeners()
-             })
-
-             rp.once('response', function (res: any) {
-             console.log('RESPONSE')
-             })
-
-             rp.once('error', function (err: any) {
-             console.error('ERROR',err)
-             })
-
-             let response = await rp.promise()
-
-             } catch (err) {
-             throw err
-             }
-             })
-             */
 
             it(protocol + ' request', async function () {
 
