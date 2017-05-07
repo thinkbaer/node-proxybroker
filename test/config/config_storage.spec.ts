@@ -17,6 +17,7 @@ describe('Config for storage', function(){
      * Single file configuration
      */
     it('Load configuration for sqlite in memory', async function () {
+        this.timeout(5000)
         let config = new Config()
         await config.init()
         await config.loadFromFile(__dirname + '/files/config02.json')

@@ -45,9 +45,7 @@ export class Storage {
         if(options.driver && options.driver.type == 'sqlite' && options.driver.storage != ':memory:' && !path.isAbsolute(options.driver.storage)){
             // TODO check if file exists
             let _path = config.options.workdir + '/' + options.driver.storage
-            console.log(options)
             options = mergeDeep(options, {driver:{storage:_path}})
-            console.log(options)
         }
 
 
