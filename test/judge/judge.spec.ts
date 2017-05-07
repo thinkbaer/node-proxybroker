@@ -110,7 +110,7 @@ describe('Judge', () => {
         })
 
         it('negative selftest', async function () {
-            let judge = new Judge({debug:true})
+            let judge = new Judge({debug: true})
 
             try {
                 await judge['get_remote_accessible_ip']()
@@ -170,31 +170,35 @@ describe('Judge', () => {
 
     })
 
-    describe('test service default bootstrap (no SSL)', () => {
-        beforeEach(() => {
-            //Log.enable = false
+
+    if (!process.env.CI_CONTAINER) {
+        /**
+         * This test doesn't work in a extern test container like travis
+         */
+
+        describe('test service default bootstrap (no SSL)', () => {
+            beforeEach(() => {
+                //Log.enable = false
+            })
+
+            afterEach(() => {
+                Log.enable = true
+            })
+
+            it('bootstrap', (done) => {
+                let judge = new Judge()
+                judge.bootstrap()
+                    .then((erg) => {
+                        expect(erg).to.be.eq(true)
+                        done()
+                    })
+                    .catch((err) => {
+                        expect(err).to.be.empty
+                        done(err)
+                    })
+            })
         })
-
-        afterEach(() => {
-            Log.enable = true
-        })
-
-        it('bootstrap', (done) => {
-            let judge = new Judge()
-            judge.bootstrap()
-                .then((erg) => {
-                    expect(erg).to.be.eq(true)
-                    done()
-                })
-                .catch((err) => {
-                    expect(err).to.be.empty
-                    done(err)
-                })
-        })
-
-    })
-
-
+    }
 
 
     /**
@@ -237,6 +241,6 @@ describe('Judge', () => {
     })
 })
 
-process.on('uncaughtException', function (err:Error) {
+process.on('uncaughtException', function (err: Error) {
     console.log(err);
 });
