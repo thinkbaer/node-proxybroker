@@ -2,7 +2,7 @@ import * as path from 'path';
 import {Connection, createConnection, getConnectionManager} from "typeorm";
 import {StorageOptions} from "./StorageOptions";
 import {Config} from "../config/Config";
-import {Log} from "../lib/logging";
+import {Log} from "../logging/logging";
 import {merge, mergeDeep} from "typescript-object-utils";
 
 

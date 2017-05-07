@@ -2,29 +2,20 @@ import * as http from "http";
 import * as tls from "tls";
 import * as https from "https";
 import * as _request from "request-promise-native";
-import {Log} from "./logging";
+import {Log} from "../logging/logging";
 import * as fs from 'fs'
 import * as mUrl from 'url'
 import * as net from 'net'
-import {RequestResponseMonitor} from "./request_response_monitor";
-import {shorthash} from "./crypt";
-import * as os from 'os';
+import {RequestResponseMonitor} from "../lib/request_response_monitor";
+import {shorthash} from "../lib/crypt";
 
-import {JudgeRequest} from "./judge_request";
+
+import {JudgeRequest} from "./JudgeRequest";
+import {JudgeOptions} from "./JudgeOptions";
 
 
 const IPCHECK_URL = 'https://api.ipify.org?format=json'
 
-export interface JudgeOptions {
-    selftest?: boolean
-    remote_lookup?: boolean
-    remote_url?: string
-    judge_url?: string
-    cert_file?: string
-    key_file?: string
-    debug?: boolean
-    ssl_options?: https.ServerOptions
-}
 
 
 const defaultOptions: JudgeOptions = {

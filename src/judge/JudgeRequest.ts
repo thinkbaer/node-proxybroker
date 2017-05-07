@@ -5,11 +5,11 @@ import * as mUrl from 'url'
 import * as net from 'net'
 
 import * as _request from "request-promise-native";
-import {Log} from "./logging";
-import {RequestResponseMonitor} from "./request_response_monitor";
-import {shorthash} from "./crypt";
-import {HttpHeaders} from "../d/http_headers";
-import {Judge} from "./judge";
+import {Log} from "../logging/logging";
+import {RequestResponseMonitor} from "../lib/request_response_monitor";
+import {shorthash} from "../lib/crypt";
+import {HttpHeaders} from "../d/HttpHeaders";
+import {Judge} from "./Judge";
 
 // interface JudgeConfig
 

@@ -4,12 +4,6 @@
 
 import "reflect-metadata";
 
-// import * as Promise from "bluebird";
-import * as fs from "fs";
-
-
-// import {Provider} from './lib/provider_spec'
-
 
 
 class Main {

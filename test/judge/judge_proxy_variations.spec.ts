@@ -2,21 +2,18 @@
 // process.env.NODE_DEBUG = ' request tunnel node '
 // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-import * as net from 'net'
+
 import * as http from 'http'
 import * as https from 'https'
-import * as mUrl from 'url'
-import * as tls from 'tls'
-
-import {Judge} from "../../src/lib/judge";
+import {Judge} from "../../src/judge/Judge";
 
 import * as chai from 'chai'
 let expect = chai.expect
-import * as url from "url";
 
 
-import {Log} from "../../src/lib/logging";
-import {ProxyServer, ProxyServerOptions} from "../../src/lib/proxy_server";
+
+import {Log} from "../../src/logging/logging";
+import {ProxyServer} from "../../src/lib/proxy_server";
 
 // https://www.proxynova.com/proxy-articles/proxy-anonymity-levels-explained
 

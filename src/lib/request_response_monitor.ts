@@ -6,7 +6,7 @@ import * as mUrl from 'url'
 import * as tls from 'tls'
 import * as events from 'events'
 import {TLSSocket} from "tls";
-import {HttpHeaders} from "../d/http_headers";
+import {HttpHeaders} from "../d/HttpHeaders";
 import {Url} from "url";
 
 
