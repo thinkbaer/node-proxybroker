@@ -138,7 +138,9 @@ export class Judge {
     async bootstrap(): Promise<boolean> {
         try {
             if (this._options.remote_lookup) {
+                Log.info('The remote IP before: ' + this.remote_url_f)
                 this._remote_url = await this.get_remote_accessible_ip()
+                Log.info('The remote IP after: ' + this.remote_url_f)
             }
             if (this._options.selftest) {
                 await this.wakeup(true)
@@ -160,7 +162,6 @@ export class Judge {
             let response_data = await _request.get(IPCHECK_URL)
             let json = JSON.parse(response_data)
             let remote_url = mUrl.parse(this._judge_url.protocol + '//' + json.ip + ':' + this._judge_url.port)
-            Log.info('The accessible remote IP: ' + this.remote_url_f)
             return remote_url
         } catch (err) {
             Log.error(err)
