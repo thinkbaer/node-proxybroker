@@ -1,8 +1,8 @@
 import * as assert from 'assert'
 
 // import FreeProxyLists_Com from "../../src/providers/free_proxy_lists.com";
-import {anonJob} from "../../src/providers/free_proxy_lists.com";
-import {API} from "../../src/module";
+//import {anonJob} from "../../src/providers/free_proxy_lists.com";
+//import {API} from "../../../src/module";
 
 /*
 class MockAPI implements API {

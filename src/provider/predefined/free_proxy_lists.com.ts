@@ -1,7 +1,7 @@
 
 
 import * as request from "request-promise-native";
-import {API, ProxyType} from "../module";
+import {API, ProxyType} from "../../module";
 
 
 const NAME = 'freeproxylists.com'
