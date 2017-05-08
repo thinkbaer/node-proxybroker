@@ -4,7 +4,8 @@
   "description": "Broker for anonymus proxies",
   "main": "dist/main.js",
   "scripts": {
-    "test": "mocha --opts mocha.all.opts"
+    "test": "nyc mocha --opts mocha.all.opts",
+    "posttest": "nyc report --reporter=json && codecov -f coverage/*.json"
   },
   "repository": {
     "type": "git",
@@ -29,6 +30,7 @@
     "@types/request": "0.0.39",
     "@types/request-promise-native": "^1.0.2",
     "chai": "^3.5.0",
+    "codecov": "^2.1.0",
     "expect": "^1.20.2",
     "gulp": "^3.9.1",
     "gulp-clean": "^0.3.2",
@@ -36,6 +38,8 @@
     "gulp-util": "^3.0.7",
     "gulp-watch": "^4.3.10",
     "mocha": "^3.3.0",
+    "nyc": "^10.3.2",
+    "source-map-support": "^0.4.15",
     "ts-node": "^1.7.3",
     "typeorm": "0.0.8",
     "typescript": "^2.3.2",
@@ -56,5 +60,19 @@
     "request": "^2.79.0",
     "request-promise-native": "^1.0.3",
     "sqlite3": "^3.1.8"
+  },
+  "nyc": {
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "**/*.d.ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ],
+    "sourceMap": true,
+    "instrument": true
   }
 }
