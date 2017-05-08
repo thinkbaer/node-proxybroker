@@ -1,8 +1,8 @@
 import * as chai from 'chai'
 let expect = chai.expect
-import {RequestResponseMonitor} from "../../src/lib/request_response_monitor";
+import {RequestResponseMonitor} from "../../src/judge/RequestResponseMonitor";
 import * as _request from "request-promise-native";
-import {Server} from "../../src/lib/server";
+import {Server} from "../../src/server/server";
 //import {DefaultHTTPServer, DefaultHTTPSServer} from "../helper/server";
 
 

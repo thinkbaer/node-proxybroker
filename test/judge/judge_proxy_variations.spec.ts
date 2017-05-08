@@ -13,7 +13,7 @@ let expect = chai.expect
 
 
 import {Log} from "../../src/logging/logging";
-import {ProxyServer} from "../../src/lib/proxy_server";
+import {ProxyServer} from "../../src/server/proxy_server";
 
 // https://www.proxynova.com/proxy-articles/proxy-anonymity-levels-explained
 

@@ -6,9 +6,9 @@ import * as net from 'net'
 
 import * as _request from "request-promise-native";
 import {Log} from "../logging/logging";
-import {RequestResponseMonitor} from "../lib/request_response_monitor";
+import {RequestResponseMonitor} from "./RequestResponseMonitor";
 import {shorthash} from "../lib/crypt";
-import {HttpHeaders} from "../d/HttpHeaders";
+import {IHttpHeaders} from "../lib/IHttpHeaders";
 import {Judge} from "./Judge";
 
 // interface JudgeConfig
@@ -58,7 +58,7 @@ export class JudgeRequest {
     judgeConnected: boolean = false
     judgeDate: Date = null
 
-    headers_judge: HttpHeaders = {}
+    headers_judge: IHttpHeaders = {}
 
     local_ip: string = null
     local_regex:string = null

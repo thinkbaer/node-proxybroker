@@ -6,7 +6,7 @@ import {Log} from "../logging/logging";
 import * as fs from 'fs'
 import * as mUrl from 'url'
 import * as net from 'net'
-import {RequestResponseMonitor} from "../lib/request_response_monitor";
+import {RequestResponseMonitor} from "./RequestResponseMonitor";
 import {shorthash} from "../lib/crypt";
 
 
