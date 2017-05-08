@@ -1,20 +1,23 @@
 
 
-import {StorageOptions} from "../storage/StorageOptions";
+import {IStorageOptions} from "../storage/IStorageOptions";
+import {IProviderOptions} from "../provider/IProviderOptions";
+import {IUrlBase} from "../lib/IUrlBase";
 
-interface ServerOptions {
+
+interface IServerOptions extends IUrlBase {
     enable: boolean
-    host: string
-    port: number
     path: string
 }
 
-export interface ProxyOptions extends ServerOptions {}
 
-export interface UIOptions  extends ServerOptions {}
+export interface ProxyOptions extends IServerOptions {}
 
 
-export interface ConfigOptions {
+export interface UIOptions  extends IServerOptions {}
+
+
+export interface IConfigOptions {
 
     /**
      * Path to the work directory or null
@@ -49,9 +52,15 @@ export interface ConfigOptions {
     readonly proxy?: ProxyOptions
 
     /**
-     * Storage Options
+     * Storage options
      */
-    storage?: StorageOptions
+    storage?: IStorageOptions
+
+    /**
+     * Provider options
+     */
+    provider?: IProviderOptions
+
 }
 
 

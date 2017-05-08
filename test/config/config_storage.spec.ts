@@ -4,7 +4,7 @@ let expect = chai.expect
 
 import {Config} from "../../src/config/Config";
 import {DEFAULT_STORAGE_OPTIONS, Storage} from "../../src/storage/Storage";
-import {StorageOptions} from "../../src/storage/StorageOptions";
+import {IStorageOptions} from "../../src/storage/IStorageOptions";
 
 import * as fs from 'fs';
 
@@ -13,31 +13,38 @@ import * as fs from 'fs';
  */
 describe('Config for storage', function(){
 
+    beforeEach(() => {
+        Config['$instance'] = null
+
+    })
+
     /**
      * Single file configuration
      */
     it('Load configuration for sqlite in memory', async function () {
-        this.timeout(5000)
-        let config = new Config()
+        let config = Config.get()
         await config.init()
         await config.loadFromFile(__dirname + '/files/config02.json')
 
-        let storage = new Storage(config)
+        //
+        config['$instance'] = config
+
+        let storage = new Storage(config.options.storage)
         await storage.init()
-        let options : StorageOptions = storage['options']
+        let options : IStorageOptions = storage['options']
         expect(options.driver.type).to.eq("sqlite")
     })
 
 
     it('Load configuration for sqlite in file', async function () {
-        let config = new Config()
+        let config = Config.get()
         await config.init({workdir: __dirname})
         await config.loadFromFile( __dirname + '/files/config03.json' )
         expect(config.options.workdir).to.eq( __dirname )
 
-        let storage = new Storage(config)
+        let storage = new Storage(config.options.storage)
         await storage.init()
-        let options : StorageOptions = storage['options']
+        let options : IStorageOptions = storage['options']
         expect(options.driver.type).to.eq("sqlite")
         expect(fs.existsSync(__dirname + '/temp/test03.db')).to.be.eq(true)
         fs.unlinkSync(__dirname + '/temp/test03.db')

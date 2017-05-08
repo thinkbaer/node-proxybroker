@@ -1,16 +1,17 @@
 import * as fs from 'fs';
 import * as path from 'path'
-import {StorageOptions} from "../storage/StorageOptions";
-import {ConfigOptions} from "./ConfigOptions";
+import {IStorageOptions} from "../storage/IStorageOptions";
+import {IConfigOptions} from "./IConfigOptions";
 import {mergeDeep} from "typescript-object-utils";
+import {ClassMetadataArgs} from "./ClassMetadataArgs";
 
 
-const DEFAULT_CONFIG : ConfigOptions = {}
+const DEFAULT_CONFIG : IConfigOptions = {}
 
 
 export class Config {
 
-    static $instance: Config = null
+    private static $instance: Config = null
 
     /**
      * Flag for executed initialization
@@ -22,7 +23,11 @@ export class Config {
 
     cmd_argv: { [key:string]: string } = {}
 
-    options: ConfigOptions = DEFAULT_CONFIG
+    options: IConfigOptions = DEFAULT_CONFIG
+
+    private _metadata : {classes:Array<ClassMetadataArgs>} = {
+        classes:[]
+    }
 
     constructor() {
         this.options.workdir = process.cwd()
@@ -54,7 +59,8 @@ export class Config {
     }
 
 
-    async init(options: ConfigOptions = DEFAULT_CONFIG): Promise<Config> {
+
+    async init(options: IConfigOptions = DEFAULT_CONFIG): Promise<Config> {
         if (this._initialized) return Promise.resolve(this)
         this._initialized = true
 
@@ -115,7 +121,13 @@ export class Config {
                 resolve(false)
             }
         })
+    }
 
+
+
+    get metadata()
+    {
+        return this._metadata
     }
 
 }

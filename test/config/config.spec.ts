@@ -4,6 +4,7 @@ let expect = chai.expect
 
 import {Config} from "../../src/config/Config";
 import {DEFAULT_STORAGE_OPTIONS} from "../../src/storage/Storage";
+import {IProviderOptions} from "../../src/provider/IProviderOptions";
 
 
 /**
@@ -49,6 +50,23 @@ describe('Config general', function(){
         let config = new Config()
         await config.init()
         expect(config.options.workdir).to.eq("/tmp")
+    })
+
+
+    /**
+     * Test the parameter for provider options
+     */
+    it('Test the parameter for provider options', async function () {
+
+        let pOptions : IProviderOptions = {
+            paths:['/some/dir','/some/other/dir'],
+            enable:true,
+            offset:1000
+        }
+
+        let config = new Config()
+        await config.init({provider:pOptions})
+        expect(config.options.provider).to.deep.eq(pOptions)
     })
 
 })
