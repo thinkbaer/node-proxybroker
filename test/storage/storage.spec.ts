@@ -3,11 +3,11 @@ import * as chai from 'chai'
 let expect = chai.expect
 
 import {Storage} from "../../src/storage/Storage";
-import {StorageOptions} from "../../src/storage/StorageOptions";
+import {IStorageOptions} from "../../src/storage/IStorageOptions";
 import {IpAddr} from "../../src/entity/IpAddr";
 import {Config} from "../../src/config/Config";
 
-const DEFAULT_STORAGE_OPTIONS : StorageOptions = {
+const DEFAULT_STORAGE_OPTIONS : IStorageOptions = {
     driver: {
         type: "sqlite",
         storage: ":memory:"
@@ -23,7 +23,8 @@ describe('Storage', () => {
 
     it('init',async () => {
 
-        let storage = new Storage(new Config())
+
+        let storage = new Storage()
         await storage.init()
         let entityNames:Array<string> = []
         storage.connection.entityMetadatas.forEach(entityMeta => { entityNames.push(entityMeta.targetName) })

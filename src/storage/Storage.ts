@@ -1,6 +1,6 @@
 import * as path from 'path';
 import {Connection, createConnection, getConnectionManager} from "typeorm";
-import {StorageOptions} from "./StorageOptions";
+import {IStorageOptions} from "./IStorageOptions";
 import {Config} from "../config/Config";
 import {Log} from "../logging/logging";
 import {merge, mergeDeep} from "typescript-object-utils";
@@ -20,7 +20,7 @@ export const FIX_STORAGE_OPTIONS = {
 
 
 
-export const DEFAULT_STORAGE_OPTIONS: StorageOptions = {
+export const DEFAULT_STORAGE_OPTIONS: IStorageOptions = {
     driver: {
         type: "sqlite",
         storage: ":memory:",
@@ -31,29 +31,26 @@ export const DEFAULT_STORAGE_OPTIONS: StorageOptions = {
 
 export class Storage {
 
-    private conn: Connection = null
+    private _connection: Connection = null
 
+    private options: IStorageOptions = null
 
+    constructor(options: IStorageOptions = DEFAULT_STORAGE_OPTIONS) {
 
-    private options: StorageOptions = null
-
-    constructor(config : Config) {
-        let options: StorageOptions = DEFAULT_STORAGE_OPTIONS
         // Apply some unchangeable and fixed options
-        options = merge(config.options.storage,FIX_STORAGE_OPTIONS)
+        options = merge(options, FIX_STORAGE_OPTIONS)
 
         if(options.driver && options.driver.type == 'sqlite' && options.driver.storage != ':memory:' && !path.isAbsolute(options.driver.storage)){
             // TODO check if file exists
-            let _path = config.options.workdir + '/' + options.driver.storage
+            let _path = Config.get().options.workdir + '/' + options.driver.storage
             options = mergeDeep(options, {driver:{storage:_path}})
         }
-
 
         this.options = Object.assign({}, DEFAULT_STORAGE_OPTIONS, options)
     }
 
     init(): Promise<void> {
-        this.conn = getConnectionManager().create(this.options)
+        this._connection = getConnectionManager().create(this.options)
         return this.connection
             .connect()
             .then(conn => {
@@ -62,7 +59,7 @@ export class Storage {
     }
 
     get connection(): Connection {
-        return this.conn;
+        return this._connection;
     }
 
 
