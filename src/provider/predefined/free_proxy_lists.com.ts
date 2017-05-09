@@ -1,83 +1,95 @@
+/**
+ * TODO Rewrite completely and use IProvider
+ */
+
 
 
 import * as request from "request-promise-native";
-import {API, ProxyType} from "../../module";
+import {IProvider} from "../IProvider";
+
 
 
 const NAME = 'freeproxylists.com'
 const BASE_URL = 'http://www.freeproxylists.com'
 
-/*
- export default (broker) => {
+
+export class FreeProxyListenProvider implements IProvider {
 
 
- let job = broker.defineSearchJob(NAME + '_anon', ProxyType.HTTP_ANON, function (broker, param, done) {
 
- })
-
-
- }
- */
-
-
-export function createScrapJob(opts: any): Function {
-    return (api: API, done: Function = null): Promise<any> => {
-        var cookies = request.jar()
-        var p:any = request
-            .get(BASE_URL + '/' + opts.path, {jar: cookies})
-            .then((html: string) => {
-
-                var matched_ids: string[] = []
-                var matcher: any;
-                while ((matcher = opts.pattern.exec(html)) !== null) {
-                    matched_ids.push(matcher[2])
-                }
-
-                var promises: Promise<any>[] = []
-                matched_ids.forEach(id => {
-                    var url = BASE_URL + '/load_' + opts.path_load + '_d' + id + '.html'
-                    var r = request
-                        .get(url, {jar: cookies})
-                        .then((html: string) => {
-
-                            var ip_regex = /&gt;(\d+\.\d+\.\d+\.\d+)&lt;\/td&gt;&lt;td&gt;(\d+)&lt;/g
-                            var matcher: any
-                            while ((matcher = ip_regex.exec(html)) !== null) {
-                                var _ip = matcher[1]
-                                var _port = matcher[2]
-
-                                api.enqueue(_ip, _port, opts.flags)
-
-                            }
-                        })
-                    promises.push(r)
-                })
-                return Promise.all(promises)
-            })
-        if (done) {
-            p = p
-                .then(()=> {
-                    done()
-                })
-                .catch((err:Error) => {
-                    done(err)
-                })
-        }
-        return p;
-    }
 }
 
-/*
-* Anonymous proxy servers hide your IP address or modify it in some way to prevent target server know about it. They may provide or may hide information about you and your reading interests. Besides that, they let anyone know that you are surfing through a proxy server.
-* http://www.freeproxylists.com/anonymous.html
-* http://www.freeproxylists.com/load_anon_d[\d+].html => returns xml for detailed list with table [IP,Port,HTTPS,Latency,Date(checked),Country]
-*/
-export const anonJob: Function = createScrapJob({
-    path: 'anonymous.html',
-    path_load: 'anon',
-    pattern: /href=(\"|\')anon\/d(\d+)\.html(\"|\')/g,
-    flags: ProxyType.HTTP_ANON
-})
+// /*
+//  export default (broker) => {
+//
+//
+//  let job = broker.defineSearchJob(NAME + '_anon', ProxyType.HTTP_ANON, function (broker, param, done) {
+//
+//  })
+//
+//
+//  }
+//  */
+//
+//
+// export function createScrapJob(opts: any): Function {
+//     return (api: API, done: Function = null): Promise<any> => {
+//         var cookies = request.jar()
+//         var p:any = request
+//             .get(BASE_URL + '/' + opts.path, {jar: cookies})
+//             .then((html: string) => {
+//
+//                 var matched_ids: string[] = []
+//                 var matcher: any;
+//                 while ((matcher = opts.pattern.exec(html)) !== null) {
+//                     matched_ids.push(matcher[2])
+//                 }
+//
+//                 var promises: Promise<any>[] = []
+//                 matched_ids.forEach(id => {
+//                     var url = BASE_URL + '/load_' + opts.path_load + '_d' + id + '.html'
+//                     var r = request
+//                         .get(url, {jar: cookies})
+//                         .then((html: string) => {
+//
+//                             var ip_regex = /&gt;(\d+\.\d+\.\d+\.\d+)&lt;\/td&gt;&lt;td&gt;(\d+)&lt;/g
+//                             var matcher: any
+//                             while ((matcher = ip_regex.exec(html)) !== null) {
+//                                 var _ip = matcher[1]
+//                                 var _port = matcher[2]
+//
+//                                 api.enqueue(_ip, _port, opts.flags)
+//
+//                             }
+//                         })
+//                     promises.push(r)
+//                 })
+//                 return Promise.all(promises)
+//             })
+//         if (done) {
+//             p = p
+//                 .then(()=> {
+//                     done()
+//                 })
+//                 .catch((err:Error) => {
+//                     done(err)
+//                 })
+//         }
+//         return p;
+//     }
+// }
+//
+// /*
+// * Anonymous proxy servers hide your IP address or modify it in some way to prevent target server know about it. They may provide or may hide information about you and your reading interests. Besides that, they let anyone know that you are surfing through a proxy server.
+// * http://www.freeproxylists.com/anonymous.html
+// * http://www.freeproxylists.com/load_anon_d[\d+].html => returns xml for detailed list with table [IP,Port,HTTPS,Latency,Date(checked),Country]
+// */
+// export const anonJob: Function = createScrapJob({
+//     path: 'anonymous.html',
+//     path_load: 'anon',
+//     pattern: /href=(\"|\')anon\/d(\d+)\.html(\"|\')/g,
+//     flags: ProxyType.HTTP_ANON
+// })
 
 // export  anonJob
 

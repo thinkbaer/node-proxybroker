@@ -1,6 +1,5 @@
 
 
-import {ProxyType} from "../module";
 
 /*
 export class Root extends SpecNode {

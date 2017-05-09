@@ -1,15 +1,14 @@
 
 
-export interface IProviderDef {
+import {IProviderVariant} from "./IProviderVariant";
+
+export interface IProviderDef extends IProviderVariant {
 
     clazz: Function
 
     name: string
 
-    type: string
-
     url: string
-
 
 
 }

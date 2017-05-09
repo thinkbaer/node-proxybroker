@@ -1,23 +1,25 @@
-
-
-import {IProxyProvider} from "../../../src/provider/IProxyProvider";
+import {IProvider} from "../../../src/provider/IProvider";
 import {IProviderWorkerAPI} from "../../../src/provider/IProviderWorkerAPI";
+import {IProviderVariant} from "../../../src/provider/IProviderVariant";
+import {AbstractProvider} from "../../../src/provider/AbstractProvider";
 
 
-export class MockedProxies01 implements IProxyProvider {
+export class MockedProxies01 extends AbstractProvider {
 
-    url:string = 'http://localhost:8000/tada01'
+    url: string = 'http://localhost:8000/tada01'
 
-    name:string = 'mockproxy01'
+    name: string = 'mockproxy01'
 
-    type:string = 'anonym'
+    variants: Array<IProviderVariant> = [
+        {type: 'anonym'},
+        {type: 'https'}
+    ]
 
-    constructor(){}
 
 
-    do(api: IProviderWorkerAPI, done: Function): void {
-
+    do(api: IProviderWorkerAPI): Promise<void> {
         console.log('')
+        return null
     }
 
 }

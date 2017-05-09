@@ -1,19 +1,25 @@
 import {IProviderOptions} from "./IProviderOptions";
 import {IProviderDef} from "./IProviderDef";
 import {importClassesFromDirectories} from "../utils/DirectoryExportedClassesLoader";
-import {IProxyProvider} from "./IProxyProvider";
+import {IProvider} from "./IProvider";
 import {createObjectByType} from "../utils/ObjectUtils";
+import {ProviderWorker} from "./ProviderWorker";
 
 
 export class ProviderManager {
 
     options: IProviderOptions = null
 
+    active_worker: Array<ProviderWorker>;
+
+    waiting_worker: Array<ProviderWorker>;
+
     providers: Array<IProviderDef> = []
 
 
     constructor(options: IProviderOptions) {
         this.options = options
+        this.options.parallel = this.options.parallel || 5
     }
 
 
@@ -24,14 +30,25 @@ export class ProviderManager {
             return Promise.resolve(clazz).then(_clazz => {
                 let tmp = self.newProviderFromObject(_clazz)
 
-                let proxyDef : IProviderDef = {
-                    name:tmp.name,
-                    url:tmp.url,
-                    type:tmp.type,
-                    clazz : clazz
+                if(tmp.variants){
+                    tmp.variants.forEach(_variant => {
+                        let proxyDef : IProviderDef = {
+                            name: tmp.name,
+                            url: tmp.url,
+                            clazz: clazz,
+                            ..._variant
+                        }
+                        self.providers.push(proxyDef)
+                    })
+                }else{
+                    let proxyDef : IProviderDef = {
+                        name:tmp.name,
+                        url:tmp.url,
+                        type: 'all',
+                        clazz : clazz
+                    }
+                    self.providers.push(proxyDef)
                 }
-
-                self.providers.push(proxyDef)
             })
         })
 
@@ -44,8 +61,8 @@ export class ProviderManager {
     }
 
 
-    private newProviderFromObject(obj: Function): IProxyProvider {
-        return createObjectByType<IProxyProvider>(obj);
+    private newProviderFromObject(obj: Function): IProvider {
+        return createObjectByType<IProvider>(obj);
     }
 
 
@@ -54,7 +71,7 @@ export class ProviderManager {
         this.providers.forEach((value:IProviderDef) => {
             let _value: boolean = true
             Object.keys(query).forEach(k => {
-                if(value[k] && query[k] && value[k].localeCompare(query[k]) == 0){
+                if(value[k] && query[k] && (value[k].localeCompare(query[k]) == 0 || value[k] === '_all_')){
                        _value = _value && true
                 }else{
                     _value = _value && false
@@ -70,4 +87,10 @@ export class ProviderManager {
     }
 
 
+    async createWorker(provider:IProviderDef): Promise<ProviderWorker> {
+        let pw = new ProviderWorker(this, provider)
+        await pw.initialize()
+
+        return pw
+    }
 }
