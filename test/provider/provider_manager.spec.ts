@@ -46,9 +46,7 @@ describe('ProviderManager',() => {
         expect(providers.length).to.eq(1)
 
         let provider = providers.shift()
-
-        let worker = pm.createWorker(provider)
-
+        let worker = await pm.createWorker(provider)
         expect(worker['id']).to.eq('Z1bBgeW')
 
 

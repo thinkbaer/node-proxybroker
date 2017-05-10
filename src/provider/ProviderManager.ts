@@ -90,7 +90,12 @@ export class ProviderManager {
     async createWorker(provider:IProviderDef): Promise<ProviderWorker> {
         let pw = new ProviderWorker(this, provider)
         await pw.initialize()
-
         return pw
     }
+
+
+
+
+
+
 }
