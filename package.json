@@ -38,6 +38,7 @@
     "gulp-util": "^3.0.7",
     "gulp-watch": "^4.3.10",
     "mocha": "^3.3.0",
+    "mocha-typescript": "^1.1.2",
     "nyc": "^10.3.2",
     "source-map-support": "^0.4.15",
     "ts-node": "^1.7.3",
@@ -48,6 +49,7 @@
     "watchify": "^3.7.0"
   },
   "dependencies": {
+    "@types/async": "^2.0.40",
     "cheerio": "^0.22.0",
     "clone": "^2.0.0",
     "es6-promise": "^4.0.5",

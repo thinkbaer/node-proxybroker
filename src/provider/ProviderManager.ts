@@ -4,15 +4,14 @@ import {importClassesFromDirectories} from "../utils/DirectoryExportedClassesLoa
 import {IProvider} from "./IProvider";
 import {createObjectByType} from "../utils/ObjectUtils";
 import {ProviderWorker} from "./ProviderWorker";
+import {IQueue} from "../queue/IQueue";
 
 
 export class ProviderManager {
 
     options: IProviderOptions = null
 
-    active_worker: Array<ProviderWorker>;
-
-    waiting_worker: Array<ProviderWorker>;
+    queue:IQueue;
 
     providers: Array<IProviderDef> = []
 

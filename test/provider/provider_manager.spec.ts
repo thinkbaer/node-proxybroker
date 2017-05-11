@@ -50,6 +50,9 @@ describe('ProviderManager',() => {
         expect(worker['id']).to.eq('Z1bBgeW')
 
 
+
+
+
     })
 
 
