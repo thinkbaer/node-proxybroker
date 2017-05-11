@@ -31,7 +31,8 @@ export class AsyncQueue<T> extends events.EventEmitter {
     constructor(processor: IQueueProcessor<T>, options: IAsyncQueueOptions = {}) {
         super()
         this.options = Object.assign(options, ASYNC_QUEUE_DEFAULT);
-        this.worker = []
+	this.processor = processor
+	this.worker = []
         this.on('process', this.process.bind(this))
     }
 
