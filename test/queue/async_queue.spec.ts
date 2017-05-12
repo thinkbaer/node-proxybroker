@@ -1,11 +1,13 @@
 // Reference mocha-typescript's global definitions:
-// <reference path="../node_modules/mocha-typescript/globals.d.ts" />
+/// <reference path="../../node_modules/mocha-typescript/globals.d.ts" />
 
 import { suite, test, slow, timeout } from "mocha-typescript";
 import {AsyncQueue, IQueueProcessor} from "../../src/queue/AsyncQueue";
 import {expect} from "chai";
 
 // describe('',() => {})
+
+// (function(){})()
 
 
 interface IWorker {
@@ -44,10 +46,10 @@ class Two {
         let q = new AsyncQueue<WorkStuff>(p)
 
         q.push(new WorkStuff())
-        expect(q.length()).to.eq(1)
+        expect(q.amount()).to.eq(1)
 
         await q.await()
-        expect(q.length()).to.eq(0)
+        expect(q.amount()).to.eq(0)
 
 
     }
