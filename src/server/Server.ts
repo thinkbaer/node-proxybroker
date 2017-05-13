@@ -10,48 +10,44 @@ import * as fs from 'fs'
 import * as url from "url";
 
 import Timer = NodeJS.Timer;
-
-export interface ServerOptions {
-    stall?: number
-    cert_file?: string
-    cert?: string | Buffer
-    key_file?: string
-    key?: string | Buffer,
-    ca_file?: string
-    ca?: string | Buffer
-    ca_key_file?: string
-    ca_key?: string | Buffer,
-    strictSSL?: boolean,
-    timeout?: number
-
-    url: string
-    _debug?: boolean
-}
+import {IServerOptions} from "./IServerOptions";
+import {Connection} from "typeorm";
 
 
 export class Server {
-    static readonly defaultOptions: ServerOptions = {
+    static readonly defaultOptions: IServerOptions = {
         url: 'http://localhost:3128',
         stall: 0,
         timeout: 10000,
+        //dual_protocol:false,
         _debug: false
     }
 
-    _options: ServerOptions
+    _options: IServerOptions
     _url: url.Url = null
     _abort: boolean = false
     _secured: boolean = true
+    _both: boolean = false
 
 
     inc: number = 0
     cache: { [key: number]: { t: Timer, s: net.Socket } } = {}
-    server: net.Server = null
 
-    constructor(options: ServerOptions) {
+    server: net.Server = null
+    //server_instance: { [key: string]: net.Server }
+    //server_port: { [key: string]: number }
+
+    constructor(options: IServerOptions) {
         this._options = Object.assign({}, Server.defaultOptions, options)
         this._url = url.parse(options.url)
-
+      //  this._both = this._options.dual_protocol
         this._secured = /^https/.test(this.protocol)
+
+        // if(this._secured && this._both){
+        //     let port = parseInt(this._url.port)
+        //     this.server_port['http'] = port++
+        //     this.server_port['https'] = port++
+        // }
 
 
         if (this._options.cert_file) {
@@ -95,12 +91,23 @@ export class Server {
         this.cache[inc] = {t: t, s: req.socket}
     }
 
+    // protocolDispatcher(conn:Connection) {
+    //     let self = this
+    //     conn.once('data', function (buf) {
+    //         // A TLS handshake record starts with byte 22.
+    //         var address = (buf[0] === 22) ? self.server_port['https'] : self.server_port['http'];
+    //         var proxy = net.createConnection(address, function () {
+    //             proxy.write(buf);
+    //             conn.pipe(proxy).pipe(conn);
+    //         });
+    //     });
+    // }
+
 
     createServer(): net.Server {
         let self = this
 
         let server: net.Server = null
-
         if (this._secured) {
             let https_server = https.createServer(this._options, this.response.bind(this))
             server = https_server
@@ -125,8 +132,8 @@ export class Server {
     root(req: http.IncomingMessage, res: http.ServerResponse) {
         this.debug('process')
         res.writeHead(200, {"Content-Type": "application/json"});
-        var data = {time: (new Date()).getTime(), headers: req.headers, rawHeaders: req.rawHeaders}
-        var json = JSON.stringify(data);
+        let data = {time: (new Date()).getTime(), headers: req.headers, rawHeaders: req.rawHeaders}
+        let json = JSON.stringify(data);
         res.end(json);
     }
 

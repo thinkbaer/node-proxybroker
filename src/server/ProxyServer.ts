@@ -1,33 +1,25 @@
-/**
- * Created by cezaryrk on 10.04.17.
- */
 
 import * as http from 'http'
-import * as tls from 'tls'
-import * as https from 'https'
 import * as net from 'net'
-import * as fs from 'fs'
 import * as url from "url";
 
-import Timer = NodeJS.Timer;
+//import Timer = NodeJS.Timer;
 import * as HttpProxy from "http-proxy"
 
-import {Server, ServerOptions} from "./server";
+import {Server} from "./Server";
+import {IProxyServerOptions} from "./IProxyServerOptions";
 
-export interface ProxyServerOptions extends ServerOptions {
-    level: number
-}
 
 
 export class ProxyServer extends Server {
-    static readonly defaultOptions: ProxyServerOptions = Object.assign({}, Server.defaultOptions, {
+    static readonly defaultOptions: IProxyServerOptions = Object.assign({}, Server.defaultOptions, {
         level: 3
     })
 
-    _options: ProxyServerOptions
+    _options: IProxyServerOptions
     proxy: HttpProxy = null
 
-    constructor(options: ProxyServerOptions) {
+    constructor(options: IProxyServerOptions) {
         super(options)
     }
 
