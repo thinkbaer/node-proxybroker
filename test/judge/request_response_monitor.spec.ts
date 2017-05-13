@@ -11,6 +11,8 @@ import {Server} from "../../src/server/Server";
 //https.globalAgent.options.rejectUnauthorized = false;
 const PROXY_LOCAL_HOST: string = 'proxy.local'
 
+const DEBUG = false
+
 describe('Request Response Monitor', () => {
 
     /**
@@ -44,7 +46,7 @@ describe('Request Response Monitor', () => {
             let _url = server.url()
             let req = _request.get(_url)
             let rrm = RequestResponseMonitor.monitor(req)
-            rrm._debug = false
+            rrm._debug = DEBUG
 
             try {
                 await req.promise()
@@ -93,7 +95,7 @@ describe('Request Response Monitor', () => {
             let _url = server.url()
             let req = _request.get(_url)
             let rrm = RequestResponseMonitor.monitor(req)
-            rrm._debug = false
+            rrm._debug = DEBUG
             try {
                 await req.promise()
             } catch (err) {
@@ -116,7 +118,7 @@ describe('Request Response Monitor', () => {
 
     describe('http server', () => {
 
-        let server: Server = new Server({url: 'http://127.0.0.1:8000', _debug: true})
+        let server: Server = new Server({url: 'http://127.0.0.1:8000', _debug: DEBUG})
 
 
         beforeEach(function (done) {
@@ -133,10 +135,9 @@ describe('Request Response Monitor', () => {
          */
         it('simple request', async function () {
             let _url = server.url()
-            console.log(_url)
             let req = _request.get(_url)
             let rrm = RequestResponseMonitor.monitor(req)
-            rrm._debug = true
+            rrm._debug = DEBUG
             await req.promise()
             await rrm.promise()
 
