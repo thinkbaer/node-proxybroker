@@ -5,13 +5,15 @@ import {IProvider} from "./IProvider";
 import {createObjectByType} from "../utils/ObjectUtils";
 import {ProviderWorker} from "./ProviderWorker";
 import {IQueue} from "../queue/IQueue";
+import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
+import {IQueueProcessor} from "../queue/IQueueProcessor";
 
 
-export class ProviderManager {
+export class ProviderManager implements  IQueueProcessor<ProviderWorker> {
 
     options: IProviderOptions = null
 
-    queue:IQueue;
+    queue: IQueue;
 
     providers: Array<IProviderDef> = []
 
@@ -19,7 +21,25 @@ export class ProviderManager {
     constructor(options: IProviderOptions) {
         this.options = options
         this.options.parallel = this.options.parallel || 5
+
+        this.queue = new AsyncWorkerQueue<ProviderWorker>(this)
     }
+
+
+    /**
+     * Implementation of queue processor method
+     *
+     * @param workLoad
+     * @returns {null}
+     */
+    do(workLoad: ProviderWorker): Promise<void>{
+        return null
+    }
+
+    propose(proxy: IProxyDef) : void{
+
+    }
+
 
 
     init(): Promise<void> {

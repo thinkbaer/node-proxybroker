@@ -5,9 +5,10 @@ import {IProvider} from "./IProvider";
 import {createObjectByType} from "../utils/ObjectUtils";
 import {shorthash} from "../lib/crypt";
 import {inspect} from "util"
+import {IQueueWorkload} from "../queue/IQueueWorkload";
 
 
-export class ProviderWorker implements IProviderWorkerAPI {
+export class ProviderWorker implements IProviderWorkerAPI, IQueueWorkload {
 
     private id: string;
 
@@ -20,9 +21,7 @@ export class ProviderWorker implements IProviderWorkerAPI {
     private _status: number = 0
 
     constructor(manager: ProviderManager, provider: IProviderDef) {
-
         this.id = shorthash(inspect(provider))
-        console.log(provider,this.id)
         this._provider = provider
         this._manager = manager
         this._localInstance = createObjectByType<IProvider>(provider.clazz)
@@ -45,6 +44,7 @@ export class ProviderWorker implements IProviderWorkerAPI {
 
 
     propose(proxy: IProxyDef): void {
+        this._manager.propose(proxy)
     }
 
 }
