@@ -5,16 +5,16 @@ import {IProviderOptions} from "../provider/IProviderOptions";
 import {IUrlBase} from "../lib/IUrlBase";
 
 
-interface IServerOptions extends IUrlBase {
+interface IServiceOptions extends IUrlBase {
     enable: boolean
     path: string
 }
 
 
-export interface ProxyOptions extends IServerOptions {}
+export interface ProxyOptions extends IServiceOptions {}
 
 
-export interface UIOptions  extends IServerOptions {}
+export interface UIOptions  extends IServiceOptions {}
 
 
 export interface IConfigOptions {
