@@ -10,9 +10,7 @@ import {ProxyServer} from "../../src/server/ProxyServer";
 import {Log} from "../../src/logging/logging";
 import {RequestResponseMonitor} from "../../src/judge/RequestResponseMonitor";
 import {JudgeResults} from "../../src/judge/JudgeResults";
-import {IServerOptions} from "../../src/server/IServerOptions";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
-import {Connection} from "typeorm";
 
 
 const JUDGE_LOCAL_HOST: string = 'judge.local'

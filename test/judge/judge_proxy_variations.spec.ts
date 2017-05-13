@@ -2,16 +2,13 @@
 // process.env.NODE_DEBUG = ' request tunnel node '
 // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
+import {suite, test, slow, timeout, pending} from "mocha-typescript";
+import {expect} from "chai";
+import {inspect} from "util";
 
 import * as http from 'http'
 import * as https from 'https'
 import {Judge} from "../../src/judge/Judge";
-
-import * as chai from 'chai'
-let expect = chai.expect
-
-
-
 import {Log} from "../../src/logging/logging";
 import {ProxyServer} from "../../src/server/ProxyServer";
 
@@ -20,6 +17,8 @@ import {ProxyServer} from "../../src/server/ProxyServer";
 
 const JUDGE_LOCAL_HOST: string = 'judge.local'
 const PROXY_LOCAL_HOST: string = 'proxy.local'
+
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 /**
  * Test different variations of judge and proxy connections for different transparency levels
@@ -36,111 +35,166 @@ const PROXY_LOCAL_HOST: string = 'proxy.local'
  * + L3 - Transparent Proxies
  */
 
-describe('Judge proxy variations tests', () => {
+let debug = false
 
-    let debug = false
+interface Variation {
+    title: string
+    proxy_options: {
+        level: number
+        key_file?:string
+        cert_file?:string
+    },
+    debug: boolean,
+    judge_options: {
+        key_file?:string
+        cert_file?:string
+    }
 
-    let variations = [
+
+}
+
+suite('Judge proxy variations', () => {
+    let variations:Array<Variation> = [
         {
-            title: 'HTTP Client <-> HTTP Proxy L3 <-> HTTP Judge',
+            title: 'Client <-> HTTP Proxy L3 <-> HTTP Judge',
             proxy_options: {level: 3},
             debug: debug,
-            judge_secured: false,
             judge_options: {}
         }
         ,
         {
-            title: 'HTTP Client <-> HTTP Proxy L2 <-> HTTP Judge',
+            title: 'Client <-> HTTP Proxy L2 <-> HTTP Judge',
             proxy_options: {level: 2},
             debug: debug,
-            judge_secured: false,
             judge_options: {}
 
         }
         ,
         {
-            title: 'HTTP Client <-> HTTP Proxy L1 <-> HTTP Judge',
+            title: 'Client <-> HTTP Proxy L1 <-> HTTP Judge',
             proxy_options: {level: 1},
-            judge_secured: false,
             debug: debug,
             judge_options: {}
         }
         ,
         {
-            title: 'HTTP Client <-> HTTP Proxy L1 <-> HTTPS Judge (only L1)',
+            title: 'Client <-> HTTP Proxy L1 <-> HTTPS Judge (only L1; because proxy by pass tunnel)',
             proxy_options: {level: 1},
             debug: debug,
-            judge_secured: true,
             judge_options: {
                 key_file: __dirname + '/../ssl/judge/server-key.pem',
                 cert_file: __dirname + '/../ssl/judge/server-cert.pem',
             }
         }
-        // ,
-        // {
-        //     // HTTP:C -> HTTPS:PSL3 -> HTTP:S
-        //     title: 'HTTP L3 transparent proxy',
-        //     level: 3,
-        //     server: HTTPSProxyServer_L3,
-        //     debug: true
-        //
-        // },
-
+        ,
+        {
+            title: 'Client <-> HTTPS Proxy L1 <-> HTTPS Judge (only L1; because proxy by pass tunnel)',
+            proxy_options: {
+                level: 1,
+                key_file: __dirname + '/../ssl/proxy/server-key.pem',
+                cert_file: __dirname + '/../ssl/proxy/server-cert.pem',
+            },
+            debug: debug,
+            //debug: true,
+            judge_options: {
+                key_file: __dirname + '/../ssl/judge/server-key.pem',
+                cert_file: __dirname + '/../ssl/judge/server-cert.pem',
+            }
+        }
+        ,
+        {
+            title: 'Client <-> HTTPS Proxy L3 <-> HTTP Judge',
+            proxy_options: {
+                level: 3,
+                key_file: __dirname + '/../ssl/proxy/server-key.pem',
+                cert_file: __dirname + '/../ssl/proxy/server-cert.pem',
+            },
+            debug: debug,
+            judge_options: {}
+        }
+        ,
+        {
+            title: 'Client <-> HTTPS Proxy L2 <-> HTTP Judge',
+            proxy_options: {
+                level: 2,
+                key_file: __dirname + '/../ssl/proxy/server-key.pem',
+                cert_file: __dirname + '/../ssl/proxy/server-cert.pem',
+            },
+            debug: debug,
+            judge_options: {}
+        }
+        ,
+        {
+            title: 'Client <-> HTTPS Proxy L1 <-> HTTP Judge',
+            proxy_options: {
+                level: 1,
+                key_file: __dirname + '/../ssl/proxy/server-key.pem',
+                cert_file: __dirname + '/../ssl/proxy/server-cert.pem',
+            },
+            debug: debug,
+            judge_options: {}
+        }
     ]
-
 
     variations.forEach((data) => {
 
-        describe(data.title, () => {
-            let proxy_port: number = 5008
-            let proxy_ip: string = PROXY_LOCAL_HOST
+        @suite(data.title) class Clazz {
 
-            let judge: Judge = null
-            let proxy_server: ProxyServer = null
-            let protocol = (data.judge_secured ? 'https' : 'http')
+            static proxy_port = 5008
+            static proxy_ip = PROXY_LOCAL_HOST
+            static judge_protocol = (data.judge_options.key_file && data.judge_options.cert_file  ? 'https' : 'http')
+            static proxy_protocol = (data.proxy_options.key_file && data.proxy_options.cert_file  ? 'https' : 'http')
 
-            before(async function () {
+            static judge : Judge = null
+            static proxy_server : ProxyServer = null
+
+            static async before() {
                 Log.enable = data.debug
 
-                let proxy_options = Object.assign({}, data.proxy_options,{
-                    url: 'http://' + proxy_ip + ':' + proxy_port,
+                let proxy_options = Object.assign({}, data.proxy_options, {
+                    url: this.proxy_protocol + '://' + this.proxy_ip + ':' + this.proxy_port,
                     _debug: data.debug,
                 })
-                proxy_server = new ProxyServer(proxy_options)
+                this.proxy_server = new ProxyServer(proxy_options)
 
                 let opts = {
                     selftest: false,
                     remote_lookup: false,
                     debug: data.debug,
-                    remote_url: protocol + '://' + JUDGE_LOCAL_HOST + ':8080',
-                    judge_url: protocol + '://' + JUDGE_LOCAL_HOST + ':8080'
+                    remote_url: this.judge_protocol + '://' + JUDGE_LOCAL_HOST + ':8080',
+                    judge_url: this.judge_protocol + '://' + JUDGE_LOCAL_HOST + ':8080',
+                    request:{
+                        local_ip:'127.0.0.1',
+                        timeout: 1000
+                    }
                 }
                 let options = Object.assign(opts, data.judge_options)
-                judge = new Judge(options)
+                this.judge = new Judge(options)
 
-                let erg = await judge.bootstrap()
+                let erg = await this.judge.bootstrap()
                 expect(erg).to.equal(true)
 
-                erg = await judge.wakeup()
+                erg = await this.judge.wakeup()
                 expect(erg).to.equal(true)
 
-                await proxy_server.start()
-            })
+                await this.proxy_server.start()
+            }
 
-            after(async function () {
-                await proxy_server.stop()
-                await judge.pending()
+
+            static async after() {
+                await this.proxy_server.stop()
+                await this.judge.pending()
                 Log.enable = true
-                proxy_server = null
-                judge = null
-            })
+                this.proxy_server = null
+                this.judge = null
+            }
 
 
-            it('http request', async function () {
+            @test
+            async request() {
 
-                let proxy_url = proxy_server.url()
-                console.log('PROXY=' + proxy_url + ' TO ' + judge.remote_url_f)
-                let judgeReq = judge.createRequest(proxy_url, {local_ip: '127.0.0.1'})
+                let proxy_url = Clazz.proxy_server.url()
+                let judgeReq = Clazz.judge.createRequest(proxy_url)
                 judgeReq._debug = data.debug
 
                 try {
@@ -160,10 +214,8 @@ describe('Judge proxy variations tests', () => {
                     console.error(err)
                     throw err
                 }
-
-            })
-        })
-
+            }
+        }
 
     })
 
