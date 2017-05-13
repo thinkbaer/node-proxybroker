@@ -1,6 +1,6 @@
 import * as util from 'util'
 import * as http from "http";
-import * as dns from "dns";
+
 import * as mUrl from 'url'
 import * as net from 'net'
 
@@ -10,6 +10,9 @@ import {RequestResponseMonitor} from "./RequestResponseMonitor";
 import {shorthash} from "../lib/crypt";
 import {IHttpHeaders} from "../lib/IHttpHeaders";
 import {Judge} from "./Judge";
+import {IJudgeRequestOptions} from "./IJudgeRequestOptions";
+import {JudgeResult} from "./JudgeResults";
+import {domainLookup} from "../utils/Domain";
 
 // interface JudgeConfig
 
@@ -38,7 +41,7 @@ const IP_REGEX = /\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}/
 export class JudgeRequest {
 
     _debug: boolean = false
-    private timeout: number = 10000
+    private timeout: number = 5000
 
     private id: string
     private url: string
@@ -61,53 +64,43 @@ export class JudgeRequest {
     headers_judge: IHttpHeaders = {}
 
     local_ip: string = null
-    local_regex:string = null
+    local_regex: string = null
     proxy_ip: string = null
-    proxy_regex:string = null
+    proxy_regex: string = null
     // proxy_hostname:string = null
 
-    constructor(judge: Judge, id: string, options: {url:string, local_ip?:string, proxy_url:string}) {
+    constructor(judge: Judge, id: string, url: string, proxy_url: string, options?: IJudgeRequestOptions) {
         this.judge = judge
-        this.url = options.url
+        this.url = url
         this.id = id
+        this.proxy_url = proxy_url
+        this.timeout = options.timeout || this.timeout
         this.local_ip = options.local_ip || this.judge.ip
-        this.proxy_url = options.proxy_url
         this.proxy_ip = mUrl.parse(this.proxy_url).hostname
     }
 
-    private async _prepare(){
-        this.local_regex = '('+this.local_ip+'(\\s|$|:))'
-        let result = await this._lookup(this.local_ip)
-        this.local_regex += '|(' + result.addr +'(\\s|$|:))'
+    private async _prepare() {
+        this.local_regex = '(' + this.local_ip + '(\\s|$|:))'
+        let result = await domainLookup(this.local_ip)
+        this.local_regex += '|(' + result.addr + '(\\s|$|:))'
 
-        this.proxy_regex = '('+this.proxy_ip+'(\\s|$|:))'
-        result = await this._lookup(this.proxy_ip)
-        this.proxy_regex += '|(' + result.addr +'(\\s|$|:))'
-    }
-
-    private _lookup(domain:string):Promise<{addr:string,family:string}>{
-        return new Promise(function(resolve, reject){
-            dns.lookup(domain,function(err, address, family){
-                if(err){
-                    reject(err)
-                }else{
-                    resolve({addr:address, family:family})
-                }
-            })
-        })
+        this.proxy_regex = '(' + this.proxy_ip + '(\\s|$|:))'
+        result = await domainLookup(this.proxy_ip)
+        this.proxy_regex += '|(' + result.addr + '(\\s|$|:))'
     }
 
 
-    async performRequest(): Promise<any> {
+
+    async performRequest(): Promise<RequestResponseMonitor> {
         await this._prepare()
 
-        let opts : _request.RequestPromiseOptions = {
+        let opts: _request.RequestPromiseOptions = {
             resolveWithFullResponse: true,
             proxy: this.proxy_url,
             timeout: this.timeout
         }
 
-        if(this.judge.isSecured && this.judge.options.ssl_options.cert){
+        if (this.judge.isSecured && this.judge.options.ssl_options.cert) {
             opts.ca = this.judge.options.ssl_options.cert
         }
 
@@ -115,9 +108,8 @@ export class JudgeRequest {
         this.monitor = RequestResponseMonitor.monitor(this.request, this.id, {debug: this._debug})
         try {
             this.response = await this.request.promise()
-        } catch (err) {
-            // TODO How to handle request errors?
-            throw err
+        } catch (e) {
+            // Will be also in ReqResMonitor
         }
         return this.monitor.promise()
     }
@@ -125,8 +117,6 @@ export class JudgeRequest {
     get duration() {
         return this.monitor.duration
     }
-
-
 
 
     onJudge(req: http.IncomingMessage, res: http.ServerResponse) {
@@ -146,7 +136,7 @@ export class JudgeRequest {
 
         for (let k of keys) {
             let entry = req.headers[k]
-            this.debug('header=>',k,entry)
+            this.debug('header=>', k, entry)
 
             /*
              * TODO Resolve domain names if present!
@@ -199,6 +189,23 @@ export class JudgeRequest {
             this.monitor.addLog(`- HTTP "forward" headers used: ${this.forward_headers.join(', ')}`, '*')
         }
     }
+
+
+    result():JudgeResult {
+        let result = new JudgeResult()
+
+        result.start = this.monitor.start
+        result.stop = this.monitor.end
+        result.duration = this.monitor.duration
+        result.log = this.monitor.logToString()
+        result.error = this.monitor.hasError()
+        result.level = this.level
+
+
+        return result;
+    }
+
+
 
     private info(...msg: any[]) {
         Log.info.apply(Log, msg)

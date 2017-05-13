@@ -8,6 +8,7 @@ import * as events from 'events'
 import {TLSSocket} from "tls";
 import {IHttpHeaders} from "../lib/IHttpHeaders";
 import {Url} from "url";
+import {JudgeResult} from "./JudgeResults";
 
 
 interface LogEntry {
@@ -32,6 +33,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     duration: number = Infinity
     secured: boolean = false
     connected: boolean = false
+    timeouted:boolean = false
     aborted: boolean = false
     okay: boolean = false
 
@@ -68,6 +70,10 @@ export class RequestResponseMonitor extends events.EventEmitter {
         return <boolean>this.request['tunnel']
     }
 
+
+    hasError(){
+        return this.errors.length > 0
+    }
     /**
      *
      * @see https://nodejs.org/api/http.html#http_event_response
@@ -378,6 +384,9 @@ export class RequestResponseMonitor extends events.EventEmitter {
                 if (error.message.match(/ECONNREFUSED/)) {
                     this.connected = false
                     this.addLog(`Connection refused.`,'#')
+                } else if (error.message.match(/ESOCKETTIMEDOUT/)) {
+                    this.timeouted = true
+                    this.addLog(`Connection timeout.`,'#')
                 } else if (error.message.match(/socket hang up/)) {
                     this.aborted = true
                     this.addLog(`Connection aborted.`,'#')
@@ -432,7 +441,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     promise(): Promise<RequestResponseMonitor> {
         var self = this
         return new Promise(function (resolve, reject) {
-            self.on('finished', function () {
+            self.once('finished', function () {
                 resolve(self)
             })
         })

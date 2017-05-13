@@ -16,6 +16,7 @@ import * as url from "url";
  */
 
 
+
 describe('Judge', () => {
 
     describe('options tests', () => {
@@ -171,6 +172,9 @@ describe('Judge', () => {
     })
 
 
+
+
+
     if (!process.env.CI_CONTAINER) {
         /**
          * This test doesn't work in a extern test container like travis
@@ -199,46 +203,6 @@ describe('Judge', () => {
             })
         })
     }
-
-
-    /**
-     * This test must be rewritten, currently testing in judge_levels
-     *
-     * TODO write collection of analysis tools
-     */
-    xdescribe('test proxy (TODO!)', () => {
-        let judge = new Judge()
-        let mockServer = null
-        let mockProxy: HttpProxy = null
-
-        before(async function () {
-            let erg = await judge.bootstrap()
-            expect(erg).to.equal(true)
-
-            erg = await judge.wakeup()
-            expect(erg).to.equal(true)
-
-            mockProxy = HttpProxy.createProxyServer()
-            mockServer = http.createServer(function (req: http.IncomingMessage, res: http.ServerResponse) {
-                let _url = url.parse(req.url)
-                let target_url = _url.protocol + '//' + req.headers.host
-                mockProxy.web(req, res, {target: target_url})
-            }).listen(8000, '0.0.0.0')
-        })
-
-
-        after((done) => {
-
-            judge.pending().then(() => done()).catch((err) => done(err))
-        })
-
-        it('run test for local proxy', async function () {
-            let results = await judge.runTests(url.parse(`http://${judge.remote_url.hostname}:8080`))
-            console.log(results)
-        })
-
-
-    })
 })
 
 process.on('uncaughtException', function (err: Error) {

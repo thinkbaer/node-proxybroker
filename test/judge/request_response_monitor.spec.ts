@@ -2,7 +2,7 @@ import * as chai from 'chai'
 let expect = chai.expect
 import {RequestResponseMonitor} from "../../src/judge/RequestResponseMonitor";
 import * as _request from "request-promise-native";
-import {Server} from "../../src/server/server";
+import {Server} from "../../src/server/Server";
 //import {DefaultHTTPServer, DefaultHTTPSServer} from "../helper/server";
 
 

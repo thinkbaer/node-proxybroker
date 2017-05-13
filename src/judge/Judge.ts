@@ -8,29 +8,33 @@ import * as mUrl from 'url'
 import * as net from 'net'
 import {RequestResponseMonitor} from "./RequestResponseMonitor";
 import {shorthash} from "../lib/crypt";
-
+import {format} from "util"
 
 import {JudgeRequest} from "./JudgeRequest";
-import {JudgeOptions} from "./JudgeOptions";
+import {IJudgeOptions} from "./IJudgeOptions";
+import {merge} from "typescript-object-utils";
+import {JudgeResults} from "./JudgeResults";
+import {domainLookup} from "../utils/Domain";
 
 
+const FREEGEOIP: string = 'http://freegeoip.net/json/%s'
 const IPCHECK_URL = 'https://api.ipify.org?format=json'
 
 
-
-const defaultOptions: JudgeOptions = {
+const defaultOptions: IJudgeOptions = {
     selftest: true,
     remote_lookup: true,
     debug: false,
     remote_url: 'http://127.0.0.1:8080',
-    judge_url: 'http://0.0.0.0:8080'
+    judge_url: 'http://0.0.0.0:8080',
+    request: {timeout: 5000}
 }
 
 
 export class Judge {
 
     private inc: number = 0
-    private _options: JudgeOptions = Judge.default_options()
+    private _options: IJudgeOptions = Judge.default_options()
 
     private secured: boolean = false
 
@@ -48,10 +52,11 @@ export class Judge {
     // private addr: Array<string> = []
 
 
-    constructor(options: JudgeOptions = {}) {
-        this._options = Object.assign(this._options, options)
+    constructor(options: IJudgeOptions = {}) {
+        this._options = merge(this._options, options)
         this._judge_url = mUrl.parse(this._options.judge_url)
         this._remote_url = mUrl.parse(this._options.remote_url)
+
 
         /*
          let self = this
@@ -102,7 +107,7 @@ export class Judge {
         return this.secured
     }
 
-    get options(): JudgeOptions {
+    get options(): IJudgeOptions {
         return this._options
     }
 
@@ -189,18 +194,14 @@ export class Judge {
     }
 
 
-    createRequest(proxy_url: string, options: { local_ip?: string }): JudgeRequest {
+    createRequest(proxy_url: string, options: { local_ip?: string, timeout?: number } = {}): JudgeRequest {
         let judge_url = this.remote_url_f
         let inc = this.inc++
         let req_id = shorthash(judge_url + '-' + proxy_url + '-' + (new Date().getTime()) + '-' + inc)
         judge_url += 'judge/' + req_id
         this.debug('JUDGE_URL', judge_url)
-        let req_options = {
-            local_ip: options.local_ip,
-            url: judge_url,
-            proxy_url: proxy_url
-        }
-        let judgeReq = new JudgeRequest(this, req_id, req_options)
+        let req_options = Object.assign(this.options.request, options)
+        let judgeReq = new JudgeRequest(this, req_id, judge_url, proxy_url, req_options)
         this.cache[req_id] = judgeReq
         return this.cache[req_id]
     }
@@ -303,59 +304,104 @@ export class Judge {
     }
 
 
-    /**
-     * Test HTTP, HTTPS, ANONYMITY LEVEL
-     *
-     * TODO this is not ready
-     *
-     * @param proxy
-     */
-    async runTests(proxy: mUrl.Url): Promise<any> {
-        let start = new Date()
-        let report: any = {}
-        let self = this
-        let http_url = mUrl.format(proxy)
+    async validate(ip: string, port: number): Promise<JudgeResults> {
+        let results: JudgeResults = new JudgeResults()
+        results.host = ip
 
+        let domain = await domainLookup(ip)
+        ip = domain.addr
+
+        results.ip = ip
+        results.port = port
+
+        // Geo resolve
+        results.geo=false
+        let geo_url = format(FREEGEOIP, ip)
         try {
-            let request = _request.defaults({proxy: http_url, timeout: 10000})
+            let geodata: string = await _request.get(geo_url)
+            if (geodata) {
+                results.geo=true
+                let geojson: { [k: string]: string } = JSON.parse(geodata)
 
-            let requestPromise = request.get(mUrl.format(self._remote_url), {resolveWithFullResponse: true})
-            let rrm = RequestResponseMonitor.monitor(requestPromise)
-            let response = await requestPromise
-            await rrm.promise()
-
-            console.log(rrm.logToString())
-
-            var s = JSON.parse(response.body)
-            var stop = new Date()
-            var c_s = s.time - start.getTime()
-            var s_c = stop.getTime() - s.time
-            var full = stop.getTime() - start.getTime()
-
-            console.log('Time: C -> S: ' + c_s + ', S -> C: ' + s_c + ', G:' + full);
-            report['http'] = {
-                start: start,
-                stop: stop,
-                duration: full,
-                success: true,
-                log: ''
+                Object.keys(geojson).filter((k) => {
+                    return ['ip'].indexOf(k) == -1
+                }).forEach(k => {
+                    results[k] = geojson[k]
+                })
             }
-
-        } catch (err) {
-
-            var stop = new Date()
-            var full = stop.getTime() - start.getTime()
-            report['http'] = {
-                start: start,
-                stop: stop,
-                duration: full,
-                success: false,
-                log: ''
-            }
-            self.throwedError(err)
+        } catch (e) {
+            Log.error(e)
         }
-        return report
+
+
+        let http_request: JudgeRequest = this.createRequest('http://' + ip + ':' + port)
+        //let http_monitor: RequestResponseMonitor =
+        await http_request.performRequest()
+        results.http = http_request.result()
+
+        let https_request: JudgeRequest = this.createRequest('https://' + ip + ':' + port)
+        //let https_monitor: RequestResponseMonitor =
+        await https_request.performRequest()
+        results.https = https_request.result()
+
+        return Promise.resolve(results)
     }
+
+
+    // /**
+    //  * Test HTTP, HTTPS, ANONYMITY LEVEL
+    //  *
+    //  * TODO this is not ready
+    //  *
+    //  * @param proxy
+    //  */
+    // async runTests(proxy: mUrl.Url): Promise<any> {
+    //     let start = new Date()
+    //     let report: any = {}
+    //     let self = this
+    //     let http_url = mUrl.format(proxy)
+    //
+    //     try {
+    //         let request = _request.defaults({proxy: http_url, timeout: 10000})
+    //
+    //         let requestPromise = request.get(mUrl.format(self._remote_url), {resolveWithFullResponse: true})
+    //         let rrm = RequestResponseMonitor.monitor(requestPromise)
+    //         let response = await requestPromise
+    //         await rrm.promise()
+    //
+    //         console.log(rrm.logToString())
+    //
+    //         var s = JSON.parse(response.body)
+    //         var stop = new Date()
+    //         var c_s = s.time - start.getTime()
+    //         var s_c = stop.getTime() - s.time
+    //         var full = stop.getTime() - start.getTime()
+    //
+    //         console.log('Time: C -> S: ' + c_s + ', S -> C: ' + s_c + ', G:' + full);
+    //         report['http'] = {
+    //             start: start,
+    //             stop: stop,
+    //             duration: full,
+    //             success: true,
+    //             log: ''
+    //         }
+    //
+    //     } catch (err) {
+    //
+    //         var stop = new Date()
+    //         var full = stop.getTime() - start.getTime()
+    //         report['http'] = {
+    //             start: start,
+    //             stop: stop,
+    //             duration: full,
+    //             success: false,
+    //             log: ''
+    //         }
+    //         self.throwedError(err)
+    //     }
+    //     return report
+    // }
+
 
     wakeup(force: boolean = false): Promise<any> {
         let self = this
@@ -423,16 +469,11 @@ export class Judge {
                     headers.forEach(function (head) {
                         cached_req.monitor.addLog(head, '>>')
                     })
-
-
                 }
-
-
             }
         }
 
         socket.once('data', onData)
-
     }
 
 

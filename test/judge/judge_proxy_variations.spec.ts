@@ -13,7 +13,7 @@ let expect = chai.expect
 
 
 import {Log} from "../../src/logging/logging";
-import {ProxyServer} from "../../src/server/proxy_server";
+import {ProxyServer} from "../../src/server/ProxyServer";
 
 // https://www.proxynova.com/proxy-articles/proxy-anonymity-levels-explained
 
@@ -136,10 +136,10 @@ describe('Judge proxy variations tests', () => {
             })
 
 
-            it(protocol + ' request', async function () {
+            it('http request', async function () {
 
                 let proxy_url = proxy_server.url()
-                // console.log('PROXY=' + proxy_url + ' TO ' + judge.remote_url_f)
+                console.log('PROXY=' + proxy_url + ' TO ' + judge.remote_url_f)
                 let judgeReq = judge.createRequest(proxy_url, {local_ip: '127.0.0.1'})
                 judgeReq._debug = data.debug
 
