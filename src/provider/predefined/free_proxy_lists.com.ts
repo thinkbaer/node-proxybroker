@@ -13,11 +13,11 @@ const NAME = 'freeproxylists.com'
 const BASE_URL = 'http://www.freeproxylists.com'
 
 
-export class FreeProxyListenProvider implements IProvider {
-
-
-
-}
+// export class FreeProxyListenProvider implements IProvider {
+//
+//
+//
+// }
 
 // /*
 //  export default (broker) => {

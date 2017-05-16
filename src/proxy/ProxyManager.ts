@@ -23,6 +23,7 @@ export class ProxyManager {
     }
 
     async validate(ip:string,port:number):Promise<ProxyResults>{
+
         let results:JudgeResults = await this._judge.validate(ip,port)
 
 

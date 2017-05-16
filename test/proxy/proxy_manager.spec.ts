@@ -39,6 +39,7 @@ class PM {
 
         let validationResult = await pm.validate(PROXY_LOCAL_HOST,3128)
 
+
         wakeup = await judge.pending()
         expect(wakeup).to.eq(true)
 
