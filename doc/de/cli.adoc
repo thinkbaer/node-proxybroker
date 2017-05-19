@@ -1,0 +1,10 @@
+## CLI
+
+
+### Befehle
+
+```
+pb judge --ip someip --port 12345
+
+pb judge --file [file]
+```

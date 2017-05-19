@@ -5,6 +5,8 @@
 
 ** judge :proxy_ip :proxy_port +
   Ausführen eines Tests für die jeweilige IP + Port
+  Oder Liste => @Task: Doku!
+
 ** update [:task] +
   Aktualisierung der ProxyListe
 ** start +
@@ -15,13 +17,13 @@
   CSV, JSON, Liste Ausgabe der aktuellen Liste
 
 
+@Task 20170518
 
 Untersuche folgende Meldung, die vom Proxy zurückgeliefert werden können:
-
 * HTTP/1.1 407 Proxy Authentication Required
-
 * HTTP/1.1 502 Bad Gateway
 
 
-Task:
+@Task 20170518
+
 Erweitere JudgeResults um empfangene Header.
