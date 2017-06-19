@@ -1,4 +1,5 @@
 
+import {IProxyDef} from "./IProxyDef";
 export interface IProviderWorkerAPI {
 
     /**

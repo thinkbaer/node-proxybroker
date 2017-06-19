@@ -2,7 +2,7 @@ import * as http from "http";
 import * as tls from "tls";
 import * as https from "https";
 import * as _request from "request-promise-native";
-import {Log} from "../logging/logging";
+import {Log} from "../logging/Log";
 import * as fs from 'fs'
 import * as mUrl from 'url'
 import * as net from 'net'
@@ -14,7 +14,8 @@ import {JudgeRequest} from "./JudgeRequest";
 import {IJudgeOptions} from "./IJudgeOptions";
 import {merge} from "typescript-object-utils";
 import {JudgeResults} from "./JudgeResults";
-import {domainLookup} from "../utils/Domain";
+import DomainUtils from "../utils/DomainUtils";
+
 
 
 const FREEGEOIP: string = 'http://freegeoip.net/json/%s'
@@ -308,7 +309,7 @@ export class Judge {
         let results: JudgeResults = new JudgeResults()
         results.host = ip
 
-        let domain = await domainLookup(ip)
+        let domain = await DomainUtils.domainLookup(ip)
         ip = domain.addr
 
         results.ip = ip

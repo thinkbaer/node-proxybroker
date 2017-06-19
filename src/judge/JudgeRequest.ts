@@ -5,14 +5,15 @@ import * as mUrl from 'url'
 import * as net from 'net'
 
 import * as _request from "request-promise-native";
-import {Log} from "../logging/logging";
+import {Log} from "../logging/Log";
 import {RequestResponseMonitor} from "./RequestResponseMonitor";
-import {shorthash} from "../lib/crypt";
+
 import {IHttpHeaders} from "../lib/IHttpHeaders";
 import {Judge} from "./Judge";
 import {IJudgeRequestOptions} from "./IJudgeRequestOptions";
 import {JudgeResult} from "./JudgeResults";
-import {domainLookup} from "../utils/Domain";
+import DomainUtils from "../utils/DomainUtils";
+
 
 // interface JudgeConfig
 
@@ -81,11 +82,11 @@ export class JudgeRequest {
 
     private async _prepare() {
         this.local_regex = '(' + this.local_ip + '(\\s|$|:))'
-        let result = await domainLookup(this.local_ip)
+        let result = await DomainUtils.domainLookup(this.local_ip)
         this.local_regex += '|(' + result.addr + '(\\s|$|:))'
 
         this.proxy_regex = '(' + this.proxy_ip + '(\\s|$|:))'
-        result = await domainLookup(this.proxy_ip)
+        result = await DomainUtils.domainLookup(this.proxy_ip)
         this.proxy_regex += '|(' + result.addr + '(\\s|$|:))'
     }
 

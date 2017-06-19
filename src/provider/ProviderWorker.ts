@@ -2,10 +2,12 @@ import {IProviderWorkerAPI} from "./IProviderWorkerAPI";
 import {IProviderDef} from "./IProviderDef";
 import {ProviderManager} from "./ProviderManager";
 import {IProvider} from "./IProvider";
-import {createObjectByType} from "../utils/ObjectUtils";
+
 import {shorthash} from "../lib/crypt";
 import {inspect} from "util"
 import {IQueueWorkload} from "../queue/IQueueWorkload";
+import {ClassLoader} from "../utils/ClassLoader";
+import {IProxyDef} from "./IProxyDef";
 
 
 export class ProviderWorker implements IProviderWorkerAPI, IQueueWorkload {
@@ -24,7 +26,7 @@ export class ProviderWorker implements IProviderWorkerAPI, IQueueWorkload {
         this.id = shorthash(inspect(provider))
         this._provider = provider
         this._manager = manager
-        this._localInstance = createObjectByType<IProvider>(provider.clazz)
+        this._localInstance = ClassLoader.createObjectByType<IProvider>(provider.clazz)
     }
 
 

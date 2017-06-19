@@ -42,7 +42,8 @@
   "exclude": [
     "node_modules",
     "build",
-    "dist"
+    "dist",
+    "tmp"
   ],
   "compileOnSave": true
 }

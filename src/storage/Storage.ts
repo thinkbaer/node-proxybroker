@@ -1,10 +1,11 @@
 import * as path from 'path';
 import {Connection, createConnection, getConnectionManager} from "typeorm";
 import {IStorageOptions} from "./IStorageOptions";
-import {Log} from "../logging/logging";
-import {merge, mergeDeep} from "typescript-object-utils";
+import {Log} from "../logging/Log";
+
 import {Config} from "commons-config";
 import {K_WORKDIR} from "../types";
+import {Utils} from "../utils/Utils";
 
 
 
@@ -39,12 +40,12 @@ export class Storage {
     constructor(options: IStorageOptions = DEFAULT_STORAGE_OPTIONS) {
 
         // Apply some unchangeable and fixed options
-        options = merge(options, FIX_STORAGE_OPTIONS)
+        options = Utils.merge(options, FIX_STORAGE_OPTIONS)
 
         if(options.driver && options.driver.type == 'sqlite' && options.driver.storage != ':memory:' && !path.isAbsolute(options.driver.storage)){
             // TODO check if file exists
             let _path = Config.get(K_WORKDIR) + '/' + options.driver.storage
-            options = mergeDeep(options, {driver:{storage:_path}})
+            options = Utils.merge(options, {driver:{storage:_path}})
         }
 
         this.options = Object.assign({}, DEFAULT_STORAGE_OPTIONS, options)

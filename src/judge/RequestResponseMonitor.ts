@@ -1,19 +1,15 @@
 import * as mRequest from "request-promise-native";
 import * as net from 'net'
 import * as http from 'http'
-import * as https from 'https'
+
 import * as mUrl from 'url'
 import * as tls from 'tls'
 import * as events from 'events'
-import {TLSSocket} from "tls";
 import {IHttpHeaders} from "../lib/IHttpHeaders";
 import {Url} from "url";
-import {JudgeResult} from "./JudgeResults";
+import {ILogEntry} from "./ILogEntry";
 
 
-interface LogEntry {
-    t: number, msg: string, s: string, code?: string,i: number
-}
 
 
 export class RequestResponseMonitor extends events.EventEmitter {
@@ -23,7 +19,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     _debug: boolean = false
     inc: number = 0
     id: string = null
-    log_arr: Array<LogEntry> = []
+    log_arr: Array<ILogEntry> = []
     length: number = 0
     errors: Array<Error> = []
     socket: net.Socket = null
@@ -327,7 +323,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     logToString(sep: string = "\n"): string {
         let msg: Array<string> = []
 
-        this.log_arr.sort(function (a: LogEntry, b: LogEntry) {
+        this.log_arr.sort(function (a: ILogEntry, b: ILogEntry) {
             return a.i < b.i ? (b.i > a.i ? -1 : 0) : 1
         })
 

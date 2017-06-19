@@ -1,12 +1,14 @@
 import {IProviderOptions} from "./IProviderOptions";
 import {IProviderDef} from "./IProviderDef";
-import {importClassesFromDirectories} from "../utils/DirectoryExportedClassesLoader";
+
 import {IProvider} from "./IProvider";
-import {createObjectByType} from "../utils/ObjectUtils";
+
 import {ProviderWorker} from "./ProviderWorker";
 import {IQueue} from "../queue/IQueue";
 import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
 import {IQueueProcessor} from "../queue/IQueueProcessor";
+import {ClassLoader} from "../utils/ClassLoader";
+import {IProxyDef} from "./IProxyDef";
 
 
 export class ProviderManager implements  IQueueProcessor<ProviderWorker> {
@@ -43,7 +45,7 @@ export class ProviderManager implements  IQueueProcessor<ProviderWorker> {
 
 
     init(): Promise<void> {
-        let clazzes = importClassesFromDirectories(this.options.paths)
+        let clazzes = ClassLoader.importClassesFromDirectories(this.options.paths)
         let self = this
         let clazzFn = clazzes.map(clazz => {
             return Promise.resolve(clazz).then(_clazz => {
@@ -81,7 +83,7 @@ export class ProviderManager implements  IQueueProcessor<ProviderWorker> {
 
 
     private newProviderFromObject(obj: Function): IProvider {
-        return createObjectByType<IProvider>(obj);
+        return ClassLoader.createObjectByType<IProvider>(obj);
     }
 
 

@@ -10,7 +10,7 @@ import * as fs from "fs";
 /**
  * Platform-specific tools.
  */
-export class PlatformTools {
+export class PlatformUtils {
 
     /**
      * Type of the currently running platform.

@@ -2,10 +2,11 @@ import * as mocha from 'mocha';
 describe('', () => {
 })
 
-import * as chai from 'chai'
-let expect = chai.expect
+
 import {suite, test, slow, timeout, pending} from "mocha-typescript";
+import {expect} from "chai";
 import {inspect} from 'util'
+
 
 import {Config} from "commons-config";
 import {DEFAULT_STORAGE_OPTIONS} from "../../src/storage/Storage";
@@ -15,9 +16,9 @@ import {IProviderOptions} from "../../src/provider/IProviderOptions";
 
 
 /**
- * Tests of the configuration reader
+ * TODO
  */
-@suite('Config general')
+@suite('commons-config integration tests')
 class ConfigTests {
 
 
@@ -92,6 +93,7 @@ class ConfigTests {
         Config.jar().merge({provider: pOptions})
         expect(Config.get('provider')).to.deep.eq(pOptions)
     }
+
 
 }
 
