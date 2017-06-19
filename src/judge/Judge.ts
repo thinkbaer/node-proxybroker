@@ -12,9 +12,10 @@ import {format} from "util"
 
 import {JudgeRequest} from "./JudgeRequest";
 import {IJudgeOptions} from "./IJudgeOptions";
-import {merge} from "typescript-object-utils";
+
 import {JudgeResults} from "./JudgeResults";
 import DomainUtils from "../utils/DomainUtils";
+import {Utils} from "../utils/Utils";
 
 
 
@@ -50,14 +51,15 @@ export class Judge {
 
     private cache: { [key: string]: JudgeRequest } = {}
 
+    private $connections: {[key: string]:net.Socket} = {}
+
     // private addr: Array<string> = []
 
 
     constructor(options: IJudgeOptions = {}) {
-        this._options = merge(this._options, options)
+        this._options = Utils.merge(this._options, options)
         this._judge_url = mUrl.parse(this._options.judge_url)
         this._remote_url = mUrl.parse(this._options.remote_url)
-
 
         /*
          let self = this
@@ -334,17 +336,17 @@ export class Judge {
             Log.error(e)
         }
 
-
         let http_request: JudgeRequest = this.createRequest('http://' + ip + ':' + port)
         //let http_monitor: RequestResponseMonitor =
         await http_request.performRequest()
         results.http = http_request.result()
 
+        /*
         let https_request: JudgeRequest = this.createRequest('https://' + ip + ':' + port)
         //let https_monitor: RequestResponseMonitor =
         await https_request.performRequest()
         results.https = https_request.result()
-
+*/
         return Promise.resolve(results)
     }
 
@@ -409,7 +411,7 @@ export class Judge {
         return new Promise(function (resolve, reject) {
             try {
                 if (self.runnable || (!self.runnable && force)) {
-
+                    self.$connections = {}
                     if (self.isSecured) {
                         self.server = https.createServer(self.options.ssl_options, self.judge.bind(self))
                         self.setupTLS(self.server)
@@ -432,6 +434,7 @@ export class Judge {
     }
 
     private onServerConnection(socket: net.Socket) {
+        
 
         let self = this
 
@@ -475,6 +478,13 @@ export class Judge {
         }
 
         socket.once('data', onData)
+
+        // register connection
+        let key = socket.remoteAddress + ':' + socket.remotePort;
+        this.$connections[key] = socket
+        socket.once('close', function () {
+            delete self.$connections[key];
+        })
     }
 
 
@@ -488,6 +498,9 @@ export class Judge {
                         self.info('Judge service shutting down on ' + self.judge_url_f)
                         resolve(true)
                     })
+                    for(let conn in self.$connections){
+                        self.$connections[conn].destroy()
+                    }
                 } else {
                     resolve(false)
                 }

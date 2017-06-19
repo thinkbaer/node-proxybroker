@@ -23,8 +23,12 @@ export class JudgeCommand {
         let booted = await judge.bootstrap()
         if(booted){
             await judge.wakeup()
+            console.log('startuped')
             let results = await judge.validate(argv.ip,argv.port)
+            console.log('validated')
             await judge.pending()
+            console.log('stop')
+
             console.log(results)
 
         }else{

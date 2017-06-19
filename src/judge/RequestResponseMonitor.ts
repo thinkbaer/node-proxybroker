@@ -16,7 +16,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
 
     // static cache:{[key:string]:RequestResponseMonitor} = {}
-    _debug: boolean = false
+    _debug: boolean = true//false
     inc: number = 0
     id: string = null
     log_arr: Array<ILogEntry> = []
@@ -87,15 +87,16 @@ export class RequestResponseMonitor extends events.EventEmitter {
             this.addLog(`Try connect to ${mUrl.format(this.uri)} ...`);
         }
 
-        request.setNoDelay(true)
+        this.addLog('disable KEEPALIVE')
+        request.setSocketKeepAlive(false,0)
+
         this.addLog('set TCP_NODELAY')
+        request.setNoDelay(true)
+
 
         if (this.proxy && this.tunnel) {
             this.addLog('HTTP-Tunneling enabled.')
             this.debug('tunneling enabled')
-
-            // let socket = request['agent'].sockets[0]
-
         }
 
         request.on('abort', this.onRequestAbort.bind(this))
@@ -185,11 +186,11 @@ export class RequestResponseMonitor extends events.EventEmitter {
         this.debug('onSocket')
         this.socket = socket
 
+
         if (socket['_pendingData']) {
             this.sendedHead = socket['_pendingData']
             this.sendedHead = this.sendedHead.split('\r\n\r\n').shift()
         }
-
 
         socket.on('close', this.onSocketClose.bind(this))
         socket.on('connect', this.onSocketConnect.bind(this))
@@ -211,6 +212,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     }
 
     onSocketClose(had_error: boolean) {
+
         this.debug('onSocketClose')
         this.finished()
     }
@@ -276,8 +278,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     onSocketError(error: Error) {
         this.debug('onSocketError')
-
-
         this.handleError(error)
     }
 
@@ -406,7 +406,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     finished() {
         this.stop()
-
+        this.debug('finished')
 
         let str: string = ''
         let last_error = this.lastError()
@@ -421,7 +421,10 @@ export class RequestResponseMonitor extends events.EventEmitter {
             str = 'Connection not established.'
         }
 
-        this.socket = null
+
+        // this.socket.removeAllListeners(this)
+
+        // this.socket = null
 
         if (last_error) {
             this.addClientLog('Connection aborted through errors:')

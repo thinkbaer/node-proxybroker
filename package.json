@@ -1,6 +1,6 @@
 {
   "name": "proxybroker",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Broker for anonymus proxies",
   "main": "dist/main.js",
   "scripts": {
@@ -75,6 +75,7 @@
     "yargonaut": "^1.1.2",
     "yargs": "^8.0.1"
   },
+  "private":true,
   "nyc": {
     "extension": [
       ".ts",

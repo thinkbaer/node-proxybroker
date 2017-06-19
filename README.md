@@ -8,6 +8,17 @@
 Under deveploment.
 
 
+## CLI
+
+from build/package
+```
+node cli.js judge --ip {ip} --port {port}
+```
+
+from .
+```
+node --require ts-node/register src/cli.ts judge --ip {ip} --port {port}
+```
 
 ## Tests
 

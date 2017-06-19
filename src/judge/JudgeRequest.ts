@@ -98,7 +98,8 @@ export class JudgeRequest {
         let opts: _request.RequestPromiseOptions = {
             resolveWithFullResponse: true,
             proxy: this.proxy_url,
-            timeout: this.timeout
+            timeout: this.timeout,
+            forever:false
         }
 
         if (this.judge.isSecured && this.judge.options.ssl_options.cert) {
