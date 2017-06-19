@@ -46,7 +46,7 @@ dist/
 build/
 
 # AsciiDoc
-.asciidoctor
+.asciidoctor/
 
 # Typings
 typings/

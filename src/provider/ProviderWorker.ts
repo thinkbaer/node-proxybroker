@@ -28,13 +28,15 @@ export class ProviderWorker implements IProviderWorkerAPI, IQueueWorkload {
     }
 
 
-    initialize(): Promise<void> {
+    async initialize(): Promise<void> {
+
         return Promise
             .resolve(this._localInstance)
             .then(_instance => {
                 if(_instance['prepare']){
                     return _instance.prepare()
                 }
+                return null
             })
             .catch(err => {
                 console.error(err)

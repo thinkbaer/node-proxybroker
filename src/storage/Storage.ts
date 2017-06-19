@@ -1,9 +1,10 @@
 import * as path from 'path';
 import {Connection, createConnection, getConnectionManager} from "typeorm";
 import {IStorageOptions} from "./IStorageOptions";
-import {Config} from "../config/Config";
 import {Log} from "../logging/logging";
 import {merge, mergeDeep} from "typescript-object-utils";
+import {Config} from "commons-config";
+import {K_WORKDIR} from "../types";
 
 
 
@@ -42,7 +43,7 @@ export class Storage {
 
         if(options.driver && options.driver.type == 'sqlite' && options.driver.storage != ':memory:' && !path.isAbsolute(options.driver.storage)){
             // TODO check if file exists
-            let _path = Config.get().options.workdir + '/' + options.driver.storage
+            let _path = Config.get(K_WORKDIR) + '/' + options.driver.storage
             options = mergeDeep(options, {driver:{storage:_path}})
         }
 

@@ -5,7 +5,7 @@ let expect = chai.expect
 import {Storage} from "../../src/storage/Storage";
 import {IStorageOptions} from "../../src/storage/IStorageOptions";
 import {IpAddr} from "../../src/entity/IpAddr";
-import {Config} from "../../src/config/Config";
+
 
 const DEFAULT_STORAGE_OPTIONS : IStorageOptions = {
     driver: {

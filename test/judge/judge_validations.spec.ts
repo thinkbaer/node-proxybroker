@@ -1,6 +1,9 @@
 // Reference mocha-typescript's global definitions:
 /// <reference path="../../node_modules/mocha-typescript/globals.d.ts" />
 
+import * as mocha from 'mocha';
+describe('',()=>{})
+
 import * as net from 'net'
 import {suite, test, slow, timeout, pending} from "mocha-typescript";
 import {expect} from "chai";

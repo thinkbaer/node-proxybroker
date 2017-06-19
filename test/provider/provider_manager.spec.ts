@@ -1,7 +1,7 @@
 import * as chai from 'chai'
 let expect = chai.expect
 
-import {Config} from "../../src/config/Config";
+
 import {ProviderManager} from "../../src/provider/ProviderManager";
 import {IProviderOptions} from "../../src/provider/IProviderOptions";
 

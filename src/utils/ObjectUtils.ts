@@ -1,5 +1,5 @@
 
-type ObjectType<T> = { new (): T }|Function;
+
 
 export function createObjectByType<T>(obj:Function) : T {
 /* Try 01

@@ -5,19 +5,19 @@ import {IProviderOptions} from "../provider/IProviderOptions";
 import {IUrlBase} from "../lib/IUrlBase";
 
 
-interface IServiceOptions extends IUrlBase {
+export interface IServiceOptions extends IUrlBase {
     enable: boolean
     path: string
 }
 
 
-export interface ProxyOptions extends IServiceOptions {}
+export interface IProxyOptions extends IServiceOptions {}
 
 
-export interface UIOptions  extends IServiceOptions {}
+export interface IUIOptions  extends IServiceOptions {}
 
 
-export interface IConfigOptions {
+export interface IAppConfig {
 
     /**
      * Path to the work directory or null
@@ -44,12 +44,12 @@ export interface IConfigOptions {
      * Options for the frontend modul
      * TODO needs work
      */
-    readonly ui?: UIOptions
+    readonly ui?: IUIOptions
 
     /**
      *  Options for the proxy server
      */
-    readonly proxy?: ProxyOptions
+    readonly proxy?: IProxyOptions
 
     /**
      * Storage options

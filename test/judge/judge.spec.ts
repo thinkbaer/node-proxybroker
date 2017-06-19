@@ -189,7 +189,7 @@ describe('Judge', () => {
                 Log.enable = true
             })
 
-            it('bootstrap', (done) => {
+            it('bootstrap', function(done:Function) {
                 let judge = new Judge()
                 judge.bootstrap()
                     .then((erg) => {

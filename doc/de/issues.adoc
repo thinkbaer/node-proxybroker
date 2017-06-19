@@ -27,3 +27,12 @@ Untersuche folgende Meldung, die vom Proxy zurückgeliefert werden können:
 @Task 20170518
 
 Erweitere JudgeResults um empfangene Header.
+
+@Task 20170607
+
+Implementiere den Prozess der eine ausgewählte vordefinierte Routine zum Aktualisieren der
+Proxies kontrolliert ausführt
+
+  - Abbruch bei zu langer Verarbeitung
+  - Abfangen von unerwarteten Fehlern
+  - gefundene Proxyies sammeln
