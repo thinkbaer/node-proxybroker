@@ -200,7 +200,7 @@ export class JudgeRequest {
         result.start = this.monitor.start
         result.stop = this.monitor.end
         result.duration = this.monitor.duration
-        result.log = this.monitor.logToString()
+        result.log = this.monitor.logs
         result.error = this.monitor.hasError()
         result.level = this.level
 

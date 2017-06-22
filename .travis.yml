@@ -8,6 +8,7 @@ node_js:
 before_install:
   - sudo /bin/sh -c 'echo "127.0.0.10 judge.local" >> /etc/hosts'
   - sudo /bin/sh -c 'echo "127.0.0.20 proxy.local" >> /etc/hosts'
+  - sudo apt-get install squid
   - export CI_CONTAINER=1
   - npm install -g nyc
   - npm install -g codecov

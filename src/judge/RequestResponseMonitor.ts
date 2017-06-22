@@ -5,9 +5,9 @@ import * as http from 'http'
 import * as mUrl from 'url'
 import * as tls from 'tls'
 import * as events from 'events'
+import * as _ from 'lodash'
 import {IHttpHeaders} from "../lib/IHttpHeaders";
 import {Url} from "url";
-import {ILogEntry} from "./ILogEntry";
 import {ReqResEvent} from "./ReqResEvent";
 import {Log} from "../logging/Log";
 
@@ -321,6 +321,10 @@ export class RequestResponseMonitor extends events.EventEmitter {
         return rrm
     }
 
+    get logs(){
+        return _.clone(this.log_arr)
+    }
+
 
     logToString(sep: string = "\n"): string {
         let msg: Array<string> = []
@@ -360,6 +364,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
         let rre = new ReqResEvent({
             nr: _inc,
+            connId: this.id,
             time: new Date(),
             direction: s,
             message: msg

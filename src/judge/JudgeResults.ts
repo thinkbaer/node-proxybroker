@@ -1,7 +1,8 @@
+import {ReqResEvent} from "./ReqResEvent";
 export class JudgeResult {
     error: boolean
 
-    log: string
+    log: ReqResEvent[]
 
     start: Date
 

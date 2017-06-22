@@ -14,7 +14,7 @@ import {ProxyServer} from "../../src/server/ProxyServer";
 
 // https://www.proxynova.com/proxy-articles/proxy-anonymity-levels-explained
 
-
+const SSL_PATH = '../_files/ssl'
 const JUDGE_LOCAL_HOST: string = 'judge.local'
 const PROXY_LOCAL_HOST: string = 'proxy.local'
 
@@ -82,8 +82,8 @@ suite('Judge proxy variations', () => {
             proxy_options: {level: 1},
             debug: debug,
             judge_options: {
-                key_file: __dirname + '/../ssl/judge/server-key.pem',
-                cert_file: __dirname + '/../ssl/judge/server-cert.pem',
+                key_file: __dirname + '/'+SSL_PATH+'/judge/server-key.pem',
+                cert_file: __dirname + '/'+SSL_PATH+'/judge/server-cert.pem',
             }
         }
         ,
@@ -91,14 +91,14 @@ suite('Judge proxy variations', () => {
             title: 'Client <-> HTTPS Proxy L1 <-> HTTPS Judge (only L1; because proxy by pass tunnel)',
             proxy_options: {
                 level: 1,
-                key_file: __dirname + '/../ssl/proxy/server-key.pem',
-                cert_file: __dirname + '/../ssl/proxy/server-cert.pem',
+                key_file: __dirname + '/'+SSL_PATH+'/proxy/server-key.pem',
+                cert_file: __dirname + '/'+SSL_PATH+'/proxy/server-cert.pem',
             },
             debug: debug,
             //debug: true,
             judge_options: {
-                key_file: __dirname + '/../ssl/judge/server-key.pem',
-                cert_file: __dirname + '/../ssl/judge/server-cert.pem',
+                key_file: __dirname + '/'+SSL_PATH+'/judge/server-key.pem',
+                cert_file: __dirname + '/'+SSL_PATH+'/judge/server-cert.pem',
             }
         }
         ,
@@ -106,8 +106,8 @@ suite('Judge proxy variations', () => {
             title: 'Client <-> HTTPS Proxy L3 <-> HTTP Judge',
             proxy_options: {
                 level: 3,
-                key_file: __dirname + '/../ssl/proxy/server-key.pem',
-                cert_file: __dirname + '/../ssl/proxy/server-cert.pem',
+                key_file: __dirname + '/'+SSL_PATH+'/proxy/server-key.pem',
+                cert_file: __dirname + '/'+SSL_PATH+'/proxy/server-cert.pem',
             },
             debug: debug,
             judge_options: {}
@@ -117,8 +117,8 @@ suite('Judge proxy variations', () => {
             title: 'Client <-> HTTPS Proxy L2 <-> HTTP Judge',
             proxy_options: {
                 level: 2,
-                key_file: __dirname + '/../ssl/proxy/server-key.pem',
-                cert_file: __dirname + '/../ssl/proxy/server-cert.pem',
+                key_file: __dirname + '/'+SSL_PATH+'/proxy/server-key.pem',
+                cert_file: __dirname + '/'+SSL_PATH+'/proxy/server-cert.pem',
             },
             debug: debug,
             judge_options: {}
@@ -128,8 +128,8 @@ suite('Judge proxy variations', () => {
             title: 'Client <-> HTTPS Proxy L1 <-> HTTP Judge',
             proxy_options: {
                 level: 1,
-                key_file: __dirname + '/../ssl/proxy/server-key.pem',
-                cert_file: __dirname + '/../ssl/proxy/server-cert.pem',
+                key_file: __dirname + '/'+SSL_PATH+'/proxy/server-key.pem',
+                cert_file: __dirname + '/'+SSL_PATH+'/proxy/server-cert.pem',
             },
             debug: debug,
             judge_options: {}

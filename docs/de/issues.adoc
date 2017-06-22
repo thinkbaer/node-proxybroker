@@ -1,17 +1,17 @@
 == Issues
 
-@TASK#{counter:task} 20170518 +
+@TASK:{counter:task} 20170518 +
 Erweitere JudgeResults um empfangene Header.
 
 
-@TASK#{counter:task} 20170518 +
+@TASK:{counter:task} 20170518 +
 Untersuche folgende Meldung, die vom Proxy zurückgeliefert werden können:
 
 * HTTP/1.1 407 Proxy Authentication Required
 * HTTP/1.1 502 Bad Gateway
 
 
-@TASK#{counter:task} 20170607 +
+@TASK:{counter:task} 20170607 +
 Implementiere den Prozess der eine ausgewählte vordefinierte Routine zum Aktualisieren der
 Proxies kontrolliert ausführt
 
@@ -20,32 +20,26 @@ Proxies kontrolliert ausführt
   - gefundene Proxyies sammeln
 
 
-@TASK#{counter:task} 20170620 +minor +
+@TASK:{counter:task} 20170620 +minor +
 Make the use of other judge server possible and configurable.
 
 
-@TASK#{counter:task} 20170620 +minor +
+@TASK:{counter:task} 20170620 +minor +
 Extend the cli command 'judge' by the file option, to check all given proxies
 in the text file. The format should be simple 'ip:port\n'
 
 
-@TASK#{counter:task} 20170621 +minor +
+[.line-through]#@TASK:{counter:task} 20170621 +minor# +
 Handle messages from monitor an other components and deliver them immediately
 to the present subscriber. Implement an EventBus which allows registered
 subscribers to receive events by type or namespace.
 ```
-@Event()
-class Message {
-
-}
-
+class Message {...}
 
 class Subscriber {
 
-  @Subscribe
-  onMessage(Message:m){
-
-  }
+  @subscribe
+  onMessage(Message:m){...}
 
 }
 
@@ -59,6 +53,8 @@ m.post()
 
 ```
 
+@TASK:{counter:task} 20170622 +minor +
+Redesign the cli output of judge.
 
 
 

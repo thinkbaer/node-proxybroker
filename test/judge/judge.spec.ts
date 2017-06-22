@@ -15,7 +15,7 @@ import * as url from "url";
  * Note: for remote access the used ip will be used, for this the firewall must allow access to the port 8080
  */
 
-
+const SSL_PATH = '../_files/ssl'
 
 describe('Judge', () => {
 
@@ -49,8 +49,8 @@ describe('Judge', () => {
         it('enable https settings', () => {
             let options = Judge.default_options()
             options.judge_url = 'https://0.0.0.0:8081'
-            options.key_file = __dirname + '/../ssl/judge/server-key.pem'
-            options.cert_file = __dirname + '/../ssl/judge/server-cert.pem'
+            options.key_file = __dirname + '/'+SSL_PATH+'/judge/server-key.pem'
+            options.cert_file = __dirname + '/'+SSL_PATH+'/judge/server-cert.pem'
             let judge = new Judge(options)
 
             options = judge.options
@@ -146,8 +146,8 @@ describe('Judge', () => {
             let options = Judge.default_options()
             options.judge_url = 'https://judge.local:8081'
             options.remote_url = 'https://judge.local:8081'
-            options.key_file = __dirname + '/../ssl/judge/server-key.pem'
-            options.cert_file = __dirname + '/../ssl/judge/server-cert.pem'
+            options.key_file = __dirname + '/'+SSL_PATH+'/judge/server-key.pem'
+            options.cert_file = __dirname + '/'+SSL_PATH+'/judge/server-cert.pem'
             options.remote_lookup = false
 
             let judge = new Judge(options)

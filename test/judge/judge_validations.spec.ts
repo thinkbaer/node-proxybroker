@@ -15,7 +15,7 @@ import {RequestResponseMonitor} from "../../src/judge/RequestResponseMonitor";
 import {JudgeResults} from "../../src/judge/JudgeResults";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
 
-
+const SSL_PATH = '../_files/ssl'
 const JUDGE_LOCAL_HOST: string = 'judge.local'
 const PROXY_LOCAL_HOST: string = 'proxy.local'
 
@@ -53,8 +53,8 @@ class JV {
             url: 'https://' + JV.https_proxy_ip + ':' + JV.https_proxy_port,
             _debug: JV._debug,
             level: 3,
-            key_file: __dirname + '/../ssl/proxy/server-key.pem',
-            cert_file: __dirname + '/../ssl/proxy/server-cert.pem',
+            key_file: __dirname + '/'+SSL_PATH+'/proxy/server-key.pem',
+            cert_file: __dirname + '/'+SSL_PATH+'/proxy/server-cert.pem',
 
         })
         JV.https_proxy_server = new ProxyServer(proxy_options2)
@@ -143,7 +143,7 @@ class JV {
 
     @test
     async validateFailedOnHttpAndHttps(){
-        let results : JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST,3128)
+        let results : JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST,3130)
         expect(results.http.error).to.eq(true)
         expect(results.https.error).to.eq(true)
     }

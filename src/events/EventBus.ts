@@ -4,7 +4,9 @@ import EventBusMeta from "./EventBusMeta";
 
 import {EventChannel} from "./EventChannel";
 
-
+/**
+ * TODO spin-off this as eventbus-typescript
+ */
 
 export class EventBus {
 

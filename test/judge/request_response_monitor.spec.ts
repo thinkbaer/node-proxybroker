@@ -10,7 +10,7 @@ import {Server} from "../../src/server/Server";
 
 //https.globalAgent.options.rejectUnauthorized = false;
 const PROXY_LOCAL_HOST: string = 'proxy.local'
-
+const SSL_PATH = '../_files/ssl'
 const DEBUG = false
 
 describe('Request Response Monitor', () => {
@@ -200,8 +200,8 @@ describe('Request Response Monitor', () => {
     describe('https server', () => {
         let server: Server = new Server({
             url: 'https://'+PROXY_LOCAL_HOST+':8000',
-            key_file: __dirname + '/../ssl/proxy/server-key.pem',
-            cert_file: __dirname + '/../ssl/proxy/server-cert.pem',
+            key_file: __dirname + '/'+SSL_PATH+'/proxy/server-key.pem',
+            cert_file: __dirname + '/'+SSL_PATH+'/proxy/server-cert.pem',
         })
 
         before(function (done) {
