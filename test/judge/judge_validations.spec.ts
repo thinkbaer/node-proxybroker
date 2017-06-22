@@ -127,7 +127,6 @@ class JV {
             console.log(log)
             console.log('<--------')
         }
-
         expect(log).to.match(/Judge connected/)
     }
 
