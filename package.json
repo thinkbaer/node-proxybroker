@@ -73,7 +73,7 @@
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
     "node-http-proxy": "^0.2.3",
-    "reflect-metadata": "^0.1.9",
+    "reflect-metadata": "^0.1.10",
     "request": "^2.79.0",
     "request-promise-native": "^1.0.3",
     "sqlite3": "^3.1.8",
@@ -89,9 +89,11 @@
     "exclude": [
       "**/*.d.ts"
     ],
+
     "require": [
       "ts-node/register"
     ],
+    "all":true
     "sourceMap": true,
     "instrument": true
   }

@@ -1,6 +1,5 @@
 import * as mocha from 'mocha';
-describe('', () => {
-})
+describe('', () => {})
 
 
 import {suite, test, slow, timeout, pending} from "mocha-typescript";
