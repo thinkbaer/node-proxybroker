@@ -154,7 +154,6 @@ class JV {
         expect(results.http.error).to.eq(false)
         expect(results.http.level).to.eq(3)
         expect(results.https.error).to.eq(true)
-
     }
 
     @test

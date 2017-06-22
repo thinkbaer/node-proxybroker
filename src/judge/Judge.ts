@@ -340,12 +340,12 @@ export class Judge {
         await http_request.performRequest()
         results.http = http_request.result()
 
-        /*
+
         let https_request: JudgeRequest = this.createRequest('https://' + ip + ':' + port)
         //let https_monitor: RequestResponseMonitor =
         await https_request.performRequest()
         results.https = https_request.result()
-*/
+
         return Promise.resolve(results)
     }
 
