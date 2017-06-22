@@ -70,6 +70,7 @@ export class JudgeRequest {
     proxy_regex: string = null
     // proxy_hostname:string = null
 
+
     constructor(judge: Judge, id: string, url: string, proxy_url: string, options?: IJudgeRequestOptions) {
         this.judge = judge
         this.url = url

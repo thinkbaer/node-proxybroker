@@ -1,5 +1,6 @@
 // import {merge, mergeDeep} from "typescript-object-utils";
 import * as merge from 'deepmerge'
+import * as _ from 'lodash'
 import {type} from "os";
 
 export class Utils {
@@ -10,7 +11,8 @@ export class Utils {
      * @returns {any[]}
      */
     static unique_array(arr: any[]): any[] {
-        return arr.filter((v, i, a) => a.indexOf(v) === i);
+        return _.uniq(arr)
+        // return arr.filter((v, i, a) => a.indexOf(v) === i);
     }
 
     static escapeRegExp(text: string): string {
@@ -171,12 +173,12 @@ export class Utils {
 
 
     static isObject(o: any) {
-        return typeof o === 'object'
+        return _.isObject(o)
     }
 
 
     static isString(o: any) {
-        return typeof o === 'string'
+        return _.isString(o)
     }
 
 }

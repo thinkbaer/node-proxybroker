@@ -8,6 +8,8 @@ import * as events from 'events'
 import {IHttpHeaders} from "../lib/IHttpHeaders";
 import {Url} from "url";
 import {ILogEntry} from "./ILogEntry";
+import {ReqResEvent} from "./ReqResEvent";
+import {Log} from "../logging/Log";
 
 
 
@@ -19,7 +21,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     _debug: boolean = true//false
     inc: number = 0
     id: string = null
-    log_arr: Array<ILogEntry> = []
+    log_arr: Array<ReqResEvent> = []
     length: number = 0
     errors: Array<Error> = []
     socket: net.Socket = null
@@ -323,13 +325,13 @@ export class RequestResponseMonitor extends events.EventEmitter {
     logToString(sep: string = "\n"): string {
         let msg: Array<string> = []
 
-        this.log_arr.sort(function (a: ILogEntry, b: ILogEntry) {
-            return a.i < b.i ? (b.i > a.i ? -1 : 0) : 1
+        this.log_arr.sort(function (a: ReqResEvent, b: ReqResEvent) {
+            return a.nr < b.nr ? (b.nr > a.nr ? -1 : 0) : 1
         })
 
         let ignore_emtpy = false
         for (let entry of this.log_arr) {
-            let str = (entry.s + ' ' + entry.msg).trim()
+            let str = (entry.direction + ' ' + entry.message).trim()
             if(str.length == 0 && ignore_emtpy){
                 continue
             }else if(str.length == 0){
@@ -356,12 +358,15 @@ export class RequestResponseMonitor extends events.EventEmitter {
     addLog(msg: string, s: string = '*'): void {
         let _inc = this.inc++
 
-        this.log_arr.push({
-            i: _inc,
-            t: new Date().getTime(),
-            s: s,
-            msg: msg
+        let rre = new ReqResEvent({
+            nr: _inc,
+            time: new Date(),
+            direction: s,
+            message: msg
         })
+
+        this.log_arr.push(rre)
+        rre.fire()
     }
 
 
@@ -448,7 +453,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     }
 
     log(level: string, ...msg: any[]) {
-        console.log.apply(console, msg)
+        Log.log(level,...msg)
     }
 
     debug(...msg: any[]) {

@@ -57,7 +57,7 @@ function binaryTransfer(integer:number, binary:any) {
  * why choose 61 binary, because we need the last element char to replace the minus sign
  * eg: -aGtzd will be ZaGtzd
  */
-export function shorthash (text:string) {
+export function shorthash (text:string):string {
     var id = binaryTransfer(bitwise(text), 61);
     return id.replace('-', 'Z');
 }

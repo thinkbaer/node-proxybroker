@@ -325,7 +325,6 @@ export class Judge {
             if (geodata) {
                 results.geo=true
                 let geojson: { [k: string]: string } = JSON.parse(geodata)
-
                 Object.keys(geojson).filter((k) => {
                     return ['ip'].indexOf(k) == -1
                 }).forEach(k => {

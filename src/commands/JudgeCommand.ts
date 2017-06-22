@@ -1,10 +1,39 @@
 
 
 import {Judge} from "../judge/Judge";
+import {ReqResEvent} from "../judge/ReqResEvent";
+
+import subscribe from "../events/decorator/subscribe"
+import {EventBus} from "../events/EventBus";
+import LogEvent from "../logging/LogEvent";
+import {Log} from "../logging/Log";
+
+class StdOut {
+
+    @subscribe(ReqResEvent)
+    onReqRes(rre: ReqResEvent){
+        this.out(rre)
+    }
+
+    @subscribe(LogEvent)
+    onLog(rre: LogEvent){
+        this.out(rre)
+    }
+
+    private out(o:LogEvent | ReqResEvent){
+        console.info(o.out())
+    }
+}
+
+
 export class JudgeCommand {
 
     command = "judge";
     describe = "Test an IP and port for proxy abilities.";
+
+    constructor(){
+        EventBus.register(new StdOut())
+    }
 
     builder(yargs: any) {
         return yargs
@@ -19,19 +48,19 @@ export class JudgeCommand {
     }
 
     async handler(argv: any) {
+
+
         let judge = new Judge()
+
         let booted = await judge.bootstrap()
         if(booted){
             await judge.wakeup()
-            console.log('startuped')
+            Log.info('judge server started')
             let results = await judge.validate(argv.ip,argv.port)
-            console.log('validated')
+            Log.debug('judge validated')
             await judge.pending()
-            console.log('stop')
-
-            console.log(results)
-
-        }else{
+            Log.info('judge server stopped')
+            Log.debug(results)
         }
     }
 }
