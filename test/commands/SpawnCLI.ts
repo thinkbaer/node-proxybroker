@@ -22,7 +22,7 @@ export default class SpawnCLI {
     exec():Promise<SpawnCLI>{
         let self = this
         return new Promise((resolve, reject) => {
-            let cp = child_process.spawn('/usr/bin/node',this.args,
+            let cp = child_process.spawn('node',this.args,
                 {
                     cwd: PlatformUtils.pathNormilize(__dirname + '/../..'),
                     env:process.env
