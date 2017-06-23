@@ -13,7 +13,7 @@ import SpawnCLI from "./SpawnCLI";
 @suite('commands/JudgeFileCommand') @timeout(20000)
 class JudgeFileCommandTest {
 
-    @test
+    @test.skip
     async 'judge file with file'() {
         let cli = await SpawnCLI.run('judge-file', 'test/_files/proxylists/list01.csv')
         let data = JSON.parse(cli.stdout)
