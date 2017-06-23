@@ -10,6 +10,8 @@ import {IQueueProcessor} from "../queue/IQueueProcessor";
 import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
 import Todo from "../../test/exceptions/Todo";
 import {JudgeResults} from "../judge/JudgeResults";
+import {IJudgeOptions} from "../judge/IJudgeOptions";
+import {Utils} from "../utils/Utils";
 
 
 class ProxyData implements IQueueWorkload {
@@ -69,11 +71,17 @@ export class JudgeFileCommand {
                 describe: "Enable logging",
                 default: false
             })
-            .default('outputformat','json')
+            .option("config", {
+                alias: 'c',
+                describe: "Judge config json",
+                default: '{}'
+            })
+            .default('outputformat', 'json')
     }
 
     async handler(argv: any) {
         Log.enable = StdConsole.$enabled = argv.verbose
+
 
         if (PlatformUtils.fileExist(argv.file)) {
             let buffer = fs.readFileSync(argv.file)
@@ -92,7 +100,12 @@ export class JudgeFileCommand {
             if (list.length) {
                 let parallel: number = 5
 
-                let judge = new Judge()
+                let judgeOptions: IJudgeOptions = Judge.default_options()
+                if (argv.config) {
+                    judgeOptions = Utils.merge(judgeOptions, JSON.parse(argv.config))
+                }
+
+                let judge = new Judge(judgeOptions)
                 let booted = await judge.bootstrap()
                 if (booted) {
 
@@ -114,7 +127,7 @@ export class JudgeFileCommand {
 
                     await judge.pending()
 
-                    switch (argv.outputformat){
+                    switch (argv.outputformat) {
                         case 'json':
                             let data: JudgeResults[] = []
                             list.forEach(_x => {
