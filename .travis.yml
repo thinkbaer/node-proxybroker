@@ -9,7 +9,8 @@ addons:
     packages:
     - squid
 
-
+services:
+  - squid
 
 before_install:
   - sudo /bin/sh -c 'echo "127.0.0.10 judge.local" >> /etc/hosts'
@@ -19,4 +20,5 @@ before_install:
   - npm install -g codecov
   - npm install -g typings
   - typings install
+  - cat /etc/squid/squid.conf
 
