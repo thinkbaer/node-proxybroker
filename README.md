@@ -20,6 +20,17 @@ from .
 node --require ts-node/register src/cli.ts judge --ip {ip} --port {port}
 ```
 
+Fetch proxy list from provider in csv format
+```
+node-proxybroker$ node --require ts-node/register src/cli.ts fetch provider freeproxylists anonym csv > /tmp/proxies.csv
+```
+
+Test proxies from a csv file and return results as csv
+```
+node-proxybroker$ node --require ts-node/register src/cli.ts judge-file /tmp/proxies.csv csv > /tmp/proxy_results.csv
+```
+
+
 ## Tests
 
 ```

@@ -10,6 +10,9 @@ import {IHttpHeaders} from "../lib/IHttpHeaders";
 import {Url} from "url";
 import {ReqResEvent} from "./ReqResEvent";
 import {Log} from "../logging/Log";
+import Exceptions from "../exceptions/Exceptions";
+import {NestedException} from "../exceptions/NestedException";
+import {Utils} from "../utils/Utils";
 
 
 
@@ -23,7 +26,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     id: string = null
     log_arr: Array<ReqResEvent> = []
     length: number = 0
-    errors: Array<Error> = []
+    errors: NestedException[] = []
     socket: net.Socket = null
     request: mRequest.RequestPromise = null
     start: Date = new Date()
@@ -42,11 +45,9 @@ export class RequestResponseMonitor extends events.EventEmitter {
     headers_request: IHttpHeaders = {}
     headers_response: IHttpHeaders = {}
 
-
-
-
     private constructor(request: mRequest.RequestPromise, id: string) {
         super()
+        this.debug('Enable monitor for '+id)
         request.on('socket', this.onSocket.bind(this))
         request.on('error', this.onError.bind(this))
         request.on('drain', this.onDrain.bind(this))
@@ -89,8 +90,8 @@ export class RequestResponseMonitor extends events.EventEmitter {
             this.addLog(`Try connect to ${mUrl.format(this.uri)} ...`);
         }
 
-        this.addLog('disable KEEPALIVE')
-        request.setSocketKeepAlive(false,0)
+        // this.addLog('disable KEEPALIVE')
+        // request.setSocketKeepAlive(false,0)
 
         this.addLog('set TCP_NODELAY')
         request.setNoDelay(true)
@@ -214,8 +215,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     }
 
     onSocketClose(had_error: boolean) {
-
-        this.debug('onSocketClose')
+        this.debug('onSocketClose with error: ' + had_error)
         this.finished()
     }
 
@@ -259,10 +259,23 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
             if(this.receivedHeadDone){
                 this.addLog('','')
-                this.receivedHead.split('\n').map((x: string) => {
+                let headers = Utils.clone(this.receivedHead.split('\n'))
+                headers.map((x: string) => {
                     this.addServerLog(x.trim())
                 })
                 this.addLog('','')
+
+
+                let http_head = headers.shift()
+                let http_heads = http_head.split(' ',3)
+
+                if(http_heads.length === 3){
+                    if(/^\d{3}$/.test(http_heads[1])){
+                        if(['200'].indexOf(http_heads[1]) === -1){
+                            this.socket.destroy(new Error(http_head))
+                        }
+                    }
+                }
             }
         }
 
@@ -302,7 +315,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
         this.debug('onTLSSocketSecureConnect')
         this.stop()
         this.addLog(`Secured connection established (${this.duration}ms)`)
-
     }
 
 
@@ -375,8 +387,11 @@ export class RequestResponseMonitor extends events.EventEmitter {
     }
 
 
-    private handleError(error: Error): boolean {
-        if (error) {
+    private handleError(_error: Error): boolean {
+        if (_error) {
+            let error = Exceptions.handle(_error)
+
+
             this.debug('error: '+error.message)
             let exists = false
             for (let i = 0; i < this.errors.length; i++) {
@@ -407,7 +422,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     }
 
-    lastError(): Error|null {
+    lastError(): NestedException|null {
         if (this.errors.length > 0) {
             return this.errors[this.errors.length - 1]
         }
@@ -463,7 +478,8 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     debug(...msg: any[]) {
         if (this._debug) {
-            msg.unshift('DEBUG')
+            msg.unshift('DEBUG RRM')
+            msg.unshift(this.id)
             this.log.apply(this, msg)
         }
     }

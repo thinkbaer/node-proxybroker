@@ -11,10 +11,9 @@ import SpawnCLI from "./SpawnCLI";
 
 const cfg = {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"}
 
-@suite('commands/JudgeFileCommand') @timeout(20000)
-class JudgeFileCommandTest {
-
-
+@suite('commands/FetchProviderProxyListCommand') @timeout(20000)
+class FetchProviderProxyListCommandTest {
+/*
 
     @test
     async 'judge file with file'() {
@@ -39,5 +38,5 @@ class JudgeFileCommandTest {
         let cli = await SpawnCLI.run()
         expect(cli.stderr).to.contain('judge-file <file>')
     }
-
+*/
 }

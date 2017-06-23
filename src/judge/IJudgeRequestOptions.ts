@@ -2,6 +2,7 @@
 
 export interface IJudgeRequestOptions {
     local_ip?: string,
-    timeout?: number
+    connection_timeout?: number
+    socket_timeout?: number
 }
 

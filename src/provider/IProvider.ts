@@ -2,6 +2,7 @@
 
 import {IProviderWorkerAPI} from "./IProviderWorkerAPI";
 import {IProviderVariant} from "./IProviderVariant";
+import {IProxyDef} from "./IProxyDef";
 
 
 
@@ -11,9 +12,11 @@ export interface IProvider {
 
     readonly url:string;
 
-    readonly variants : Array<IProviderVariant>;
+    readonly variants : IProviderVariant[];
 
     prepare?():Promise<void>;
+
+    get(): Promise<IProxyDef[]>;
 
     do(api: IProviderWorkerAPI): Promise<void>;
 }

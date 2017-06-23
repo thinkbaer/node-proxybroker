@@ -1,10 +1,12 @@
 
 
+import {StringOrFunction} from "../types";
+
 export interface IProviderOptions {
 
-    enable : boolean
+    // enable : boolean
 
-    paths : Array<string>
+    providers? : StringOrFunction[]
 
     offset? : number
 

@@ -16,13 +16,13 @@ import {Utils} from "./Utils";
  */
 export class ClassLoader {
 
-    static createObjectByType<T>(obj:Function) : T {
+    static createObjectByType<T>(obj:Function,...args:any[]) : T {
         /* Try 01
          let tmp: any  = Object.create(obj.prototype);
          let _obj:T  = tmp as T
          */
 
-        let _obj:T = Reflect.construct(obj,[])
+        let _obj:T = Reflect.construct(obj,args)
         return _obj
     }
 

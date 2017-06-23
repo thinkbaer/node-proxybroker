@@ -1,16 +1,13 @@
 /**
  * TODO Rewrite completely and use IProvider
  */
+// 'mockproxy03'
 
 
 
-import * as request from "request-promise-native";
 import {IProvider} from "../IProvider";
 
 
-
-const NAME = 'freeproxylists.com'
-const BASE_URL = 'http://www.freeproxylists.com'
 
 
 // export class FreeProxyListenProvider implements IProvider {

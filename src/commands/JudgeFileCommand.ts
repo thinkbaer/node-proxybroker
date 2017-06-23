@@ -8,7 +8,7 @@ import * as _ from 'lodash'
 import {IQueueWorkload} from "../queue/IQueueWorkload";
 import {IQueueProcessor} from "../queue/IQueueProcessor";
 import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
-import Todo from "../../test/exceptions/Todo";
+import Todo from "../exceptions/Todo";
 import {JudgeResults} from "../judge/JudgeResults";
 import {IJudgeOptions} from "../judge/IJudgeOptions";
 import {Utils} from "../utils/Utils";
@@ -45,10 +45,10 @@ class ProxyValidator implements IQueueProcessor<ProxyData> {
         this.judge = judge
     }
 
-    async do(workLoad: ProxyData): Promise<void> {
+    async do(workLoad: ProxyData): Promise<any> {
         let results = await this.judge.validate(workLoad.ip, workLoad.port)
         workLoad.results = results
-
+        return Promise.resolve(results)
     }
 
 
@@ -76,7 +76,13 @@ export class JudgeFileCommand {
                 describe: "Judge config json",
                 default: '{}'
             })
-            .default('outputformat', 'json')
+            .option('format', {
+                alias: 'f',
+                describe: "Set outputformat (default: json).",
+                default: 'json',
+                demand:true
+            })
+
     }
 
     async handler(argv: any) {
@@ -97,8 +103,9 @@ export class JudgeFileCommand {
             })
 
 
+
             if (list.length) {
-                let parallel: number = 5
+                let parallel: number = 200
 
                 let judgeOptions: IJudgeOptions = Judge.default_options()
                 if (argv.config) {
@@ -106,7 +113,13 @@ export class JudgeFileCommand {
                 }
 
                 let judge = new Judge(judgeOptions)
-                let booted = await judge.bootstrap()
+                let booted = false
+
+                try {
+                    booted = await judge.bootstrap()
+                } catch (err) {
+                    Log.error(err)
+                }
                 if (booted) {
                     await judge.wakeup()
                     try {
@@ -115,6 +128,7 @@ export class JudgeFileCommand {
                         list.forEach(_q => {
                             q.push(_q)
                         })
+
                         await q.await()
                     } catch (err) {
                         Log.error(err)
@@ -122,16 +136,67 @@ export class JudgeFileCommand {
 
                     await judge.pending()
 
-                    switch (argv.outputformat) {
+                    switch (argv.format) {
                         case 'json':
                             let data: JudgeResults[] = []
                             list.forEach(_x => {
+                                _x.results.http.logStr = _x.results.http.logToString()
+                                _x.results.https.logStr = _x.results.https.logToString()
                                 _x.results.http.log = null
                                 _x.results.https.log = null
                                 data.push(_x.results)
                             })
 
                             console.log(JSON.stringify(data, null, 2))
+                            break;
+                        case 'csv':
+                            let rows: string[] = [[
+                                "ip",
+                                "port",
+                                "http.error",
+                                "http.error.code",
+                                "http.level",
+                                "http.duration",
+                                "http.log",
+                                "https.error",
+                                "https.error.code",
+                                "https.level",
+                                "https.duration",
+                                "https.log",
+                                "country_code",
+                                "country_name",
+                                "region_code",
+                                "region_name",
+                                "city",
+                                "latitude",
+                                "longitude"
+
+                            ].join(';')]
+                            list.forEach(_x => {
+                                rows.push([
+                                    _x.results.ip,
+                                    _x.results.port,
+                                    _x.results.http.hasError() ? '"' + (_x.results.http.error.toString()).replace('"', '""') + '"' : '',
+                                    _x.results.http.hasError() ? '"' + (_x.results.http.error.code).replace('"', '""') + '"' : '',
+                                    _x.results.http.level,
+                                    _x.results.http.duration,
+                                    '"' + _x.results.http.logToString().replace('"', '""') + '"',
+                                    _x.results.https.hasError() ? '"' + (_x.results.https.error.toString()).replace('"', '""') + '"' : '',
+                                    _x.results.https.hasError() ? '"' + (_x.results.https.error.code).replace('"', '""') + '"' : '',
+                                    _x.results.https.level,
+                                    _x.results.https.duration,
+                                    '"' + _x.results.https.logToString().replace('"', '""') + '"',
+                                    _x.results.country_code,
+                                    _x.results.country_name,
+                                    _x.results.region_code,
+                                    _x.results.region_name,
+                                    _x.results.city,
+                                    _x.results.latitude,
+                                    _x.results.longitude
+
+                                ].join(';'))
+                            })
+                            console.log(rows.join('\n'))
                             break;
 
                         default:
@@ -149,7 +214,7 @@ export class JudgeFileCommand {
 
 
         } else {
-            // TODO check this
+            throw new Todo()
         }
         /*
          */

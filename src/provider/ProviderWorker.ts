@@ -8,6 +8,8 @@ import {inspect} from "util"
 import {IQueueWorkload} from "../queue/IQueueWorkload";
 import {ClassLoader} from "../utils/ClassLoader";
 import {IProxyDef} from "./IProxyDef";
+import {AbstractProvider} from "./AbstractProvider";
+import {Log} from "../logging/Log";
 
 
 export class ProviderWorker implements IProviderWorkerAPI, IQueueWorkload {
@@ -18,7 +20,7 @@ export class ProviderWorker implements IProviderWorkerAPI, IQueueWorkload {
 
     private _manager: ProviderManager = null
 
-    private _localInstance: IProvider = null
+    private _localInstance: AbstractProvider = null
 
     private _status: number = 0
 
@@ -26,29 +28,30 @@ export class ProviderWorker implements IProviderWorkerAPI, IQueueWorkload {
         this.id = shorthash(inspect(provider))
         this._provider = provider
         this._manager = manager
-        this._localInstance = ClassLoader.createObjectByType<IProvider>(provider.clazz)
+        this._localInstance = ClassLoader.createObjectByType<AbstractProvider>(provider.clazz)
+        this._localInstance.selectVariant(provider);
     }
 
 
     async initialize(): Promise<void> {
-
-        return Promise
-            .resolve(this._localInstance)
-            .then(_instance => {
-                if(_instance['prepare']){
-                    return _instance.prepare()
-                }
-                return null
-            })
-            .catch(err => {
-                console.error(err)
-                throw err
-            })
+        try{
+            if(this._localInstance.prepare){
+               await  this._localInstance.prepare
+            }
+        }catch(err){
+            Log.error(err)
+            throw err
+        }
+        return Promise.resolve()
     }
 
 
     propose(proxy: IProxyDef): void {
         this._manager.propose(proxy)
+    }
+
+    async fetch():Promise<IProxyDef[]>{
+        return await this._localInstance.get()
     }
 
 }

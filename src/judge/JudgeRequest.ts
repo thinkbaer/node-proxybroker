@@ -13,6 +13,7 @@ import {Judge} from "./Judge";
 import {IJudgeRequestOptions} from "./IJudgeRequestOptions";
 import {JudgeResult} from "./JudgeResults";
 import DomainUtils from "../utils/DomainUtils";
+import Timer = NodeJS.Timer;
 
 
 // interface JudgeConfig
@@ -42,9 +43,10 @@ const IP_REGEX = /\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}/
 export class JudgeRequest {
 
     _debug: boolean = false
-    private timeout: number = 5000
+    private connect_timeout: number = 2000
+    private socket_timeout: number = 10000
 
-    private id: string
+    readonly id: string
     private url: string
     private proxy_url: string
     private judge: Judge
@@ -68,6 +70,8 @@ export class JudgeRequest {
     local_regex: string = null
     proxy_ip: string = null
     proxy_regex: string = null
+    timer: Timer = null
+    socket : net.Socket = null
     // proxy_hostname:string = null
 
 
@@ -76,7 +80,8 @@ export class JudgeRequest {
         this.url = url
         this.id = id
         this.proxy_url = proxy_url
-        this.timeout = options.timeout || this.timeout
+        this.connect_timeout = options.connection_timeout || this.connect_timeout
+        this.socket_timeout = options.socket_timeout || this.socket_timeout
         this.local_ip = options.local_ip || this.judge.ip
         this.proxy_ip = mUrl.parse(this.proxy_url).hostname
     }
@@ -92,15 +97,14 @@ export class JudgeRequest {
     }
 
 
-
     async performRequest(): Promise<RequestResponseMonitor> {
         await this._prepare()
 
         let opts: _request.RequestPromiseOptions = {
             resolveWithFullResponse: true,
             proxy: this.proxy_url,
-            timeout: this.timeout,
-            forever:false
+            timeout: this.connect_timeout,
+            forever: false
         }
 
         if (this.judge.isSecured && this.judge.options.ssl_options.cert) {
@@ -108,14 +112,41 @@ export class JudgeRequest {
         }
 
         this.request = _request.get(this.url, opts)
+        this.request.on('socket', this.onSocket.bind(this))
+
         this.monitor = RequestResponseMonitor.monitor(this.request, this.id, {debug: this._debug})
         try {
             this.response = await this.request.promise()
         } catch (e) {
             // Will be also in ReqResMonitor
         }
+
+        /*
+        if(this.socket){
+            this.socket.end()
+            this.socket.destroy()
+        }
+        */
         return this.monitor.promise()
     }
+
+
+    private onSocket(socket: net.Socket) {
+        this.debug('JR onSocket')
+        this.socket = socket
+        socket.setKeepAlive(false)
+        socket.setTimeout(this.socket_timeout)
+        socket.on('error', this.onSocketError.bind(this))
+
+    }
+
+    private onSocketError(error: Error) {
+        this.debug('JR onSocketError')
+        if(this.socket){
+            this.socket.destroy()
+        }
+    }
+
 
     get duration() {
         return this.monitor.duration
@@ -127,7 +158,7 @@ export class JudgeRequest {
         this.judgeDate = new Date()
 
         this.monitor.stop()
-        this.monitor.addLog(`Judge connected. (${this.monitor.duration}ms)`, '*')
+        this.monitor.addLog(`Judge connected from ${req.socket.remoteAddress}:${req.socket.remotePort}. (${this.monitor.duration}ms)`, '*')
 
         let rx_ip = new RegExp((this.local_regex).replace('.', '\\.'))
         let rx_proxy_ip = new RegExp(this.proxy_regex.replace('.', '\\.'))
@@ -194,20 +225,19 @@ export class JudgeRequest {
     }
 
 
-    result():JudgeResult {
+    result(): JudgeResult {
         let result = new JudgeResult()
 
+        result.id = this.id
         result.start = this.monitor.start
         result.stop = this.monitor.end
         result.duration = this.monitor.duration
         result.log = this.monitor.logs
-        result.error = this.monitor.hasError()
+        result.error = this.monitor.lastError()
         result.level = this.level
-
 
         return result;
     }
-
 
 
     private info(...msg: any[]) {
@@ -215,9 +245,9 @@ export class JudgeRequest {
     }
 
     private debug(...msg: any[]) {
-        if (this._debug) {
+        //if (this._debug) {
             Log.debug.apply(Log, msg)
-        }
+        //}
     }
 
     private throwedError(err: Error, ret?: any): any {

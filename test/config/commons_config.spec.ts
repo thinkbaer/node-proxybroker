@@ -83,8 +83,8 @@ class ConfigTests {
     'Test the parameter for provider options'() {
 
         let pOptions: IProviderOptions = {
-            paths: ['/some/dir', '/some/other/dir'],
-            enable: true,
+            providers: ['/some/dir', '/some/other/dir'],
+            //enable: true,
             offset: 1000
         }
 

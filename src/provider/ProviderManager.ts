@@ -9,21 +9,38 @@ import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
 import {IQueueProcessor} from "../queue/IQueueProcessor";
 import {ClassLoader} from "../utils/ClassLoader";
 import {IProxyDef} from "./IProxyDef";
+import {FreeProxyListsCom} from "./predefined/FreeProxyListsCom";
+import {StringOrFunction} from "../types";
+import {Utils} from "../utils/Utils";
 
+const DEFAULT_PROVIDER : StringOrFunction[] = [
+    FreeProxyListsCom
+]
+
+
+
+const DEFAULT_OPTIONS:IProviderOptions = {
+    //enable:true,
+    providers:DEFAULT_PROVIDER
+}
 
 export class ProviderManager implements  IQueueProcessor<ProviderWorker> {
 
-    options: IProviderOptions = null
+    options: IProviderOptions = DEFAULT_OPTIONS
 
     queue: IQueue;
 
     providers: Array<IProviderDef> = []
 
 
-    constructor(options: IProviderOptions) {
-        this.options = options
-        this.options.parallel = this.options.parallel || 5
+    constructor(options: IProviderOptions = {}, override:boolean = false) {
+        if(override){
+            this.options = Utils.clone(options)
+        }else {
+            this.options = Utils.merge(DEFAULT_OPTIONS,options)
+        }
 
+        this.options.parallel = this.options.parallel || 5
         this.queue = new AsyncWorkerQueue<ProviderWorker>(this)
     }
 
@@ -45,13 +62,14 @@ export class ProviderManager implements  IQueueProcessor<ProviderWorker> {
 
 
     init(): Promise<void> {
-        let clazzes = ClassLoader.importClassesFromDirectories(this.options.paths)
+        let clazzes = ClassLoader.importClassesFromAny(this.options.providers)
         let self = this
         let clazzFn = clazzes.map(clazz => {
             return Promise.resolve(clazz).then(_clazz => {
                 let tmp = self.newProviderFromObject(_clazz)
 
                 if(tmp.variants){
+
                     tmp.variants.forEach(_variant => {
                         let proxyDef : IProviderDef = {
                             name: tmp.name,
@@ -87,7 +105,7 @@ export class ProviderManager implements  IQueueProcessor<ProviderWorker> {
     }
 
 
-    findAll(query: {[_k:string]:string} = {}):Array<IProviderDef>{
+    findAll(query: {[_k:string]:string} = {}): IProviderDef[]{
         let ret:Array<IProviderDef> = []
         this.providers.forEach((value:IProviderDef) => {
             let _value: boolean = true

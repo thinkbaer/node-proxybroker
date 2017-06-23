@@ -18,7 +18,6 @@ import DomainUtils from "../utils/DomainUtils";
 import {Utils} from "../utils/Utils";
 
 
-
 const FREEGEOIP: string = 'http://freegeoip.net/json/%s'
 const IPCHECK_URL = 'https://api.ipify.org?format=json'
 
@@ -29,7 +28,10 @@ const defaultOptions: IJudgeOptions = {
     debug: false,
     remote_url: 'http://127.0.0.1:8080',
     judge_url: 'http://0.0.0.0:8080',
-    request: {timeout: 5000}
+    request: {
+        socket_timeout: 10000,
+        connection_timeout: 5000
+    }
 }
 
 
@@ -51,7 +53,7 @@ export class Judge {
 
     private cache: { [key: string]: JudgeRequest } = {}
 
-    private $connections: {[key: string]:net.Socket} = {}
+    private $connections: { [key: string]: net.Socket } = {}
 
     // private addr: Array<string> = []
 
@@ -131,7 +133,7 @@ export class Judge {
     }
 
     static default_options() {
-        return Object.assign({}, defaultOptions)
+        return Utils.clone(defaultOptions)
     }
 
     async bootstrap(): Promise<boolean> {
@@ -209,6 +211,13 @@ export class Judge {
         return this.cache[req_id]
     }
 
+    removeFromCache(id:string){
+        if(this.cache[id]){
+            Log.info(id + ' REMOVE')
+            delete this.cache[id]
+        }
+    }
+
 
     /**
      * Judge root callback
@@ -233,10 +242,8 @@ export class Judge {
             if (this.cache[req_id]) {
                 cached_req = this.cache[req_id]
                 req.socket.once('end', function () {
-                    self.debug('CLEANUPO')
-                    delete self.cache[req_id]
+                    self.removeFromCache(req_id)
                 })
-
             }
 
             if (cached_req && this.enabled) {
@@ -318,12 +325,12 @@ export class Judge {
         results.port = port
 
         // Geo resolve
-        results.geo=false
+        results.geo = false
         let geo_url = format(FREEGEOIP, ip)
         try {
             let geodata: string = await _request.get(geo_url)
             if (geodata) {
-                results.geo=true
+                results.geo = true
                 let geojson: { [k: string]: string } = JSON.parse(geodata)
                 Object.keys(geojson).filter((k) => {
                     return ['ip'].indexOf(k) == -1
@@ -339,70 +346,20 @@ export class Judge {
         //let http_monitor: RequestResponseMonitor =
         await http_request.performRequest()
         results.http = http_request.result()
+        this.removeFromCache(http_request.id)
+
 
 
         let https_request: JudgeRequest = this.createRequest('https://' + ip + ':' + port)
         //let https_monitor: RequestResponseMonitor =
         await https_request.performRequest()
         results.https = https_request.result()
+        this.removeFromCache(https_request.id)
+
 
         return Promise.resolve(results)
     }
 
-
-    // /**
-    //  * Test HTTP, HTTPS, ANONYMITY LEVEL
-    //  *
-    //  * TODO this is not ready
-    //  *
-    //  * @param proxy
-    //  */
-    // async runTests(proxy: mUrl.Url): Promise<any> {
-    //     let start = new Date()
-    //     let report: any = {}
-    //     let self = this
-    //     let http_url = mUrl.format(proxy)
-    //
-    //     try {
-    //         let request = _request.defaults({proxy: http_url, timeout: 10000})
-    //
-    //         let requestPromise = request.get(mUrl.format(self._remote_url), {resolveWithFullResponse: true})
-    //         let rrm = RequestResponseMonitor.monitor(requestPromise)
-    //         let response = await requestPromise
-    //         await rrm.promise()
-    //
-    //         console.log(rrm.logToString())
-    //
-    //         var s = JSON.parse(response.body)
-    //         var stop = new Date()
-    //         var c_s = s.time - start.getTime()
-    //         var s_c = stop.getTime() - s.time
-    //         var full = stop.getTime() - start.getTime()
-    //
-    //         console.log('Time: C -> S: ' + c_s + ', S -> C: ' + s_c + ', G:' + full);
-    //         report['http'] = {
-    //             start: start,
-    //             stop: stop,
-    //             duration: full,
-    //             success: true,
-    //             log: ''
-    //         }
-    //
-    //     } catch (err) {
-    //
-    //         var stop = new Date()
-    //         var full = stop.getTime() - start.getTime()
-    //         report['http'] = {
-    //             start: start,
-    //             stop: stop,
-    //             duration: full,
-    //             success: false,
-    //             log: ''
-    //         }
-    //         self.throwedError(err)
-    //     }
-    //     return report
-    // }
 
 
     wakeup(force: boolean = false): Promise<any> {
@@ -433,7 +390,7 @@ export class Judge {
     }
 
     private onServerConnection(socket: net.Socket) {
-        
+
 
         let self = this
 
@@ -497,7 +454,7 @@ export class Judge {
                         self.info('Judge service shutting down on ' + self.judge_url_f)
                         resolve(true)
                     })
-                    for(let conn in self.$connections){
+                    for (let conn in self.$connections) {
                         self.$connections[conn].destroy()
                     }
                 } else {

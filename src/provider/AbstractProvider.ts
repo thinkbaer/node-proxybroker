@@ -1,8 +1,9 @@
 
-
+import * as _ from 'lodash'
 import {IProvider} from "./IProvider";
 import {IProviderWorkerAPI} from "./IProviderWorkerAPI";
 import {IProviderVariant} from "./IProviderVariant";
+import {IProxyDef} from "./IProxyDef";
 
 
 export abstract class AbstractProvider implements IProvider {
@@ -11,17 +12,44 @@ export abstract class AbstractProvider implements IProvider {
 
     abstract readonly url:string;
 
-    abstract readonly variants : Array<IProviderVariant>;
+    abstract readonly variants : IProviderVariant[];
 
-    private _variant : IProviderVariant;
+    private _variant : IProviderVariant = null;
 
-    constructor(variant : IProviderVariant) {
-        this._variant = variant
+    private _proxyies : IProxyDef[] = []
+
+    constructor() {}
+
+    selectVariant(variant : IProviderVariant|string){
+        // TODO check if exists and is valid
+        if(_.isString(variant)){
+            this._variant = _.find(this.variants,{type:variant})
+        }else{
+            this._variant = variant
+        }
     }
+
+    prepare?():Promise<void>;
+
 
     get variant(): IProviderVariant {
         return this._variant
     }
+
+    get proxies(): IProxyDef[] {
+        return this._proxyies
+    }
+
+    push(def:IProxyDef){
+        let found = _.find(this._proxyies,def)
+        if(!found){
+            this._proxyies.push(def)
+        }
+    }
+
+    abstract get(): Promise<IProxyDef[]>;
+
+
 
     abstract do(api: IProviderWorkerAPI): Promise<void>;
 

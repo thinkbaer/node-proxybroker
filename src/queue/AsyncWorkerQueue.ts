@@ -1,8 +1,11 @@
+import * as _ from 'lodash'
 import * as events from 'events'
 import {IAsyncQueueOptions} from "./IAsyncQueueOptions";
 import {IQueueProcessor} from "./IQueueProcessor";
 import {IQueueWorkload} from "./IQueueWorkload";
 import {QueueJob} from "./QueueJob";
+import {Log} from "../logging/Log";
+import {Utils} from "../utils/Utils";
 
 
 const ASYNC_QUEUE_DEFAULT: IAsyncQueueOptions = {
@@ -14,7 +17,10 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
     static readonly E_NO_RUNNING_JOBS = 'running empty'
     static readonly E_DO_PROCESS = 'process'
 
-    _paused : boolean = false
+    _inc: number = 0
+    _done: number = 0
+
+    _paused: boolean = false
 
     options: IAsyncQueueOptions;
 
@@ -22,24 +28,34 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
 
     runningTasks: number = 0
 
-    worker: Array<QueueJob<T>>
+    worker: Array<QueueJob<T>> = []
+
+    active: Array<QueueJob<T>> = []
 
     constructor(processor: IQueueProcessor<T>, options: IAsyncQueueOptions = {}) {
         super()
-        this.options = Object.assign(options, ASYNC_QUEUE_DEFAULT);
+        this.options = Utils.merge(ASYNC_QUEUE_DEFAULT, options);
         this.processor = processor
-        this.worker = []
         this.on(AsyncWorkerQueue.E_DO_PROCESS, this.process.bind(this))
         this.on('enqueue', this.enqueue.bind(this))
     }
 
     private next() {
         this.runningTasks--
-        if(this.isPaused()){
-            if(!this.isRunning()){
+
+        Log.debug('Tasks in queue INC:' + this._inc + ' DONE:' + this._done + ' RUNNING:' + this.running() + ' TODO:' + this.enqueued() + ' ACTIVE:' + this.active.length)
+        if (this.active.length < 5) {
+            let out = ''
+            this.active.forEach(_q => {
+                out += _q.workload()['ip'] + ':' + _q.workload()['port'] + '; '
+            })
+            Log.debug('Active tasks IDs:' + out)
+        }
+        if (this.isPaused()) {
+            if (!this.isRunning()) {
                 this.emit(AsyncWorkerQueue.E_NO_RUNNING_JOBS)
             }
-        }else{
+        } else {
             this.fireProcess()
         }
 
@@ -51,7 +67,7 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
 
     private process() {
         // ignore if is paused
-        if(this._paused) {
+        if (this._paused) {
             return;
         }
 
@@ -59,19 +75,28 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
             // room for additional job
             let worker = this.worker.shift()
             let self = this
+            self.active.push(worker);
 
             this.runningTasks++
             Promise.resolve(worker)
-                .then((worker) => {
-                    worker.doStart()
-                    return worker
+                .then((_worker) => {
+
+                    self._inc++
+                    _worker.doStart()
+                    return _worker
                 })
-                .then((worker) => {
-                    return self.processor.do(worker.workload())
+                .then(async (_worker) => {
+                    await self.processor.do(_worker.workload())
+                    return _worker
                 })
-                .then(function (_result) {
-                    worker.doStop()
+                .then(function (_worker) {
+                    _.remove(self.active, _worker)
+                    _worker.doStop()
+                    self._done++
                     self.next()
+                })
+                .catch((err) => {
+                    Log.error('Queue=>', err)
                 })
 
         } else {
@@ -92,7 +117,7 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
     }
 
 
-    private fireProcess(){
+    private fireProcess() {
         this.emit(AsyncWorkerQueue.E_DO_PROCESS)
     }
 
@@ -153,15 +178,15 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
     }
 
     // TODO impl
-    pause() : Promise<boolean> {
+    pause(): Promise<boolean> {
         let self = this
         this._paused = true
         return new Promise(function (resolve) {
-            if(self.isRunning()){
+            if (self.isRunning()) {
                 self.once(AsyncWorkerQueue.E_NO_RUNNING_JOBS, function () {
                     resolve(self._paused)
                 })
-            }else{
+            } else {
                 resolve(self._paused)
             }
         })

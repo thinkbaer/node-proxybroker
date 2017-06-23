@@ -143,31 +143,32 @@ class JV {
     @test
     async validateFailedOnHttpAndHttps(){
         let results : JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST,3130)
-        expect(results.http.error).to.eq(true)
-        expect(results.https.error).to.eq(true)
+        expect(results.http.hasError()).to.be.true
+        expect(results.https.hasError()).to.be.true
+
     }
 
     @test
     async validateSuccessOnHttpAndFailedOnHttps(){
         let results : JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST,JV.http_proxy_port)
-        expect(results.http.error).to.eq(false)
+        expect(results.http.hasError()).to.be.false
         expect(results.http.level).to.eq(3)
-        expect(results.https.error).to.eq(true)
+        expect(results.https.hasError()).to.be.true
     }
 
     @test
     async validateFailedOnHttpAndSuccessOnHttps(){
         let results : JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST,JV.https_proxy_port)
-        expect(results.http.error).to.eq(true)
-        expect(results.https.error).to.eq(false)
+        expect(results.http.hasError()).to.be.true
+        expect(results.https.hasError()).to.be.false
     }
 
     @test
     async validateSuccessOnHttpAndHttps(){
         let results : JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST,JV.proxy_wrapper_port)
         // console.log(results)
-        expect(results.http.error).to.eq(false)
-        expect(results.https.error).to.eq(false)
+        expect(results.http.hasError()).to.be.false
+        expect(results.https.hasError()).to.be.false
     }
 
 }

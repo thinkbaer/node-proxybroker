@@ -63,6 +63,20 @@ Analyse warning on travis:
 WARNING: executing requirements for [object Object] failed, this types cannot be loaded
 ```
 
+@TASK:{counter:task} 20170623 +patch +
+Extract the validation of proxy lists in JudgeFileCommand to a seperate worker class.
+
+@TASK:{counter:task} 20170623 +
+Analyse errors from proxy results and try to simulate them in testcases.
+
+- ETIMEOUT
+- ESOCKETTIMEOUT
+- further @see Exceptions.handle impl
+
+
+@TASK:{counter:task} 20170623 +
+Request over elite proxy cannot be identifiert as proxied. If via or forward
+exists, but the ip isn't listed then it is an anonymus proxy.
 
 
 

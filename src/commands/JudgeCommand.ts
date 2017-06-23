@@ -1,9 +1,12 @@
 
 
 import {Judge} from "../judge/Judge";
-import {EventBus} from "../events/EventBus";
+
 import StdConsole from "./StdConsole";
 import {Log} from "../logging/Log";
+import Todo from "../exceptions/Todo";
+import {Utils} from "../utils/Utils";
+import {IJudgeOptions} from "../judge/IJudgeOptions";
 
 
 
@@ -22,11 +25,21 @@ export class JudgeCommand {
                 describe: "Enable logging",
                 default:false
             })
+            .option("config", {
+                alias: 'c',
+                describe: "Judge config json",
+                default: '{}'
+            })
     }
 
     async handler(argv: any) {
         Log.enable = StdConsole.$enabled = argv.verbose
-        let judge = new Judge()
+        let judgeOptions: IJudgeOptions = Judge.default_options()
+        if (argv.config) {
+            judgeOptions = Utils.merge(judgeOptions, JSON.parse(argv.config))
+        }
+
+        let judge = new Judge(judgeOptions)
         let booted = await judge.bootstrap()
         if(booted){
             await judge.wakeup()
@@ -34,7 +47,7 @@ export class JudgeCommand {
             await judge.pending()
             console.log(JSON.stringify(results,null,2))
         }else{
-            // TODO check this
+            throw new Todo()
         }
     }
 }

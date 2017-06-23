@@ -2,11 +2,13 @@ import {IQueueWorkload} from "./IQueueWorkload";
 import {shorthash} from "../lib/crypt";
 import {inspect} from "util"
 import {IQueue} from "./IQueue";
+import Timer = NodeJS.Timer;
 
 
 export class QueueJob<T extends IQueueWorkload> {
 
     private static _INC = 0;
+    private _TIMEOUT = 20000;
 
     private _id: string;
 
@@ -18,6 +20,9 @@ export class QueueJob<T extends IQueueWorkload> {
     private _stop: Date = null;
     private _enqueued: Date = null;
     private _duration: number;
+
+    // create a timer which destroy long running jobs
+    private _timer: Timer = null;
 
     constructor(queue: IQueue, workload: T) {
         this._workload = workload;
@@ -117,6 +122,7 @@ export class QueueJob<T extends IQueueWorkload> {
         this._queue.removeAllListeners('job ' + this._id + ' start');
         this._queue.removeAllListeners('job ' + this._id + ' stop')
         this._queue.removeAllListeners('job ' + this._id + ' enqueued');
+
     }
 
 
