@@ -96,24 +96,27 @@ export class JudgeFileCommand {
                 if (booted) {
 
                     await judge.wakeup()
-                    let p = new ProxyValidator(judge)
-                    let q = new AsyncWorkerQueue<ProxyData>(p, {concurrent: parallel})
+                    try {
+                        let p = new ProxyValidator(judge)
+                        let q = new AsyncWorkerQueue<ProxyData>(p, {concurrent: parallel})
+                        list.forEach(_q => {
+                            q.push(_q)
+                        })
+                        await q.await()
+                    } catch (err) {
+                        Log.error(err)
+                    }
 
-                    list.forEach(_q => {
-                        q.push(_q)
-                    })
-
-                    await q.await()
                     await judge.pending()
 
-                    let data:JudgeResults[] = []
+                    let data: JudgeResults[] = []
                     list.forEach(_x => {
                         _x.results.http.log = null
                         _x.results.https.log = null
                         data.push(_x.results)
                     })
 
-                    console.log(JSON.stringify(data,null,2))
+                    console.log(JSON.stringify(data, null, 2))
                 } else {
                     throw new Todo()
                 }
@@ -131,3 +134,4 @@ export class JudgeFileCommand {
          */
     }
 }
+

@@ -21,8 +21,9 @@ export default class SpawnCLI {
 
     exec():Promise<SpawnCLI>{
         let self = this
+        let cp:child_process.ChildProcess = null
         return new Promise((resolve, reject) => {
-            let cp = child_process.spawn('node',this.args,
+            cp = child_process.spawn('node',this.args,
                 {
                     cwd: PlatformUtils.pathNormilize(__dirname + '/../..'),
                     env:process.env
@@ -39,6 +40,16 @@ export default class SpawnCLI {
             cp.on("error", function (err) {
                 reject(err)
             })
+        }).then(() =>{
+            try{
+                cp.kill()
+            }catch(e){}
+            return self
+        }).catch((err) =>{
+            try{
+                cp.kill()
+            }catch(e){}
+            return err
         })
     }
 

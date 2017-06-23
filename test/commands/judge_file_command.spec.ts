@@ -10,7 +10,7 @@ import {inspect} from 'util'
 import SpawnCLI from "./SpawnCLI";
 
 
-@suite('commands/JudgeFileCommand') @timeout(10000)
+@suite('commands/JudgeFileCommand') @timeout(20000)
 class JudgeFileCommandTest {
 
     @test
