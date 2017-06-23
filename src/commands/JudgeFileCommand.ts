@@ -87,12 +87,14 @@ export class JudgeFileCommand {
                 }
             })
 
+
             if (list.length) {
                 let parallel: number = 5
 
                 let judge = new Judge()
                 let booted = await judge.bootstrap()
                 if (booted) {
+
                     await judge.wakeup()
                     let p = new ProxyValidator(judge)
                     let q = new AsyncWorkerQueue<ProxyData>(p, {concurrent: parallel})
@@ -110,6 +112,7 @@ export class JudgeFileCommand {
                         _x.results.https.log = null
                         data.push(_x.results)
                     })
+
                     console.log(JSON.stringify(data,null,2))
                 } else {
                     throw new Todo()
@@ -117,7 +120,7 @@ export class JudgeFileCommand {
 
 
             } else {
-                console.error('NO DATA')
+                Log.error('NO DATA')
             }
 
 

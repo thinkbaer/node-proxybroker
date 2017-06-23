@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // import "reflect-metadata";
+
 import {JudgeCommand} from "./commands/JudgeCommand";
 import {EventBus} from "./events/EventBus";
 import StdConsole from "./commands/StdConsole";
