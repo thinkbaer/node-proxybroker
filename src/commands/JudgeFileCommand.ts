@@ -1,5 +1,5 @@
 import {Judge} from "../judge/Judge";
-import {EventBus} from "../events/EventBus";
+
 import StdConsole from "./StdConsole";
 import {Log} from "../logging/Log";
 import {PlatformUtils} from "../utils/PlatformUtils";
@@ -58,7 +58,7 @@ class ProxyValidator implements IQueueProcessor<ProxyData> {
 
 export class JudgeFileCommand {
 
-    command = "judge-file <file>"
+    command = "judge-file <file> [outputformat]"
     aliases = 'jf'
     describe = "Test a list with addresses in <file> for proxy abilities. (Format: ip:port\\n)";
 
@@ -69,6 +69,7 @@ export class JudgeFileCommand {
                 describe: "Enable logging",
                 default: false
             })
+            .default('outputformat','json')
     }
 
     async handler(argv: any) {
@@ -95,6 +96,7 @@ export class JudgeFileCommand {
                 let booted = await judge.bootstrap()
                 if (booted) {
 
+
                     await judge.wakeup()
                     try {
                         let p = new ProxyValidator(judge)
@@ -102,21 +104,32 @@ export class JudgeFileCommand {
                         list.forEach(_q => {
                             q.push(_q)
                         })
+
+                        Log.error('PRE AWAIT')
                         await q.await()
+                        Log.error('AFTER AWAIT')
                     } catch (err) {
                         Log.error(err)
                     }
 
                     await judge.pending()
 
-                    let data: JudgeResults[] = []
-                    list.forEach(_x => {
-                        _x.results.http.log = null
-                        _x.results.https.log = null
-                        data.push(_x.results)
-                    })
+                    switch (argv.outputformat){
+                        case 'json':
+                            let data: JudgeResults[] = []
+                            list.forEach(_x => {
+                                _x.results.http.log = null
+                                _x.results.https.log = null
+                                data.push(_x.results)
+                            })
 
-                    console.log(JSON.stringify(data, null, 2))
+                            console.log(JSON.stringify(data, null, 2))
+                            break;
+
+                        default:
+                            console.log(1)
+                            break;
+                    }
                 } else {
                     throw new Todo()
                 }
