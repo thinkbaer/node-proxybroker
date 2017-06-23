@@ -108,8 +108,6 @@ export class JudgeFileCommand {
                 let judge = new Judge(judgeOptions)
                 let booted = await judge.bootstrap()
                 if (booted) {
-
-
                     await judge.wakeup()
                     try {
                         let p = new ProxyValidator(judge)
@@ -117,10 +115,7 @@ export class JudgeFileCommand {
                         list.forEach(_q => {
                             q.push(_q)
                         })
-
-                        Log.error('PRE AWAIT')
                         await q.await()
-                        Log.error('AFTER AWAIT')
                     } catch (err) {
                         Log.error(err)
                     }

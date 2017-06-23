@@ -13,12 +13,10 @@ import SpawnCLI from "./SpawnCLI";
 @suite('commands/JudgeFileCommand') @timeout(20000)
 class JudgeFileCommandTest {
 
-    @test.only
+    @test
     async 'judge file with file'() {
         let cfg = {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"}
         let cli = await SpawnCLI.run('judge-file', 'test/_files/proxylists/list01.csv', '-v', '-c', JSON.stringify(cfg))
-        console.log(cli.stdout)
-
         let data = JSON.parse(cli.stdout)
         data = data.shift()
         expect(data.ip).to.eq('127.0.0.1')

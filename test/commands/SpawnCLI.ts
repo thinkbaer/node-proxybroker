@@ -32,7 +32,6 @@ export default class SpawnCLI {
                 self.stdout += data
             })
             cp.stderr.on('data',function (data:string) {
-                console.error(data.toString())
                 self.stderr += data
             })
             cp.on('close',function () {
