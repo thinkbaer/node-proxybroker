@@ -57,8 +57,11 @@ m.post()
 Redesign the cli output of judge.
 
 
-
-
+@TASK:{counter:task} 20170623 +patch +
+Analyse warning on travis:
+```
+WARNING: executing requirements for [object Object] failed, this types cannot be loaded
+```
 
 
 

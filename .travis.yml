@@ -20,5 +20,5 @@ before_install:
   - npm install -g codecov
   - npm install -g typings
   - typings install
-  - cat /etc/squid/squid.conf
+  - cat /etc/squid3/squid.conf
 
