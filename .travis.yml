@@ -13,7 +13,7 @@ node_js:
 #  - squid
 
 before_install:
-  - sudo /bin/sh -c 'echo "127.0.0.10 judge.local\n" >> /etc/hosts'
+  - sudo /bin/sh -c 'echo "\n127.0.0.10 judge.local\n" >> /etc/hosts'
   - sudo /bin/sh -c 'echo "127.0.0.11 proxy.local\n" >> /etc/hosts'
   - export CI_CONTAINER=1
   - npm install -g nyc
