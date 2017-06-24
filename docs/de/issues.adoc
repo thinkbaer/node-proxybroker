@@ -24,7 +24,7 @@ Proxies kontrolliert ausführt
 Make the use of other judge server possible and configurable.
 
 
-@TASK:{counter:task} 20170620 +minor +
+[.line-through]#@TASK:{counter:task} 20170620# +minor +
 Extend the cli command 'judge' by the file option, to check all given proxies
 in the text file. The format should be simple 'ip:port\n'
 
@@ -74,9 +74,10 @@ Analyse errors from proxy results and try to simulate them in testcases.
 - further @see Exceptions.handle impl
 
 
-@TASK:{counter:task} 20170623 +
+[.line-through]#@TASK:{counter:task} 20170623# +minor +
 Request over elite proxy cannot be identifiert as proxied. If via or forward
-exists, but the ip isn't listed then it is an anonymus proxy.
+exists, but the ip isn't listed then it is an anonymus proxy.+
+Write testcase for the different scoring possibilities.
 
 
 

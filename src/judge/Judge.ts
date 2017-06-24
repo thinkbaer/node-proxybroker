@@ -227,7 +227,7 @@ export class Judge {
      * @param req
      * @param res
      */
-    public judge(req: http.IncomingMessage, res: http.ServerResponse) {
+    public async judge(req: http.IncomingMessage, res: http.ServerResponse) {
         let paths = req.url.split('/').filter((x) => {
             return x || x.length != 0
         })
@@ -249,7 +249,7 @@ export class Judge {
             }
 
             if (cached_req && this.enabled) {
-                cached_req.onJudge(req, res)
+                await cached_req.onJudge(req, res)
                 res.writeHead(200, {"Content-Type": "application/json"});
                 var json = JSON.stringify({time: (new Date()).getTime(), headers: req.headers});
                 res.end(json);
