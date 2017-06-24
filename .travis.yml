@@ -4,13 +4,13 @@ sudo: required
 node_js:
   - "6"
 
-addons:
-  apt:
-    packages:
-    - squid
+# addons:
+#  apt:
+#    packages:
+#    - squid
 
-services:
-  - squid
+#services:
+#  - squid
 
 before_install:
   - sudo /bin/sh -c 'echo "127.0.0.10 judge.local" >> /etc/hosts'
