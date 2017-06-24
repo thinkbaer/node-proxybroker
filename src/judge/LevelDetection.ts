@@ -140,7 +140,7 @@ export class LevelDetection {
         if (!this.hasLocalIP() && !this.hasProxyIP() && !this.hasViaHeader() && !this.hasForwardHeader()) {
             // Elite
             this._level = 1
-        } else if (!this.hasLocalIP() && !this.hasForwardHeader()) {
+        } else if (!this.hasLocalIP()) {
             // Anonym
             this._level = 2
         } else {

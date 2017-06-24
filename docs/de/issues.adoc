@@ -80,4 +80,5 @@ exists, but the ip isn't listed then it is an anonymus proxy.+
 Write testcase for the different scoring possibilities.
 
 
-
+@TASK:{counter:task} 20170624 +
+UserAgent generator, generate combinations be given agent parameter.

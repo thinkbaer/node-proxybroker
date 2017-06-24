@@ -180,7 +180,9 @@ export class JudgeRequest {
                 if(_h.isForward){
                     o.push('forward header "'+_h.key+'": ' + _h.value)
                 }
-                this.monitor.addLog(`- Has ${o.join(' ')}`, '*')
+                if(o.length){
+                    this.monitor.addLog(`- Has ${o.join(' ')}`, '*')
+                }
             }
 
         })
