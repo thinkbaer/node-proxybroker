@@ -14,6 +14,9 @@ import {Log} from "../../src/logging/Log";
 import {RequestResponseMonitor} from "../../src/judge/RequestResponseMonitor";
 import {JudgeResults} from "../../src/judge/JudgeResults";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
+import StdConsole from "../../src/commands/StdConsole";
+import {EventBus} from "../../src/events/EventBus";
+import {NestedException} from "../../src/exceptions/NestedException";
 
 const SSL_PATH = '../_files/ssl'
 const JUDGE_LOCAL_HOST: string = 'judge.local'
@@ -131,12 +134,18 @@ class JV {
     }
 
     @test
-    async proxyIpAndPortForHttpsNegativ() {
+    async 'socket timeout on https judge request'() {
+        /*
+        StdConsole.$enabled = true
+        Log.enable = true
+        EventBus.register(new StdConsole())
+        */
         let proxy_url_https = 'https://' + JV.http_proxy_ip + ':' + JV.http_proxy_port
-        let judgeReq = JV.http_judge.createRequest(proxy_url_https, {local_ip: '127.0.0.1', timeout: 500})
-        judgeReq._debug = JV._debug
+        let judgeReq = JV.http_judge.createRequest(proxy_url_https, {local_ip: '127.0.0.1', socket_timeout: 500, connection_timeout:500})
         let rrm:RequestResponseMonitor = await judgeReq.performRequest()
-        expect(rrm.lastError()).to.deep.eq({"code":"ESOCKETTIMEDOUT","connect":false})
+        let err = rrm.lastError()
+        expect(err instanceof NestedException).to.be.true
+        expect(err.code).to.be.eq('SOCKET_TIMEDOUT')
     }
 
 

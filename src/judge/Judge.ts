@@ -193,25 +193,27 @@ export class Judge {
             return true
         } catch (err) {
             return this.throwedError(err, false)
-
-            // return false
         }
     }
 
 
-    createRequest(proxy_url: string, options: { local_ip?: string, timeout?: number } = {}): JudgeRequest {
+    createRequest(proxy_url: string, options: { local_ip?: string, socket_timeout?: number, connection_timeout?: number } = {}): JudgeRequest {
         let judge_url = this.remote_url_f
         let inc = this.inc++
         let req_id = shorthash(judge_url + '-' + proxy_url + '-' + (new Date().getTime()) + '-' + inc)
         judge_url += 'judge/' + req_id
-        this.debug('JUDGE_URL', judge_url)
+        this.debug('createRequest to ' + judge_url + ' identified by ' + req_id)
         let req_options = Object.assign(this.options.request, options)
         let judgeReq = new JudgeRequest(this, req_id, judge_url, proxy_url, req_options)
-        this.cache[req_id] = judgeReq
-        return this.cache[req_id]
+        return this.addToCache(judgeReq)
     }
 
-    removeFromCache(id:string){
+    private addToCache(req : JudgeRequest) : JudgeRequest{
+        this.cache[req.id] = req
+        return this.cache[req.id]
+    }
+
+    private removeFromCache(id:string){
         if(this.cache[id]){
             Log.info(id + ' REMOVE')
             delete this.cache[id]

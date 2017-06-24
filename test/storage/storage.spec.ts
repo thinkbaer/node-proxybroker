@@ -28,7 +28,6 @@ describe('Storage', () => {
         await storage.init()
         let entityNames:Array<string> = []
         storage.connection.entityMetadatas.forEach(entityMeta => { entityNames.push(entityMeta.targetName) })
-        console.log(entityNames)
 
         entityNames = entityNames.sort()
         expect(entityNames).to.be.deep.eq([ "IpAddr" , "Variable" ])

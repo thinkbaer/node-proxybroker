@@ -120,13 +120,6 @@ export class JudgeRequest {
         } catch (e) {
             // Will be also in ReqResMonitor
         }
-
-        /*
-        if(this.socket){
-            this.socket.end()
-            this.socket.destroy()
-        }
-        */
         return this.monitor.promise()
     }
 
@@ -137,7 +130,6 @@ export class JudgeRequest {
         socket.setKeepAlive(false)
         socket.setTimeout(this.socket_timeout)
         socket.on('error', this.onSocketError.bind(this))
-
     }
 
     private onSocketError(error: Error) {
