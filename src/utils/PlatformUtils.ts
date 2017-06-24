@@ -15,7 +15,7 @@ export class PlatformUtils {
     /**
      * Type of the currently running platform.
      */
-    static type: "browser"|"node" = "node";
+    static type: "browser" | "node" = "node";
 
     /**
      * Gets global variable where global stuff can be stored.
@@ -79,6 +79,18 @@ export class PlatformUtils {
      */
     static getEnvVariable(name: string): any {
         return process.env[name];
+    }
+
+
+    static getHostPath():string {
+        if (process.platform === 'win32') {
+            return path.join(process.env.SYSTEMROOT, '/System32/drivers/etc/hosts');
+        }
+        return '/etc/hosts';
+    }
+
+    static getHostFileContent():string {
+        return fs.readFileSync(this.getHostPath(),{encoding:'utf-8'})
     }
 
 }
