@@ -120,11 +120,13 @@ Bootstrap implementation which should handle:
 @TASK:{counter:task} 20170627 minor +
 Impl. of the processing workflow.
 
-1. fetching proxy ip by provider and transport to the
-2. ip filter detects if an ip was already check in last time ()
-* validating quality of
-** on errors save the ip
-* sadf
+1. fetching proxy ip by provider and transport to the ip filter
+2. ip filter detects if an ip was already check in last time and
+decides if it should be (re)validated or not
+3. the validator checks the quality of the proxy and transports
+the results to the storage handler
+4. storage handler saves the results to the backend
+
 
 
 

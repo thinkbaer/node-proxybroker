@@ -271,6 +271,9 @@ export class Judge {
 
     }
 
+    isEnabled(){
+        return this.enabled
+    }
 
     enable() {
         this.enabled = true

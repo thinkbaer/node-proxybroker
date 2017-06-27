@@ -1,61 +1,22 @@
+import * as fs from 'fs'
+
 import {Judge} from "../judge/Judge";
 
 import StdConsole from "./StdConsole";
 import {Log} from "../logging/Log";
 import {PlatformUtils} from "../utils/PlatformUtils";
-import * as fs from 'fs'
-import * as _ from 'lodash'
-import {IQueueWorkload} from "../queue/IQueueWorkload";
-import {IQueueProcessor} from "../queue/IQueueProcessor";
-import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
+
 import Todo from "../exceptions/Todo";
 import {JudgeResults} from "../judge/JudgeResults";
 import {IJudgeOptions} from "../judge/IJudgeOptions";
 import {Utils} from "../utils/Utils";
+import {ProxyData} from "../proxy/ProxyData";
+import {ProxyValidationController} from "../proxy/ProxyValidator";
 
 
-class ProxyData implements IQueueWorkload {
-
-    ip: string
-    port: number
-    results: JudgeResults = null
 
 
-    constructor(ip: string | { ip: string, port: number }, port?: number) {
-        if (_.isString(ip) && port) {
-            this.ip = ip
-            this.port = port
 
-        } else if (_.isObject(ip)) {
-            this.ip = ip['ip']
-            this.port = ip['port']
-        } else {
-            // TODO test string with :
-            throw new Todo()
-        }
-    }
-}
-
-
-class ProxyValidator implements IQueueProcessor<ProxyData> {
-
-    private judge: Judge = null
-
-    constructor(judge: Judge) {
-        this.judge = judge
-    }
-
-    async do(workLoad: ProxyData): Promise<any> {
-        let results = await this.judge.validate(workLoad.ip, workLoad.port)
-        workLoad.results = results
-        return Promise.resolve(results)
-    }
-
-
-    onEmpty(): Promise<void> {
-        return null;
-    }
-}
 
 
 export class JudgeFileCommand {
@@ -105,36 +66,32 @@ export class JudgeFileCommand {
 
 
             if (list.length) {
-                let parallel: number = 200
+
 
                 let judgeOptions: IJudgeOptions = Judge.default_options()
                 if (argv.config) {
                     judgeOptions = Utils.merge(judgeOptions, JSON.parse(argv.config))
                 }
 
-                let judge = new Judge(judgeOptions)
+                let validator = new ProxyValidationController(judgeOptions);
                 let booted = false
-
                 try {
-                    booted = await judge.bootstrap()
+                    booted = await validator.prepare()
                 } catch (err) {
                     Log.error(err)
                 }
                 if (booted) {
-                    await judge.wakeup()
                     try {
-                        let p = new ProxyValidator(judge)
-                        let q = new AsyncWorkerQueue<ProxyData>(p, {concurrent: parallel})
                         list.forEach(_q => {
-                            q.push(_q)
+                            validator.push(_q)
                         })
 
-                        await q.await()
+                        await validator.await()
                     } catch (err) {
                         Log.error(err)
                     }
 
-                    await judge.pending()
+                    await validator.shutdown()
 
                     switch (argv.format) {
                         case 'json':
