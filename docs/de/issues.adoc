@@ -73,6 +73,8 @@ Analyse errors from proxy results and try to simulate them in testcases.
 - ESOCKETTIMEOUT
 - further @see Exceptions.handle impl
 
+NOTE: implemented Exceptions.handle to wrap errors to NestedException with error code
+
 
 [.line-through]#@TASK:{counter:task} 20170623# +minor +
 Request over elite proxy cannot be identifiert as proxied. If via or forward
@@ -81,4 +83,49 @@ Write testcase for the different scoring possibilities.
 
 
 @TASK:{counter:task} 20170624 +
-UserAgent generator, generate combinations be given agent parameter.
+UserAgent generator, generate combinations of given agent parameter types.
+
+
+@TASK:{counter:task} 20170626 +
+Backlog: Docker test enviroment
+
+@TASK:{counter:task} 20170626 +
+Backlog: Internationalization
+
+
+@TASK:{counter:task} 20170626 +
+Backlog: Spin-Offs
+
+- EventBus
+- AsyncWorkerQueue
+
+
+@TASK:{counter:task} 20170626 patch per subtask +
+Impl. multiple proxy provider
+
+- http://www.proxy-listen.de
+- http://proxydb.net
+
+
+@TASK:{counter:task} 20170626 minor +
+Bootstrap implementation which should handle:
+
+- default config definition
+- storage initialisation (data are present in Config)
+- ui enabling
+- proxyserver enabling
+
+
+
+@TASK:{counter:task} 20170627 minor +
+Impl. of the processing workflow.
+
+1. fetching proxy ip by provider and transport to the
+2. ip filter detects if an ip was already check in last time ()
+* validating quality of
+** on errors save the ip
+* sadf
+
+
+
+

@@ -1,13 +1,18 @@
+import * as mocha from 'mocha';
+describe('', () => {
+})
 
-import * as chai from 'chai'
-let expect = chai.expect
+
+import {suite, test, slow, timeout, pending} from "mocha-typescript";
+import {expect} from "chai";
+import {inspect} from 'util'
 
 import {Storage} from "../../src/storage/Storage";
 import {IStorageOptions} from "../../src/storage/IStorageOptions";
-import {IpAddr} from "../../src/entity/IpAddr";
+import {IpAddr} from "../../src/storage/entity/IpAddr";
 
 
-const DEFAULT_STORAGE_OPTIONS : IStorageOptions = {
+const DEFAULT_STORAGE_OPTIONS: IStorageOptions = {
     driver: {
         type: "sqlite",
         storage: ":memory:"
@@ -18,23 +23,34 @@ const DEFAULT_STORAGE_OPTIONS : IStorageOptions = {
 }
 
 
+@suite('storage/Storage')
+class StorageTest {
 
-describe('Storage', () => {
-
-    it('init',async () => {
-
-
-        let storage = new Storage()
-        await storage.init()
-        let entityNames:Array<string> = []
-        storage.connection.entityMetadatas.forEach(entityMeta => { entityNames.push(entityMeta.targetName) })
+    @test
+    async 'init'() {
+        let storage = new Storage();
+        await storage.init();
+        let entityNames: Array<string> = []
+        let cw = await storage.connect()
+        cw.connection.entityMetadatas.forEach(entityMeta => {
+            entityNames.push(entityMeta.targetName)
+        })
 
         entityNames = entityNames.sort()
-        expect(entityNames).to.be.deep.eq([ "IpAddr" , "Variable" ])
+        expect(entityNames).to.be.deep.eq(["IpAddr", "Variable"])
+    }
 
+    /**
+     * sqlite in-memory test
+     *
+     * @returns {Promise<void>}
+     */
+    @test.only()
+    async 'static'() {
+        Storage['$$'] = null
+        let storage = await Storage.$();
+        expect(storage.size()).to.be.eq(1)
+        Storage['$$'] = null
+    }
 
-        // let ipAddr = storage.create(IpAddr)
-    })
-
-
-})
+}

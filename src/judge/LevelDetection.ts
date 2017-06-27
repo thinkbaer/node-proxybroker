@@ -5,10 +5,70 @@ import DomainUtils from "../utils/DomainUtils";
 import {Utils} from "../utils/Utils";
 import {IHeader} from "./IHeader";
 
-const httpForwardHeader = ['forwarded-for', 'http-x-forwarded-for', 'x-forwarded-for', 'http-client-ip', 'x-client-ip', 'x-http-forwarded-for']
-const httpViaHeader = ['via', 'http-via', 'proxy-connection', 'forwarded', 'http-forwarded']
-const ignore_headers = ['host']
+const HTTP_FORWARD_HEADER = [
+    'forwarded-for',
+    'http-x-forwarded-for',
+    'http-client-ip',
+    'x-client-ip',
+    'x-http-forwarded-for',
+    'forwarded',
+    'http-forwarded',
+    'accproxyws',
+    'cdn-src-ip',
+    'client-ip',
+    'cuda_cliip',
+    'forwarded',
+    'forwarded-for',
+    'remote-host',
+    'x-client-ip',
+    'x-coming-from',
+    'x-forwarded',
+    'x-forwarded-for',
+    'x-forwarded-for-ip',
+    'x-forwarded-host',
+    'x-forwarded-server',
+    'x-host',
+    'x-network-info',
+    'x-nokia-remotesocket',
+    'x-proxyuser-ip',
+    'x-qihoo-ip',
+    'x-real-ip',
+    'xcnool_forwarded_for',
+    'xcnool_remote_addr']
 
+
+const HTTP_VIA_HEADER = [
+    'http-via',
+    'proxy-connection',
+    'mt-proxy-id',
+    'proxy-agent',
+    'surrogate-capability',
+    'via',
+    'x-authenticated-user',
+    'x-bluecoat-via',
+    'x-cache',
+    'x-cid-hash',
+    'x-content-opt',
+    'x-d-forwarder',
+    'x-fikker',
+    'x-forwarded-proto',
+    'x-imforwards',
+    'x-loop-control',
+    'x-mato-param',
+    'x-nai-id',
+    'x-nokia-gateway-id',
+    'x-nokia-localsocket',
+    'x-proxy-id',
+    'x-roaming',
+    'x-turbopage',
+    'x-varnish',
+    'x-via',
+    'x-wap-profile',
+    'x-wrproxy-id',
+    'x-xff-0',
+    'xroxy-connection']
+
+const ignore_headers = ['host']
 
 
 export class LevelDetection {
@@ -121,11 +181,11 @@ export class LevelDetection {
                 header.hasProxyIp = true
             }
 
-            if (httpForwardHeader.indexOf(key.toLocaleLowerCase()) > -1) {
+            if (HTTP_FORWARD_HEADER.indexOf(key.toLocaleLowerCase()) > -1) {
                 header.isForward = true
             }
 
-            if (httpViaHeader.indexOf(key.toLocaleLowerCase()) > -1) {
+            if (HTTP_VIA_HEADER.indexOf(key.toLocaleLowerCase()) > -1) {
                 header.isVia = true
             }
 
@@ -135,7 +195,6 @@ export class LevelDetection {
                 }
             })
         }
-
 
         if (!this.hasLocalIP() && !this.hasProxyIP() && !this.hasViaHeader() && !this.hasForwardHeader()) {
             // Elite
@@ -148,37 +207,6 @@ export class LevelDetection {
             this._level = 3
         }
 
-        /*
-         if (this.is_ip_of_proxy.length == 0 && this.is_ip_present.length == 0) {
-
-         this.level = 1
-
-         } else if (this.is_ip_of_proxy.length > 0 && this.is_ip_present.length == 0) {
-
-         //} else if(is_ip_of_proxy.length == 0 && is_ip_present.length > 0){
-         //    this.monitor.addLog(`Proxy is L3 - :`, '*')
-         this.level = 2
-         } else {
-
-         this.level = 3
-         }
-
-         if (this.is_ip_present.length > 0) {
-         this.monitor.addLog(`- IP in headers: ${this.is_ip_present.join(', ')}`, '*')
-         }
-
-         if (this.is_ip_of_proxy.length > 0) {
-         this.monitor.addLog(`- IP of proxy in headers: ${this.is_ip_of_proxy.join(', ')}`, '*')
-         }
-
-         if (this.via_headers.length > 0) {
-         this.monitor.addLog(`- HTTP "via" headers used: ${this.via_headers.join(', ')}`, '*')
-         }
-
-         if (this.forward_headers.length > 0) {
-         this.monitor.addLog(`- HTTP "forward" headers used: ${this.forward_headers.join(', ')}`, '*')
-         }
-         */
         return Promise.resolve()
     }
 

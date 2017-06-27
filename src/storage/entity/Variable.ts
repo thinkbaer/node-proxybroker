@@ -5,7 +5,7 @@ import {ColumnTypes} from "typeorm/metadata/types/ColumnTypes";
 @Entity()
 export class Variable {
 
-    @PrimaryColumn(ColumnTypes.STRING, { length : 64 })
+    @PrimaryColumn(ColumnTypes.STRING, { length : 128 })
     key: string;
 
 
