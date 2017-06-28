@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as _ from 'lodash'
-import {Connection, createConnection, getConnectionManager} from "typeorm";
+import {Connection, ConnectionManager, createConnection, getConnectionManager} from "typeorm";
 import {IStorageOptions} from "./IStorageOptions";
 
 
@@ -24,6 +24,7 @@ export const FIX_STORAGE_OPTIONS = {
 
 
 export const DEFAULT_STORAGE_OPTIONS: IStorageOptions = {
+    name:'default',
     driver: {
         type: "sqlite",
         storage: ":memory:",
@@ -33,6 +34,8 @@ export const DEFAULT_STORAGE_OPTIONS: IStorageOptions = {
 
 
 export class Storage {
+
+    private _name:string = null
 
     // if memory then on connection must be permanent
     private memory: boolean = false
@@ -67,9 +70,14 @@ export class Storage {
         }
 
         this.options = Object.assign({}, DEFAULT_STORAGE_OPTIONS, options)
+        this._name = this.options.name
         if (this.options.driver.type == 'sqlite' && this.options.driver.storage == ':memory:') {
             this.memory = true
         }
+    }
+
+    get name(){
+        return this._name
     }
 
     get isMemory(){
@@ -77,8 +85,9 @@ export class Storage {
     }
 
 
+
     async init(): Promise<void> {
-        if(!getConnectionManager().has('default')){
+        if(!getConnectionManager().has(this.name)){
             let c =  await getConnectionManager().createAndConnect(this.options)
             await (await this.wrap(c)).close()
         }else{

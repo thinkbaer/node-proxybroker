@@ -6,6 +6,7 @@ export class ConnectionWrapper {
 
     inc: number = ConnectionWrapper.$INC++
 
+    private name:string = null
 
     memory: boolean = false
 
@@ -17,6 +18,7 @@ export class ConnectionWrapper {
         this.storage = s
         this.memory = this.storage.isMemory
         this.connection = conn
+        this.name = this.storage.name
     }
 
     async persist<Entity>(o: Entity): Promise<any> {
@@ -27,10 +29,10 @@ export class ConnectionWrapper {
     async connect(): Promise<ConnectionWrapper> {
         if (this.memory) {
             if (!this.connection || !this.connection.isConnected) {
-                this.connection = await getConnectionManager().get()
+                this.connection = await getConnectionManager().get(this.name)
             }
         } else {
-            this.connection = await getConnectionManager().get()
+            this.connection = await getConnectionManager().get(this.name)
         }
         return Promise.resolve(this)
     }

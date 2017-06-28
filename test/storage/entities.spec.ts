@@ -20,6 +20,7 @@ class EntitiesTest {
 
     static async before(){
         storage = await Storage.$({
+            name:'entity_test',
             driver:{
                 type:'sqlite',
                 storage:':memory:'
@@ -28,6 +29,7 @@ class EntitiesTest {
     }
 
     static async after(){
+        await storage.shutdown()
         storage = Storage['$$'] = null
     }
 

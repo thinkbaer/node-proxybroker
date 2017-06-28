@@ -28,7 +28,13 @@ class StorageTest {
 
     @test
     async 'init'() {
-        let storage = new Storage();
+        let storage = new Storage({
+            name: 'storage_test',
+            driver: {
+                type: "sqlite",
+                storage: ":memory:"
+            }
+        });
         await storage.init();
         let entityNames: Array<string> = []
         let cw = await storage.connect()
@@ -51,7 +57,13 @@ class StorageTest {
     @test
     async 'static'() {
         Storage['$$'] = null
-        let storage = await Storage.$();
+        let storage = await Storage.$({
+            name: 'storage_test',
+            driver: {
+                type: "sqlite",
+                storage: ":memory:"
+            }
+        });
         expect(storage.size()).to.be.eq(1)
 
         Storage['$$'] = null
