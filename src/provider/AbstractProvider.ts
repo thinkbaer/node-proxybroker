@@ -3,7 +3,7 @@ import * as _ from 'lodash'
 import {IProvider} from "./IProvider";
 import {IProviderWorkerAPI} from "./IProviderWorkerAPI";
 import {IProviderVariant} from "./IProviderVariant";
-import {IProxyDef} from "./IProxyDef";
+import {IProxyData} from "../proxy/IProxyData";
 
 
 export abstract class AbstractProvider implements IProvider {
@@ -16,7 +16,7 @@ export abstract class AbstractProvider implements IProvider {
 
     private _variant : IProviderVariant = null;
 
-    private _proxyies : IProxyDef[] = []
+    private _proxyies : IProxyData[] = []
 
     constructor() {}
 
@@ -36,18 +36,18 @@ export abstract class AbstractProvider implements IProvider {
         return this._variant
     }
 
-    get proxies(): IProxyDef[] {
+    get proxies(): IProxyData[] {
         return this._proxyies
     }
 
-    push(def:IProxyDef){
+    push(def:IProxyData){
         let found = _.find(this._proxyies,def)
         if(!found){
             this._proxyies.push(def)
         }
     }
 
-    abstract get(): Promise<IProxyDef[]>;
+    abstract get(): Promise<IProxyData[]>;
 
 
 

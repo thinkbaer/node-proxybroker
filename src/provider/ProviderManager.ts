@@ -8,7 +8,7 @@ import {IQueue} from "../queue/IQueue";
 import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
 import {IQueueProcessor} from "../queue/IQueueProcessor";
 import {ClassLoader} from "../utils/ClassLoader";
-import {IProxyDef} from "./IProxyDef";
+import {IProxyData} from "../proxy/IProxyData";
 import {FreeProxyListsCom} from "./predefined/FreeProxyListsCom";
 import {StringOrFunction} from "../types";
 import {Utils} from "../utils/Utils";
@@ -55,7 +55,7 @@ export class ProviderManager implements  IQueueProcessor<ProviderWorker> {
         return null
     }
 
-    propose(proxy: IProxyDef) : void{
+    propose(proxy: IProxyData) : void{
 
     }
 

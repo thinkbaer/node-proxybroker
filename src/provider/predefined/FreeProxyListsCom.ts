@@ -4,7 +4,7 @@ import * as request from "request-promise-native";
 
 import {AbstractProvider} from "../AbstractProvider";
 import {IProviderVariant} from "../IProviderVariant";
-import {IProxyDef} from "../IProxyDef";
+import {IProxyData} from "../../proxy/IProxyData";
 import {IProviderWorkerAPI} from "../IProviderWorkerAPI";
 import {ProxyType} from "../../lib/ProxyType";
 import * as _ from 'lodash'
@@ -51,7 +51,7 @@ export class FreeProxyListsCom extends AbstractProvider {
     }
 
 
-    async  get(variant?: IProviderVariant):Promise<IProxyDef[]> {
+    async  get(variant?: IProviderVariant):Promise<IProxyData[]> {
         let self = this
         if (variant) {
             this.selectVariant(variant)
@@ -77,7 +77,7 @@ export class FreeProxyListsCom extends AbstractProvider {
 
                     let inc = 0
                     while ((matcher = ip_regex.exec(html)) !== null) {
-                        let proxyData: IProxyDef = {
+                        let proxyData: IProxyData = {
                             ip: matcher[1],
                             port: parseInt(matcher[2])
                         }

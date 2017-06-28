@@ -2,7 +2,7 @@ import {IProvider} from "../../../src/provider/IProvider";
 import {IProviderWorkerAPI} from "../../../src/provider/IProviderWorkerAPI";
 import {IProviderVariant} from "../../../src/provider/IProviderVariant";
 import {AbstractProvider} from "../../../src/provider/AbstractProvider";
-import {IProxyDef} from "../../../src/provider/IProxyDef";
+import {IProxyData} from "../../../src/proxy/IProxyData";
 
 
 export class MockedProxies01 extends AbstractProvider {
@@ -18,7 +18,7 @@ export class MockedProxies01 extends AbstractProvider {
 
 
 
-    get(): Promise<IProxyDef[]> {
+    get(): Promise<IProxyData[]> {
         console.log('')
         return null
     }

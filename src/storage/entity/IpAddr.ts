@@ -9,10 +9,17 @@ export class IpAddr {
     id: number;
 
     @Column(ColumnTypes.STRING)
-    address: string;
+    ip: string;
 
     @Column(ColumnTypes.INT)
     port: number;
+
+    @Column(ColumnTypes.BOOLEAN)
+    blocked: boolean;
+
+
+    @Column(ColumnTypes.DATETIME)
+    last_checked: Date;
 
     @Column(ColumnTypes.DATETIME)
     created_at: Date;
@@ -20,6 +27,19 @@ export class IpAddr {
     @Column(ColumnTypes.DATETIME)
     updated_at: Date;
 
+
+    preUpdate(){
+        let now = new Date()
+        if(!this.created_at){
+            this.created_at = now
+        }
+        this.updated_at = now
+        this.blocked = false
+        if(!this.last_checked){
+            this.last_checked = now
+        }
+
+    }
 
 
 }

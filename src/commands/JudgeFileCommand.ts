@@ -11,7 +11,7 @@ import {JudgeResults} from "../judge/JudgeResults";
 import {IJudgeOptions} from "../judge/IJudgeOptions";
 import {Utils} from "../utils/Utils";
 import {ProxyData} from "../proxy/ProxyData";
-import {ProxyValidationController} from "../proxy/ProxyValidator";
+import {ProxyValidationController} from "../proxy/ProxyValidationController";
 
 
 export class JudgeFileCommand {

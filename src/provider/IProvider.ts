@@ -2,7 +2,7 @@
 
 import {IProviderWorkerAPI} from "./IProviderWorkerAPI";
 import {IProviderVariant} from "./IProviderVariant";
-import {IProxyDef} from "./IProxyDef";
+import {IProxyData} from "../proxy/IProxyData";
 
 
 
@@ -16,7 +16,7 @@ export interface IProvider {
 
     prepare?():Promise<void>;
 
-    get(): Promise<IProxyDef[]>;
+    get(): Promise<IProxyData[]>;
 
     do(api: IProviderWorkerAPI): Promise<void>;
 }

@@ -1,5 +1,5 @@
 
-import {IProxyDef} from "./IProxyDef";
+import {IProxyData} from "../proxy/IProxyData";
 export interface IProviderWorkerAPI {
 
     /**
@@ -7,6 +7,6 @@ export interface IProviderWorkerAPI {
      *
      * @param proxy
      */
-    propose(proxy: IProxyDef): void;
+    propose(proxy: IProxyData): void;
 
 }

@@ -1,4 +1,4 @@
-export interface IProxyDef {
+export interface IProxyData {
 
     ip: string
 
