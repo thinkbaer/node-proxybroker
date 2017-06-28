@@ -21,7 +21,7 @@ export default class DomainUtils {
     static IP_REGEX = /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$/
     static HOSTS: { host: string, ip: string }[] = []
 
-    static domainLookup(domain: string): Promise<{ addr: string, family: string }> {
+    static domainLookup(domain: string): Promise<{ addr: string, family: number }> {
 
         return new Promise(function (resolve, reject) {
             dns.lookup(domain, function (err, address, family) {
