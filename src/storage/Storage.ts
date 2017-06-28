@@ -37,6 +37,8 @@ export class Storage {
     // if memory then on connection must be permanent
     private memory: boolean = false
 
+
+
     private connections: ConnectionWrapper[] = []
 
 
@@ -76,8 +78,12 @@ export class Storage {
 
 
     async init(): Promise<void> {
-        let c =  await getConnectionManager().createAndConnect(this.options)
-        await (await this.wrap(c)).close()
+        if(!getConnectionManager().has('default')){
+            let c =  await getConnectionManager().createAndConnect(this.options)
+            await (await this.wrap(c)).close()
+        }else{
+            await (await this.wrap()).close()
+        }
         return Promise.resolve()
     }
 
@@ -104,6 +110,14 @@ export class Storage {
 
     async connect(): Promise<ConnectionWrapper> {
         return (await this.wrap()).connect()
+    }
+
+    async shutdown() : Promise<any>{
+        let ps : Promise<any>[] = []
+        while(this.connections.length > 0){
+            ps.push(this.connections.shift().close())
+        }
+        return Promise.all(ps)
     }
 
 

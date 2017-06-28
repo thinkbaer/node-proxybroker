@@ -14,11 +14,6 @@ import {ProxyData} from "../proxy/ProxyData";
 import {ProxyValidationController} from "../proxy/ProxyValidator";
 
 
-
-
-
-
-
 export class JudgeFileCommand {
 
     command = "judge-file <file> [outputformat]"
@@ -43,7 +38,6 @@ export class JudgeFileCommand {
                 default: 'json',
                 demand:true
             })
-
     }
 
     async handler(argv: any) {

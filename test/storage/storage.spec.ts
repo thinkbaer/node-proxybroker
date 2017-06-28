@@ -35,9 +35,12 @@ class StorageTest {
         cw.connection.entityMetadatas.forEach(entityMeta => {
             entityNames.push(entityMeta.targetName)
         })
-
         entityNames = entityNames.sort()
         expect(entityNames).to.be.deep.eq(["IpAddr", "Variable"])
+
+        expect(storage.size()).to.be.eq(1)
+        await storage.shutdown()
+        expect(storage.size()).to.be.eq(0)
     }
 
     /**
@@ -45,12 +48,14 @@ class StorageTest {
      *
      * @returns {Promise<void>}
      */
-    @test.only()
+    @test
     async 'static'() {
         Storage['$$'] = null
         let storage = await Storage.$();
         expect(storage.size()).to.be.eq(1)
+
         Storage['$$'] = null
+        await storage.shutdown()
     }
 
 }
