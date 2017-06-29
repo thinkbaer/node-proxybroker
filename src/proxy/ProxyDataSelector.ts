@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
 
 import subscribe from "../events/decorator/subscribe"
-import {ProxyDataFetchedEvent} from "../provider/ProxyDataDeliveryEvent";
+import {ProxyDataFetchedEvent} from "./ProxyDataFetchedEvent";
 import {Storage} from "../storage/Storage";
 
 import {IQueueProcessor} from "../queue/IQueueProcessor";
@@ -9,13 +9,17 @@ import {IProxyData} from "./IProxyData";
 import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
 import {IpAddr} from "../storage/entity/IpAddr";
 import {ProxyData} from "./ProxyData";
-import {Utils} from "../utils/Utils";
+
 import DomainUtils from "../utils/DomainUtils";
+import {ProxyDataValidateEvent} from "./ProxyDataValidateEvent";
 
 export class ProxyDataSelector implements IQueueProcessor<IProxyData[]> {
 
-    chunk_size: number = 100
+    // TODO make this configurable
+    chunk_size: number = 50
 
+    // TODO make this configurable
+    // TODO Idea: make config annotation in commons-config @config('path.to.value',fallback value)
     recheck_after: number = 24 * 60 * 60 * 1000
 
     storage: Storage
@@ -84,39 +88,36 @@ export class ProxyDataSelector implements IQueueProcessor<IProxyData[]> {
 
         // check the ips
         let entries = await cqb.getMany()
-        let proxyData: ProxyData[] = []
-
+        let events:ProxyDataValidateEvent[] = []
         for (let _x of workLoad) {
 
             let recordExists = _.find(entries, _x)
-            console.log(_x, recordExists)
-            let pd = new ProxyData(_x)
+            let proxyData = new ProxyData(_x)
+            let proxyDataValidateEvent = new ProxyDataValidateEvent(proxyData)
+
             if (recordExists) {
                 // todo if has error
-                pd.record = Utils.clone(recordExists)
+                proxyDataValidateEvent.record = recordExists
 
-                if ((now.getTime() - self.recheck_after) > recordExists.last_checked.getTime()) {
+                if (!recordExists.last_checked || ((now.getTime() - self.recheck_after) > recordExists.last_checked.getTime())) {
                     // last check is longer then the recheck offset, so revalidate
-
-
+                    proxyDataValidateEvent.fire()
                 } else {
-                    // last check was within recheck offset
-
+                    // last check was within recheck offset, so ignore validation
 
                 }
             } else {
                 // new record entry must be checked
+                proxyDataValidateEvent.fire()
+            }
 
+            if(proxyDataValidateEvent.fired){
+                events.push(proxyDataValidateEvent)
             }
         }
 
-
-        //let em = conn.connection.entityManager
-        //await em.find()
-
-
         await conn.close()
-        return Promise.resolve()
+        return Promise.resolve(events)
     }
 
     // TODO need a functional

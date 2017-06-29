@@ -8,7 +8,6 @@ import {IpAddr} from "../storage/entity/IpAddr";
 
 export class ProxyData implements IQueueWorkload, IProxyData {
 
-    record:IpAddr
     ip: string
     port: number
     results: JudgeResults = null

@@ -49,7 +49,19 @@ export class EventBus {
         })
     }
 
-    // static unregister
+    static unregister(o: any): void {
+        let infos = EventBusMeta.$().getSubscriberInfo(o)
+        if (_.isEmpty(infos)){
+            throw new Error('registration went wrong')
+        }
+        let self = this
+        infos.forEach(info => {
+            let channel = self.$().getOrCreateChannel(info.namespace)
+            channel.unregister(o)
+        })
+
+    }
+        // static unregister
 
     private static postOnChannel(namespace: string, o: any): Promise<any> {
         let self = this

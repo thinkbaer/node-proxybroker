@@ -8,9 +8,12 @@ import {expect} from "chai";
 import {inspect} from 'util'
 import {Storage} from "../../src/storage/Storage";
 import {ProxyDataSelector} from "../../src/proxy/ProxyDataSelector";
-import {ProxyDataFetchedEvent} from "../../src/provider/ProxyDataDeliveryEvent";
+import {ProxyDataFetchedEvent} from "../../src/proxy/ProxyDataFetchedEvent";
 import {IProxyData} from "../../src/proxy/IProxyData";
 import {IpAddr} from "../../src/storage/entity/IpAddr";
+import subscribe from "../../src/events/decorator/subscribe"
+import {ProxyDataValidateEvent} from "../../src/proxy/ProxyDataValidateEvent";
+import {EventBus} from "../../src/events/EventBus";
 
 @suite('proxy/ProxyDataSelector')
 class ProxyDataSelectorTest {
@@ -32,7 +35,7 @@ class ProxyDataSelectorTest {
 
 
     @test
-    async 'do'() {
+    async 'verify if validation is necessary'() {
         let storage = await Storage.$({
             name: 'proxy_data_validator',
             driver: {
@@ -41,18 +44,76 @@ class ProxyDataSelectorTest {
             }
         })
         let proxy_data_selector = new ProxyDataSelector(storage)
-
         let c = await storage.connect()
+
         let p = new IpAddr()
         p.ip = '192.0.0.1'
         p.port = 3129
         p.preUpdate()
         await c.persist(p)
 
-        proxy_data_selector.do([{ip:'192.0.0.1',port:3129},{ip:'127.0.1.1',port:3128}])
+
+        let events = await proxy_data_selector.do([{ip: '192.0.0.1', port: 3129}, {ip: '127.0.1.1', port: 3128}])
+        expect(events.length).to.be.eq(1)
+        expect(events[0]).to.deep.eq({
+            isNew: true,
+            record: null,
+            fired: true,
+            data: {
+                results: null, ip: '127.0.1.1', port: 3128
+            }
+        })
+
+        p.last_checked = new Date((new Date()).getTime() - 36 * 60 * 60 * 1000)
+        await c.persist(p)
+
+        events = await proxy_data_selector.do([{ip: '192.0.0.1', port: 3129}, {ip: '127.0.0.1', port: 3128}])
+        expect(events.length).to.be.eq(2)
+        expect(events[0].isNew).to.be.false
+        expect(events[0].record).to.deep.include({
+            id: 1,
+            ip: '192.0.0.1',
+            port: 3129,
+            blocked: false
+        })
+        expect(events[1]).to.deep.eq({
+            isNew: true,
+            record: null,
+            fired: true,
+            data: {
+                results: null, ip: '127.0.0.1', port: 3128
+            }
+        })
+
+        class X01 {
+
+            _test: Function = null
+
+            constructor(test: Function) {
+                this._test = test
+            }
+
+            @subscribe(ProxyDataValidateEvent)
+            test(p: ProxyDataValidateEvent) {
+                this._test(p)
+            }
+        }
+
+        let x01 = new X01(function (e: ProxyDataValidateEvent) {
+            expect(e.record).to.deep.include({
+                id: 1,
+                ip: '192.0.0.1',
+                port: 3129,
+                blocked: false
+            })
+        })
+        EventBus.register(x01)
+
+        await proxy_data_selector.do([{ip: '192.0.0.1', port: 3129}])
+
+        EventBus.unregister(x01)
 
         await storage.shutdown()
-
     }
 
 

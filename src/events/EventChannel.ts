@@ -1,5 +1,6 @@
 import {CryptUtils} from "../utils/CryptUtils";
 import {EventEmitter} from "events";
+import * as _ from 'lodash'
 
 export class EventChannel extends EventEmitter {
 
@@ -56,6 +57,14 @@ export class EventChannel extends EventEmitter {
         this.subsciber.push({
             object: subscriber, method: method
         })
+    }
+
+    unregister(subscriber: any): void {
+        for(let i=this.subsciber.length - 1;i>=0;i--){
+            if(this.subsciber[i].object === subscriber){
+                this.subsciber.splice(i,1)
+            }
+        }
     }
 
     post(o: any): Promise<any> {
