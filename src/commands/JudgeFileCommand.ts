@@ -6,7 +6,7 @@ import StdConsole from "./StdConsole";
 import {Log} from "../logging/Log";
 import {PlatformUtils} from "../utils/PlatformUtils";
 
-import Todo from "../exceptions/Todo";
+import Todo from "../exceptions/TodoException";
 import {JudgeResults} from "../judge/JudgeResults";
 import {IJudgeOptions} from "../judge/IJudgeOptions";
 import {Utils} from "../utils/Utils";
@@ -36,7 +36,7 @@ export class JudgeFileCommand {
                 alias: 'f',
                 describe: "Set outputformat (default: json).",
                 default: 'json',
-                demand:true
+                demand: true
             })
     }
 
@@ -58,7 +58,6 @@ export class JudgeFileCommand {
             })
 
 
-
             if (list.length) {
 
 
@@ -76,6 +75,7 @@ export class JudgeFileCommand {
                 }
                 if (booted) {
                     try {
+
                         list.forEach(_q => {
                             validator.push(_q)
                         })
@@ -124,28 +124,53 @@ export class JudgeFileCommand {
 
                             ].join(';')]
                             list.forEach(_x => {
-                                rows.push([
-                                    _x.results.ip,
-                                    _x.results.port,
-                                    _x.results.http.hasError() ? '"' + (_x.results.http.error.toString()).replace('"', '""') + '"' : '',
-                                    _x.results.http.hasError() ? '"' + (_x.results.http.error.code).replace('"', '""') + '"' : '',
-                                    _x.results.http.level,
-                                    _x.results.http.duration,
-                                    '"' + _x.results.http.logToString().replace('"', '""') + '"',
-                                    _x.results.https.hasError() ? '"' + (_x.results.https.error.toString()).replace('"', '""') + '"' : '',
-                                    _x.results.https.hasError() ? '"' + (_x.results.https.error.code).replace('"', '""') + '"' : '',
-                                    _x.results.https.level,
-                                    _x.results.https.duration,
-                                    '"' + _x.results.https.logToString().replace('"', '""') + '"',
-                                    _x.results.country_code,
-                                    _x.results.country_name,
-                                    _x.results.region_code,
-                                    _x.results.region_name,
-                                    _x.results.city,
-                                    _x.results.latitude,
-                                    _x.results.longitude
+                                if (_x.results) {
+                                    rows.push([
+                                        _x.results.ip,
+                                        _x.results.port,
+                                        _x.results.http.hasError() ? '"' + (_x.results.http.error.toString()).replace('"', '""') + '"' : '',
+                                        _x.results.http.hasError() ? '"' + (_x.results.http.error.code).replace('"', '""') + '"' : '',
+                                        _x.results.http.level,
+                                        _x.results.http.duration,
+                                        '"' + _x.results.http.logToString().replace('"', '""') + '"',
+                                        _x.results.https.hasError() ? '"' + (_x.results.https.error.toString()).replace('"', '""') + '"' : '',
+                                        _x.results.https.hasError() ? '"' + (_x.results.https.error.code).replace('"', '""') + '"' : '',
+                                        _x.results.https.level,
+                                        _x.results.https.duration,
+                                        '"' + _x.results.https.logToString().replace('"', '""') + '"',
+                                        _x.results.country_code,
+                                        _x.results.country_name,
+                                        _x.results.region_code,
+                                        _x.results.region_name,
+                                        _x.results.city,
+                                        _x.results.latitude,
+                                        _x.results.longitude
 
-                                ].join(';'))
+                                    ].join(';'))
+                                }else{
+                                    rows.push([
+                                        _x.ip,
+                                        _x.port,
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                        '',
+                                    ].join(';'))
+                                }
                             })
                             console.log(rows.join('\n'))
                             break;

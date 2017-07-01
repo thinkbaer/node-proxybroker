@@ -1,4 +1,4 @@
-
+import subscribe from "../events/decorator/subscribe"
 
 import {IJudgeOptions} from "../judge/IJudgeOptions";
 import {Judge} from "../judge/Judge";
@@ -7,8 +7,11 @@ import {ProxyData} from "./ProxyData";
 
 import {IQueueProcessor} from "../queue/IQueueProcessor";
 import {QueueJob} from "../queue/QueueJob";
+import {ProxyDataValidateEvent} from "./ProxyDataValidateEvent";
 
 export class ProxyValidationController implements IQueueProcessor<ProxyData> {
+
+    wakeuped:boolean = false
 
     queue: AsyncWorkerQueue<ProxyData>
 
@@ -20,6 +23,38 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
         this.queue = new AsyncWorkerQueue<ProxyData>(this, {concurrent: parallel})
     }
 
+
+    @subscribe(ProxyDataValidateEvent)
+    async validate(event: ProxyDataValidateEvent):Promise<any>{
+        let queueJob = await this.push(event.data)
+        queueJob = await queueJob.done()
+        let proxyData = queueJob.workload()
+
+        // console.log(proxyData)
+        // what should be saved ???
+        /*
+        if we have no positive results for http and https then
+            if record already exists then
+                set update_at and last_error_at to now
+            else
+                insert record with last_checked and last_success_at = null and last_error_at = now
+            finally
+                add
+
+         */
+
+        if(event.isNew){
+
+        }else{
+            let record = event.record
+
+        }
+
+        return Promise.resolve(event)
+    }
+
+
+
     async prepare():Promise<boolean>{
         let booted = await this.judge.bootstrap()
         return Promise.resolve(booted)
@@ -27,17 +62,25 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
 
     async push(o:ProxyData):Promise<QueueJob<ProxyData>>{
         if(!this.judge.isEnabled()){
+            this.wakeuped = true
+            // if multi push??
             await this.judge.wakeup()
         }
         return this.queue.push(o)
     }
 
     async await():Promise<void>{
-        return this.queue.await()
+        if(this.queue.amount() > 0 || this.wakeuped){
+            return this.queue.await()
+        }else{
+            return Promise.resolve()
+        }
+
     }
 
     async shutdown(){
         if(this.judge.isEnabled()){
+            this.wakeuped = false
             await this.judge.pending()
         }
 
@@ -51,6 +94,7 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
 
 
     onEmpty(): Promise<void> {
+        //this.wakeuped = false
         console.log('DONE?')
         return null;
     }

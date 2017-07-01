@@ -96,10 +96,15 @@ export class ProxyDataSelector implements IQueueProcessor<IProxyData[]> {
             let proxyDataValidateEvent = new ProxyDataValidateEvent(proxyData)
 
             if (recordExists) {
-                // todo if has error
+
+                // if manuell blocked then skip this entry
+                if(recordExists.blocked || recordExists.to_delete){
+                    continue;
+                }
+
                 proxyDataValidateEvent.record = recordExists
 
-                if (!recordExists.last_checked || ((now.getTime() - self.recheck_after) > recordExists.last_checked.getTime())) {
+                if (!recordExists.last_checked_at || ((now.getTime() - self.recheck_after) > recordExists.last_checked_at.getTime())) {
                     // last check is longer then the recheck offset, so revalidate
                     proxyDataValidateEvent.fire()
                 } else {

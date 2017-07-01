@@ -1,14 +1,14 @@
 
 
 import "reflect-metadata";
-import {Storage} from "../storage/Storage";
+import {Storage} from "./storage/Storage";
 
 import {Config} from "commons-config";
-import {IStorageOptions} from "../storage/IStorageOptions";
-import {ProxyDataSelector} from "../proxy/ProxyDataSelector";
-import {ProxyValidationController} from "../proxy/ProxyValidationController";
-import {EventBus} from "../events/EventBus";
-import {IJudgeOptions} from "../judge/IJudgeOptions";
+import {IStorageOptions} from "./storage/IStorageOptions";
+import {ProxyDataSelector} from "./proxy/ProxyDataSelector";
+import {ProxyValidationController} from "./proxy/ProxyValidationController";
+import {EventBus} from "./events/EventBus";
+import {IJudgeOptions} from "./judge/IJudgeOptions";
 
 
 

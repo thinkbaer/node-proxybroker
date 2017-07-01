@@ -1,9 +1,23 @@
 // import {merge, mergeDeep} from "typescript-object-utils";
 import * as merge from 'deepmerge'
 import * as _ from 'lodash'
+import {InterpolationSupport} from "commons-config";
 
 
 export class Utils {
+
+    static interpolate(msg:string, parameter:{[k:string]:string}):string{
+        let data = {msg:msg}
+        InterpolationSupport.exec(data,parameter)
+        return data.msg
+    }
+
+    static now(){
+        let now = new Date()
+        // reset milliseconds for datefields
+        let rest = now.getTime() % 1000;
+        return new Date(now.getTime() - rest)
+    }
 
     /**
      * https://stackoverflow.com/questions/1960473/unique-values-in-an-array
@@ -20,7 +34,7 @@ export class Utils {
     }
 
     static clone(obj: any) {
-        return Utils.merge({}, obj)
+        return _.clone(obj)
     }
 
     static merge(...args: any[]): any {

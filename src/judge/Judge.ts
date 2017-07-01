@@ -16,6 +16,7 @@ import {IJudgeOptions} from "./IJudgeOptions";
 import {JudgeResults} from "./JudgeResults";
 import DomainUtils from "../utils/DomainUtils";
 import {Utils} from "../utils/Utils";
+import {MESSAGE} from "../lib/Messages";
 
 
 const FREEGEOIP: string = 'http://freegeoip.net/json/%s'
@@ -432,7 +433,7 @@ export class Judge {
                 if (cached_req && self.enabled) {
                     self.debug('HEADER ADD: ', headers)
                     headers.forEach(function (head) {
-                        cached_req.monitor.addLog(head, '>>')
+                        cached_req.monitor.addLog(MESSAGE.HED01.k,{header:head}, '>>')
                     })
                 }
             }

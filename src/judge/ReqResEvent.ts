@@ -1,22 +1,23 @@
 import * as _ from 'lodash'
 import {EventBus} from "../events/EventBus";
 import * as moment from "moment";
+import {Messages} from "../lib/Messages";
 
 export class ReqResEvent {
 
     nr: number
 
-    direction: string
+    prefix: string
 
     time: Date
 
-    message: ""
+    msgId: string
 
-    code: string
+    params: any = null
 
     connId:string = ''
 
-    constructor(opts: { nr: number, direction: string, time: Date, message: string, connId?:string, code?: string, [k: string]: any }) {
+    constructor(opts: { nr: number, prefix: string, time: Date, msgId: string, connId?:string, params: any, [k: string]: any }) {
         _.assign(this, opts)
     }
 
@@ -24,8 +25,13 @@ export class ReqResEvent {
         EventBus.post(this)
     }
 
+    message():string{
+        let str = Messages.get(this.msgId,this.params)
+        return str;
+    }
+
     out(): string {
 
-        return '['+moment(this.time).format('YYYY.MM.DD HH:mm:ss.SSS')+'] '+this.connId+' | '+ this.direction + ' ' + this.message
+        return '['+moment(this.time).format('YYYY.MM.DD HH:mm:ss.SSS')+'] '+this.connId+' | '+ this.prefix + ' ' + this.message()
     }
 }

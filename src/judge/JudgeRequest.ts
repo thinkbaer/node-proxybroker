@@ -15,6 +15,7 @@ import {JudgeResult} from "./JudgeResults";
 
 import Timer = NodeJS.Timer;
 import {LevelDetection} from "./LevelDetection";
+import {MESSAGE} from "../lib/Messages";
 
 
 // interface JudgeConfig
@@ -136,55 +137,43 @@ export class JudgeRequest {
         this.judgeDate = new Date()
 
         this.monitor.stop()
-        this.monitor.addLog(`Judge connected from ${req.socket.remoteAddress}:${req.socket.remotePort}. (${this.monitor.duration}ms)`, '*')
+        this.monitor.addLog(MESSAGE.JDG01.k,{addr:req.socket.remoteAddress,port:req.socket.remotePort,duration:this.monitor.duration}, '*')
         this.level_detector.addRecvHeader(req.headers)
         await this.level_detector.detect()
 
         switch(this.level_detector.level){
             case 1:
-                this.monitor.addLog(`Proxy is L1 - elite (high anonymus):`, '*')
+                this.monitor.addLog(MESSAGE.PRX01.k,{level:1}, '*')
                 break;
             case 2:
-                this.monitor.addLog(`Proxy is L2 - anonymus:`, '*')
+                this.monitor.addLog(MESSAGE.PRX02.k,{level:2}, '*')
                 break;
             case 3:
-                this.monitor.addLog(`Proxy is L3 - transparent:`, '*')
+                this.monitor.addLog(MESSAGE.PRX03.k,{level:3}, '*')
                 break;
             default:
-                this.monitor.addLog(`Proxy level is unknown:`, '*')
+                this.monitor.addLog(MESSAGE.PRX10.k,{level:null}, '*')
                 break;
         }
 
 
         this.level_detector.headers.forEach(_h => {
-            let o = []
-            if(_h.hasLocalIp){
-                o.push('local IP')
-            }
-            if(_h.hasProxyIp){
-                o.push('IP of proxy')
-            }
-
-            if(o.length > 0){
+            if(_h.hasProxyIp || _h.hasLocalIp){
                 if(_h.isVia){
-                    o.push('in via header "'+_h.key+'": ' + _h.value)
+                    this.monitor.addLog(MESSAGE.LVL01.k,_h, '*')
                 }
                 if(_h.isForward){
-                    o.push('in forward header "'+_h.key+'": ' + _h.value)
+                    this.monitor.addLog(MESSAGE.LVL02.k,_h, '*')
                 }
-                this.monitor.addLog(`- Detected ${o.join(' ')}`, '*')
+
             }else{
                 if(_h.isVia){
-                    o.push('via header "'+_h.key+'": ' + _h.value)
+                    this.monitor.addLog(MESSAGE.LVL03.k,_h, '*')
                 }
                 if(_h.isForward){
-                    o.push('forward header "'+_h.key+'": ' + _h.value)
-                }
-                if(o.length){
-                    this.monitor.addLog(`- Has ${o.join(' ')}`, '*')
+                    this.monitor.addLog(MESSAGE.LVL04.k,_h, '*')
                 }
             }
-
         })
         return Promise.resolve()
     }

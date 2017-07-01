@@ -1,5 +1,5 @@
 
-export default class Todo extends Error {
+export default class TodoException extends Error {
     constructor(msg:string = 'TODO EXCEPTION'){
         super(msg)
     }

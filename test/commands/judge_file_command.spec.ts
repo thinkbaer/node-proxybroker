@@ -13,6 +13,7 @@ import {ProxyServer} from "../../src/server/ProxyServer";
 
 const cfg = {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"}
 
+
 @suite('commands/JudgeFileCommand') @timeout(20000)
 class JudgeFileCommandTest {
 
@@ -29,6 +30,7 @@ class JudgeFileCommandTest {
         let http_proxy_server = new ProxyServer(proxy_options)
 
         await http_proxy_server.start()
+
         let cli = await SpawnCLI.run('judge-file', 'test/_files/proxylists/list01.csv', '-v', '-c', JSON.stringify(cfg))
         await http_proxy_server.stop()
 

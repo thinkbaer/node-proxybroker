@@ -2,7 +2,7 @@
 
 import {IStorageOptions} from "../storage/IStorageOptions";
 import {IProviderOptions} from "../provider/IProviderOptions";
-import {IUrlBase} from "../lib/IUrlBase";
+import {IUrlBase} from "./IUrlBase";
 
 
 export interface IServiceOptions extends IUrlBase {

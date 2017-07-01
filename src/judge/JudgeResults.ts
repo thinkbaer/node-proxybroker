@@ -32,7 +32,8 @@ export class JudgeResult {
 
         let ignore_emtpy = false
         for (let entry of this.log) {
-            let str = (entry.direction + ' ' + entry.message).trim()
+
+            let str = (entry.prefix + ' ' + entry.message()).trim()
             if(str.length == 0 && ignore_emtpy){
                 continue
             }else if(str.length == 0){

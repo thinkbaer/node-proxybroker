@@ -2,7 +2,7 @@ import * as _ from 'lodash'
 import {EventBus} from "../events/EventBus";
 
 import {IProxyData} from "./IProxyData";
-import TodoException from "../exceptions/Todo";
+import TodoException from "../exceptions/TodoException";
 
 export class ProxyDataFetchedEvent {
 

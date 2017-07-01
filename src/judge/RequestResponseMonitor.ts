@@ -13,6 +13,7 @@ import {Log} from "../logging/Log";
 import Exceptions from "../exceptions/Exceptions";
 import {NestedException} from "../exceptions/NestedException";
 import {Utils} from "../utils/Utils";
+import {MESSAGE} from "../lib/Messages";
 
 
 
@@ -85,20 +86,20 @@ export class RequestResponseMonitor extends events.EventEmitter {
         this.debug('onRequest')
 
         if (this.proxy) {
-            this.addLog(`Try connect to ${mUrl.format(this.uri)} over proxy ${mUrl.format(this.proxy)} ...`);
+            this.addLog(MESSAGE.ORQ01.k,{uri:mUrl.format(this.uri),proxy_uri:mUrl.format(this.proxy)});
         } else {
-            this.addLog(`Try connect to ${mUrl.format(this.uri)} ...`);
+            this.addLog(MESSAGE.ORQ02.k,{uri:mUrl.format(this.uri)});
         }
 
         // this.addLog('disable KEEPALIVE')
         // request.setSocketKeepAlive(false,0)
 
-        this.addLog('set TCP_NODELAY')
+        this.addLog(MESSAGE.ORQ03.k)
         request.setNoDelay(true)
 
 
         if (this.proxy && this.tunnel) {
-            this.addLog('HTTP-Tunneling enabled.')
+            this.addLog(MESSAGE.ORQ04.k)
             this.debug('tunneling enabled')
         }
 
@@ -228,20 +229,18 @@ export class RequestResponseMonitor extends events.EventEmitter {
         this.connected = true
 
         if (this.proxy) {
-            this.addLog(`Connected to proxy ${mUrl.format(this.proxy)}`)
+            this.addLog(MESSAGE.OSC01.k, {uri:mUrl.format(this.proxy)})
         } else {
-            this.addLog(`Connected to ${this.socket.remoteAddress}:${this.socket.remotePort}`)
+            this.addLog(MESSAGE.OSC02.k, {addr:this.socket.remoteAddress, port:this.socket.remotePort})
         }
 
         if (this.secured) {
-            this.addLog(`Try handshake for secure connetion ...`)
+            this.addLog(MESSAGE.OSC03.k)
         }
 
-        this.addLog('','')
         this.sendedHead.split('\n').map((x: string) => {
-            this.addClientLog(x.trim())
+            this.addClientLog(MESSAGE.HED01.k,{header:x.trim()})
         })
-        this.addLog('','')
     }
 
     onSocketData(data: Buffer) {
@@ -258,12 +257,10 @@ export class RequestResponseMonitor extends events.EventEmitter {
             }
 
             if(this.receivedHeadDone){
-                this.addLog('','')
                 let headers = Utils.clone(this.receivedHead.split('\n'))
                 headers.map((x: string) => {
-                    this.addServerLog(x.trim())
+                    this.addServerLog(MESSAGE.HED01.k,{header:x.trim()})
                 })
-                this.addLog('','')
 
 
                 let http_head = headers.shift()
@@ -288,7 +285,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     onSocketEnd() {
         this.debug('onSocketEnd')
-        this.addClientLog('Forced end of socket.')
+        this.addClientLog(MESSAGE.OSE01.k)
     }
 
     onSocketError(error: Error) {
@@ -304,7 +301,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     onSocketTimeout() {
         this.stop()
         this.debug('onSocketTimeout', `after ${this.duration}ms`)
-        this.addLog(`Socket timed out after ${this.duration}ms`)
+        this.addLog(MESSAGE.OST01.k,{duration:this.duration})
     }
 
     onTLSSocketOCSPResponse(buffer: Buffer) {
@@ -314,7 +311,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     onTLSSocketSecureConnect() {
         this.debug('onTLSSocketSecureConnect')
         this.stop()
-        this.addLog(`Secured connection established (${this.duration}ms)`)
+        this.addLog(MESSAGE.OTS01.k,{duration:this.duration})
     }
 
 
@@ -347,7 +344,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
         let ignore_emtpy = false
         for (let entry of this.log_arr) {
-            let str = (entry.direction + ' ' + entry.message).trim()
+            let str = (entry.prefix + ' ' + entry.message()).trim()
             if(str.length == 0 && ignore_emtpy){
                 continue
             }else if(str.length == 0){
@@ -363,30 +360,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
 
 
-    addClientLog(msg: string): void {
-        this.addLog(msg, '>')
-    }
-
-    addServerLog(msg: string): void {
-        this.addLog(msg, '<')
-    }
-
-    addLog(msg: string, s: string = '*'): void {
-        let _inc = this.inc++
-
-        let rre = new ReqResEvent({
-            nr: _inc,
-            connId: this.id,
-            time: new Date(),
-            direction: s,
-            message: msg
-        })
-
-        this.log_arr.push(rre)
-        rre.fire()
-    }
-
-
     private handleError(_error: Error): boolean {
         if (_error) {
             let error = Exceptions.handle(_error)
@@ -400,23 +373,21 @@ export class RequestResponseMonitor extends events.EventEmitter {
                     break;
                 }
             }
-            if (!exists) {
 
+            if (!exists) {
                 if (error.message.match(/ECONNREFUSED/)) {
                     this.connected = false
-                    this.addLog(`Connection refused.`,'#')
+                    this.addLog(MESSAGE.ERR03.k,null,'#')
                 } else if (error.message.match(/ESOCKETTIMEDOUT/)) {
                     this.timeouted = true
-                    this.addLog(`Connection timeout.`,'#')
+                    this.addLog(MESSAGE.ERR04.k,null,'#')
                 } else if (error.message.match(/socket hang up/)) {
                     this.aborted = true
-                    this.addLog(`Connection aborted.`,'#')
+                    this.addLog(MESSAGE.ERR05.k,null,'#')
                 }
-
                 this.errors.push(error)
                 return true
             }
-
         }
         return false
 
@@ -437,13 +408,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
         let last_error = this.lastError()
 
         if (!this.errors.length) {
-            this.addLog(`Received ${this.length} byte from sender.`)
-        }
-
-        if (!last_error) {
-            str = `Connection closed to ${mUrl.format(this.uri)} (${this.duration}ms)`
-        } else {
-            str = 'Connection not established.'
+            this.addLog(MESSAGE.RCL01.k, {length:this.length})
         }
 
 
@@ -452,13 +417,19 @@ export class RequestResponseMonitor extends events.EventEmitter {
         // this.socket = null
 
         if (last_error) {
-            this.addClientLog('Connection aborted through errors:')
+            this.addClientLog(MESSAGE.ERR01.k)
             this.errors.forEach((err: Error) => {
-                this.addClientLog(` - ${err.message}`)
+                this.addClientLog(MESSAGE.ERR02.k,{error:err.message})
             })
         }
 
-        this.addLog(str)
+        if (!last_error) {
+            this.addLog(MESSAGE.RCC01.k,{uri: mUrl.format(this.uri), duration:this.duration})
+        } else {
+            this.addLog(MESSAGE.CNE01.k)
+        }
+
+
         this.emit('finished', last_error)
     }
 
@@ -482,6 +453,37 @@ export class RequestResponseMonitor extends events.EventEmitter {
             msg.unshift(this.id)
             this.log.apply(this, msg)
         }
+    }
+
+    /**
+     * Protokol handler
+     *
+     * @param msgId
+     * @param parameter
+     */
+
+    addClientLog(msgId: string, parameter?:{[k:string]:any}): void {
+        this.addLog(msgId,parameter, '>')
+    }
+
+    addServerLog(msgId: string, parameter?:{[k:string]:any}): void {
+        this.addLog(msgId,parameter, '<')
+    }
+
+    addLog(msgId: string, parameter:{[k:string]:any}=null, s: string = '*'): void {
+        let _inc = this.inc++
+
+        let rre = new ReqResEvent({
+            nr: _inc,
+            connId: this.id,
+            msgId:msgId,
+            params:Utils.clone(parameter),
+            time: new Date(),
+            prefix: s
+        })
+
+        this.log_arr.push(rre)
+        rre.fire()
     }
 
 }

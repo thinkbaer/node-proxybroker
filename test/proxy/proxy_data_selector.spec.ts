@@ -64,7 +64,7 @@ class ProxyDataSelectorTest {
             }
         })
 
-        p.last_checked = new Date((new Date()).getTime() - 36 * 60 * 60 * 1000)
+        p.last_checked_at = new Date((new Date()).getTime() - 36 * 60 * 60 * 1000)
         await c.persist(p)
 
         events = await proxy_data_selector.do([{ip: '192.0.0.1', port: 3129}, {ip: '127.0.0.1', port: 3128}])
@@ -85,10 +85,9 @@ class ProxyDataSelectorTest {
             }
         })
 
+        // Test subscribe if the events are fired
         class X01 {
-
             _test: Function = null
-
             constructor(test: Function) {
                 this._test = test
             }
@@ -107,11 +106,28 @@ class ProxyDataSelectorTest {
                 blocked: false
             })
         })
+
         EventBus.register(x01)
-
         await proxy_data_selector.do([{ip: '192.0.0.1', port: 3129}])
-
         EventBus.unregister(x01)
+
+        // Test blocked or to_delete flags
+        p = new IpAddr()
+        p.ip = '192.0.0.2'
+        p.port = 3129
+        p.preUpdate()
+        p.blocked = true
+        await c.persist(p)
+
+        p = new IpAddr()
+        p.ip = '192.0.0.3'
+        p.port = 3129
+        p.preUpdate()
+        p.to_delete = true
+        await c.persist(p)
+
+        events = await proxy_data_selector.do([{ip: '192.0.0.2', port: 3129},{ip: '192.0.0.3', port: 3129}])
+        expect(events.length).to.eq(0)
 
         await storage.shutdown()
     }

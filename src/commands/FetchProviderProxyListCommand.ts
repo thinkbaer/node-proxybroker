@@ -2,7 +2,7 @@ import * as _ from 'lodash'
 
 import StdConsole from "./StdConsole";
 import {Log} from "../logging/Log";
-import Todo from "../exceptions/Todo";
+import Todo from "../exceptions/TodoException";
 import {ProviderManager} from "../provider/ProviderManager";
 import {Utils} from "../utils/Utils";
 

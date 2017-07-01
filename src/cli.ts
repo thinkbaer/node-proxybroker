@@ -7,6 +7,18 @@ import StdConsole from "./commands/StdConsole";
 import {JudgeFileCommand} from "./commands/JudgeFileCommand";
 import {FetchProviderProxyListCommand} from "./commands/FetchProviderProxyListCommand";
 
+
+process.on('uncaughtException',(err:Error) => {
+    console.error(err)
+    process.exit()
+})
+
+process.on('unhandledRejection',(err:Error) => {
+    console.error(err)
+    process.exit()
+})
+
+
 EventBus.register(new StdConsole())
 
 require("yargonaut")

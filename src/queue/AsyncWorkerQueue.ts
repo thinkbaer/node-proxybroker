@@ -80,7 +80,6 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
             this.runningTasks++
             Promise.resolve(worker)
                 .then((_worker) => {
-
                     self._inc++
                     _worker.doStart()
                     return _worker
