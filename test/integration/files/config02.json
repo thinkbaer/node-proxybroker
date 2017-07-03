@@ -1,10 +1,8 @@
 {
   "workdir": "/tmp",
   "storage": {
-    "driver": {
-      "type": "sqlite",
-      "storage": ":memory:",
-      "tablesPrefix": "npb_"
-    }
+    "type": "sqlite",
+    "database": ":memory:",
+    "tablesPrefix": "npb_"
   }
 }

@@ -51,7 +51,7 @@ class Main {
         EventBus.register(this.proxy_data_selector)
 
         let options:IJudgeOptions = Config.get('judge') || {}
-        this.proxy_validation_controller = new ProxyValidationController(options)
+        this.proxy_validation_controller = new ProxyValidationController(options,this.storage)
 
     }
 

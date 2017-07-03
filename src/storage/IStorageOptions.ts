@@ -1,9 +1,11 @@
 
 
 
-import {ConnectionOptions} from "typeorm/connection/ConnectionOptions";
 
-export interface IStorageOptions extends ConnectionOptions {
+import {BaseConnectionOptions} from "typeorm/connection/BaseConnectionOptions";
+import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
+
+export interface IStorageOptions extends BaseConnectionOptions {
 
 
 }

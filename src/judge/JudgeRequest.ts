@@ -11,11 +11,13 @@ import {RequestResponseMonitor} from "./RequestResponseMonitor";
 import {IHttpHeaders} from "../lib/IHttpHeaders";
 import {Judge} from "./Judge";
 import {IJudgeRequestOptions} from "./IJudgeRequestOptions";
-import {JudgeResult} from "./JudgeResults";
+
 
 import Timer = NodeJS.Timer;
 import {LevelDetection} from "./LevelDetection";
 import {MESSAGE} from "../lib/Messages";
+import {JudgeResult} from "./JudgeResult";
+import {ProtocolType} from "../lib/ProtocolType";
 
 
 // interface JudgeConfig
@@ -183,8 +185,8 @@ export class JudgeRequest {
     }
 
 
-    result(): JudgeResult {
-        let result = new JudgeResult()
+    result(p:ProtocolType): JudgeResult {
+        let result = new JudgeResult(p)
 
         result.id = this.id
         result.start = this.monitor.start

@@ -1,9 +1,7 @@
 {
   "storage": {
-    "driver": {
-      "type": "sqlite",
-      "storage": "temp/test03.db",
-      "tablesPrefix": "npb_"
-    }
+    "type": "sqlite",
+    "database": "temp/test03.db",
+    "tablesPrefix": "npb_"
   }
 }

@@ -17,6 +17,7 @@ import {JudgeResults} from "./JudgeResults";
 import DomainUtils from "../utils/DomainUtils";
 import {Utils} from "../utils/Utils";
 import {MESSAGE} from "../lib/Messages";
+import {ProtocolType} from "../lib/ProtocolType";
 
 
 const FREEGEOIP: string = 'http://freegeoip.net/json/%s'
@@ -351,7 +352,7 @@ export class Judge {
         let http_request: JudgeRequest = this.createRequest('http://' + ip + ':' + port)
         //let http_monitor: RequestResponseMonitor =
         await http_request.performRequest()
-        results.http = http_request.result()
+        results.http = http_request.result(ProtocolType.HTTP)
         this.removeFromCache(http_request.id)
 
 
@@ -359,7 +360,7 @@ export class Judge {
         let https_request: JudgeRequest = this.createRequest('https://' + ip + ':' + port)
         //let https_monitor: RequestResponseMonitor =
         await https_request.performRequest()
-        results.https = https_request.result()
+        results.https = https_request.result(ProtocolType.HTTPS)
         this.removeFromCache(https_request.id)
 
 

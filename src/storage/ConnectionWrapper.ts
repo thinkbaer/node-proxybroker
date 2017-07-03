@@ -1,4 +1,4 @@
-import {Connection, getConnectionManager} from "typeorm";
+import {Connection, EntityManager, getConnectionManager} from "typeorm";
 import {Storage} from "./Storage";
 export class ConnectionWrapper {
 
@@ -22,7 +22,7 @@ export class ConnectionWrapper {
     }
 
     async persist<Entity>(o: Entity): Promise<any> {
-        return this.connection.entityManager.persist(o)
+        return this.manager.persist(o)
     }
 
 
@@ -35,6 +35,10 @@ export class ConnectionWrapper {
             this.connection = await getConnectionManager().get(this.name)
         }
         return Promise.resolve(this)
+    }
+
+    get manager():EntityManager{
+        return this.connection.manager
     }
 
     async close(): Promise<ConnectionWrapper> {

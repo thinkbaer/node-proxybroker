@@ -33,7 +33,7 @@ class ConfigTests {
         expect(storageOptions).not.to.be.null
         let storage = new Storage(storageOptions)
         let options : IStorageOptions = storage['options']
-        expect(options.driver.type).to.eq("sqlite")
+        expect(options.type).to.eq("sqlite")
     }
 
     @test
@@ -48,7 +48,7 @@ class ConfigTests {
         let storage = new Storage(storageOptions)
 
         let options : IStorageOptions = storage['options']
-        expect(options.driver.type).to.eq("sqlite")
+        expect(options.type).to.eq("sqlite")
 
         await storage.init()
         expect(PlatformUtils.fileExist(__dirname + '/temp/test03.db')).to.be.true

@@ -66,7 +66,7 @@ export class JudgeFileCommand {
                     judgeOptions = Utils.merge(judgeOptions, JSON.parse(argv.config))
                 }
 
-                let validator = new ProxyValidationController(judgeOptions);
+                let validator = new ProxyValidationController(judgeOptions, null);
                 let booted = false
                 try {
                     booted = await validator.prepare()

@@ -51,7 +51,6 @@
     "source-map-support": "^0.4.15",
     "ts-node": "^3.1.0",
     "tslint-stylish": "^2.1.0",
-    "typeorm": "0.0.8",
     "typescript": "^2.3.4",
     "typescript-object-utils": "^0.2.6",
     "typescript-require": "^0.2.9-1",
@@ -74,6 +73,7 @@
     "request": "^2.79.0",
     "request-promise-native": "^1.0.3",
     "sqlite3": "^3.1.8",
+    "typeorm": "0.1.0-alpha.26",
     "yargonaut": "^1.1.2",
     "yargs": "^8.0.1"
   },

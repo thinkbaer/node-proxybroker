@@ -12,6 +12,12 @@ export class Utils {
         return data.msg
     }
 
+    static flattenDate(d:Date){
+        // reset milliseconds for datefields
+        let rest = d.getTime() % 1000;
+        return new Date(d.getTime() - rest)
+    }
+
     static now(){
         let now = new Date()
         // reset milliseconds for datefields

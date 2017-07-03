@@ -10,13 +10,13 @@ import {inspect} from 'util'
 import {Storage} from "../../src/storage/Storage";
 import {IStorageOptions} from "../../src/storage/IStorageOptions";
 import {IpAddr} from "../../src/storage/entity/IpAddr";
+import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 
 
-const DEFAULT_STORAGE_OPTIONS: IStorageOptions = {
-    driver: {
-        type: "sqlite",
-        storage: ":memory:"
-    },
+const DEFAULT_STORAGE_OPTIONS: SqliteConnectionOptions = {
+    type: "sqlite",
+    database: ":memory:",
+
     entities: [],
     migrations: [],
     autoSchemaSync: true,
@@ -28,12 +28,10 @@ class StorageTest {
 
     @test
     async 'init'() {
-        let storage = new Storage({
+        let storage = new Storage(<SqliteConnectionOptions>{
             name: 'storage_test',
-            driver: {
-                type: "sqlite",
-                storage: ":memory:"
-            }
+            type: "sqlite",
+            database: ":memory:"
         });
         await storage.init();
         let entityNames: Array<string> = []
@@ -42,7 +40,7 @@ class StorageTest {
             entityNames.push(entityMeta.targetName)
         })
         entityNames = entityNames.sort()
-        expect(entityNames).to.be.deep.eq(["IpAddr", "Variable"])
+        expect(entityNames).to.be.deep.eq(["IpAddrState", "IpAddr", "Variable","IpLoc"].sort())
 
         expect(storage.size()).to.be.eq(1)
         await storage.shutdown()
@@ -57,12 +55,10 @@ class StorageTest {
     @test
     async 'static'() {
         Storage['$$'] = null
-        let storage = await Storage.$({
+        let storage = await Storage.$(<SqliteConnectionOptions>{
             name: 'storage_test',
-            driver: {
-                type: "sqlite",
-                storage: ":memory:"
-            }
+            type: "sqlite",
+            database: ":memory:"
         });
         expect(storage.size()).to.be.eq(1)
 

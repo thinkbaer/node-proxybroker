@@ -14,6 +14,8 @@ import {IpAddr} from "../../src/storage/entity/IpAddr";
 import subscribe from "../../src/events/decorator/subscribe"
 import {ProxyDataValidateEvent} from "../../src/proxy/ProxyDataValidateEvent";
 import {EventBus} from "../../src/events/EventBus";
+import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
+import {Utils} from "../../src/utils/Utils";
 
 @suite('proxy/ProxyDataSelector')
 class ProxyDataSelectorTest {
@@ -21,12 +23,12 @@ class ProxyDataSelectorTest {
 
     @test
     async 'init'() {
-        let storage = await Storage.$({
+        let storage = await Storage.$(<SqliteConnectionOptions>{
             name: 'proxy_data_validator',
-            driver: {
-                type: 'sqlite',
-                storage: ':memory:'
-            }
+
+            type: 'sqlite',
+            database: ':memory:'
+
         })
         let proxy_data_selector = new ProxyDataSelector(storage)
         expect(proxy_data_selector).to.exist
@@ -36,12 +38,12 @@ class ProxyDataSelectorTest {
 
     @test
     async 'verify if validation is necessary'() {
-        let storage = await Storage.$({
+        let storage = await Storage.$(<SqliteConnectionOptions>{
             name: 'proxy_data_validator',
-            driver: {
-                type: 'sqlite',
-                storage: ':memory:'
-            }
+
+            type: 'sqlite',
+            database: ':memory:'
+
         })
         let proxy_data_selector = new ProxyDataSelector(storage)
         let c = await storage.connect()
@@ -49,7 +51,7 @@ class ProxyDataSelectorTest {
         let p = new IpAddr()
         p.ip = '192.0.0.1'
         p.port = 3129
-        p.preUpdate()
+        p.last_checked_at = Utils.now()
         await c.persist(p)
 
 
@@ -88,6 +90,7 @@ class ProxyDataSelectorTest {
         // Test subscribe if the events are fired
         class X01 {
             _test: Function = null
+
             constructor(test: Function) {
                 this._test = test
             }
@@ -115,18 +118,16 @@ class ProxyDataSelectorTest {
         p = new IpAddr()
         p.ip = '192.0.0.2'
         p.port = 3129
-        p.preUpdate()
         p.blocked = true
         await c.persist(p)
 
         p = new IpAddr()
         p.ip = '192.0.0.3'
         p.port = 3129
-        p.preUpdate()
         p.to_delete = true
         await c.persist(p)
 
-        events = await proxy_data_selector.do([{ip: '192.0.0.2', port: 3129},{ip: '192.0.0.3', port: 3129}])
+        events = await proxy_data_selector.do([{ip: '192.0.0.2', port: 3129}, {ip: '192.0.0.3', port: 3129}])
         expect(events.length).to.eq(0)
 
         await storage.shutdown()
@@ -149,12 +150,11 @@ class ProxyDataSelectorTest {
             }
         }
 
-        let storage = await Storage.$({
+        let storage = await Storage.$(<SqliteConnectionOptions>{
             name: 'proxy_data_validator',
-            driver: {
-                type: 'sqlite',
-                storage: ':memory:'
-            }
+            type: 'sqlite',
+            database: ':memory:'
+
         })
 
         let proxy_data_selector = new ProxyDataSelectorFilterTest(storage, (w: IProxyData[]) => {
