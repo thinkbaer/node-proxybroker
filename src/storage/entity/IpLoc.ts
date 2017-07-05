@@ -2,12 +2,12 @@
 
 import {Entity} from "typeorm/decorator/entity/Entity";
 import {Column, CreateDateColumn, PrimaryColumn, UpdateDateColumn} from "typeorm";
-import {ColumnType} from "typeorm/driver/types/ColumnTypes";
+
 
 @Entity()
 export class IpLoc {
 
-    @PrimaryColumn(<ColumnType>"string")
+    @PrimaryColumn({type:"varchar",length:15})
     ip: string
 
     @Column({nullable:true})

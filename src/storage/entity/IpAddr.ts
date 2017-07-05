@@ -6,7 +6,7 @@ import {
 import {Utils} from "../../utils/Utils";
 import {Index} from "typeorm/decorator/Index";
 import {ProtocolType} from "../../lib/ProtocolType";
-import {ColumnType} from "typeorm/driver/types/ColumnTypes";
+
 import {Entity} from "typeorm/decorator/entity/Entity";
 
 
@@ -15,7 +15,7 @@ import {Entity} from "typeorm/decorator/entity/Entity";
 @Index("unique_ip_and_port", (ipaddr: IpAddr) => [ipaddr.ip, ipaddr.port], { unique: true })
 export class IpAddr {
 
-    @PrimaryGeneratedColumn(<ColumnType>"number")
+    @PrimaryGeneratedColumn()
     id: number;
 
     // ip : port
