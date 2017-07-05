@@ -1,13 +1,12 @@
-import {Column, CreateDateColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
+import {Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
 
 import {ProtocolType} from "../../lib/ProtocolType";
-import {ColumnType} from "typeorm/driver/types/ColumnTypes";
 import {Entity} from "typeorm/decorator/entity/Entity";
 
 @Entity()
 export class IpAddrState {
 
-    @PrimaryGeneratedColumn(<ColumnType>"number")
+    @PrimaryGeneratedColumn()
     id: number;
 
     @Column({type:"boolean",nullable:false})
