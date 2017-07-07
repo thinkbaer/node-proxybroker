@@ -19,7 +19,7 @@ class JudgeFileCommandTest {
 
 
 
-    @test.only
+    @test
     async 'judge file with file'() {
 
         let proxy_options : IProxyServerOptions = Object.assign({}, {
