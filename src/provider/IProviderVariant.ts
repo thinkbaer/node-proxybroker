@@ -1,8 +1,8 @@
 
 
-export interface IProviderVariant {
+import {IProviderVariantId} from "./IProviderVariantId";
 
-    type: string;
+export interface IProviderVariant extends IProviderVariantId {
 
     [key:string]:any;
 

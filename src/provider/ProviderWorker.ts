@@ -1,7 +1,6 @@
-import {IProviderWorkerAPI} from "./IProviderWorkerAPI";
 import {IProviderDef} from "./IProviderDef";
 import {ProviderManager} from "./ProviderManager";
-import {IProvider} from "./IProvider";
+
 
 import {shorthash} from "../lib/crypt";
 import {inspect} from "util"
@@ -12,7 +11,7 @@ import {AbstractProvider} from "./AbstractProvider";
 import {Log} from "../logging/Log";
 
 
-export class ProviderWorker implements IProviderWorkerAPI, IQueueWorkload {
+export class ProviderWorker implements IQueueWorkload {
 
     private id: string;
 
@@ -46,9 +45,6 @@ export class ProviderWorker implements IProviderWorkerAPI, IQueueWorkload {
     }
 
 
-    propose(proxy: IProxyData): void {
-        this._manager.propose(proxy)
-    }
 
     async fetch():Promise<IProxyData[]>{
         return await this._localInstance.get()

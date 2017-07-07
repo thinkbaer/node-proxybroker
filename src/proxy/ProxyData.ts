@@ -10,21 +10,24 @@ export class ProxyData implements IQueueWorkload, IProxyData {
 
     ip: string
     port: number
+    job_state_id: number
     results: JudgeResults = null
 
 
-    constructor(ip: string | { ip: string, port: number }, port?: number) {
+    constructor(ip: string | { ip: string, port: number, job_state_id?: number }, port?: number, job_state_id?: number) {
         if (_.isString(ip) && port) {
             this.ip = ip
             this.port = port
-
+            this.job_state_id = job_state_id
         } else if (_.isObject(ip)) {
             this.ip = ip['ip']
             this.port = ip['port']
+            this.job_state_id = ip['job_state_id']
         } else {
             // TODO test string with :
             throw new Todo()
         }
+
     }
 
 

@@ -25,13 +25,13 @@ export class FetchProviderProxyListCommand {
                 alias: 'f',
                 describe: "Set outputformat (default: json).",
                 default: 'json',
-                demand:true
+                demand: true
             })
     }
 
     async handler(argv: any) {
         Log.enable = StdConsole.$enabled = argv.verbose
-        let manager = new ProviderManager()
+        let manager = new ProviderManager({schedule: {enable: false}})
         await manager.init()
         let provider = null
         let variant = null
@@ -77,14 +77,14 @@ export class FetchProviderProxyListCommand {
             let worker = await manager.createWorker(variant_found)
             let p = await worker.fetch()
 
-            switch (argv.format){
+            switch (argv.format) {
                 case 'json':
-                    console.log(JSON.stringify(p,null,2))
+                    console.log(JSON.stringify(p, null, 2))
                     break;
                 case 'csv':
-                    let rows:string[] = []
+                    let rows: string[] = []
                     p.forEach(_rowData => {
-                        rows.push([_rowData.ip,_rowData.port].join(';'))
+                        rows.push([_rowData.ip, _rowData.port].join(';'))
                     })
                     rows = Utils.unique_array(rows)
                     console.log(rows.join('\n'))

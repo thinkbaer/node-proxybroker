@@ -1,7 +1,5 @@
 
 
-import {IProvider} from "../../../src/provider/IProvider";
-import {IProviderWorkerAPI} from "../../../src/provider/IProviderWorkerAPI";
 import {IProviderVariant} from "../../../src/provider/IProviderVariant";
 import {AbstractProvider} from "../../../src/provider/AbstractProvider";
 import {IProxyData} from "../../../src/proxy/IProxyData";
@@ -18,13 +16,8 @@ export class MockedProxies02  extends AbstractProvider {
     ]
 
     get(): Promise<IProxyData[]> {
-        console.log('')
-        return null
+        return Promise.resolve([{ip: '127.0.0.3', port: 3128}, {ip: '127.0.0.4', port: 3129}])
     }
 
-
-    do(api: IProviderWorkerAPI): Promise<void> {
-        return null
-    }
 
 }

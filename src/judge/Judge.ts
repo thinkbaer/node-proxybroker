@@ -371,6 +371,7 @@ export class Judge {
 
     wakeup(force: boolean = false): Promise<any> {
         let self = this
+        // TODO check if address and port are bound, on expcetion shutdown connection
         return new Promise(function (resolve, reject) {
             try {
                 if (self.runnable || (!self.runnable && force)) {

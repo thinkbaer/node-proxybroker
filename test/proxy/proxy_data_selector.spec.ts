@@ -16,6 +16,7 @@ import {ProxyDataValidateEvent} from "../../src/proxy/ProxyDataValidateEvent";
 import {EventBus} from "../../src/events/EventBus";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {Utils} from "../../src/utils/Utils";
+import {ProxyDataFetched} from "../../src/proxy/ProxyDataFetched";
 
 @suite('proxy/ProxyDataSelector')
 class ProxyDataSelectorTest {
@@ -52,24 +53,46 @@ class ProxyDataSelectorTest {
         p.ip = '192.0.0.1'
         p.port = 3129
         p.last_checked_at = Utils.now()
-        await c.persist(p)
+        await c.save(p)
 
 
-        let events = await proxy_data_selector.do([{ip: '192.0.0.1', port: 3129}, {ip: '127.0.1.1', port: 3128}])
+        let events = await proxy_data_selector.do(new ProxyDataFetched([{ip: '192.0.0.1', port: 3129}, {
+            ip: '127.0.1.1',
+            port: 3128
+        }]))
+
+        console.log(events[0])
         expect(events.length).to.be.eq(1)
-        expect(events[0]).to.deep.eq({
+        expect(events[0]).to.deep.include({
             isNew: true,
             record: null,
             fired: true,
-            data: {
-                results: null, ip: '127.0.1.1', port: 3128
+            jobState:{count: 0,
+                selected: 0,
+                added: 1,
+                skipped: 1,
+                blocked: 0,
+                updated: 0,
+                validated: 0,
+                broken: 0 },
+            data:{
+                results: null,
+                ip: '127.0.1.1',
+                port: 3128,
+                job_state_id: undefined
+
             }
         })
 
         p.last_checked_at = new Date((new Date()).getTime() - 36 * 60 * 60 * 1000)
-        await c.persist(p)
+        await c.save(p)
 
-        events = await proxy_data_selector.do([{ip: '192.0.0.1', port: 3129}, {ip: '127.0.0.1', port: 3128}])
+        events = await proxy_data_selector.do(new ProxyDataFetched([
+            {ip: '192.0.0.1', port: 3129},
+            {
+                ip: '127.0.0.1',
+                port: 3128
+            }]))
         expect(events.length).to.be.eq(2)
         expect(events[0].isNew).to.be.false
         expect(events[0].record).to.deep.include({
@@ -111,7 +134,7 @@ class ProxyDataSelectorTest {
         })
 
         EventBus.register(x01)
-        await proxy_data_selector.do([{ip: '192.0.0.1', port: 3129}])
+        await proxy_data_selector.do(new ProxyDataFetched([{ip: '192.0.0.1', port: 3129}]))
         EventBus.unregister(x01)
 
         // Test blocked or to_delete flags
@@ -127,7 +150,10 @@ class ProxyDataSelectorTest {
         p.to_delete = true
         await c.persist(p)
 
-        events = await proxy_data_selector.do([{ip: '192.0.0.2', port: 3129}, {ip: '192.0.0.3', port: 3129}])
+        events = await proxy_data_selector.do(new ProxyDataFetched([{ip: '192.0.0.2', port: 3129}, {
+            ip: '192.0.0.3',
+            port: 3129
+        }]))
         expect(events.length).to.eq(0)
 
         await storage.shutdown()
@@ -145,7 +171,7 @@ class ProxyDataSelectorTest {
                 this.test = cb
             }
 
-            async do(workLoad: IProxyData[]): Promise<any> {
+            async do(workLoad: ProxyDataFetched): Promise<any> {
                 this.test(workLoad)
             }
         }

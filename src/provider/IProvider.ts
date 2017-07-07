@@ -18,5 +18,5 @@ export interface IProvider {
 
     get(): Promise<IProxyData[]>;
 
-    do(api: IProviderWorkerAPI): Promise<void>;
+    // do(api: IProviderWorkerAPI): Promise<void>;
 }

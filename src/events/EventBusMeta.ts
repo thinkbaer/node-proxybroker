@@ -1,4 +1,6 @@
+import * as _ from 'lodash'
 import {SubscriberInfo} from "./SubscriberInfo";
+
 interface EventListenerDef {
     namespace: string
     method: string
@@ -29,7 +31,7 @@ export default class EventBusMeta {
                 ns.push($t.namespace)
             }
         }
-        return ns
+        return _.uniq(ns)
     }
 
     public getSubscriberInfo(o: Function): SubscriberInfo[] {

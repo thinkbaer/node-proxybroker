@@ -3,6 +3,7 @@
 import {EventBus} from "../events/EventBus";
 import {ProxyData} from "./ProxyData";
 import {IpAddr} from "../storage/entity/IpAddr";
+import {JobState} from "../storage/entity/JobState";
 export class ProxyDataValidateEvent {
 
     data: ProxyData
@@ -13,8 +14,14 @@ export class ProxyDataValidateEvent {
 
     fired: boolean = false
 
+    jobState:JobState = null
 
-    constructor(data: ProxyData){
+
+    constructor(data: ProxyData, jobState?:JobState){
+        this.jobState = jobState
+        if(!this.jobState){
+            this.jobState = new JobState()
+        }
         this.isNew = false
         this.data = data
     }

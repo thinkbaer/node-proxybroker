@@ -84,8 +84,9 @@ class ConfigTests {
 
         let pOptions: IProviderOptions = {
             providers: ['/some/dir', '/some/other/dir'],
-            //enable: true,
-            offset: 1000
+            schedule:{
+                enable:true
+            }
         }
 
         Config['$self'] = null

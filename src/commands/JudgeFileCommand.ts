@@ -43,7 +43,6 @@ export class JudgeFileCommand {
     async handler(argv: any) {
         Log.enable = StdConsole.$enabled = argv.verbose
 
-
         if (PlatformUtils.fileExist(argv.file)) {
             let buffer = fs.readFileSync(argv.file)
             let data = buffer.toString('utf-8').trim()
@@ -75,11 +74,9 @@ export class JudgeFileCommand {
                 }
                 if (booted) {
                     try {
-
-                        list.forEach(_q => {
+                        for(let _q of list){
                             validator.push(_q)
-                        })
-
+                        }
                         await validator.await()
                     } catch (err) {
                         Log.error(err)
@@ -90,14 +87,20 @@ export class JudgeFileCommand {
                     switch (argv.format) {
                         case 'json':
                             let data: JudgeResults[] = []
-                            list.forEach(_x => {
-                                _x.results.http.logStr = _x.results.http.logToString()
-                                _x.results.https.logStr = _x.results.https.logToString()
-                                _x.results.http.log = null
-                                _x.results.https.log = null
-                                data.push(_x.results)
-                            })
 
+                            list.forEach(_x => {
+                                if (_x.results) {
+                                    if (_x.results.http) {
+                                        _x.results.http.logStr = _x.results.http.logToString()
+                                        _x.results.http.log = null
+                                    }
+                                    if (_x.results.https) {
+                                        _x.results.https.logStr = _x.results.https.logToString()
+                                        _x.results.https.log = null
+                                    }
+                                    data.push(_x.results)
+                                }
+                            })
                             console.log(JSON.stringify(data, null, 2))
                             break;
                         case 'csv':
@@ -147,7 +150,7 @@ export class JudgeFileCommand {
                                         _x.results.longitude
 
                                     ].join(';'))
-                                }else{
+                                } else {
                                     rows.push([
                                         _x.ip,
                                         _x.port,

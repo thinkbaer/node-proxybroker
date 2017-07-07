@@ -8,7 +8,12 @@ export interface IProviderOptions {
 
     providers? : StringOrFunction[]
 
-    offset? : number
+    schedule?: {
+        enable?: boolean
+        recheck?: number
+        pattern?:string
+    }
+
 
     /**
      * Amount of parallel allowed worker jobs

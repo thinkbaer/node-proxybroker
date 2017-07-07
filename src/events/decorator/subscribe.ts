@@ -24,6 +24,7 @@ export function decorate(handleDescriptor: Function, entryArgs: any[]) {
 }
 
 function handleDescriptor(target: Function, key: any, descriptor: PropertyDescriptor, ...args: any[]) {
+    // console.log(target,key,descriptor,args)
     EventBusMeta.$().register(target, key, descriptor, args.shift())
     return descriptor;
 }

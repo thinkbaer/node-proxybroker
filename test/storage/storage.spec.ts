@@ -8,7 +8,7 @@ import {expect} from "chai";
 import {inspect} from 'util'
 
 import {Storage} from "../../src/storage/Storage";
-import {IStorageOptions} from "../../src/storage/IStorageOptions";
+
 import {IpAddr} from "../../src/storage/entity/IpAddr";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 
@@ -40,7 +40,7 @@ class StorageTest {
             entityNames.push(entityMeta.targetName)
         })
         entityNames = entityNames.sort()
-        expect(entityNames).to.be.deep.eq(["IpAddrState", "IpAddr", "Variable","IpLoc"].sort())
+        expect(entityNames).to.be.deep.eq(["IpAddrState", "IpAddr", "Variable","IpLoc","Job","JobState"].sort())
 
         expect(storage.size()).to.be.eq(1)
         await storage.shutdown()

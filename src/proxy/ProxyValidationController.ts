@@ -14,7 +14,7 @@ import {IpLoc} from "../storage/entity/IpLoc";
 import {IpAddrState} from "../storage/entity/IpAddrState";
 import {IpAddr} from "../storage/entity/IpAddr";
 import {JudgeResult} from "../judge/JudgeResult";
-import {ProtocolType} from "../lib/ProtocolType";
+
 import {Utils} from "../utils/Utils";
 
 export class ProxyValidationController implements IQueueProcessor<ProxyData> {
@@ -27,6 +27,7 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
 
     judge: Judge
 
+
     constructor(judgeOptions: IJudgeOptions, storage: Storage) {
         let parallel: number = 200
         this.storage = storage
@@ -34,13 +35,13 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
         this.queue = new AsyncWorkerQueue<ProxyData>(this, {concurrent: parallel})
     }
 
+
     buildState(addr: IpAddr, result: JudgeResult): IpAddrState {
         let state = new IpAddrState()
         state.addr_id = addr.id
         state.validation_id = addr.check_id
         state.level = result.level
         state.protocol = result.protocol
-
 
         if (result.hasError()) {
             state.error_code = result.error.code
@@ -70,8 +71,6 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
             }
 
         }
-
-
         return state;
     }
 
@@ -98,10 +97,7 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
 
         // increment the state identifier
         ip_addr.last_checked_at = now
-
-
-        ip_addr = await conn.persist(ip_addr)
-
+        ip_addr = await conn.save(ip_addr)
 
         let http_state: IpAddrState = null
         let https_state: IpAddrState = null
@@ -124,7 +120,7 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
                 ip_loc[k] = proxyData.results[k]
             }
 
-            ip_loc = await conn.persist(ip_loc)
+            ip_loc = await conn.save(ip_loc)
 
             // if we have no positive results for http and https then
             //     if record already exists then
@@ -143,10 +139,11 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
             if (proxyData.results.https) {
                 let _http = proxyData.results.https;
                 https_state = this.buildState(ip_addr, _http)
-                await conn.persist(https_state)
+                await conn.save(https_state)
             }
 
             if (http_state.enabled || https_state.enabled) {
+                event.jobState.validated++
                 ip_addr.count_success++
                 ip_addr.count_errors = 0
 
@@ -154,6 +151,7 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
                     ip_addr.success_since_at = now
                 }
             } else {
+                event.jobState.broken++
                 ip_addr.count_success = 0
                 ip_addr.count_errors++
 
@@ -162,13 +160,16 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
                 }
             }
 
-            await conn.persist(ip_addr)
+            await conn.save(ip_addr)
+
 
         } else {
             throw new TodoException()
         }
 
-
+        if (event.jobState.id) {
+            await conn.save(event.jobState)
+        }
         await conn.close()
 
         return Promise.resolve(event)
@@ -184,8 +185,13 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
         if (!this.judge.isEnabled()) {
             this.wakeuped = true
             // if multi push??
-            await this.judge.wakeup()
+            try {
+                await this.judge.wakeup()
+            } catch (err) {
+                throw new TodoException(err)
+            }
         }
+
         return this.queue.push(o)
     }
 
@@ -203,7 +209,6 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
             this.wakeuped = false
             await this.judge.pending()
         }
-
     }
 
     async do(workLoad: ProxyData): Promise<any> {

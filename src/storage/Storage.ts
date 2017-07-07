@@ -14,11 +14,18 @@ import {ConnectionWrapper} from "./ConnectionWrapper";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 
 import {IpLoc} from "./entity/IpLoc";
+import {JobState} from "./entity/JobState";
+import {Job} from "./entity/Job";
 
 
 export const FIX_STORAGE_OPTIONS = {
     entities: [
-        Variable, IpAddrState, IpAddr,IpLoc
+        Variable,
+        IpAddrState,
+        IpAddr,
+        IpLoc,
+        Job,
+        JobState
     ],
     migrations: [
         __dirname + "/migrations/*"

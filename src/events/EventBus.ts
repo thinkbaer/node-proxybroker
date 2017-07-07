@@ -58,6 +58,11 @@ export class EventBus {
         infos.forEach(info => {
             let channel = self.$().getOrCreateChannel(info.namespace)
             channel.unregister(o)
+            if(channel.size == 0){
+                channel = self.$().channels[info.namespace]
+                channel.removeAllListeners()
+                delete self.$().channels[info.namespace]
+            }
         })
 
     }
@@ -76,7 +81,7 @@ export class EventBus {
         })
     }
 
-    static post(o: any): Promise<any[]> {
+    static post(o: any): Promise<any> {
 
         // TODO check is supported type?
         let self = this
@@ -85,7 +90,6 @@ export class EventBus {
             self.$().inc++
         }
         let promises: Promise<any>[] = []
-
         info.forEach(_namespace => {
             promises.push(self.postOnChannel(_namespace,o))
         })

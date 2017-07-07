@@ -1,5 +1,6 @@
 import {Connection, EntityManager, getConnectionManager} from "typeorm";
 import {Storage} from "./Storage";
+import {deprecate} from "util";
 export class ConnectionWrapper {
 
     static $INC: number = 0
@@ -21,10 +22,19 @@ export class ConnectionWrapper {
         this.name = this.storage.name
     }
 
+    /**
+     * Persists (saves) all given entities in the database.
+     * If entities do not exist in the database then inserts, otherwise updates.
+     *
+     * @deprecated
+     */
     async persist<Entity>(o: Entity): Promise<any> {
         return this.manager.persist(o)
     }
 
+    async save<Entity>(o: Entity): Promise<any> {
+        return this.manager.save(o)
+    }
 
     async connect(): Promise<ConnectionWrapper> {
         if (this.memory) {

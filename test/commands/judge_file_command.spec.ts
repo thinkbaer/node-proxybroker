@@ -19,7 +19,7 @@ class JudgeFileCommandTest {
 
 
 
-    @test
+    @test.only
     async 'judge file with file'() {
 
         let proxy_options : IProxyServerOptions = Object.assign({}, {
@@ -30,9 +30,10 @@ class JudgeFileCommandTest {
         let http_proxy_server = new ProxyServer(proxy_options)
 
         await http_proxy_server.start()
-
         let cli = await SpawnCLI.run('judge-file', 'test/_files/proxylists/list01.csv', '-v', '-c', JSON.stringify(cfg))
         await http_proxy_server.stop()
+
+        console.log(cli.stdout)
 
         let data = JSON.parse(cli.stdout)
         data = data.shift()

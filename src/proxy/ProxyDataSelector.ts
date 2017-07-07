@@ -12,8 +12,9 @@ import {ProxyData} from "./ProxyData";
 
 import DomainUtils from "../utils/DomainUtils";
 import {ProxyDataValidateEvent} from "./ProxyDataValidateEvent";
+import {ProxyDataFetched} from "./ProxyDataFetched";
 
-export class ProxyDataSelector implements IQueueProcessor<IProxyData[]> {
+export class ProxyDataSelector implements IQueueProcessor<ProxyDataFetched> {
 
     // TODO make this configurable
     chunk_size: number = 50
@@ -24,13 +25,13 @@ export class ProxyDataSelector implements IQueueProcessor<IProxyData[]> {
 
     storage: Storage
 
-    queue: AsyncWorkerQueue<IProxyData[]>
+    queue: AsyncWorkerQueue<ProxyDataFetched>
 
 
     constructor(storage: Storage) {
         let parallel = 200
         this.storage = storage
-        this.queue = new AsyncWorkerQueue<IProxyData[]>(this, {concurrent: parallel})
+        this.queue = new AsyncWorkerQueue<ProxyDataFetched>(this, {concurrent: parallel})
     }
 
     @subscribe(ProxyDataFetchedEvent)
@@ -39,14 +40,18 @@ export class ProxyDataSelector implements IQueueProcessor<IProxyData[]> {
         let proxy = []
         for (let addr of fetched.list) {
             if (DomainUtils.IP_REGEX.test(addr.ip) && 0 < addr.port && addr.port <= 65536) {
+                // addr.job_state_id = fetched.jobState.id
                 proxy.push(addr)
+                fetched.jobState.selected++
+            }else{
+                fetched.jobState.skipped++
             }
         }
 
         // - chunk the array and push to worker queue
         let entries = _.chunk(proxy, this.chunk_size)
         while (entries.length > 0) {
-            let entry = entries.shift()
+            let entry = new ProxyDataFetched(entries.shift(),fetched.jobState)
             this.queue.push(entry)
         }
     }
@@ -56,7 +61,7 @@ export class ProxyDataSelector implements IQueueProcessor<IProxyData[]> {
     }
 
 
-    async do(workLoad: IProxyData[]): Promise<any> {
+    async do(workLoad: ProxyDataFetched): Promise<any> {
         let self = this
 
         // get existing entries
@@ -66,7 +71,7 @@ export class ProxyDataSelector implements IQueueProcessor<IProxyData[]> {
         let cqb = qb.createQueryBuilder('addr')
         cqb = cqb.select()
         let i = 0
-        workLoad.forEach(_proxy_ip => {
+        workLoad.list.forEach(_proxy_ip => {
             /*
              TODO this must be a bug in typeorm
              { ip0: '192.0.0.1', port0: 3129 }
@@ -84,21 +89,22 @@ export class ProxyDataSelector implements IQueueProcessor<IProxyData[]> {
              */
             cqb = cqb.orWhere(`(addr.ip = "${_proxy_ip.ip}" and addr.port = ${_proxy_ip.port})`)
         })
-        // console.log(cqb.getSqlWithParameters())
 
         // check the ips
         let entries = await cqb.getMany()
         let events:ProxyDataValidateEvent[] = []
-        for (let _x of workLoad) {
+
+        for (let _x of workLoad.list) {
 
             let recordExists = _.find(entries, _x)
             let proxyData = new ProxyData(_x)
-            let proxyDataValidateEvent = new ProxyDataValidateEvent(proxyData)
+            let proxyDataValidateEvent = new ProxyDataValidateEvent(proxyData, workLoad.jobState)
 
             if (recordExists) {
 
                 // if manuell blocked then skip this entry
                 if(recordExists.blocked || recordExists.to_delete){
+                    workLoad.jobState.blocked++
                     continue;
                 }
 
@@ -107,12 +113,15 @@ export class ProxyDataSelector implements IQueueProcessor<IProxyData[]> {
                 if (!recordExists.last_checked_at || ((now.getTime() - self.recheck_after) > recordExists.last_checked_at.getTime())) {
                     // last check is longer then the recheck offset, so revalidate
                     proxyDataValidateEvent.fire()
+                    workLoad.jobState.updated++
                 } else {
                     // last check was within recheck offset, so ignore validation
+                    workLoad.jobState.skipped++
 
                 }
             } else {
                 // new record entry must be checked
+                workLoad.jobState.added++
                 proxyDataValidateEvent.fire()
             }
 

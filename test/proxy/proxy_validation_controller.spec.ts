@@ -33,7 +33,7 @@ const judge_options: IJudgeOptions = {
 class ProxyValidationControllerTest {
 
     @test
-    async 'validation'() {
+    async 'positiv validation'() {
 
         let storage = new Storage(<SqliteConnectionOptions>{
             name: 'proxy_validator_controller',
@@ -44,16 +44,14 @@ class ProxyValidationControllerTest {
 
         let http_proxy_server = new ProxyServer(proxy_options)
         let proxyValidationController = new ProxyValidationController(judge_options, storage)
-
         await proxyValidationController.prepare()
-
         await http_proxy_server.start()
 
         let proxyData = new ProxyData({ip: '127.0.0.1', port: 3128})
         let e = new ProxyDataValidateEvent(proxyData)
         let event = null
         try {
-             event = await proxyValidationController.validate(e)
+            event = await proxyValidationController.validate(e)
         } catch (err) {
             throw err
         }
@@ -70,7 +68,6 @@ class ProxyValidationControllerTest {
         await conn.close()
         await storage.shutdown()
 
-        //console.log(ip_loc,ip_addr,ip_addr_state)
         expect(ip_loc[1]).to.eq(1)
         expect(ip_addr[1]).to.eq(1)
         expect(ip_addr_state[1]).to.eq(2)
@@ -78,11 +75,54 @@ class ProxyValidationControllerTest {
         expect(event.data.results).to.exist
         expect(event.data.results.http).to.exist
         expect(event.data.results.https).to.exist
+        expect(event.data.results.https.error).to.exist
+        expect(event.data.results.https.level).to.eq(-1)
         expect(event.data.results.http).to.deep.include({
             error: null,
             level: 3
         })
+    }
+
+    @test
+    async 'negativ validation'() {
+
+        let storage = new Storage(<SqliteConnectionOptions>{
+            name: 'proxy_validator_controller2',
+            type: 'sqlite',
+            database: ':memory:'
+        })
+        await storage.init()
+        let proxyValidationController = new ProxyValidationController(judge_options, storage)
+        await proxyValidationController.prepare()
+
+        let proxyData = new ProxyData({ip: '127.0.0.30', port: 3128})
+        let e = new ProxyDataValidateEvent(proxyData)
+        let event = null
+        try {
+            event = await proxyValidationController.validate(e)
+        } catch (err) {
+            throw err
+        }
+        // await proxyValidationController.await()
+        await proxyValidationController.shutdown()
 
 
+        let conn = await storage.connect()
+        let ip_loc = await conn.manager.findAndCount(IpLoc)
+        let ip_addr = await conn.manager.findAndCount(IpAddr)
+        let ip_addr_state = await conn.manager.findAndCount(IpAddrState)
+
+        await conn.close()
+        await storage.shutdown()
+
+        expect(ip_loc[1]).to.eq(1)
+        expect(ip_addr[1]).to.eq(1)
+        expect(ip_addr_state[1]).to.eq(2)
+
+        expect(ip_addr[0][0].count_errors).to.eq(1)
+        expect(ip_addr[0][0].success_since_at).to.be.null
+
+        expect(ip_addr_state[0][0].enabled).to.be.false
+        expect(ip_addr_state[0][1].enabled).to.be.false
     }
 }

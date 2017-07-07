@@ -116,16 +116,46 @@ Bootstrap implementation which should handle:
 - proxyserver enabling
 
 
-
-@TASK:{counter:task} 20170627 minor +
+[.line-through]#@TASK:{counter:task} 20170627 minor# +
 Impl. of the processing workflow.
 
 1. fetching proxy ip by provider and transport to the ip filter
 2. ip filter detects if an ip was already check in last time and
 decides if it should be (re)validated or not
-3. the validator checks the quality of the proxy and transports
-the results to the storage handler
-4. storage handler saves the results to the backend
+3. the validator checks the quality of the proxy and saves the results
+to the database
+
+@TASK:{counter:task} 20170706 minor +
+Impl. the server part which will deliver information via rest services
+for a coming ui or other
+
+* runtime statistics
+** started / running since
+** proxy count all/active/inactive
+* fetcher statistics
+** show last execution for each fetch job
+** count found proxies
+** manuel control (start, stop, disable?)
+* proxies
+** get next in line fastes proxy (for )
+** list proxy queue
+** search by country, speed, level, etc.
+
+@TASK:{counter:task} 20170706 minor +
+Impl. configurable winston logger and define the
+configuration parameter
+
+@TASK:{counter:task} 20170707 minor +
+Fetcher control in configuration? Define if some fetcher should be
+excluded.
+
+@TASK:{counter:task} 20170707 minor +
+Impl. ProviderManager
+
+* schedule fetcher
+** make this configurable (offset)
+* fetcher statistics
+** count proxies / new / existing
 
 
 

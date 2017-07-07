@@ -126,12 +126,21 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
      */
     await(): Promise<void> {
         let self = this
+
         return new Promise<void>(function (resolve) {
-            self.once('drain', function () {
+            //if (self.amount() > 0) {
+                self.once('drain', function () {
+                    resolve()
+                })
+            /*
+            }else{
+                console.log('Y=')
                 resolve()
-            })
+            }*/
         })
+
     }
+
 
     /**
      * Creates a new QueueJob for passed entry and return a promise which that the job will be enqueued
@@ -176,7 +185,7 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
         return this.runningTasks >= this.options.concurrent
     }
 
-    // TODO impl
+// TODO impl
     pause(): Promise<boolean> {
         let self = this
         this._paused = true
@@ -191,7 +200,7 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
         })
     }
 
-    // TODO impl
+// TODO impl
     resume() {
         this._paused = false
         this.fireProcess()

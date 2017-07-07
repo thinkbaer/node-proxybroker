@@ -51,6 +51,6 @@ export abstract class AbstractProvider implements IProvider {
 
 
 
-    abstract do(api: IProviderWorkerAPI): Promise<void>;
+    // abstract do(api: IProviderWorkerAPI): Promise<void>;
 
 }
