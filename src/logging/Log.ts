@@ -8,7 +8,6 @@ export class Log {
         if (Log.enable) {
             let l = new LogEvent({args: args, level:level})
             l.fire()
-            // console.log.apply(console, args)
         }
     }
 

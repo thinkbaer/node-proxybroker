@@ -44,6 +44,8 @@ class EventsSubscribe {
 
         let res = await channel.post('TEST')
         expect(res.length).to.eq(1)
+
+        channel.unregister(subscriber)
     }
 
 
@@ -83,8 +85,10 @@ class EventsSubscribe {
 
         }
 
-        EventBus.register(new LocalTest2())
-        expect(EventBus.namespaces).to.deep.eq(['TestData2'])
+        EventBus.$()['inc'] = 0
+        let l = new LocalTest2()
+        EventBus.register(l)
+        expect(EventBus.namespaces).to.contain('TestData2')
 
         let event = new TestData2()
         let info = EventBusMeta.$().getNamespacesForEvent(event)
@@ -92,6 +96,7 @@ class EventsSubscribe {
 
         await EventBus.post(new TestData2())
         expect(EventBus.$()['inc']).to.eq(1)
+        EventBus.unregister(l)
     }
 
 }

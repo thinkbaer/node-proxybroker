@@ -16,6 +16,8 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
 
     static readonly E_NO_RUNNING_JOBS = 'running empty'
     static readonly E_DO_PROCESS = 'process'
+    static readonly E_DRAIN = 'drain'
+    static readonly E_ENQUEUE = 'enqueue'
 
     _inc: number = 0
     _done: number = 0
@@ -37,7 +39,8 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
         this.options = Utils.merge(ASYNC_QUEUE_DEFAULT, options);
         this.processor = processor
         this.on(AsyncWorkerQueue.E_DO_PROCESS, this.process.bind(this))
-        this.on('enqueue', this.enqueue.bind(this))
+        this.on(AsyncWorkerQueue.E_ENQUEUE, this.enqueue.bind(this))
+        this.on(AsyncWorkerQueue.E_DRAIN, this.drained.bind(this))
     }
 
     private next() {
@@ -101,7 +104,7 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
         } else {
             if (this.amount() === 0) {
                 // notthing to do
-                this.emit('drain')
+                this.emit(AsyncWorkerQueue.E_DRAIN)
             } else {
                 // worker exists and occupied
             }
@@ -115,6 +118,11 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
         this.fireProcess()
     }
 
+    private drained(){
+        if(this.processor.onEmpty){
+            this.processor.onEmpty()
+        }
+    }
 
     private fireProcess() {
         this.emit(AsyncWorkerQueue.E_DO_PROCESS)
@@ -128,17 +136,14 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
         let self = this
 
         return new Promise<void>(function (resolve) {
-            //if (self.amount() > 0) {
-                self.once('drain', function () {
+            if (self.amount() > 0) {
+                self.once(AsyncWorkerQueue.E_DRAIN, function () {
                     resolve()
                 })
-            /*
             }else{
-                console.log('Y=')
                 resolve()
-            }*/
+            }
         })
-
     }
 
 

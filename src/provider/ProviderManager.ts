@@ -291,7 +291,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
     async shutdown() {
         clearTimeout(this.timer)
-        await this.queue.await();
+        await this.await();
         await this.saveJobs()
 
     }

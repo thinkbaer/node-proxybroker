@@ -1,5 +1,3 @@
-
-
 import {Judge} from "../judge/Judge";
 
 import StdConsole from "./StdConsole";
@@ -7,8 +5,6 @@ import {Log} from "../logging/Log";
 import Todo from "../exceptions/TodoException";
 import {Utils} from "../utils/Utils";
 import {IJudgeOptions} from "../judge/IJudgeOptions";
-
-
 
 
 export class JudgeCommand {
@@ -21,9 +17,9 @@ export class JudgeCommand {
     builder(yargs: any) {
         return yargs
             .option("verbose", {
-                alias:'v',
+                alias: 'v',
                 describe: "Enable logging",
-                default:false
+                default: false
             })
             .option("config", {
                 alias: 'c',
@@ -41,12 +37,17 @@ export class JudgeCommand {
 
         let judge = new Judge(judgeOptions)
         let booted = await judge.bootstrap()
-        if(booted){
-            await judge.wakeup()
-            let results = await judge.validate(argv.ip,argv.port)
-            await judge.pending()
-            console.log(JSON.stringify(results,null,2))
-        }else{
+        if (booted) {
+            try {
+                await judge.wakeup()
+                let results = await judge.validate(argv.ip, argv.port)
+                await judge.pending()
+                console.log(JSON.stringify(results, null, 2))
+            } catch (err) {
+                Log.error(err)
+                await judge.pending()
+            }
+        } else {
             throw new Todo()
         }
     }

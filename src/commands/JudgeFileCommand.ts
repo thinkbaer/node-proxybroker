@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import * as _ from 'lodash'
 
 import {Judge} from "../judge/Judge";
 
@@ -40,7 +41,7 @@ export class JudgeFileCommand {
             })
     }
 
-    async handler(argv: any) {
+    async handler(argv: any):Promise<any> {
         Log.enable = StdConsole.$enabled = argv.verbose
 
         if (PlatformUtils.fileExist(argv.file)) {
@@ -56,13 +57,11 @@ export class JudgeFileCommand {
                 }
             })
 
-
             if (list.length) {
-
 
                 let judgeOptions: IJudgeOptions = Judge.default_options()
                 if (argv.config) {
-                    judgeOptions = Utils.merge(judgeOptions, JSON.parse(argv.config))
+                    judgeOptions = Utils.merge(judgeOptions, _.isString(argv.config) ? JSON.parse(argv.config) : argv.config)
                 }
 
                 let validator = new ProxyValidationController(judgeOptions, null);
@@ -71,7 +70,9 @@ export class JudgeFileCommand {
                     booted = await validator.prepare()
                 } catch (err) {
                     Log.error(err)
+                    throw err
                 }
+
                 if (booted) {
                     try {
                         for(let _q of list){
@@ -186,9 +187,11 @@ export class JudgeFileCommand {
                     throw new Todo()
                 }
 
+                return Promise.resolve(list)
 
             } else {
                 Log.error('NO DATA')
+                return Promise.resolve(null)
             }
 
 

@@ -43,7 +43,7 @@ export class ProxyDataSelector implements IQueueProcessor<ProxyDataFetched> {
                 // addr.job_state_id = fetched.jobState.id
                 proxy.push(addr)
                 fetched.jobState.selected++
-            }else{
+            } else {
                 fetched.jobState.skipped++
             }
         }
@@ -51,7 +51,7 @@ export class ProxyDataSelector implements IQueueProcessor<ProxyDataFetched> {
         // - chunk the array and push to worker queue
         let entries = _.chunk(proxy, this.chunk_size)
         while (entries.length > 0) {
-            let entry = new ProxyDataFetched(entries.shift(),fetched.jobState)
+            let entry = new ProxyDataFetched(entries.shift(), fetched.jobState)
             this.queue.push(entry)
         }
     }
@@ -92,7 +92,7 @@ export class ProxyDataSelector implements IQueueProcessor<ProxyDataFetched> {
 
         // check the ips
         let entries = await cqb.getMany()
-        let events:ProxyDataValidateEvent[] = []
+        let events: ProxyDataValidateEvent[] = []
 
         for (let _x of workLoad.list) {
 
@@ -103,7 +103,7 @@ export class ProxyDataSelector implements IQueueProcessor<ProxyDataFetched> {
             if (recordExists) {
 
                 // if manuell blocked then skip this entry
-                if(recordExists.blocked || recordExists.to_delete){
+                if (recordExists.blocked || recordExists.to_delete) {
                     workLoad.jobState.blocked++
                     continue;
                 }
@@ -125,7 +125,7 @@ export class ProxyDataSelector implements IQueueProcessor<ProxyDataFetched> {
                 proxyDataValidateEvent.fire()
             }
 
-            if(proxyDataValidateEvent.fired){
+            if (proxyDataValidateEvent.fired) {
                 events.push(proxyDataValidateEvent)
             }
         }
@@ -135,9 +135,10 @@ export class ProxyDataSelector implements IQueueProcessor<ProxyDataFetched> {
     }
 
     // TODO need a functional
-    onEmpty(): Promise<void> {
-        console.log('DONE?')
-        return null;
-    }
-
+    /*
+     onEmpty(): Promise<void> {
+     console.log('DONE?')
+     return null;
+     }
+     */
 }

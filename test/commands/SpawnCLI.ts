@@ -23,15 +23,16 @@ export default class SpawnCLI {
         let self = this
         let cp:child_process.ChildProcess = null
         return new Promise((resolve, reject) => {
-            cp = child_process.spawn('node',this.args,
-                {
+            cp = child_process.spawn('node',this.args,{
                     cwd: PlatformUtils.pathNormilize(__dirname + '/../..'),
                     env:process.env
                 })
             cp.stdout.on('data',function (data:string) {
+                //console.log('out='+data)
                 self.stdout += data
             })
             cp.stderr.on('data',function (data:string) {
+                //console.log('err='+data)
                 self.stderr += data
             })
             cp.on('close',function () {

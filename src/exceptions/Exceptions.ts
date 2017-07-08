@@ -3,6 +3,8 @@
 import {NestedException} from "./NestedException";
 export default class Exceptions {
 
+    static EADDRINUSE = 'ADDRINUSE'
+
     static handle(err: Error):NestedException{
         let msg = err.message.trim()
 
@@ -17,6 +19,8 @@ export default class Exceptions {
             classification = 'SOCKET_HANGUP'
         }else if(/ECONNRESET/.test(msg)){
             classification = 'CONN_RESET'
+        }else if(/EADDRINUSE/.test(msg)){
+            classification = Exceptions.EADDRINUSE
         }else if(/EHOSTUNREACH/.test(msg)){
             classification = 'HOST_UNREACHABLE'
         }else if(/EPROTO.*SSL.*GET_SERVER_HELLO/.test(msg)){

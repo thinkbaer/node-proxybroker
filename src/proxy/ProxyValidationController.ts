@@ -16,6 +16,7 @@ import {IpAddr} from "../storage/entity/IpAddr";
 import {JudgeResult} from "../judge/JudgeResult";
 
 import {Utils} from "../utils/Utils";
+import {Log} from "../logging/Log";
 
 export class ProxyValidationController implements IQueueProcessor<ProxyData> {
 
@@ -55,7 +56,6 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
             }
         }
 
-
         state.log = result.log
         state.duration = result.duration
         state.start = result.start
@@ -69,7 +69,6 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
             if (addr.supportsProtocol(result.protocol)) {
                 addr.removeProtocol(state.protocol)
             }
-
         }
         return state;
     }
@@ -133,7 +132,7 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
             if (proxyData.results.http) {
                 let _http = proxyData.results.http;
                 http_state = this.buildState(ip_addr, _http)
-                await conn.persist(http_state)
+                await conn.save(http_state)
             }
 
             if (proxyData.results.https) {
@@ -159,9 +158,7 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
                     ip_addr.errors_since_at = now
                 }
             }
-
             await conn.save(ip_addr)
-
 
         } else {
             throw new TodoException()
@@ -182,45 +179,50 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
     }
 
     async push(o: ProxyData): Promise<QueueJob<ProxyData>> {
+        let enque = this.queue.push(o)
         if (!this.judge.isEnabled()) {
-            this.wakeuped = true
-            // if multi push??
             try {
-                await this.judge.wakeup()
+                this.wakeuped = await this.judge.wakeup()
             } catch (err) {
-                throw new TodoException(err)
+                Log.error(err)
+                throw err
             }
         }
-
-        return this.queue.push(o)
+        return enque
     }
 
     async await(): Promise<void> {
-        if (this.queue.amount() > 0 || this.wakeuped) {
+        if (this.queue.amount() > 0 || this.judge.isEnabled()) {
             return this.queue.await()
         } else {
             return Promise.resolve()
         }
-
     }
 
     async shutdown() {
         if (this.judge.isEnabled()) {
-            this.wakeuped = false
-            await this.judge.pending()
+            this.wakeuped = await this.judge.pending()
         }
     }
 
     async do(workLoad: ProxyData): Promise<any> {
-        let results = await this.judge.validate(workLoad.ip, workLoad.port)
-        workLoad.results = results
-        return Promise.resolve(results)
+        // If starting or stopping judge server then wait
+        await this.judge.progressing()
+
+        if(this.judge.isEnabled()){
+            let results = await this.judge.validate(workLoad.ip, workLoad.port)
+            workLoad.results = results
+            return Promise.resolve(results)
+        }else{
+            Log.error('Judge is not started!')
+            return Promise.resolve()
+        }
     }
 
 
     onEmpty(): Promise<void> {
-        //this.wakeuped = false
-        console.log('DONE?')
+        this.judge.pending()
         return null;
     }
+
 }

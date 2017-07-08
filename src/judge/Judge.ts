@@ -18,6 +18,8 @@ import DomainUtils from "../utils/DomainUtils";
 import {Utils} from "../utils/Utils";
 import {MESSAGE} from "../lib/Messages";
 import {ProtocolType} from "../lib/ProtocolType";
+import Exceptions from "../exceptions/Exceptions";
+import {Progress} from "../lib/Progress";
 
 
 const FREEGEOIP: string = 'http://freegeoip.net/json/%s'
@@ -47,9 +49,11 @@ export class Judge {
     private server: net.Server = null
 
     private _remote_url: mUrl.Url = null
+
     private _judge_url: mUrl.Url = null
 
     private enabled: boolean = false
+    private progress: Progress = new Progress()
     private runnable: boolean = false
     private running: boolean = false
 
@@ -144,15 +148,19 @@ export class Judge {
                 Log.info('The remote IP before: ' + this.remote_url_f)
                 this._remote_url = await this.get_remote_accessible_ip()
                 Log.info('The remote IP after: ' + this.remote_url_f)
+            }else{
+                Log.info('remote lookup: skipped')
             }
             if (this._options.selftest) {
                 await this.wakeup(true)
                 this.runnable = await this.selftest()
                 await this.pending()
+                Log.info('selftest was '+ (this.runnable ? 'successful' : 'failed'))
             } else {
+                Log.info('selftest: skipped')
                 this.runnable = true
             }
-            return this.runnable
+            return Promise.resolve(this.runnable)
         } catch (err) {
             Log.error(err)
             throw err
@@ -210,13 +218,13 @@ export class Judge {
         return this.addToCache(judgeReq)
     }
 
-    private addToCache(req : JudgeRequest) : JudgeRequest{
+    private addToCache(req: JudgeRequest): JudgeRequest {
         this.cache[req.id] = req
         return this.cache[req.id]
     }
 
-    private removeFromCache(id:string){
-        if(this.cache[id]){
+    private removeFromCache(id: string) {
+        if (this.cache[id]) {
             Log.info(id + ' REMOVE')
             delete this.cache[id]
         }
@@ -273,7 +281,7 @@ export class Judge {
 
     }
 
-    isEnabled(){
+    isEnabled() {
         return this.enabled
     }
 
@@ -356,7 +364,6 @@ export class Judge {
         this.removeFromCache(http_request.id)
 
 
-
         let https_request: JudgeRequest = this.createRequest('https://' + ip + ':' + port)
         //let https_monitor: RequestResponseMonitor =
         await https_request.performRequest()
@@ -368,11 +375,13 @@ export class Judge {
     }
 
 
-
-    wakeup(force: boolean = false): Promise<any> {
+    async wakeup(force: boolean = false): Promise<boolean> {
         let self = this
+
+        await this.progress.startWhenReady();
+
         // TODO check if address and port are bound, on expcetion shutdown connection
-        return new Promise(function (resolve, reject) {
+        return new Promise<boolean>(function (resolve, reject) {
             try {
                 if (self.runnable || (!self.runnable && force)) {
                     self.$connections = {}
@@ -382,8 +391,16 @@ export class Judge {
                     } else {
                         self.server = http.createServer(self.judge.bind(self))
                     }
-                    self.server.on('connection', self.onServerConnection.bind(self))
+                    self.server.on('error', (err) => {
+                        let nErr = Exceptions.handle(err)
+                        if (nErr.code === Exceptions.EADDRINUSE) {
+                            reject(err)
+                        } else {
+                            Log.error('Judge server error:', err)
+                        }
+                    })
                     self.server.listen(parseInt(self._judge_url.port), self._judge_url.hostname, function () {
+                        self.server.on('connection', self.onServerConnection.bind(self))
                         self.enable()
                         self.info('Judge service startup on ' + self.judge_url_f + ' (SSL: ' + self.isSecured + ')')
                         resolve(true)
@@ -395,11 +412,13 @@ export class Judge {
                 reject(e)
             }
         })
+            .then(async r => {
+                await self.progress.ready()
+                return r
+            })
     }
 
     private onServerConnection(socket: net.Socket) {
-
-
         let self = this
 
         function onData(data: Buffer) {
@@ -435,7 +454,7 @@ export class Judge {
                 if (cached_req && self.enabled) {
                     self.debug('HEADER ADD: ', headers)
                     headers.forEach(function (head) {
-                        cached_req.monitor.addLog(MESSAGE.HED01.k,{header:head}, '>>')
+                        cached_req.monitor.addLog(MESSAGE.HED01.k, {header: head}, '>>')
                     })
                 }
             }
@@ -451,12 +470,19 @@ export class Judge {
         })
     }
 
+    async progressing():Promise<any>{
+        return this.progress.waitTillDone()
+    }
 
-    pending(): Promise<any> {
+
+    async pending(): Promise<any> {
         let self = this
+        await this.progress.startWhenReady();
+
         return new Promise(function (resolve, reject) {
             try {
                 if (self.server) {
+                    self.server.removeAllListeners()
                     self.server.close(function () {
                         self.disable()
                         self.info('Judge service shutting down on ' + self.judge_url_f)
@@ -471,6 +497,9 @@ export class Judge {
             } catch (e) {
                 reject(e)
             }
+        }).then(async r => {
+            await self.progress.ready()
+            return r
         })
 
     }
