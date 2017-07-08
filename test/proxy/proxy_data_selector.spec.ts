@@ -3,13 +3,12 @@ describe('', () => {
 })
 
 
-import {suite, test, slow, timeout, pending} from "mocha-typescript";
+import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 import {inspect} from 'util'
 import {Storage} from "../../src/storage/Storage";
 import {ProxyDataSelector} from "../../src/proxy/ProxyDataSelector";
 import {ProxyDataFetchedEvent} from "../../src/proxy/ProxyDataFetchedEvent";
-import {IProxyData} from "../../src/proxy/IProxyData";
 import {IpAddr} from "../../src/storage/entity/IpAddr";
 import subscribe from "../../src/events/decorator/subscribe"
 import {ProxyDataValidateEvent} from "../../src/proxy/ProxyDataValidateEvent";
@@ -30,10 +29,10 @@ class ProxyDataSelectorTest {
             type: 'sqlite',
             database: ':memory:'
 
-        })
-        let proxy_data_selector = new ProxyDataSelector(storage)
-        expect(proxy_data_selector).to.exist
-        await storage.shutdown()
+        });
+        let proxy_data_selector = new ProxyDataSelector(storage);
+        expect(proxy_data_selector).to.exist;
+        await storage.shutdown();
     }
 
 
@@ -43,29 +42,29 @@ class ProxyDataSelectorTest {
             name: 'proxy_data_validator',
             type: 'sqlite',
             database: ':memory:'
-        })
+        });
 
-        let proxy_data_selector = new ProxyDataSelector(storage)
-        let c = await storage.connect()
+        let proxy_data_selector = new ProxyDataSelector(storage);
+        let c = await storage.connect();
 
-        let p = new IpAddr()
-        p.ip = '192.0.0.1'
-        p.port = 3129
-        p.last_checked_at = Utils.now()
-        await c.save(p)
+        let p = new IpAddr();
+        p.ip = '192.0.0.1';
+        p.port = 3129;
+        p.last_checked_at = Utils.now();
+        await c.save(p);
 
         let events = await proxy_data_selector.do(new ProxyDataFetched([
             {ip: '192.0.0.1', port: 3129},
             {ip: '127.0.1.1', port: 3128}
-        ]))
+        ]));
 
 
-        expect(events.length).to.be.eq(1)
-        expect(events[0].isNew).to.be.true
-        expect(events[0].fired).to.be.true
-        expect(events[0].data.results).to.be.null
-        expect(events[0].data.ip).to.eq('127.0.1.1')
-        expect(events[0].data.port).to.eq(3128)
+        expect(events.length).to.be.eq(1);
+        expect(events[0].isNew).to.be.true;
+        expect(events[0].fired).to.be.true;
+        expect(events[0].data.results).to.be.null;
+        expect(events[0].data.ip).to.eq('127.0.1.1');
+        expect(events[0].data.port).to.eq(3128);
         expect(events[0].jobState).to.contain({
             count: 0,
             selected: 0,
@@ -75,16 +74,16 @@ class ProxyDataSelectorTest {
             updated: 0,
             validated: 0,
             broken: 0
-        })
+        });
 
 
-        p.last_checked_at = new Date((new Date()).getTime() - 36 * 60 * 60 * 1000)
-        await c.save(p)
+        p.last_checked_at = new Date((new Date()).getTime() - 36 * 60 * 60 * 1000);
+        await c.save(p);
 
         events = await proxy_data_selector.do(new ProxyDataFetched([
             {ip: '192.0.0.1', port: 3129},
             {ip: '127.0.0.1', port: 3128}
-        ]))
+        ]));
         expect(events.length).to.be.eq(2)
         expect(events[0].isNew).to.be.false
         expect(events[0].record).to.deep.include({
@@ -92,38 +91,38 @@ class ProxyDataSelectorTest {
             ip: '192.0.0.1',
             port: 3129,
             blocked: false
-        })
+        });
 
-        expect(events[1].isNew).to.be.true
-        expect(events[1].record).to.be.null
+        expect(events[1].isNew).to.be.true;
+        expect(events[1].record).to.be.null;
         expect(events[1].data).to.include({
             results: null,
             ip: '127.0.0.1',
             port: 3128
-        })
+        });
 
         // Test subscribe if the events are fired
         class X01 {
             _test: Function = null
 
             constructor(test: Function) {
-                this._test = test
+                this._test = test;
             }
 
             @subscribe(ProxyDataValidateEvent)
             test(p: ProxyDataValidateEvent) {
-                this._test(p)
+                this._test(p);
             }
         }
 
-        let _q:ProxyDataValidateEvent[] = []
+        let _q:ProxyDataValidateEvent[] = [];
         let x01 = new X01(function (e: ProxyDataValidateEvent) {
-            _q.push(e)
-        })
+            _q.push(e);
+        });
 
-        EventBus.register(x01)
-        await proxy_data_selector.do(new ProxyDataFetched([{ip: '192.0.0.1', port: 3129}]))
-        EventBus.unregister(x01)
+        EventBus.register(x01);
+        await proxy_data_selector.do(new ProxyDataFetched([{ip: '192.0.0.1', port: 3129}]));
+        EventBus.unregister(x01);
 
 
         expect(_q[0].record).to.deep.include({
@@ -135,25 +134,25 @@ class ProxyDataSelectorTest {
 
 
         // Test blocked or to_delete flags
-        p = new IpAddr()
-        p.ip = '192.0.0.2'
-        p.port = 3129
-        p.blocked = true
-        await c.persist(p)
+        p = new IpAddr();
+        p.ip = '192.0.0.2';
+        p.port = 3129;
+        p.blocked = true;
+        await c.save(p);
 
-        p = new IpAddr()
-        p.ip = '192.0.0.3'
-        p.port = 3129
-        p.to_delete = true
-        await c.persist(p)
+        p = new IpAddr();
+        p.ip = '192.0.0.3';
+        p.port = 3129;
+        p.to_delete = true;
+        await c.save(p);
 
         events = await proxy_data_selector.do(new ProxyDataFetched([{ip: '192.0.0.2', port: 3129}, {
             ip: '192.0.0.3',
             port: 3129
-        }]))
-        expect(events.length).to.eq(0)
+        }]));
+        expect(events.length).to.eq(0);
 
-        await storage.shutdown()
+        await storage.shutdown();
     }
 
 
@@ -178,50 +177,50 @@ class ProxyDataSelectorTest {
             type: 'sqlite',
             database: ':memory:'
 
-        })
+        });
 
         let _q:ProxyDataFetched = null
         let proxy_data_selector = new ProxyDataSelectorFilterTest(storage, (w: ProxyDataFetched) => {
-            _q = w
-        })
+            _q = w;
+        });
 
-        let e = new ProxyDataFetchedEvent(addr)
-        await proxy_data_selector.filter(e)
-        expect(_q.list).to.deep.eq([addr])
+        let e = new ProxyDataFetchedEvent(addr);
+        await proxy_data_selector.filter(e);
+        expect(_q.list).to.deep.eq([addr]);
 
-        e = new ProxyDataFetchedEvent([addr])
-        await proxy_data_selector.filter(e)
-        expect(_q.list).to.deep.eq([addr])
+        e = new ProxyDataFetchedEvent([addr]);
+        await proxy_data_selector.filter(e);
+        expect(_q.list).to.deep.eq([addr]);
 
-        let _r = false
+        let _r = false;
         proxy_data_selector = new ProxyDataSelectorFilterTest(storage, (w: ProxyDataFetched) => {
-            _r = true
-        })
+            _r = true;
+        });
 
         // should be ignored
-        e = new ProxyDataFetchedEvent([{ip: '999.999.999.999', port: 3128}])
-        await proxy_data_selector.filter(e)
-        expect(_r).to.be.false
+        e = new ProxyDataFetchedEvent([{ip: '999.999.999.999', port: 3128}]);
+        await proxy_data_selector.filter(e);
+        expect(_r).to.be.false;
 
         // should be ignored
-        e = new ProxyDataFetchedEvent([{ip: '127.0.0.1', port: 65537}])
-        await proxy_data_selector.filter(e)
-        expect(_r).to.be.false
+        e = new ProxyDataFetchedEvent([{ip: '127.0.0.1', port: 65537}]);
+        await proxy_data_selector.filter(e);
+        expect(_r).to.be.false;
 
 
         proxy_data_selector = new ProxyDataSelectorFilterTest(storage, (w: ProxyDataFetched) => {
-            _q = w
-        })
+            _q = w;
+        });
 
         e = new ProxyDataFetchedEvent([
             {ip: '127.0.0.1', port: 65537},
             {ip: '127.0.1.1', port: 65530},
             {ip: '999.999.999.999', port: 3128}
-        ])
-        await proxy_data_selector.filter(e)
-        expect(_q.list).to.deep.eq([{ip: '127.0.1.1', port: 65530}])
+        ]);
+        await proxy_data_selector.filter(e);
+        expect(_q.list).to.deep.eq([{ip: '127.0.1.1', port: 65530}]);
 
-        await storage.shutdown()
+        await storage.shutdown();
     }
 
 }

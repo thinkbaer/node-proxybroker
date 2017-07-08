@@ -29,30 +29,30 @@ class EventsSubscribe {
     async 'channel'() {
         class ChannelSubscriber {
             fire(o: any) {
-                expect(o).to.eq('TEST')
+                expect(o).to.eq('TEST');
             }
         }
-        let channel = new EventChannel('test')
+        let channel = new EventChannel('test');
 
         expect(function () {
-            channel.register(channel, 'fire')
-        }).to.throw()
+            channel.register(channel, 'fire');
+        }).to.throw();
 
-        let subscriber = new ChannelSubscriber()
-        channel.register(subscriber, 'fire')
-        expect(channel.size).to.eq(1)
+        let subscriber = new ChannelSubscriber();
+        channel.register(subscriber, 'fire');
+        expect(channel.size).to.eq(1);
 
-        let res = await channel.post('TEST')
-        expect(res.length).to.eq(1)
+        let res = await channel.post('TEST');
+        expect(res.length).to.eq(1);
 
-        channel.unregister(subscriber)
+        channel.unregister(subscriber);
     }
 
 
     @test
     'subscribe for single class'() {
         class TestData {
-            data: string
+            data: string;
         }
 
         class LocalTest {
@@ -69,7 +69,7 @@ class EventsSubscribe {
     async 'register subscriber and post message'() {
 
         class TestData2 {
-            data: string
+            data: string;
 
             constructor() {
                 this.data = 'TESTDATA'
@@ -85,18 +85,18 @@ class EventsSubscribe {
 
         }
 
-        EventBus.$()['inc'] = 0
-        let l = new LocalTest2()
-        EventBus.register(l)
-        expect(EventBus.namespaces).to.contain('TestData2')
+        EventBus.$()['inc'] = 0;
+        let l = new LocalTest2();
+        EventBus.register(l);
+        expect(EventBus.namespaces).to.contain('TestData2');
 
-        let event = new TestData2()
-        let info = EventBusMeta.$().getNamespacesForEvent(event)
-        expect(info).not.to.be.empty
+        let event = new TestData2();
+        let info = EventBusMeta.$().getNamespacesForEvent(event);
+        expect(info).not.to.be.empty;
 
-        await EventBus.post(new TestData2())
-        expect(EventBus.$()['inc']).to.eq(1)
-        EventBus.unregister(l)
+        await EventBus.post(new TestData2());
+        expect(EventBus.$()['inc']).to.eq(1);
+        EventBus.unregister(l);
     }
 
 }
