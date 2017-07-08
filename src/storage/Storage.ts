@@ -7,15 +7,15 @@ import {IStorageOptions} from "./IStorageOptions";
 import {Config} from "commons-config";
 import {K_STORAGE, K_WORKDIR} from "../types";
 import {Utils} from "../utils/Utils";
-import {Variable} from "./entity/Variable";
-import {IpAddrState} from "./entity/IpAddrState";
-import {IpAddr} from "./entity/IpAddr";
+import {Variable} from "../model/Variable";
+import {IpAddrState} from "../model/IpAddrState";
+import {IpAddr} from "../model/IpAddr";
 import {ConnectionWrapper} from "./ConnectionWrapper";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 
-import {IpLoc} from "./entity/IpLoc";
-import {JobState} from "./entity/JobState";
-import {Job} from "./entity/Job";
+import {IpLoc} from "../model/IpLoc";
+import {JobState} from "../model/JobState";
+import {Job} from "../model/Job";
 
 
 export const FIX_STORAGE_OPTIONS = {

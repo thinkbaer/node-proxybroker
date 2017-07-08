@@ -8,12 +8,12 @@ import {expect} from "chai";
 import {inspect} from 'util'
 
 import {Storage} from "../../src/storage/Storage";
-import {Variable} from "../../src/storage/entity/Variable";
+import {Variable} from "../../src/model/Variable";
 
 
 import {ProtocolType} from "../../src/lib/ProtocolType";
-import {IpAddrState} from "../../src/storage/entity/IpAddrState";
-import {IpAddr} from "../../src/storage/entity/IpAddr";
+import {IpAddrState} from "../../src/model/IpAddrState";
+import {IpAddr} from "../../src/model/IpAddr";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 
 let storage: Storage = null;

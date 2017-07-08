@@ -15,10 +15,10 @@ import {FreeProxyListsCom} from "./predefined/FreeProxyListsCom";
 import {StringOrFunction} from "../types";
 import {Utils} from "../utils/Utils";
 import {Storage} from "../storage/Storage";
-import {Job} from "../storage/entity/Job";
+import {Job} from "../model/Job";
 import {ConnectionWrapper} from "../storage/ConnectionWrapper";
 
-import {JobState} from "../storage/entity/JobState";
+import {JobState} from "../model/JobState";
 import {ProxyDataFetchedEvent} from "../proxy/ProxyDataFetchedEvent";
 import {Log} from "../logging/Log";
 import Exceptions from "../exceptions/Exceptions";

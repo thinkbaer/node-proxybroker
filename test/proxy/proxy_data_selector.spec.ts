@@ -9,7 +9,7 @@ import {inspect} from 'util'
 import {Storage} from "../../src/storage/Storage";
 import {ProxyDataSelector} from "../../src/proxy/ProxyDataSelector";
 import {ProxyDataFetchedEvent} from "../../src/proxy/ProxyDataFetchedEvent";
-import {IpAddr} from "../../src/storage/entity/IpAddr";
+import {IpAddr} from "../../src/model/IpAddr";
 import subscribe from "../../src/events/decorator/subscribe"
 import {ProxyDataValidateEvent} from "../../src/proxy/ProxyDataValidateEvent";
 import {EventBus} from "../../src/events/EventBus";

@@ -9,7 +9,7 @@ import {inspect} from 'util'
 
 import {Storage} from "../../src/storage/Storage";
 
-import {IpAddr} from "../../src/storage/entity/IpAddr";
+import {IpAddr} from "../../src/model/IpAddr";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 
 

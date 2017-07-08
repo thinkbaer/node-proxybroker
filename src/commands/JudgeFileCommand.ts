@@ -26,17 +26,17 @@ export class JudgeFileCommand {
             .option("verbose", {
                 alias: 'v',
                 describe: "Enable logging",
-                default: false
+                'default': false
             })
             .option("config", {
                 alias: 'c',
                 describe: "Judge config json",
-                default: '{}'
+                'default': '{}'
             })
             .option('format', {
                 alias: 'f',
                 describe: "Set outputformat (default: json).",
-                default: 'json',
+                'default': 'json',
                 demand: true
             })
     }

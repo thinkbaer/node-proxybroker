@@ -19,12 +19,12 @@ export class JudgeCommand {
             .option("verbose", {
                 alias: 'v',
                 describe: "Enable logging",
-                default: false
+                'default': false
             })
             .option("config", {
                 alias: 'c',
                 describe: "Judge config json",
-                default: '{}'
+                'default': '{}'
             })
     }
 

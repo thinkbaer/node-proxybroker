@@ -19,12 +19,12 @@ export class FetchProviderProxyListCommand {
             .option("verbose", {
                 alias: 'v',
                 describe: "Enable logging",
-                default: false
+                'default': false
             })
             .option('format', {
                 alias: 'f',
                 describe: "Set outputformat (default: json).",
-                default: 'json',
+                'default': 'json',
                 demand: true
             })
     }
@@ -50,7 +50,6 @@ export class FetchProviderProxyListCommand {
                 }
             }
         }
-
 
         if (!provider && !variant) {
             let variants = manager.findAll();

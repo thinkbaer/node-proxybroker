@@ -1,3 +1,7 @@
+# Sym links
+src/ui/app
+
+
 # Logs
 logs
 *.log

@@ -13,13 +13,13 @@ import {ProviderManager} from "../../src/provider/ProviderManager";
 import {IProviderOptions} from "../../src/provider/IProviderOptions";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {Storage} from "../../src/storage/Storage";
-import {Job} from "../../src/storage/entity/Job";
+import {Job} from "../../src/model/Job";
 import {ProxyDataSelector} from "../../src/proxy/ProxyDataSelector";
 import {EventBus} from "../../src/events/EventBus";
 import {Utils} from "../../src/utils/Utils";
 import {ProviderRunEvent} from "../../src/provider/ProviderRunEvent";
-import {JobState} from "../../src/storage/entity/JobState";
-import {IpAddr} from "../../src/storage/entity/IpAddr";
+import {JobState} from "../../src/model/JobState";
+import {IpAddr} from "../../src/model/IpAddr";
 import {MockedProxies01} from "./predefined_01/MockedProxies01";
 import {ProxyDataFetchedEvent} from "../../src/proxy/ProxyDataFetchedEvent";
 

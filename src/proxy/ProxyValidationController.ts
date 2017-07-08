@@ -10,9 +10,9 @@ import {QueueJob} from "../queue/QueueJob";
 import {ProxyDataValidateEvent} from "./ProxyDataValidateEvent";
 import TodoException from "../exceptions/TodoException";
 import {Storage} from "../storage/Storage";
-import {IpLoc} from "../storage/entity/IpLoc";
-import {IpAddrState} from "../storage/entity/IpAddrState";
-import {IpAddr} from "../storage/entity/IpAddr";
+import {IpLoc} from "../model/IpLoc";
+import {IpAddrState} from "../model/IpAddrState";
+import {IpAddr} from "../model/IpAddr";
 import {JudgeResult} from "../judge/JudgeResult";
 
 import {Utils} from "../utils/Utils";

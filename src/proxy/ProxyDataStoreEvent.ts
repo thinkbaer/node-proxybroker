@@ -2,7 +2,7 @@
 
 import {EventBus} from "../events/EventBus";
 import {ProxyData} from "./ProxyData";
-import {IpAddr} from "../storage/entity/IpAddr";
+import {IpAddr} from "../model/IpAddr";
 export class ProxyDataStoreEvent {
 
     data: ProxyData;

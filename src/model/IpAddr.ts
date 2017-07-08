@@ -3,9 +3,9 @@ import {
      BeforeInsert, BeforeUpdate
 } from "typeorm";
 
-import {Utils} from "../../utils/Utils";
+import {Utils} from "../utils/Utils";
 import {Index} from "typeorm/decorator/Index";
-import {ProtocolType} from "../../lib/ProtocolType";
+import {ProtocolType} from "../lib/ProtocolType";
 
 import {Entity} from "typeorm/decorator/entity/Entity";
 

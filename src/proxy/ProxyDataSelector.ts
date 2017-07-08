@@ -7,7 +7,7 @@ import {Storage} from "../storage/Storage";
 import {IQueueProcessor} from "../queue/IQueueProcessor";
 import {IProxyData} from "./IProxyData";
 import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
-import {IpAddr} from "../storage/entity/IpAddr";
+import {IpAddr} from "../model/IpAddr";
 import {ProxyData} from "./ProxyData";
 
 import DomainUtils from "../utils/DomainUtils";

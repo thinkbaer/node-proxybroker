@@ -14,9 +14,10 @@ import {ProxyDataValidateEvent} from "../../src/proxy/ProxyDataValidateEvent";
 import {ProxyData} from "../../src/proxy/ProxyData";
 import {Storage} from "../../src/storage/Storage";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
-import {IpLoc} from "../../src/storage/entity/IpLoc";
-import {IpAddr} from "../../src/storage/entity/IpAddr";
-import {IpAddrState} from "../../src/storage/entity/IpAddrState";
+import {IpLoc} from "../../src/model/IpLoc";
+import {IpAddr} from "../../src/model/IpAddr";
+import {IpAddrState} from "../../src/model/IpAddrState";
+import {Container} from "typedi";
 
 const proxy_options: IProxyServerOptions = Object.assign({}, {
     url: 'http://127.0.0.1:3128',

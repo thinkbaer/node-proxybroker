@@ -2,8 +2,8 @@
 
 import {EventBus} from "../events/EventBus";
 import {ProxyData} from "./ProxyData";
-import {IpAddr} from "../storage/entity/IpAddr";
-import {JobState} from "../storage/entity/JobState";
+import {IpAddr} from "../model/IpAddr";
+import {JobState} from "../model/JobState";
 export class ProxyDataValidateEvent {
 
     data: ProxyData;
