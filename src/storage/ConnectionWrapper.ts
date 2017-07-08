@@ -1,24 +1,24 @@
 import {Connection, EntityManager, getConnectionManager} from "typeorm";
 import {Storage} from "./Storage";
-import {deprecate} from "util";
+
 export class ConnectionWrapper {
 
-    static $INC: number = 0
+    static $INC: number = 0;
 
-    inc: number = ConnectionWrapper.$INC++
+    inc: number = ConnectionWrapper.$INC++;
 
-    private name:string = null
+    private name:string = null;
 
-    memory: boolean = false
+    memory: boolean = false;
 
-    storage: Storage
+    storage: Storage;
 
-    connection: Connection
+    connection: Connection;
 
     constructor(s: Storage, conn?: Connection) {
-        this.storage = s
-        this.memory = this.storage.isMemory
-        this.connection = conn
+        this.storage = s;
+        this.memory = this.storage.isMemory;
+        this.connection = conn;
         this.name = this.storage.name
     }
 

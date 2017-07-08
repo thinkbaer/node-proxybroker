@@ -4,8 +4,8 @@
 
 // import {ProviderSpec} from '../lib/provider_spec'
 
-const BASE_URL = 'http://www.proxy-listen.de'
-const PROXY_LIST_DE = BASE_URL + '/Proxy/Proxyliste.html'
+const BASE_URL = 'http://www.proxy-listen.de';
+const PROXY_LIST_DE = BASE_URL + '/Proxy/Proxyliste.html';
 
 
 

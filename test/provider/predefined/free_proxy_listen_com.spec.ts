@@ -1,6 +1,6 @@
 import * as mocha from 'mocha';
 describe('', () => {
-})
+});
 
 
 import {suite, test, slow, timeout, pending} from "mocha-typescript";
@@ -15,11 +15,11 @@ class FreeProxyListsComTest {
 
     @test
     async 'get anonym'(){
-        let p = new FreeProxyListsCom()
-        p.selectVariant('anonym')
-        let v = p.variant
-        expect(v.type).to.be.eq('anonym')
-        let list = await p.get()
+        let p = new FreeProxyListsCom();
+        p.selectVariant('anonym');
+        let v = p.variant;
+        expect(v.type).to.be.eq('anonym');
+        let list = await p.get();
         expect(list.length).to.not.be.empty
 
     }

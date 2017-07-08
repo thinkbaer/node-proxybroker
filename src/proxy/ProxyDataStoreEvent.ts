@@ -5,22 +5,22 @@ import {ProxyData} from "./ProxyData";
 import {IpAddr} from "../storage/entity/IpAddr";
 export class ProxyDataStoreEvent {
 
-    data: ProxyData
+    data: ProxyData;
 
-    isNew: boolean = true
+    isNew: boolean = true;
 
-    record: IpAddr = null
+    record: IpAddr = null;
 
-    fired: boolean = false
+    fired: boolean = false;
 
 
     constructor(data: ProxyData){
-        this.isNew = false
+        this.isNew = false;
         this.data = data
     }
 
     fire() {
-        this.fired = true
+        this.fired = true;
         if(!this.record){
             this.isNew = true
         }

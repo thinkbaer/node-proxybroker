@@ -13,28 +13,28 @@ import {Index} from "typeorm/decorator/Index";
 export class Job {
 
     @PrimaryGeneratedColumn()
-    id : number
+    id : number;
 
     @Column()
-    key: string
+    key: string;
 
     @Column()
-    name: string
+    name: string;
 
     @Column({nullable:true})
-    type: string
+    type: string;
 
     @Column({type:'json',nullable:true})
-    data: any
+    data: any;
 
     @Column({type:"boolean"})
-    active: boolean
+    active: boolean;
 
     @Column({type:"boolean"})
-    enabled: boolean
+    enabled: boolean;
 
     @Column({nullable:true})
-    last_state_id: number = null
+    last_state_id: number = null;
 
     @CreateDateColumn()
     created_at: Date;

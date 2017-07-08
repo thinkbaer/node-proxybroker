@@ -41,62 +41,62 @@ class AsyncQueueTests {
 
     @test
     async enqueueSingleWorkloadAndWaitUntilAllDone() {
-        let p = new Processor()
-        let q = new AsyncWorkerQueue<Workload>(p)
-        await q.pause()
-        expect(q.isPaused()).to.eq(true)
+        let p = new Processor();
+        let q = new AsyncWorkerQueue<Workload>(p);
+        await q.pause();
+        expect(q.isPaused()).to.eq(true);
 
-        q.push(new Workload())
-        q.resume()
-        expect(q.isPaused()).to.eq(false)
-        expect(q.amount()).to.eq(1)
+        q.push(new Workload());
+        q.resume();
+        expect(q.isPaused()).to.eq(false);
+        expect(q.amount()).to.eq(1);
 
-        await q.await()
+        await q.await();
         expect(q.amount()).to.eq(0)
     }
 
     @test
     async enqueueMultipleWorkloadAndWaitUntilAllDone() {
-        let parallel : number = 5
-        let p = new Processor()
-        let q = new AsyncWorkerQueue<Workload>(p, {concurrent:parallel})
+        let parallel : number = 5;
+        let p = new Processor();
+        let q = new AsyncWorkerQueue<Workload>(p, {concurrent:parallel});
 
         for(let i=0;i<20;i++){
-            q.push(new Workload())
-            expect(q.amount()).to.greaterThan(0)
+            q.push(new Workload());
+            expect(q.amount()).to.greaterThan(0);
             expect(q.running()).to.lessThan(parallel+1)
         }
 
-        await q.await()
-        expect(q.running()).to.eq(0)
-        expect(q.enqueued()).to.eq(0)
+        await q.await();
+        expect(q.running()).to.eq(0);
+        expect(q.enqueued()).to.eq(0);
         expect(q.amount()).to.eq(0)
     }
 
     @test
     async enqueueSingleWorkloadAndWaitUntilWorkIsDone() {
-        let p = new Processor()
-        let q = new AsyncWorkerQueue<Workload>(p)
-        await q.pause()
-        expect(q.isPaused()).to.eq(true)
+        let p = new Processor();
+        let q = new AsyncWorkerQueue<Workload>(p);
+        await q.pause();
+        expect(q.isPaused()).to.eq(true);
 
-        let job :QueueJob<Workload> = await q.push(new Workload())
-        expect(q.amount()).to.eq(1)
-        expect(job.isEnqueued()).to.eq(true)
-        expect(job.isStarted()).to.eq(false)
-        expect(job.isFinished()).to.eq(false)
-        q.resume()
-        expect(q.isPaused()).to.eq(false)
+        let job :QueueJob<Workload> = await q.push(new Workload());
+        expect(q.amount()).to.eq(1);
+        expect(job.isEnqueued()).to.eq(true);
+        expect(job.isStarted()).to.eq(false);
+        expect(job.isFinished()).to.eq(false);
+        q.resume();
+        expect(q.isPaused()).to.eq(false);
 
-        await job.starting()
-        expect(job.isEnqueued()).to.eq(false)
-        expect(job.isStarted()).to.eq(true)
-        expect(job.isFinished()).to.eq(false)
+        await job.starting();
+        expect(job.isEnqueued()).to.eq(false);
+        expect(job.isStarted()).to.eq(true);
+        expect(job.isFinished()).to.eq(false);
 
-        await job.done()
-        expect(job.isEnqueued()).to.eq(false)
-        expect(job.isStarted()).to.eq(false)
-        expect(job.isFinished()).to.eq(true)
+        await job.done();
+        expect(job.isEnqueued()).to.eq(false);
+        expect(job.isStarted()).to.eq(false);
+        expect(job.isFinished()).to.eq(true);
         expect(q.amount()).to.eq(0)
     }
 

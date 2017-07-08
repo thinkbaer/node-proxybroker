@@ -10,7 +10,7 @@ import {IJudgeOptions} from "../judge/IJudgeOptions";
 export class JudgeCommand {
 
     command = "judge-ip <ip> <port>";
-    aliases = "j"
+    aliases = "j";
     describe = "Test <ip> with <port> for proxy abilities.";
 
 
@@ -29,22 +29,22 @@ export class JudgeCommand {
     }
 
     async handler(argv: any) {
-        Log.enable = StdConsole.$enabled = argv.verbose
-        let judgeOptions: IJudgeOptions = Judge.default_options()
+        Log.enable = StdConsole.$enabled = argv.verbose;
+        let judgeOptions: IJudgeOptions = Judge.default_options();
         if (argv.config) {
             judgeOptions = Utils.merge(judgeOptions, JSON.parse(argv.config))
         }
 
-        let judge = new Judge(judgeOptions)
-        let booted = await judge.bootstrap()
+        let judge = new Judge(judgeOptions);
+        let booted = await judge.bootstrap();
         if (booted) {
             try {
-                await judge.wakeup()
-                let results = await judge.validate(argv.ip, argv.port)
-                await judge.pending()
+                await judge.wakeup();
+                let results = await judge.validate(argv.ip, argv.port);
+                await judge.pending();
                 console.log(JSON.stringify(results, null, 2))
             } catch (err) {
-                Log.error(err)
+                Log.error(err);
                 await judge.pending()
             }
         } else {

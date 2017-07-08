@@ -18,8 +18,8 @@ if (dns['getServers'] && dns['getServers']().length < 2) {
 export default class DomainUtils {
 
 
-    static IP_REGEX = /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$/
-    static HOSTS: { host: string, ip: string }[] = []
+    static IP_REGEX = /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$/;
+    static HOSTS: { host: string, ip: string }[] = [];
 
     static domainLookup(domain: string): Promise<{ addr: string, family: number }> {
 
@@ -47,7 +47,7 @@ export default class DomainUtils {
                 })
             }).then((hostnames: string[]) => {
                 // TODO reload host if not loaded
-                let hosts = _.filter(DomainUtils.HOSTS, {ip: ip})
+                let hosts = _.filter(DomainUtils.HOSTS, {ip: ip});
                 if (!_.isEmpty(hosts)) {
                     hosts.forEach(_x => {
                         hostnames.unshift(_x.host)
@@ -65,10 +65,10 @@ export default class DomainUtils {
     }
 
     static getHostsSync(): { host: string, ip: string }[] {
-        let content = PlatformUtils.getHostFileContent()
-        let hosts: { host: string, ip: string }[] = []
+        let content = PlatformUtils.getHostFileContent();
+        let hosts: { host: string, ip: string }[] = [];
         content.split(/\r?\n/).map(function (x: string) {
-            var matches = /^\s*?([^#]+?)\s+([^#]+?)$/.exec(x)
+            var matches = /^\s*?([^#]+?)\s+([^#]+?)$/.exec(x);
             if (matches && matches.length === 3) {
                 matches[2].trim().split(' ').forEach(_x => {
                     hosts.push({host: _x, ip: matches[1]}); // host:ip

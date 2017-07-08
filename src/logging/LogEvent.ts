@@ -5,13 +5,13 @@ import * as moment from "moment";
 
 export default class LogEvent {
 
-    level: 'INFO'
+    level: 'INFO';
 
-    message: string = ''
+    message: string = '';
 
-    args: any[] = []
+    args: any[] = [];
 
-    time: Date
+    time: Date;
 
     constructor(opts: { level?: string, message?: string, args?: any[], time?: Date, [k: string]: any }) {
         if (opts.time) {
@@ -25,16 +25,16 @@ export default class LogEvent {
     }
 
     out(): string {
-        let msg = ''
+        let msg = '';
         if (!_.isEmpty(this.args)) {
-            let _msgs:string[] = []
+            let _msgs:string[] = [];
             this.args.forEach(x => {
                 if(_.isString(x)){
                     _msgs.push(x)
                 }else{
                     _msgs.push('\n'+JSON.stringify(x, null, 2))
                 }
-            })
+            });
             msg = _msgs.join('; ')
 
         }

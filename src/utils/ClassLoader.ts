@@ -22,25 +22,25 @@ export class ClassLoader {
          let _obj:T  = tmp as T
          */
 
-        let _obj:T = Reflect.construct(obj,args)
+        let _obj:T = Reflect.construct(obj,args);
         return _obj
     }
 
     static importClassesFromAny(o: StringOrFunction[]):Function[] {
 
-        let klasses: Function[] = []
+        let klasses: Function[] = [];
 
         o.forEach(x => {
             if (Utils.isString(x)) {
-                let _x = PlatformUtils.pathNormilize(PlatformUtils.pathResolve(<string>x))
-                    let exported = ClassLoader.importClassesFromDirectories([_x])
+                let _x = PlatformUtils.pathNormilize(PlatformUtils.pathResolve(<string>x));
+                    let exported = ClassLoader.importClassesFromDirectories([_x]);
                     klasses = klasses.concat.apply(klasses,exported)
             } else if (x instanceof Function) {
                 klasses.push(x)
             } else {
                 throw new Error('TODO: unknown '+x)
             }
-        })
+        });
         return klasses
     }
 
@@ -61,8 +61,8 @@ export class ClassLoader {
     static importClassesFromDirectories(directories: string[], formats = [".js", ".ts"]): Function[] {
 
         const allFiles = directories.reduce((allDirs, dir) => {
-            let x = PlatformUtils.pathNormilize(dir)
-            let y = PlatformUtils.load("glob").sync(x)
+            let x = PlatformUtils.pathNormilize(dir);
+            let y = PlatformUtils.load("glob").sync(x);
             return allDirs.concat(y);
         }, [] as string[]);
 

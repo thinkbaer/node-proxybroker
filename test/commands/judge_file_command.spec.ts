@@ -1,6 +1,6 @@
 import * as mocha from 'mocha';
 describe('', () => {
-})
+});
 
 
 import {suite, test, timeout} from "mocha-typescript";

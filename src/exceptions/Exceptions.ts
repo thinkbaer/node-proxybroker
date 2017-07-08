@@ -3,12 +3,12 @@
 import {NestedException} from "./NestedException";
 export default class Exceptions {
 
-    static EADDRINUSE = 'ADDRINUSE'
+    static EADDRINUSE = 'ADDRINUSE';
 
     static handle(err: Error):NestedException{
-        let msg = err.message.trim()
+        let msg = err.message.trim();
 
-        let classification = 'UNCLASSIFIED'
+        let classification = 'UNCLASSIFIED';
         if(/ESOCKETTIMEDOUT/.test(msg)){
             classification = 'SOCKET_TIMEDOUT'
         }else if(/ETIMEDOUT/.test(msg)){
@@ -26,8 +26,8 @@ export default class Exceptions {
         }else if(/EPROTO.*SSL.*GET_SERVER_HELLO/.test(msg)){
             classification = 'SSL_UNSUPPORTED'
         }else if(/^(HTTP\/\d.\d)\s(\d{3})\s(.+)$/.test(msg)){
-            let match = msg.match(/^(HTTP\/\d.\d)\s(\d{3})\s(.+)$/)
-            classification = 'HTTP_ERROR_'+match[2]
+            let match = msg.match(/^(HTTP\/\d.\d)\s(\d{3})\s(.+)$/);
+            classification = 'HTTP_ERROR_'+match[2];
             err.message = match[3]
         }
         return new NestedException(err,classification);

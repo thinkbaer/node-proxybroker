@@ -7,8 +7,8 @@ export class NestedException extends Error {
     private _error : Error;
 
     constructor(err: Error, code:string){
-        super()
-        this._error = err
+        super();
+        this._error = err;
         this._code = code
     }
 

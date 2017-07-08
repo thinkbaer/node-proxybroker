@@ -5,14 +5,14 @@ import {IProxyData} from "../../../src/proxy/IProxyData";
 
 export class MockedProxies01 extends AbstractProvider {
 
-    url: string = 'http://localhost:8000/tada01'
+    url: string = 'http://localhost:8000/tada01';
 
-    name: string = 'mockproxy01'
+    name: string = 'mockproxy01';
 
     variants: IProviderVariant[] = [
         {type: 'anonym'},
         {type: 'https'}
-    ]
+    ];
 
 
     get(): Promise<IProxyData[]> {

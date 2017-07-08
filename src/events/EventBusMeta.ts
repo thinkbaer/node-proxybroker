@@ -13,7 +13,7 @@ export default class EventBusMeta {
 
     private static self: EventBusMeta;
 
-    private $types: EventListenerDef[] = []
+    private $types: EventListenerDef[] = [];
 
     static $() {
         if (!this.self) {
@@ -24,9 +24,9 @@ export default class EventBusMeta {
 
 
     public getNamespacesForEvent(o: any): string[] {
-        let ns: string[] = []
+        let ns: string[] = [];
         for (let i = 0; i < this.$types.length; i++) {
-            let $t = this.$types[i]
+            let $t = this.$types[i];
             if (o instanceof $t.eventClazz) {
                 ns.push($t.namespace)
             }
@@ -35,9 +35,9 @@ export default class EventBusMeta {
     }
 
     public getSubscriberInfo(o: Function): SubscriberInfo[] {
-        let list: SubscriberInfo[] = []
+        let list: SubscriberInfo[] = [];
         for (let i = 0; i < this.$types.length; i++) {
-            let $t = this.$types[i]
+            let $t = this.$types[i];
             if (o instanceof $t.holderClazz.constructor) {
                 list.push({
                     namespace: $t.namespace,
@@ -50,14 +50,14 @@ export default class EventBusMeta {
 
 
     public register(clazz: Function, method: string, descriptor: PropertyDescriptor, args: any[]) {
-        let self = this
+        let self = this;
         args.forEach(_eventClass => {
             let def: EventListenerDef = {
                 namespace: _eventClass.name,
                 eventClazz: _eventClass,
                 method: method,
                 holderClazz: clazz
-            }
+            };
             self.$types.push(def)
         })
     }

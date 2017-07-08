@@ -14,9 +14,9 @@ import {ProxyServer} from "../../src/server/ProxyServer";
 
 // https://www.proxynova.com/proxy-articles/proxy-anonymity-levels-explained
 
-const SSL_PATH = '../_files/ssl'
-const JUDGE_LOCAL_HOST: string = 'judge.local'
-const PROXY_LOCAL_HOST: string = 'proxy.local'
+const SSL_PATH = '../_files/ssl';
+const JUDGE_LOCAL_HOST: string = 'judge.local';
+const PROXY_LOCAL_HOST: string = 'proxy.local';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
@@ -35,7 +35,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
  * + L3 - Transparent Proxies
  */
 
-let debug = false
+let debug = false;
 
 interface Variation {
     title: string
@@ -134,28 +134,28 @@ suite('Judge proxy variations', () => {
             debug: debug,
             judge_options: {}
         }
-    ]
+    ];
 
     variations.forEach((data) => {
 
         @suite(data.title) class Clazz {
 
-            static proxy_port = 5008
-            static proxy_ip = PROXY_LOCAL_HOST
-            static judge_protocol = (data.judge_options.key_file && data.judge_options.cert_file  ? 'https' : 'http')
-            static proxy_protocol = (data.proxy_options.key_file && data.proxy_options.cert_file  ? 'https' : 'http')
+            static proxy_port = 5008;
+            static proxy_ip = PROXY_LOCAL_HOST;
+            static judge_protocol = (data.judge_options.key_file && data.judge_options.cert_file  ? 'https' : 'http');
+            static proxy_protocol = (data.proxy_options.key_file && data.proxy_options.cert_file  ? 'https' : 'http');
 
-            static judge : Judge = null
-            static proxy_server : ProxyServer = null
+            static judge : Judge = null;
+            static proxy_server : ProxyServer = null;
 
             static async before() {
-                Log.enable = data.debug
+                Log.enable = data.debug;
 
                 let proxy_options = Object.assign({}, data.proxy_options, {
                     url: this.proxy_protocol + '://' + this.proxy_ip + ':' + this.proxy_port,
                     _debug: data.debug,
-                })
-                this.proxy_server = new ProxyServer(proxy_options)
+                });
+                this.proxy_server = new ProxyServer(proxy_options);
 
                 let opts = {
                     selftest: false,
@@ -167,25 +167,25 @@ suite('Judge proxy variations', () => {
                         local_ip:'127.0.0.1',
                         timeout: 1000
                     }
-                }
-                let options = Object.assign(opts, data.judge_options)
-                this.judge = new Judge(options)
+                };
+                let options = Object.assign(opts, data.judge_options);
+                this.judge = new Judge(options);
 
-                let erg = await this.judge.bootstrap()
-                expect(erg).to.equal(true)
+                let erg = await this.judge.bootstrap();
+                expect(erg).to.equal(true);
 
-                erg = await this.judge.wakeup()
-                expect(erg).to.equal(true)
+                erg = await this.judge.wakeup();
+                expect(erg).to.equal(true);
 
                 await this.proxy_server.start()
             }
 
 
             static async after() {
-                await this.proxy_server.stop()
-                await this.judge.pending()
-                Log.enable = true
-                this.proxy_server = null
+                await this.proxy_server.stop();
+                await this.judge.pending();
+                Log.enable = true;
+                this.proxy_server = null;
                 this.judge = null
             }
 
@@ -193,25 +193,25 @@ suite('Judge proxy variations', () => {
             @test
             async request() {
 
-                let proxy_url = Clazz.proxy_server.url()
-                let judgeReq = Clazz.judge.createRequest(proxy_url)
-                judgeReq._debug = data.debug
+                let proxy_url = Clazz.proxy_server.url();
+                let judgeReq = Clazz.judge.createRequest(proxy_url);
+                judgeReq._debug = data.debug;
 
                 try {
-                    let rrm = await judgeReq.performRequest()
-                    let log = rrm.logToString()
+                    let rrm = await judgeReq.performRequest();
+                    let log = rrm.logToString();
 
                     if (judgeReq._debug) {
-                        console.log('-------->')
-                        console.log(log)
+                        console.log('-------->');
+                        console.log(log);
                         console.log('<--------')
                     }
 
-                    expect(judgeReq.level).to.be.equal(data.proxy_options.level)
-                    expect(log).to.match(/Judge connected/)
+                    expect(judgeReq.level).to.be.equal(data.proxy_options.level);
+                    expect(log).to.match(/Judge connected/);
                     expect(log).to.match(new RegExp('Proxy is L' + data.proxy_options.level))
                 } catch (err) {
-                    console.error(err)
+                    console.error(err);
                     throw err
                 }
             }
@@ -219,7 +219,7 @@ suite('Judge proxy variations', () => {
 
     })
 
-})
+});
 
 process.on('uncaughtException', function (err: Error) {
     console.log(err);

@@ -14,11 +14,11 @@ import {IJudgeOptions} from "./judge/IJudgeOptions";
 
 class Main {
 
-    storage : Storage
+    storage : Storage;
 
-    proxy_data_selector: ProxyDataSelector
+    proxy_data_selector: ProxyDataSelector;
 
-    proxy_validation_controller: ProxyValidationController
+    proxy_validation_controller: ProxyValidationController;
 
 
     initConfig() : Promise<void> {
@@ -30,14 +30,14 @@ class Main {
                 // find in proxyborker
                 {type: 'file', file: '${argv.configfile}'},
             ]
-        })
+        });
         return Promise.resolve()
     }
 
 
     async initStorage() : Promise<void>{
 
-        this.storage = await Storage.$()
+        this.storage = await Storage.$();
         return Promise.resolve()
 
     }
@@ -47,10 +47,10 @@ class Main {
     boot(){
 
 
-        this.proxy_data_selector = new ProxyDataSelector(this.storage)
-        EventBus.register(this.proxy_data_selector)
+        this.proxy_data_selector = new ProxyDataSelector(this.storage);
+        EventBus.register(this.proxy_data_selector);
 
-        let options:IJudgeOptions = Config.get('judge') || {}
+        let options:IJudgeOptions = Config.get('judge') || {};
         this.proxy_validation_controller = new ProxyValidationController(options,this.storage)
 
     }
@@ -58,5 +58,5 @@ class Main {
 
 }
 
-let main = new Main()
+let main = new Main();
 // main.boot()

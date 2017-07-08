@@ -9,17 +9,17 @@ import {FetchProviderProxyListCommand} from "./commands/FetchProviderProxyListCo
 
 
 process.on('uncaughtException',(err:Error) => {
-    console.error(err)
+    console.error(err);
     process.exit()
-})
+});
 
 process.on('unhandledRejection',(err:Error) => {
-    console.error(err)
+    console.error(err);
     process.exit()
-})
+});
 
 
-EventBus.register(new StdConsole())
+EventBus.register(new StdConsole());
 
 require("yargonaut")
     .style("blue")

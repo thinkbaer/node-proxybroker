@@ -6,18 +6,18 @@ import TodoException from "../exceptions/TodoException";
 
 export class Progress extends EventEmitter {
 
-    progressing: boolean = false
+    progressing: boolean = false;
     //active:number=0
 
-    done:number=0
-    enqueued:number=0
+    done:number=0;
+    enqueued:number=0;
 
     constructor(){
         super()
     }
 
     waitTillDone(){
-        let self = this
+        let self = this;
         return new Promise((resolve, reject) => {
             if(!self.progressing){
                 resolve(self.progressing)
@@ -30,11 +30,11 @@ export class Progress extends EventEmitter {
     }
 
     startWhenReady():Promise<boolean>{
-        let self = this
-        let q = self.enqueued++
+        let self = this;
+        let q = self.enqueued++;
         return new Promise((resolve, reject) => {
             if(!self.progressing){
-                self.progressing = true
+                self.progressing = true;
                 resolve(self.progressing)
             }else{
                 self.once('stop_'+q,function () {
@@ -46,8 +46,8 @@ export class Progress extends EventEmitter {
 
 
     ready(){
-        this.done++
-        this.progressing = false
+        this.done++;
+        this.progressing = false;
         if(this.done == this.enqueued){
             this.emit('empty')
         }else if(this.done < this.enqueued){

@@ -5,7 +5,7 @@ import subscribe from "../events/decorator/subscribe"
 
 export default class StdConsole {
 
-    static $enabled = false
+    static $enabled = false;
 
     @subscribe(ReqResEvent)
     onReqRes(rre: ReqResEvent){

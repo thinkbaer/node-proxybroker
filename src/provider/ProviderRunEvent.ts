@@ -7,7 +7,7 @@ import {IProviderVariantId} from "./IProviderVariantId";
 
 export class ProviderRunEvent {
 
-    variants: IProviderVariantId[] = []
+    variants: IProviderVariantId[] = [];
 
     constructor(variants:IProviderVariantId|IProviderVariantId[]){
         if(_.isArray(variants)){

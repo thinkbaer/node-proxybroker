@@ -1,6 +1,6 @@
 import * as mocha from 'mocha';
 describe('', () => {
-})
+});
 
 
 import {suite, test, slow, timeout, pending} from "mocha-typescript";
@@ -26,32 +26,32 @@ class ConfigTests {
      */
     @test
     'Load configuration for sqlite in memory' () {
-        Config['$self'] = null
-        Config.options({configs:[{type:'file',file:__dirname + '/files/config02.json'}]})
+        Config['$self'] = null;
+        Config.options({configs:[{type:'file',file:__dirname + '/files/config02.json'}]});
 
-        let storageOptions = Config.get('storage')
-        expect(storageOptions).not.to.be.null
-        let storage = new Storage(storageOptions)
-        let options : IStorageOptions = storage['options']
+        let storageOptions = Config.get('storage');
+        expect(storageOptions).not.to.be.null;
+        let storage = new Storage(storageOptions);
+        let options : IStorageOptions = storage['options'];
         expect(options.type).to.eq("sqlite")
     }
 
     @test
     async 'Load configuration for sqlite in file'() {
-        Config['$self'] = null
-        Config.options({configs:[{type:'file',file:__dirname + '/files/config03.json'}]})
-        Config.jar().merge({workdir:__dirname})
+        Config['$self'] = null;
+        Config.options({configs:[{type:'file',file:__dirname + '/files/config03.json'}]});
+        Config.jar().merge({workdir:__dirname});
 
-        expect(Config.get('workdir')).to.eq( __dirname )
-        let storageOptions = Config.get('storage')
-        expect(storageOptions).not.to.be.null
-        let storage = new Storage(storageOptions)
+        expect(Config.get('workdir')).to.eq( __dirname );
+        let storageOptions = Config.get('storage');
+        expect(storageOptions).not.to.be.null;
+        let storage = new Storage(storageOptions);
 
-        let options : IStorageOptions = storage['options']
-        expect(options.type).to.eq("sqlite")
+        let options : IStorageOptions = storage['options'];
+        expect(options.type).to.eq("sqlite");
 
-        await storage.init()
-        expect(PlatformUtils.fileExist(__dirname + '/temp/test03.db')).to.be.true
+        await storage.init();
+        expect(PlatformUtils.fileExist(__dirname + '/temp/test03.db')).to.be.true;
         fs.unlinkSync(__dirname + '/temp/test03.db')
     }
 

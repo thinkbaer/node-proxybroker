@@ -16,7 +16,7 @@ export abstract class AbstractProvider implements IProvider {
 
     private _variant : IProviderVariant = null;
 
-    private _proxyies : IProxyData[] = []
+    private _proxyies : IProxyData[] = [];
 
     constructor() {}
 
@@ -41,7 +41,7 @@ export abstract class AbstractProvider implements IProvider {
     }
 
     push(def:IProxyData){
-        let found = _.find(this._proxyies,def)
+        let found = _.find(this._proxyies,def);
         if(!found){
             this._proxyies.push(def)
         }

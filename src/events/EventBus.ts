@@ -10,11 +10,11 @@ import {EventChannel} from "./EventChannel";
 
 export class EventBus {
 
-    private static self: EventBus = null
+    private static self: EventBus = null;
 
-    private inc:number = 0
+    private inc:number = 0;
 
-    private channels: { [k: string]: EventChannel } = {}
+    private channels: { [k: string]: EventChannel } = {};
 
 
     static $() {
@@ -37,30 +37,30 @@ export class EventBus {
 
     static register(o: any): void {
         // support multiple subsriber in one class
-        let infos = EventBusMeta.$().getSubscriberInfo(o)
+        let infos = EventBusMeta.$().getSubscriberInfo(o);
         if (_.isEmpty(infos)){
             throw new Error('registration went wrong')
         }
 
-        let self = this
+        let self = this;
         infos.forEach(info => {
-            let channel = self.$().getOrCreateChannel(info.namespace)
+            let channel = self.$().getOrCreateChannel(info.namespace);
             channel.register(o, info.method)
         })
     }
 
     static unregister(o: any): void {
-        let infos = EventBusMeta.$().getSubscriberInfo(o)
+        let infos = EventBusMeta.$().getSubscriberInfo(o);
         if (_.isEmpty(infos)){
             throw new Error('registration went wrong')
         }
-        let self = this
+        let self = this;
         infos.forEach(info => {
-            let channel = self.$().getOrCreateChannel(info.namespace)
-            channel.unregister(o)
+            let channel = self.$().getOrCreateChannel(info.namespace);
+            channel.unregister(o);
             if(channel.size == 0){
-                channel = self.$().channels[info.namespace]
-                channel.removeAllListeners()
+                channel = self.$().channels[info.namespace];
+                channel.removeAllListeners();
                 delete self.$().channels[info.namespace]
             }
         })
@@ -69,11 +69,11 @@ export class EventBus {
         // static unregister
 
     private static postOnChannel(namespace: string, o: any): Promise<any> {
-        let self = this
+        let self = this;
         return new Promise(async (resolve, reject) => {
-            let channel = self.$().getOrCreateChannel(namespace)
+            let channel = self.$().getOrCreateChannel(namespace);
             try {
-                let res = await channel.post(o)
+                let res = await channel.post(o);
                 resolve(res)
             } catch (e) {
                 reject(e)
@@ -84,15 +84,15 @@ export class EventBus {
     static post(o: any): Promise<any> {
 
         // TODO check is supported type?
-        let self = this
-        let info = EventBusMeta.$().getNamespacesForEvent(o)
+        let self = this;
+        let info = EventBusMeta.$().getNamespacesForEvent(o);
         if(info.length){
             self.$().inc++
         }
-        let promises: Promise<any>[] = []
+        let promises: Promise<any>[] = [];
         info.forEach(_namespace => {
             promises.push(self.postOnChannel(_namespace,o))
-        })
+        });
 
         return Promise.all(promises)
     }

@@ -1,6 +1,6 @@
 import * as mocha from 'mocha';
 describe('', () => {
-})
+});
 
 
 import {suite, test, slow, timeout, pending} from "mocha-typescript";
@@ -16,7 +16,7 @@ import {IpAddrState} from "../../src/storage/entity/IpAddrState";
 import {IpAddr} from "../../src/storage/entity/IpAddr";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 
-let storage: Storage = null
+let storage: Storage = null;
 
 @suite('storage/entity/*')
 class EntitiesTest {
@@ -32,58 +32,58 @@ class EntitiesTest {
     }
 
     static async after() {
-        await storage.shutdown()
+        await storage.shutdown();
         storage = Storage['$$'] = null
     }
 
 
     @test
     async 'entity: IpAddr'() {
-        let e = new IpAddr()
-        e.ip = '127.0.0.1'
-        e.port = 12345
+        let e = new IpAddr();
+        e.ip = '127.0.0.1';
+        e.port = 12345;
 
-        expect(e.blocked).to.be.false
-        expect(e.to_delete).to.be.false
+        expect(e.blocked).to.be.false;
+        expect(e.to_delete).to.be.false;
 
-        let c = await storage.connect()
-        let ne = await c.persist(e)
+        let c = await storage.connect();
+        let ne = await c.persist(e);
 
-        await c.close()
-        expect(ne).to.deep.eq(e)
+        await c.close();
+        expect(ne).to.deep.eq(e);
 
-        c = await storage.connect()
-        ne = await c.manager.findOneById(IpAddr, ne.id)
-        await c.close()
-        e.flattenDates()
-        expect(ne).to.deep.eq(e)
+        c = await storage.connect();
+        ne = await c.manager.findOneById(IpAddr, ne.id);
+        await c.close();
+        e.flattenDates();
+        expect(ne).to.deep.eq(e);
 
-        e = new IpAddr()
-        e.ip = '127.0.0.2'
-        e.port = 12345
+        e = new IpAddr();
+        e.ip = '127.0.0.2';
+        e.port = 12345;
 
-        expect(e.supportsHttp()).to.be.false
-        expect(e.supportsHttps()).to.be.false
-        expect(e.supportsBoth()).to.be.false
+        expect(e.supportsHttp()).to.be.false;
+        expect(e.supportsHttps()).to.be.false;
+        expect(e.supportsBoth()).to.be.false;
 
-        e.addProtocol(ProtocolType.HTTP)
-        expect(e.supportsHttp()).to.be.true
-        expect(e.supportsHttps()).to.be.false
-        expect(e.supportsBoth()).to.be.false
+        e.addProtocol(ProtocolType.HTTP);
+        expect(e.supportsHttp()).to.be.true;
+        expect(e.supportsHttps()).to.be.false;
+        expect(e.supportsBoth()).to.be.false;
 
-        e.addProtocol(ProtocolType.HTTPS)
-        expect(e.supportsHttp()).to.be.true
-        expect(e.supportsHttps()).to.be.true
-        expect(e.supportsBoth()).to.be.true
+        e.addProtocol(ProtocolType.HTTPS);
+        expect(e.supportsHttp()).to.be.true;
+        expect(e.supportsHttps()).to.be.true;
+        expect(e.supportsBoth()).to.be.true;
 
-        e.removeProtocol(ProtocolType.HTTP)
-        expect(e.supportsHttp()).to.be.false
-        expect(e.supportsHttps()).to.be.true
-        expect(e.supportsBoth()).to.be.false
+        e.removeProtocol(ProtocolType.HTTP);
+        expect(e.supportsHttp()).to.be.false;
+        expect(e.supportsHttps()).to.be.true;
+        expect(e.supportsBoth()).to.be.false;
 
-        e.removeProtocol(ProtocolType.HTTPS)
-        expect(e.supportsHttp()).to.be.false
-        expect(e.supportsHttps()).to.be.false
+        e.removeProtocol(ProtocolType.HTTPS);
+        expect(e.supportsHttp()).to.be.false;
+        expect(e.supportsHttps()).to.be.false;
         expect(e.supportsBoth()).to.be.false
     }
 
@@ -99,18 +99,18 @@ class EntitiesTest {
 
     @test
     async 'entity: Variable'() {
-        let e = new Variable()
-        e.key = 'test'
-        e.value = 'data'
+        let e = new Variable();
+        e.key = 'test';
+        e.value = 'data';
 
-        let c = await storage.connect()
-        let ne = await c.persist(e)
-        await c.close()
-        expect(ne).to.deep.eq(e)
+        let c = await storage.connect();
+        let ne = await c.persist(e);
+        await c.close();
+        expect(ne).to.deep.eq(e);
 
-        c = await storage.connect()
-        ne = await c.connection.manager.findOneById(Variable, 'test')
-        await c.close()
+        c = await storage.connect();
+        ne = await c.connection.manager.findOneById(Variable, 'test');
+        await c.close();
         expect(ne).to.deep.eq(e)
 
     }

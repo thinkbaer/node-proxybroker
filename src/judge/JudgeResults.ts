@@ -3,35 +3,35 @@ import {JudgeResult} from "./JudgeResult";
 import {ProtocolType} from "../lib/ProtocolType";
 export class JudgeResults {
 
-    host:string
+    host:string;
 
-    ip: string
+    ip: string;
 
-    port: number
+    port: number;
 
-    geo:boolean
+    geo:boolean;
 
-    country_code: string
+    country_code: string;
 
-    country_name: string
+    country_name: string;
 
-    region_code: string
+    region_code: string;
 
-    region_name: string
+    region_name: string;
 
-    city: string
+    city: string;
 
-    zip_code: string
+    zip_code: string;
 
-    time_zone: string
+    time_zone: string;
 
-    latitude: number
+    latitude: number;
 
-    longitude: number
+    longitude: number;
 
-    metro_code: number
+    metro_code: number;
 
-    http: JudgeResult = new JudgeResult(ProtocolType.HTTP)
+    http: JudgeResult = new JudgeResult(ProtocolType.HTTP);
 
     https: JudgeResult = new JudgeResult(ProtocolType.HTTPS)
 }

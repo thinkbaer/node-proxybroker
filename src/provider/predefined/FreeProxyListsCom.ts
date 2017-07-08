@@ -10,15 +10,15 @@ import {ProxyType} from "../../lib/ProxyType";
 import * as _ from 'lodash'
 import {Log} from "../../logging/Log";
 
-const NAME = 'freeproxylists'
-const BASE_URL = 'http://www.freeproxylists.com'
-const ip_regex = /&gt;(\d+\.\d+\.\d+\.\d+)&lt;\/td&gt;&lt;td&gt;(\d+)&lt;/g
+const NAME = 'freeproxylists';
+const BASE_URL = 'http://www.freeproxylists.com';
+const ip_regex = /&gt;(\d+\.\d+\.\d+\.\d+)&lt;\/td&gt;&lt;td&gt;(\d+)&lt;/g;
 
 export class FreeProxyListsCom extends AbstractProvider {
 
-    url: string = BASE_URL
+    url: string = BASE_URL;
 
-    name: string = NAME
+    name: string = NAME;
 
     variants: IProviderVariant[] = [
         {
@@ -42,7 +42,7 @@ export class FreeProxyListsCom extends AbstractProvider {
             path_load: 'elite',
             flags: ProxyType.HTTP_ANON
         }
-    ]
+    ];
 
 
 
@@ -52,42 +52,42 @@ export class FreeProxyListsCom extends AbstractProvider {
 
 
     async  get(variant?: IProviderVariant):Promise<IProxyData[]> {
-        let self = this
+        let self = this;
         if (variant) {
             this.selectVariant(variant)
         }
 
-        Log.info('FreeProxyListsCom ('+this.url+') selected variant is ' + this.variant.type)
-        let cookies = request.jar()
-        let req = await request.get(this.url + '/' + this.variant.path, {jar: cookies, resolveWithFullResponse: false})
+        Log.info('FreeProxyListsCom ('+this.url+') selected variant is ' + this.variant.type);
+        let cookies = request.jar();
+        let req = await request.get(this.url + '/' + this.variant.path, {jar: cookies, resolveWithFullResponse: false});
 
-        let matched_ids: string[] = []
+        let matched_ids: string[] = [];
         let matcher: any;
         while ((matcher = this.variant.pattern.exec(req)) !== null) {
             matched_ids.push(matcher[2])
         }
 
-        let promises: Promise<any>[] = []
+        let promises: Promise<any>[] = [];
         matched_ids.forEach(id => {
-            let url = self.url + '/load_' + self.variant.path_load + '_d' + id + '.html'
+            let url = self.url + '/load_' + self.variant.path_load + '_d' + id + '.html';
             let r = request.get(url, {jar: cookies})
                 .then((html: string) => {
-                    Log.info('FreeProxyListsCom ('+this.url+') fetch url = ' + url)
-                    let matcher: any
+                    Log.info('FreeProxyListsCom ('+this.url+') fetch url = ' + url);
+                    let matcher: any;
 
-                    let inc = 0
+                    let inc = 0;
                     while ((matcher = ip_regex.exec(html)) !== null) {
                         let proxyData: IProxyData = {
                             ip: matcher[1],
                             port: parseInt(matcher[2])
-                        }
-                        inc++
+                        };
+                        inc++;
                         self.push(proxyData)
                     }
                     Log.info('FreeProxyListsCom (' + url + ') found='+inc + ' all='+self.proxies.length)
-                })
+                });
             promises.push(r)
-        })
+        });
 
         return Promise.all(promises).then(() => {
             return self.proxies

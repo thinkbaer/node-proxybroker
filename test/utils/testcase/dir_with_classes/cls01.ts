@@ -2,11 +2,11 @@
 
 export class Cls01 {
 
-    somename : string = 'somename'
+    somename : string = 'somename';
 
-    public othername : string = 'othername'
+    public othername : string = 'othername';
 
-    private someothername : string = 'someothername'
+    private someothername : string = 'someothername';
 
 
     constructor(){

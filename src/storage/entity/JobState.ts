@@ -7,57 +7,57 @@ import {Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn} from
 export class JobState {
 
     @PrimaryGeneratedColumn()
-    id: number
+    id: number;
 
 
     @Column()
-    job_id: number
+    job_id: number;
 
     @Column({type:'datetime',nullable:true})
-    start: Date
+    start: Date;
 
     @Column({type:'datetime',nullable:true})
-    stop: Date
+    stop: Date;
 
     @Column()
-    name: string
+    name: string;
 
     @Column()
-    type: string
+    type: string;
 
     @Column({nullable:true})
-    duration: number
+    duration: number;
 
     @Column()
-    count: number = 0
+    count: number = 0;
 
     @Column()
-    selected: number = 0
+    selected: number = 0;
 
 
     @Column()
-    added: number = 0
+    added: number = 0;
 
     @Column()
-    skipped: number = 0
+    skipped: number = 0;
 
     @Column()
-    blocked: number = 0
+    blocked: number = 0;
 
     @Column()
-    updated: number = 0
+    updated: number = 0;
 
     @Column()
-    validated: number = 0
+    validated: number = 0;
 
     @Column()
-    broken: number = 0
+    broken: number = 0;
 
     @Column({nullable:true})
-    error_code: string
+    error_code: string;
 
     @Column({nullable:true})
-    error_message: string
+    error_message: string;
 
     @CreateDateColumn()
     created_at: Date;

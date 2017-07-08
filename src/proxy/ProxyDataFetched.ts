@@ -6,13 +6,13 @@ import {JobState} from "../storage/entity/JobState";
 
 export class ProxyDataFetched {
 
-    jobState:JobState
+    jobState:JobState;
 
-    list: IProxyData[] = []
+    list: IProxyData[] = [];
 
 
     constructor(list: IProxyData | IProxyData[], jobState?: JobState){
-        this.jobState = jobState
+        this.jobState = jobState;
         if(!this.jobState){
             this.jobState = new JobState()
         }

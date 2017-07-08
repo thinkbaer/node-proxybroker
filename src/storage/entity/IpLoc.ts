@@ -8,37 +8,37 @@ import {Column, CreateDateColumn, PrimaryColumn, UpdateDateColumn} from "typeorm
 export class IpLoc {
 
     @PrimaryColumn({type:"varchar",length:15})
-    ip: string
+    ip: string;
 
     @Column({nullable:true})
-    country_code: string
+    country_code: string;
 
     @Column({nullable:true})
-    country_name: string
+    country_name: string;
 
     @Column({nullable:true})
-    region_code: string
+    region_code: string;
 
     @Column({nullable:true})
-    region_name: string
+    region_name: string;
 
     @Column({nullable:true})
-    city: string
+    city: string;
 
     @Column({nullable:true})
-    zip_code: string
+    zip_code: string;
 
     @Column({nullable:true})
-    time_zone: string
+    time_zone: string;
 
     @Column({nullable:true})
-    metro_code: number
+    metro_code: number;
 
     @Column({type:'float',nullable:true})
-    latitude: number
+    latitude: number;
 
     @Column({type:'float',nullable:true})
-    longitude: number
+    longitude: number;
 
     @CreateDateColumn()
     created_at: Date;

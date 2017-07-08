@@ -149,13 +149,18 @@ configuration parameter
 Fetcher control in configuration? Define if some fetcher should be
 excluded.
 
-@TASK:{counter:task} 20170707 minor +
+[.line-through]#@TASK:{counter:task} 20170707 minor# +
 Impl. ProviderManager
 
 * schedule fetcher
 ** make this configurable (offset)
 * fetcher statistics
 ** count proxies / new / existing
+
+@TASK:{counter:task} 20170708 +
+Write documentation for the configuration possible configuration
+settings.
+
 
 
 

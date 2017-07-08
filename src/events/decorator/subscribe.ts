@@ -25,11 +25,11 @@ export function decorate(handleDescriptor: Function, entryArgs: any[]) {
 
 function handleDescriptor(target: Function, key: any, descriptor: PropertyDescriptor, ...args: any[]) {
     // console.log(target,key,descriptor,args)
-    EventBusMeta.$().register(target, key, descriptor, args.shift())
+    EventBusMeta.$().register(target, key, descriptor, args.shift());
     return descriptor;
 }
 
 export default function subscribe(clazz: Function,...args:any[]) {
-    let _args = Array.prototype.slice.call(arguments)
+    let _args = Array.prototype.slice.call(arguments);
     return decorate(handleDescriptor, _args)
 }

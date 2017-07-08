@@ -17,8 +17,8 @@ import {ProxyValidationController} from "../proxy/ProxyValidationController";
 
 export class JudgeFileCommand {
 
-    command = "judge-file <file> [outputformat]"
-    aliases = 'jf'
+    command = "judge-file <file> [outputformat]";
+    aliases = 'jf';
     describe = "Test a list with addresses in <file> for proxy abilities. (Format: ip:port\\n)";
 
     builder(yargs: any) {
@@ -42,34 +42,34 @@ export class JudgeFileCommand {
     }
 
     async handler(argv: any):Promise<any> {
-        Log.enable = StdConsole.$enabled = argv.verbose
+        Log.enable = StdConsole.$enabled = argv.verbose;
 
         if (PlatformUtils.fileExist(argv.file)) {
-            let buffer = fs.readFileSync(argv.file)
-            let data = buffer.toString('utf-8').trim()
-            let list: ProxyData[] = []
+            let buffer = fs.readFileSync(argv.file);
+            let data = buffer.toString('utf-8').trim();
+            let list: ProxyData[] = [];
 
             data.split(/\n/).forEach((value, index, array) => {
-                let d = value.trim().split(/:|;/)
+                let d = value.trim().split(/:|;/);
                 // TODO check ip pattern
                 if (d.length == 2 && d[0] && /[1-9]\d*/.test(d[1])) {
                     list.push(new ProxyData(d[0], parseInt(d[1])))
                 }
-            })
+            });
 
             if (list.length) {
 
-                let judgeOptions: IJudgeOptions = Judge.default_options()
+                let judgeOptions: IJudgeOptions = Judge.default_options();
                 if (argv.config) {
                     judgeOptions = Utils.merge(judgeOptions, _.isString(argv.config) ? JSON.parse(argv.config) : argv.config)
                 }
 
                 let validator = new ProxyValidationController(judgeOptions, null);
-                let booted = false
+                let booted = false;
                 try {
                     booted = await validator.prepare()
                 } catch (err) {
-                    Log.error(err)
+                    Log.error(err);
                     throw err
                 }
 
@@ -83,26 +83,26 @@ export class JudgeFileCommand {
                         Log.error(err)
                     }
 
-                    await validator.shutdown()
+                    await validator.shutdown();
 
                     switch (argv.format) {
                         case 'json':
-                            let data: JudgeResults[] = []
+                            let data: JudgeResults[] = [];
 
                             list.forEach(_x => {
                                 if (_x.results) {
                                     if (_x.results.http) {
-                                        _x.results.http.logStr = _x.results.http.logToString()
+                                        _x.results.http.logStr = _x.results.http.logToString();
                                         _x.results.http.log = null
                                     }
                                     if (_x.results.https) {
-                                        _x.results.https.logStr = _x.results.https.logToString()
+                                        _x.results.https.logStr = _x.results.https.logToString();
                                         _x.results.https.log = null
                                     }
                                     data.push(_x.results)
                                 }
-                            })
-                            console.log(JSON.stringify(data, null, 2))
+                            });
+                            console.log(JSON.stringify(data, null, 2));
                             break;
                         case 'csv':
                             let rows: string[] = [[
@@ -126,7 +126,7 @@ export class JudgeFileCommand {
                                 "latitude",
                                 "longitude"
 
-                            ].join(';')]
+                            ].join(';')];
                             list.forEach(_x => {
                                 if (_x.results) {
                                     rows.push([
@@ -175,12 +175,12 @@ export class JudgeFileCommand {
                                         '',
                                     ].join(';'))
                                 }
-                            })
-                            console.log(rows.join('\n'))
+                            });
+                            console.log(rows.join('\n'));
                             break;
 
                         default:
-                            console.log(1)
+                            console.log(1);
                             break;
                     }
                 } else {
@@ -190,7 +190,7 @@ export class JudgeFileCommand {
                 return Promise.resolve(list)
 
             } else {
-                Log.error('NO DATA')
+                Log.error('NO DATA');
                 return Promise.resolve(null)
             }
 

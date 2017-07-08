@@ -29,10 +29,10 @@ export class IpAddr {
     port: number;
 
     @Column()
-    check_id: number = 0
+    check_id: number = 0;
 
     @Column()
-    protocols: number = 0
+    protocols: number = 0;
 
     @Column({type:'boolean'})
     blocked: boolean = false;
@@ -44,13 +44,13 @@ export class IpAddr {
     last_checked_at: Date;
 
     @Column()
-    count_errors: number = 0
+    count_errors: number = 0;
 
     @Column({type:'datetime',nullable:true})
     errors_since_at: Date = null;
 
     @Column()
-    count_success: number = 0
+    count_success: number = 0;
 
     @Column({type:'datetime',nullable:true})
     success_since_at: Date = null;

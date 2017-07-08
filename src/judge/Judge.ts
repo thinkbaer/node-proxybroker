@@ -22,8 +22,8 @@ import Exceptions from "../exceptions/Exceptions";
 import {Progress} from "../lib/Progress";
 
 
-const FREEGEOIP: string = 'http://freegeoip.net/json/%s'
-const IPCHECK_URL = 'https://api.ipify.org?format=json'
+const FREEGEOIP: string = 'http://freegeoip.net/json/%s';
+const IPCHECK_URL = 'https://api.ipify.org?format=json';
 
 
 const defaultOptions: IJudgeOptions = {
@@ -36,38 +36,38 @@ const defaultOptions: IJudgeOptions = {
         socket_timeout: 10000,
         connection_timeout: 5000
     }
-}
+};
 
 
 export class Judge {
 
-    private inc: number = 0
-    private _options: IJudgeOptions = Judge.default_options()
+    private inc: number = 0;
+    private _options: IJudgeOptions = Judge.default_options();
 
-    private secured: boolean = false
+    private secured: boolean = false;
 
-    private server: net.Server = null
+    private server: net.Server = null;
 
-    private _remote_url: mUrl.Url = null
+    private _remote_url: mUrl.Url = null;
 
-    private _judge_url: mUrl.Url = null
+    private _judge_url: mUrl.Url = null;
 
-    private enabled: boolean = false
-    private progress: Progress = new Progress()
-    private runnable: boolean = false
-    private running: boolean = false
+    private enabled: boolean = false;
+    private progress: Progress = new Progress();
+    private runnable: boolean = false;
+    private running: boolean = false;
 
-    private cache: { [key: string]: JudgeRequest } = {}
+    private cache: { [key: string]: JudgeRequest } = {};
 
-    private $connections: { [key: string]: net.Socket } = {}
+    private $connections: { [key: string]: net.Socket } = {};
 
     // private addr: Array<string> = []
 
 
     constructor(options: IJudgeOptions = {}) {
-        this._options = Utils.merge(this._options, options)
-        this._judge_url = mUrl.parse(this._options.judge_url)
-        this._remote_url = mUrl.parse(this._options.remote_url)
+        this._options = Utils.merge(this._options, options);
+        this._judge_url = mUrl.parse(this._options.judge_url);
+        this._remote_url = mUrl.parse(this._options.remote_url);
 
         /*
          let self = this
@@ -80,10 +80,10 @@ export class Judge {
          });
          */
 
-        this.secured = this._judge_url.protocol === 'https:'
+        this.secured = this._judge_url.protocol === 'https:';
 
         if (this.secured || this._options.key_file || this._options.cert_file) {
-            let has_ssl = false
+            let has_ssl = false;
             if (!this._options.ssl_options) {
                 this._options.ssl_options = {}
             } else {
@@ -91,12 +91,12 @@ export class Judge {
             }
 
             if (this._options.key_file) {
-                this._options.ssl_options.key = fs.readFileSync(this._options.key_file)
+                this._options.ssl_options.key = fs.readFileSync(this._options.key_file);
                 has_ssl = true
             }
 
             if (this._options.cert_file) {
-                this._options.ssl_options.cert = fs.readFileSync(this._options.cert_file)
+                this._options.ssl_options.cert = fs.readFileSync(this._options.cert_file);
                 has_ssl = true
             }
 
@@ -104,7 +104,7 @@ export class Judge {
              * Adapt the secured flag and the protocol, if some ssl settings are present
              */
             if (has_ssl) {
-                this.secured = true
+                this.secured = true;
                 this._judge_url.protocol = 'https:'
             }
         }
@@ -145,24 +145,24 @@ export class Judge {
     async bootstrap(): Promise<boolean> {
         try {
             if (this._options.remote_lookup) {
-                Log.info('The remote IP before: ' + this.remote_url_f)
-                this._remote_url = await this.get_remote_accessible_ip()
+                Log.info('The remote IP before: ' + this.remote_url_f);
+                this._remote_url = await this.get_remote_accessible_ip();
                 Log.info('The remote IP after: ' + this.remote_url_f)
             }else{
                 Log.info('remote lookup: skipped')
             }
             if (this._options.selftest) {
-                await this.wakeup(true)
-                this.runnable = await this.selftest()
-                await this.pending()
+                await this.wakeup(true);
+                this.runnable = await this.selftest();
+                await this.pending();
                 Log.info('selftest was '+ (this.runnable ? 'successful' : 'failed'))
             } else {
-                Log.info('selftest: skipped')
+                Log.info('selftest: skipped');
                 this.runnable = true
             }
             return Promise.resolve(this.runnable)
         } catch (err) {
-            Log.error(err)
+            Log.error(err);
             throw err
         }
     }
@@ -170,12 +170,12 @@ export class Judge {
     private async get_remote_accessible_ip(): Promise<any> {
         // If IP is fixed, it should be configurable ...
         try {
-            let response_data = await _request.get(IPCHECK_URL)
-            let json = JSON.parse(response_data)
-            let remote_url = mUrl.parse(this._judge_url.protocol + '//' + json.ip + ':' + this._judge_url.port)
+            let response_data = await _request.get(IPCHECK_URL);
+            let json = JSON.parse(response_data);
+            let remote_url = mUrl.parse(this._judge_url.protocol + '//' + json.ip + ':' + this._judge_url.port);
             return remote_url
         } catch (err) {
-            Log.error(err)
+            Log.error(err);
             throw err
         }
     }
@@ -185,21 +185,21 @@ export class Judge {
      */
     private async selftest(): Promise<boolean> {
         // Startup
-        this.runnable = false
-        let ping_url = this.remote_url_f + 'ping'
-        let start = new Date()
+        this.runnable = false;
+        let ping_url = this.remote_url_f + 'ping';
+        let start = new Date();
         try {
-            let options: any = {}
+            let options: any = {};
             if (this.isSecured) {
                 options.ca = this.options.ssl_options.cert
             }
-            let res = await _request.get(ping_url, options)
-            var s = JSON.parse(res)
-            var stop = new Date()
-            var c_s = s.time - start.getTime()
-            var s_c = stop.getTime() - s.time
-            var full = stop.getTime() - start.getTime()
-            this.debug('Self Time: C -> S: ' + c_s + ', S -> C: ' + s_c + ', G:' + full + ' on ' + ping_url)
+            let res = await _request.get(ping_url, options);
+            var s = JSON.parse(res);
+            var stop = new Date();
+            var c_s = s.time - start.getTime();
+            var s_c = stop.getTime() - s.time;
+            var full = stop.getTime() - start.getTime();
+            this.debug('Self Time: C -> S: ' + c_s + ', S -> C: ' + s_c + ', G:' + full + ' on ' + ping_url);
             return true
         } catch (err) {
             return this.throwedError(err, false)
@@ -208,24 +208,24 @@ export class Judge {
 
 
     createRequest(proxy_url: string, options: { local_ip?: string, socket_timeout?: number, connection_timeout?: number } = {}): JudgeRequest {
-        let judge_url = this.remote_url_f
-        let inc = this.inc++
-        let req_id = shorthash(judge_url + '-' + proxy_url + '-' + (new Date().getTime()) + '-' + inc)
-        judge_url += 'judge/' + req_id
-        this.debug('createRequest to ' + judge_url + ' identified by ' + req_id)
-        let req_options = Object.assign(this.options.request, options)
-        let judgeReq = new JudgeRequest(this, req_id, judge_url, proxy_url, req_options)
+        let judge_url = this.remote_url_f;
+        let inc = this.inc++;
+        let req_id = shorthash(judge_url + '-' + proxy_url + '-' + (new Date().getTime()) + '-' + inc);
+        judge_url += 'judge/' + req_id;
+        this.debug('createRequest to ' + judge_url + ' identified by ' + req_id);
+        let req_options = Object.assign(this.options.request, options);
+        let judgeReq = new JudgeRequest(this, req_id, judge_url, proxy_url, req_options);
         return this.addToCache(judgeReq)
     }
 
     private addToCache(req: JudgeRequest): JudgeRequest {
-        this.cache[req.id] = req
+        this.cache[req.id] = req;
         return this.cache[req.id]
     }
 
     private removeFromCache(id: string) {
         if (this.cache[id]) {
-            Log.info(id + ' REMOVE')
+            Log.info(id + ' REMOVE');
             delete this.cache[id]
         }
     }
@@ -240,26 +240,26 @@ export class Judge {
     public async judge(req: http.IncomingMessage, res: http.ServerResponse) {
         let paths = req.url.split('/').filter((x) => {
             return x || x.length != 0
-        })
-        this.debug('paths=' + JSON.stringify(paths))
+        });
+        this.debug('paths=' + JSON.stringify(paths));
 
-        let first_path = paths.shift()
-        let cached_req: JudgeRequest = null
+        let first_path = paths.shift();
+        let cached_req: JudgeRequest = null;
 
         if (first_path === 'judge' && paths.length == 1) {
-            let self = this
-            let req_id = paths.shift()
-            this.debug('JUDGE_ID: ' + req_id)
+            let self = this;
+            let req_id = paths.shift();
+            this.debug('JUDGE_ID: ' + req_id);
 
             if (this.cache[req_id]) {
-                cached_req = this.cache[req_id]
+                cached_req = this.cache[req_id];
                 req.socket.once('end', function () {
                     self.removeFromCache(req_id)
                 })
             }
 
             if (cached_req && this.enabled) {
-                await cached_req.onJudge(req, res)
+                await cached_req.onJudge(req, res);
                 res.writeHead(200, {"Content-Type": "application/json"});
                 var json = JSON.stringify({time: (new Date()).getTime(), headers: req.headers});
                 res.end(json);
@@ -294,25 +294,25 @@ export class Judge {
     }
 
     private setupTLS(server: net.Server) {
-        server.on('newSession', this.onTLSNewSession.bind(this))
-        server.on('OCSPRequest', this.onTLSOCSPRequest.bind(this))
-        server.on('resumeSession', this.onTLSResumeSession.bind(this))
-        server.on('secureConnection', this.onTLSSecureConnection.bind(this))
+        server.on('newSession', this.onTLSNewSession.bind(this));
+        server.on('OCSPRequest', this.onTLSOCSPRequest.bind(this));
+        server.on('resumeSession', this.onTLSResumeSession.bind(this));
+        server.on('secureConnection', this.onTLSSecureConnection.bind(this));
         server.on('tlsClientError', this.onTLSClientError.bind(this))
     }
 
     private onTLSNewSession(sessionId: any, sessionData: any, callback: Function) {
-        this.debug('onTLSNewSession')
+        this.debug('onTLSNewSession');
         callback()
     }
 
     private onTLSOCSPRequest(certificate: Buffer, issuer: Buffer, callback: Function) {
-        this.debug('onTLSOCSPRequest')
+        this.debug('onTLSOCSPRequest');
         callback(null, null)
     }
 
     private onTLSResumeSession(sessionId: any, callback: Function) {
-        this.debug('onTLSResumeSession')
+        this.debug('onTLSResumeSession');
         callback()
     }
 
@@ -330,23 +330,23 @@ export class Judge {
 
 
     async validate(ip: string, port: number): Promise<JudgeResults> {
-        let results: JudgeResults = new JudgeResults()
-        results.host = ip
+        let results: JudgeResults = new JudgeResults();
+        results.host = ip;
 
-        let domain = await DomainUtils.domainLookup(ip)
-        ip = domain.addr
+        let domain = await DomainUtils.domainLookup(ip);
+        ip = domain.addr;
 
-        results.ip = ip
-        results.port = port
+        results.ip = ip;
+        results.port = port;
 
         // Geo resolve
-        results.geo = false
-        let geo_url = format(FREEGEOIP, ip)
+        results.geo = false;
+        let geo_url = format(FREEGEOIP, ip);
         try {
-            let geodata: string = await _request.get(geo_url)
+            let geodata: string = await _request.get(geo_url);
             if (geodata) {
-                results.geo = true
-                let geojson: { [k: string]: string } = JSON.parse(geodata)
+                results.geo = true;
+                let geojson: { [k: string]: string } = JSON.parse(geodata);
                 Object.keys(geojson).filter((k) => {
                     return ['ip'].indexOf(k) == -1
                 }).forEach(k => {
@@ -357,18 +357,18 @@ export class Judge {
             Log.error(e)
         }
 
-        let http_request: JudgeRequest = this.createRequest('http://' + ip + ':' + port)
+        let http_request: JudgeRequest = this.createRequest('http://' + ip + ':' + port);
         //let http_monitor: RequestResponseMonitor =
-        await http_request.performRequest()
-        results.http = http_request.result(ProtocolType.HTTP)
-        this.removeFromCache(http_request.id)
+        await http_request.performRequest();
+        results.http = http_request.result(ProtocolType.HTTP);
+        this.removeFromCache(http_request.id);
 
 
-        let https_request: JudgeRequest = this.createRequest('https://' + ip + ':' + port)
+        let https_request: JudgeRequest = this.createRequest('https://' + ip + ':' + port);
         //let https_monitor: RequestResponseMonitor =
-        await https_request.performRequest()
-        results.https = https_request.result(ProtocolType.HTTPS)
-        this.removeFromCache(https_request.id)
+        await https_request.performRequest();
+        results.https = https_request.result(ProtocolType.HTTPS);
+        this.removeFromCache(https_request.id);
 
 
         return Promise.resolve(results)
@@ -376,7 +376,7 @@ export class Judge {
 
 
     async wakeup(force: boolean = false): Promise<boolean> {
-        let self = this
+        let self = this;
 
         await this.progress.startWhenReady();
 
@@ -384,25 +384,25 @@ export class Judge {
         return new Promise<boolean>(function (resolve, reject) {
             try {
                 if (self.runnable || (!self.runnable && force)) {
-                    self.$connections = {}
+                    self.$connections = {};
                     if (self.isSecured) {
-                        self.server = https.createServer(self.options.ssl_options, self.judge.bind(self))
+                        self.server = https.createServer(self.options.ssl_options, self.judge.bind(self));
                         self.setupTLS(self.server)
                     } else {
                         self.server = http.createServer(self.judge.bind(self))
                     }
                     self.server.on('error', (err) => {
-                        let nErr = Exceptions.handle(err)
+                        let nErr = Exceptions.handle(err);
                         if (nErr.code === Exceptions.EADDRINUSE) {
                             reject(err)
                         } else {
                             Log.error('Judge server error:', err)
                         }
-                    })
+                    });
                     self.server.listen(parseInt(self._judge_url.port), self._judge_url.hostname, function () {
-                        self.server.on('connection', self.onServerConnection.bind(self))
-                        self.enable()
-                        self.info('Judge service startup on ' + self.judge_url_f + ' (SSL: ' + self.isSecured + ')')
+                        self.server.on('connection', self.onServerConnection.bind(self));
+                        self.enable();
+                        self.info('Judge service startup on ' + self.judge_url_f + ' (SSL: ' + self.isSecured + ')');
                         resolve(true)
                     })
                 } else {
@@ -413,46 +413,46 @@ export class Judge {
             }
         })
             .then(async r => {
-                await self.progress.ready()
+                await self.progress.ready();
                 return r
             })
     }
 
     private onServerConnection(socket: net.Socket) {
-        let self = this
+        let self = this;
 
         function onData(data: Buffer) {
-            let tmp: Buffer = Buffer.allocUnsafe(data.length)
-            data.copy(tmp)
+            let tmp: Buffer = Buffer.allocUnsafe(data.length);
+            data.copy(tmp);
 
-            let receivedHead = tmp.toString('utf8')
+            let receivedHead = tmp.toString('utf8');
             if (/\r\n\r\n/.test(receivedHead)) {
                 receivedHead = receivedHead.split("\r\n\r\n").shift()
             }
 
 
-            let headers = receivedHead.split(/\r\n/)
-            let head = headers[0].split(/\s+/)
-            let method = head.shift()
-            let path = head.shift()
+            let headers = receivedHead.split(/\r\n/);
+            let head = headers[0].split(/\s+/);
+            let method = head.shift();
+            let path = head.shift();
             let paths = path.split('/').filter((x) => {
                 return x || x.length != 0
-            })
+            });
 
-            let first_path = paths.shift()
-            let cached_req: JudgeRequest = null
+            let first_path = paths.shift();
+            let cached_req: JudgeRequest = null;
 
             if (first_path === 'judge' && paths.length == 1) {
-                let req_id = paths.shift()
-                self.debug('JUDGE_REQ_ID: ' + req_id)
+                let req_id = paths.shift();
+                self.debug('JUDGE_REQ_ID: ' + req_id);
 
                 if (self.cache[req_id]) {
-                    self.debug('JUDGE_REQ_ID FOUND: ' + req_id)
+                    self.debug('JUDGE_REQ_ID FOUND: ' + req_id);
                     cached_req = self.cache[req_id]
                 }
 
                 if (cached_req && self.enabled) {
-                    self.debug('HEADER ADD: ', headers)
+                    self.debug('HEADER ADD: ', headers);
                     headers.forEach(function (head) {
                         cached_req.monitor.addLog(MESSAGE.HED01.k, {header: head}, '>>')
                     })
@@ -460,11 +460,11 @@ export class Judge {
             }
         }
 
-        socket.once('data', onData)
+        socket.once('data', onData);
 
         // register connection
         let key = socket.remoteAddress + ':' + socket.remotePort;
-        this.$connections[key] = socket
+        this.$connections[key] = socket;
         socket.once('close', function () {
             delete self.$connections[key];
         })
@@ -476,18 +476,18 @@ export class Judge {
 
 
     async pending(): Promise<any> {
-        let self = this
+        let self = this;
         await this.progress.startWhenReady();
 
         return new Promise(function (resolve, reject) {
             try {
                 if (self.server) {
-                    self.server.removeAllListeners()
+                    self.server.removeAllListeners();
                     self.server.close(function () {
-                        self.disable()
-                        self.info('Judge service shutting down on ' + self.judge_url_f)
+                        self.disable();
+                        self.info('Judge service shutting down on ' + self.judge_url_f);
                         resolve(true)
-                    })
+                    });
                     for (let conn in self.$connections) {
                         self.$connections[conn].destroy()
                     }
@@ -498,7 +498,7 @@ export class Judge {
                 reject(e)
             }
         }).then(async r => {
-            await self.progress.ready()
+            await self.progress.ready();
             return r
         })
 
@@ -509,7 +509,7 @@ export class Judge {
     }
 
     private throwedError(err: Error, ret?: any): any {
-        Log.error(err)
+        Log.error(err);
         return ret
     }
 

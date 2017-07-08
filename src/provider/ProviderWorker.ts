@@ -15,19 +15,19 @@ export class ProviderWorker implements IQueueWorkload {
 
     private id: string;
 
-    private _provider: IProviderDef = null
+    private _provider: IProviderDef = null;
 
-    private _manager: ProviderManager = null
+    private _manager: ProviderManager = null;
 
-    private _localInstance: AbstractProvider = null
+    private _localInstance: AbstractProvider = null;
 
-    private _status: number = 0
+    private _status: number = 0;
 
     constructor(manager: ProviderManager, provider: IProviderDef) {
-        this.id = shorthash(inspect(provider))
-        this._provider = provider
-        this._manager = manager
-        this._localInstance = ClassLoader.createObjectByType<AbstractProvider>(provider.clazz)
+        this.id = shorthash(inspect(provider));
+        this._provider = provider;
+        this._manager = manager;
+        this._localInstance = ClassLoader.createObjectByType<AbstractProvider>(provider.clazz);
         this._localInstance.selectVariant(provider);
     }
 
@@ -38,7 +38,7 @@ export class ProviderWorker implements IQueueWorkload {
                await  this._localInstance.prepare
             }
         }catch(err){
-            Log.error(err)
+            Log.error(err);
             throw err
         }
         return Promise.resolve()

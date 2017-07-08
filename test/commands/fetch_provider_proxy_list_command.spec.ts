@@ -1,6 +1,6 @@
 import * as mocha from 'mocha';
 describe('', () => {
-})
+});
 
 
 import {suite, test, slow, timeout, pending} from "mocha-typescript";
@@ -9,7 +9,7 @@ import {inspect} from 'util'
 
 import SpawnCLI from "./SpawnCLI";
 
-const cfg = {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"}
+const cfg = {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"};
 
 @suite('commands/FetchProviderProxyListCommand') @timeout(20000)
 class FetchProviderProxyListCommandTest {

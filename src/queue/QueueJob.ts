@@ -120,7 +120,7 @@ export class QueueJob<T extends IQueueWorkload> {
 
     private finalize() {
         this._queue.removeAllListeners('job ' + this._id + ' start');
-        this._queue.removeAllListeners('job ' + this._id + ' stop')
+        this._queue.removeAllListeners('job ' + this._id + ' stop');
         this._queue.removeAllListeners('job ' + this._id + ' enqueued');
 
     }

@@ -5,17 +5,17 @@ import {Messages} from "../lib/Messages";
 
 export class ReqResEvent {
 
-    nr: number
+    nr: number;
 
-    prefix: string
+    prefix: string;
 
-    time: Date
+    time: Date;
 
-    msgId: string
+    msgId: string;
 
-    params: any = null
+    params: any = null;
 
-    connId:string = ''
+    connId:string = '';
 
     constructor(opts: { nr: number, prefix: string, time: Date, msgId: string, connId?:string, params: any, [k: string]: any }) {
         _.assign(this, opts)
@@ -26,7 +26,7 @@ export class ReqResEvent {
     }
 
     message():string{
-        let str = Messages.get(this.msgId,this.params)
+        let str = Messages.get(this.msgId,this.params);
         return str;
     }
 

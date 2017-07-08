@@ -34,7 +34,7 @@ const HTTP_FORWARD_HEADER = [
     'x-qihoo-ip',
     'x-real-ip',
     'xcnool_forwarded_for',
-    'xcnool_remote_addr']
+    'xcnool_remote_addr'];
 
 
 const HTTP_VIA_HEADER = [
@@ -66,24 +66,24 @@ const HTTP_VIA_HEADER = [
     'x-wap-profile',
     'x-wrproxy-id',
     'x-xff-0',
-    'xroxy-connection']
+    'xroxy-connection'];
 
-const ignore_headers = ['host']
+const ignore_headers = ['host'];
 
 
 export class LevelDetection {
 
-    static DEFAULT_LEVEL: number = -1
+    static DEFAULT_LEVEL: number = -1;
 
 
-    local_ip: string = null
-    proxy_ip: string = null
+    local_ip: string = null;
+    proxy_ip: string = null;
 
-    local_regex: RegExp = null
-    proxy_regex: RegExp = null
+    local_regex: RegExp = null;
+    proxy_regex: RegExp = null;
 
-    local_regex_str: string = null
-    proxy_regex_str: string = null
+    local_regex_str: string = null;
+    proxy_regex_str: string = null;
 
     stats: {
         hasLocalIp: number,
@@ -96,15 +96,15 @@ export class LevelDetection {
         isVia: 0,
         isForward: 0
 
-    }
+    };
 
-    private recv_headers: IHeader[] = []
+    private recv_headers: IHeader[] = [];
 
-    private _level: number = null
+    private _level: number = null;
 
     constructor(proxy_ip: string, ip: string) {
-        this._level = LevelDetection.DEFAULT_LEVEL
-        this.proxy_ip = proxy_ip
+        this._level = LevelDetection.DEFAULT_LEVEL;
+        this.proxy_ip = proxy_ip;
         this.local_ip = ip
     }
 
@@ -120,7 +120,7 @@ export class LevelDetection {
     addRecvHeader(headers: any) {
         let keys = Object.keys(headers).filter((x) => {
             return ignore_headers.indexOf(x) == -1
-        })
+        });
 
         for (let k of keys) {
             this.recv_headers.push({
@@ -137,15 +137,15 @@ export class LevelDetection {
     }
 
     private static async createAddrRegex(ip: string): Promise<string> {
-        let l: string[] = []
-        l.push('(' + Utils.escapeRegExp(ip) + '(\\s|$|:))')
-        let result = await DomainUtils.domainLookup(ip)
+        let l: string[] = [];
+        l.push('(' + Utils.escapeRegExp(ip) + '(\\s|$|:))');
+        let result = await DomainUtils.domainLookup(ip);
         if (result && result.addr !== ip) {
             l.push('(' + Utils.escapeRegExp(result.addr) + '(\\s|$|:))')
         }
 
         if (result && result.addr) {
-            let hosts = await DomainUtils.reverse(result.addr)
+            let hosts = await DomainUtils.reverse(result.addr);
             hosts.forEach(_x => {
                 l.push('(' + Utils.escapeRegExp(_x) + '(\\s|$|:))')
             })
@@ -156,21 +156,21 @@ export class LevelDetection {
     }
 
     async prepare(): Promise<void> {
-        this.local_regex_str = await LevelDetection.createAddrRegex(this.local_ip)
-        this.proxy_regex_str = await LevelDetection.createAddrRegex(this.proxy_ip)
+        this.local_regex_str = await LevelDetection.createAddrRegex(this.local_ip);
+        this.proxy_regex_str = await LevelDetection.createAddrRegex(this.proxy_ip);
 
-        this.local_regex = new RegExp(this.local_regex_str, 'gi')
-        this.proxy_regex = new RegExp(this.proxy_regex_str, 'gi')
+        this.local_regex = new RegExp(this.local_regex_str, 'gi');
+        this.proxy_regex = new RegExp(this.proxy_regex_str, 'gi');
         return Promise.resolve()
     }
 
 
     async detect(): Promise<void> {
-        let self = this
+        let self = this;
         for (let header of this.recv_headers) {
 
-            let key = header.key
-            let value = header.value
+            let key = header.key;
+            let value = header.value;
 
             if (this.local_regex.test(value)) {
                 // this.is_ip_present.push(k)

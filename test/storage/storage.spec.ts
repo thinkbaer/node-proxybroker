@@ -1,6 +1,6 @@
 import * as mocha from 'mocha';
 describe('', () => {
-})
+});
 
 
 import {suite, test, slow, timeout, pending} from "mocha-typescript";
@@ -20,7 +20,7 @@ const DEFAULT_STORAGE_OPTIONS: SqliteConnectionOptions = {
     entities: [],
     migrations: [],
     autoSchemaSync: true,
-}
+};
 
 
 @suite('storage/Storage')
@@ -34,16 +34,16 @@ class StorageTest {
             database: ":memory:"
         });
         await storage.init();
-        let entityNames: Array<string> = []
-        let cw = await storage.connect()
+        let entityNames: Array<string> = [];
+        let cw = await storage.connect();
         cw.connection.entityMetadatas.forEach(entityMeta => {
             entityNames.push(entityMeta.targetName)
-        })
-        entityNames = entityNames.sort()
-        expect(entityNames).to.be.deep.eq(["IpAddrState", "IpAddr", "Variable","IpLoc","Job","JobState"].sort())
+        });
+        entityNames = entityNames.sort();
+        expect(entityNames).to.be.deep.eq(["IpAddrState", "IpAddr", "Variable","IpLoc","Job","JobState"].sort());
 
-        expect(storage.size()).to.be.eq(1)
-        await storage.shutdown()
+        expect(storage.size()).to.be.eq(1);
+        await storage.shutdown();
         expect(storage.size()).to.be.eq(0)
     }
 
@@ -54,15 +54,15 @@ class StorageTest {
      */
     @test
     async 'static'() {
-        Storage['$$'] = null
+        Storage['$$'] = null;
         let storage = await Storage.$(<SqliteConnectionOptions>{
             name: 'storage_test',
             type: "sqlite",
             database: ":memory:"
         });
-        expect(storage.size()).to.be.eq(1)
+        expect(storage.size()).to.be.eq(1);
 
-        Storage['$$'] = null
+        Storage['$$'] = null;
         await storage.shutdown()
     }
 

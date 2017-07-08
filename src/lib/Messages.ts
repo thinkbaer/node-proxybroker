@@ -34,20 +34,20 @@ export const MESSAGE = {
     LVL03: {k: 'LVL03', _: '- Has via header: ${key} = ${value}'},
     LVL04: {k: 'LVL04', _: '- Has forward header: ${key} = ${value}'},
 
-}
+};
 
 
 Object.keys(MESSAGE).forEach(_x => {
     if(_x != MESSAGE[_x].k){
         throw new TodoException('Correct message key.')
     }
-})
+});
 
 export class Messages {
 
 
     static get(msgId: string, parameter?: any) {
-        let str = ""
+        let str = "";
 
         if (MESSAGE[msgId]) {
 

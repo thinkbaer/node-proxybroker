@@ -21,27 +21,27 @@ export class Server {
         timeout: 10000,
         //dual_protocol:false,
         _debug: false
-    }
+    };
 
-    _options: IServerOptions
-    _url: url.Url = null
-    _abort: boolean = false
-    _secured: boolean = true
-    _both: boolean = false
+    _options: IServerOptions;
+    _url: url.Url = null;
+    _abort: boolean = false;
+    _secured: boolean = true;
+    _both: boolean = false;
 
 
-    inc: number = 0
-    cache: { [key: number]: { t: Timer, s: net.Socket } } = {}
+    inc: number = 0;
+    cache: { [key: number]: { t: Timer, s: net.Socket } } = {};
 
-    server: net.Server = null
+    server: net.Server = null;
     //server_instance: { [key: string]: net.Server }
     //server_port: { [key: string]: number }
 
     constructor(options: IServerOptions) {
-        this._options = Object.assign({}, Server.defaultOptions, options)
-        this._url = url.parse(options.url)
+        this._options = Object.assign({}, Server.defaultOptions, options);
+        this._url = url.parse(options.url);
       //  this._both = this._options.dual_protocol
-        this._secured = /^https/.test(this.protocol)
+        this._secured = /^https/.test(this.protocol);
 
         // if(this._secured && this._both){
         //     let port = parseInt(this._url.port)
@@ -81,13 +81,13 @@ export class Server {
 
 
     response(req: http.IncomingMessage, res: http.ServerResponse) {
-        let inc = this.inc++
-        let self = this
+        let inc = this.inc++;
+        let self = this;
         let t = setTimeout(function () {
-            self.root(req, res)
-            clearTimeout(self.cache[inc].t)
+            self.root(req, res);
+            clearTimeout(self.cache[inc].t);
             delete self.cache[inc]
-        }, this.stall)
+        }, this.stall);
         this.cache[inc] = {t: t, s: req.socket}
     }
 
@@ -105,19 +105,19 @@ export class Server {
 
 
     createServer(): net.Server {
-        let self = this
+        let self = this;
 
-        let server: net.Server = null
+        let server: net.Server = null;
         if (this._secured) {
-            let https_server = https.createServer(this._options, this.response.bind(this))
+            let https_server = https.createServer(this._options, this.response.bind(this));
             server = https_server
         } else {
-            let http_server = http.createServer(this.response.bind(this))
+            let http_server = http.createServer(this.response.bind(this));
             http_server.setTimeout(
                 self._options.timeout, function (socket: net.Socket) {
-                    self.debug('server timeout reached: ' + self._options.timeout)
+                    self.debug('server timeout reached: ' + self._options.timeout);
                     socket.destroy();
-                })
+                });
             server = http_server
         }
 
@@ -130,15 +130,15 @@ export class Server {
 
 
     root(req: http.IncomingMessage, res: http.ServerResponse) {
-        this.debug('process')
+        this.debug('process');
         res.writeHead(200, {"Content-Type": "application/json"});
-        let data = {time: (new Date()).getTime(), headers: req.headers, rawHeaders: req.rawHeaders}
+        let data = {time: (new Date()).getTime(), headers: req.headers, rawHeaders: req.rawHeaders};
         let json = JSON.stringify(data);
         res.end(json);
     }
 
     forcedShutdown() {
-        this._abort = true
+        this._abort = true;
         for (let x in this.cache) {
             if (this.cache[x].t) {
                 clearTimeout(this.cache[x].t)
@@ -162,8 +162,8 @@ export class Server {
      * @param head
      */
     private onServerConnect(request: http.IncomingMessage, upstream: net.Socket, head: Buffer): void {
-        this.debug('onServerConnect')
-        let self = this
+        this.debug('onServerConnect');
+        let self = this;
         let rurl: url.Url = url.parse(`https://${request.url}`);
 
         let downstream = net.connect(parseInt(rurl.port), rurl.hostname, function () {
@@ -171,9 +171,9 @@ export class Server {
             upstream.write(
                 'HTTP/' + request.httpVersion + ' 200 Connection Established\r\n' +
                 'Proxy-agent: Proxybroker\r\n' +
-                '\r\n')
-            downstream.write(head)
-            downstream.pipe(upstream)
+                '\r\n');
+            downstream.write(head);
+            downstream.pipe(upstream);
             upstream.pipe(downstream)
         });
     }
@@ -197,27 +197,27 @@ export class Server {
     // private onServerConnection(socket: net.Socket): void {  }
 
     async start(done: Function = null): Promise<any> {
-        let self = this
-        this.prepare()
-        this.server = this.createServer()
+        let self = this;
+        this.prepare();
+        this.server = this.createServer();
         //      this.server.on('checkContinue',this.onServerCheckContinue.bind(this))
         //      this.server.on('checkExpectation',this.onServerCheckExpectation.bind(this))
-        this.server.on('clientError', this.onServerClientError.bind(this))
-        this.server.on('close', this.onServerClose.bind(this))
+        this.server.on('clientError', this.onServerClientError.bind(this));
+        this.server.on('close', this.onServerClose.bind(this));
         //this.server.on('connection', this.onServerConnection.bind(this))
-        this.server.on('upgrade', this.onServerUpgrade.bind(this))
+        this.server.on('upgrade', this.onServerUpgrade.bind(this));
         //      this.server.on('request',this.onServerRequest.bind(this))
-        this.server.on('connect', this.onServerConnect.bind(this))
+        this.server.on('connect', this.onServerConnect.bind(this));
 
         let p = new Promise(function (resolve) {
             self.server = self.server.listen(parseInt(self._url.port), self._url.hostname, () => {
-                self.debug('start server on ' + url.format(self._url))
+                self.debug('start server on ' + url.format(self._url));
                 resolve()
             });
-        })
+        });
 
         if (done) {
-            await p
+            await p;
             done()
         } else {
             return p;
@@ -225,25 +225,25 @@ export class Server {
     }
 
     async stop(done: Function = null): Promise<any> {
-        let self = this
+        let self = this;
         let p = new Promise(function (resolve) {
             if (self.server) {
                 self.server.close(function () {
-                    self.server = null
-                    self.debug('stop server')
+                    self.server = null;
+                    self.debug('stop server');
                     resolve()
                 })
             } else {
                 resolve()
             }
-        })
+        });
 
         if (done) {
-            await p
-            self.finalize()
+            await p;
+            self.finalize();
             done()
         } else {
-            self.finalize()
+            self.finalize();
             return p;
         }
     }

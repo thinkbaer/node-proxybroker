@@ -1,6 +1,6 @@
 import * as mocha from 'mocha';
 describe('', () => {
-})
+});
 
 
 import {suite, test} from "mocha-typescript";
@@ -84,8 +84,8 @@ class ProxyDataSelectorTest {
             {ip: '192.0.0.1', port: 3129},
             {ip: '127.0.0.1', port: 3128}
         ]));
-        expect(events.length).to.be.eq(2)
-        expect(events[0].isNew).to.be.false
+        expect(events.length).to.be.eq(2);
+        expect(events[0].isNew).to.be.false;
         expect(events[0].record).to.deep.include({
             id: 1,
             ip: '192.0.0.1',
@@ -103,7 +103,7 @@ class ProxyDataSelectorTest {
 
         // Test subscribe if the events are fired
         class X01 {
-            _test: Function = null
+            _test: Function = null;
 
             constructor(test: Function) {
                 this._test = test;
@@ -130,7 +130,7 @@ class ProxyDataSelectorTest {
             ip: '192.0.0.1',
             port: 3129,
             blocked: false
-        })
+        });
 
 
         // Test blocked or to_delete flags
@@ -158,12 +158,12 @@ class ProxyDataSelectorTest {
 
     @test
     async 'filter'() {
-        let addr = {ip: '127.0.0.1', port: 3128}
+        let addr = {ip: '127.0.0.1', port: 3128};
         class ProxyDataSelectorFilterTest extends ProxyDataSelector {
-            test: Function
+            test: Function;
 
             constructor(storage: Storage, cb: Function) {
-                super(storage)
+                super(storage);
                 this.test = cb
             }
 
@@ -179,7 +179,7 @@ class ProxyDataSelectorTest {
 
         });
 
-        let _q:ProxyDataFetched = null
+        let _q:ProxyDataFetched = null;
         let proxy_data_selector = new ProxyDataSelectorFilterTest(storage, (w: ProxyDataFetched) => {
             _q = w;
         });

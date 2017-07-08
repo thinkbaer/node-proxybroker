@@ -3,14 +3,14 @@ import {PlatformUtils} from "../../src/utils/PlatformUtils";
 
 export default class SpawnCLI {
 
-    args:string[]
-    stderr:string = ''
-    stdout:string = ''
-    cwd: string = PlatformUtils.pathNormilize(__dirname + '/../..')
+    args:string[];
+    stderr:string = '';
+    stdout:string = '';
+    cwd: string = PlatformUtils.pathNormilize(__dirname + '/../..');
 
 
     constructor(...args:string[]){
-        args.unshift('src/cli.ts')
+        args.unshift('src/cli.ts');
         if(!process.env.NYC_PARENT_PID){
             // if not embedded in nyc the register ts
             args.unshift('--require','ts-node/register')
@@ -20,24 +20,24 @@ export default class SpawnCLI {
 
 
     exec():Promise<SpawnCLI>{
-        let self = this
-        let cp:child_process.ChildProcess = null
+        let self = this;
+        let cp:child_process.ChildProcess = null;
         return new Promise((resolve, reject) => {
             cp = child_process.spawn('node',this.args,{
                     cwd: PlatformUtils.pathNormilize(__dirname + '/../..'),
                     env:process.env
-                })
+                });
             cp.stdout.on('data',function (data:string) {
                 //console.log('out='+data)
                 self.stdout += data
-            })
+            });
             cp.stderr.on('data',function (data:string) {
                 //console.log('err='+data)
                 self.stderr += data
-            })
+            });
             cp.on('close',function () {
                 resolve(self)
-            })
+            });
             cp.on("error", function (err) {
                 reject(err)
             })
@@ -55,7 +55,7 @@ export default class SpawnCLI {
     }
 
     static run(...args:string[]):Promise<SpawnCLI>{
-        let spawnCLI = new SpawnCLI(...args)
+        let spawnCLI = new SpawnCLI(...args);
         return spawnCLI.exec()
     }
 }
