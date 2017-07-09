@@ -16,6 +16,7 @@ import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOpt
 import {IpLoc} from "../model/IpLoc";
 import {JobState} from "../model/JobState";
 import {Job} from "../model/Job";
+import {Runtime} from "../lib/Runtime";
 
 
 export const FIX_STORAGE_OPTIONS = {
@@ -82,9 +83,12 @@ export class Storage {
 
         this.options = Object.assign({}, DEFAULT_STORAGE_OPTIONS, options);
         this._name = this.options.name;
-        if (this.options.type == 'sqlite' && this.options['database'] == ':memory:') {
+        if (this.options.type == 'sqlite' /*&& this.options['database'] == ':memory:'*/) {
             this.memory = true
         }
+
+
+        Runtime.$().setConfig('storage',this.options)
     }
 
     get name() {

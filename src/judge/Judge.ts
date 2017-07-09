@@ -20,6 +20,8 @@ import {MESSAGE} from "../lib/Messages";
 import {ProtocolType} from "../lib/ProtocolType";
 import Exceptions from "../exceptions/Exceptions";
 import {Progress} from "../lib/Progress";
+import {Config} from "commons-config";
+import {Runtime} from "../lib/Runtime";
 
 
 const FREEGEOIP: string = 'http://freegeoip.net/json/%s';
@@ -108,6 +110,8 @@ export class Judge {
                 this._judge_url.protocol = 'https:'
             }
         }
+
+        Runtime.$().setConfig('judge', this._options)
     }
 
     get ip(): string {
@@ -148,18 +152,19 @@ export class Judge {
                 Log.info('The remote IP before: ' + this.remote_url_f);
                 this._remote_url = await this.get_remote_accessible_ip();
                 Log.info('The remote IP after: ' + this.remote_url_f)
-            }else{
+            } else {
                 Log.info('remote lookup: skipped')
             }
             if (this._options.selftest) {
                 await this.wakeup(true);
                 this.runnable = await this.selftest();
                 await this.pending();
-                Log.info('selftest was '+ (this.runnable ? 'successful' : 'failed'))
+                Log.info('selftest was ' + (this.runnable ? 'successful' : 'failed'))
             } else {
                 Log.info('selftest: skipped');
                 this.runnable = true
             }
+            Runtime.$().setConfig('judge', {judge_url: this.judge_url_f, remote_url: this.remote_url_f})
             return Promise.resolve(this.runnable)
         } catch (err) {
             Log.error(err);
@@ -285,12 +290,19 @@ export class Judge {
         return this.enabled
     }
 
-    enable() {
+    private enable() {
+        this.server.on('connection', this.onServerConnection.bind(this));
         this.enabled = true
+        this.info('Judge service startup on ' + this.judge_url_f + ' (SSL: ' + this.isSecured + ')');
+
     }
 
-    disable() {
+    private disable() {
+        this.server = null
+
         this.enabled = false
+        this.info('Judge service shutting down on ' + this.judge_url_f);
+
     }
 
     private setupTLS(server: net.Server) {
@@ -374,50 +386,6 @@ export class Judge {
         return Promise.resolve(results)
     }
 
-
-    async wakeup(force: boolean = false): Promise<boolean> {
-        let self = this;
-
-        await this.progress.startWhenReady();
-
-        // TODO check if address and port are bound, on expcetion shutdown connection
-        return new Promise<boolean>(function (resolve, reject) {
-            try {
-                if (self.runnable || (!self.runnable && force)) {
-                    self.$connections = {};
-                    if (self.isSecured) {
-                        self.server = https.createServer(self.options.ssl_options, self.judge.bind(self));
-                        self.setupTLS(self.server)
-                    } else {
-                        self.server = http.createServer(self.judge.bind(self))
-                    }
-                    self.server.on('error', (err) => {
-                        let nErr = Exceptions.handle(err);
-                        if (nErr.code === Exceptions.EADDRINUSE) {
-                            reject(err)
-                        } else {
-                            Log.error('Judge server error:', err)
-                        }
-                    });
-                    self.server.listen(parseInt(self._judge_url.port), self._judge_url.hostname, function () {
-                        self.server.on('connection', self.onServerConnection.bind(self));
-                        self.enable();
-                        self.info('Judge service startup on ' + self.judge_url_f + ' (SSL: ' + self.isSecured + ')');
-                        resolve(true)
-                    })
-                } else {
-                    throw new Error('This will not work!')
-                }
-            } catch (e) {
-                reject(e)
-            }
-        })
-            .then(async r => {
-                await self.progress.ready();
-                return r
-            })
-    }
-
     private onServerConnection(socket: net.Socket) {
         let self = this;
 
@@ -454,7 +422,7 @@ export class Judge {
                 if (cached_req && self.enabled) {
                     self.debug('HEADER ADD: ', headers);
                     headers.forEach(function (head) {
-                        cached_req.monitor.addLog(MESSAGE.HED01.k, {header: head}, '>>')
+                        cached_req.monitor.addLog(MESSAGE.HED01.k, {header: head ? head : '_UNKNOWN_'}, '>>')
                     })
                 }
             }
@@ -470,27 +438,82 @@ export class Judge {
         })
     }
 
-    async progressing():Promise<any>{
+    async progressing(): Promise<any> {
         return this.progress.waitTillDone()
+    }
+
+    async wakeup(force: boolean = false): Promise<boolean> {
+        let self = this;
+
+        // this.info('judge wakuping ...')
+
+        await this.progress.startWhenReady();
+
+        if (this.isEnabled()) {
+            return Promise.resolve(true)
+        }
+
+        // TODO check if address and port are bound, on expcetion shutdown connection
+        return new Promise<boolean>(function (resolve, reject) {
+            try {
+                if (self.runnable || (!self.runnable && force)) {
+                    self.$connections = {};
+                    if (self.isSecured) {
+                        self.server = https.createServer(self.options.ssl_options, self.judge.bind(self));
+                        self.setupTLS(self.server)
+                    } else {
+                        self.server = http.createServer(self.judge.bind(self))
+                    }
+                    self.server.on('error', (err) => {
+                        let nErr = Exceptions.handle(err);
+                        if (nErr.code === Exceptions.EADDRINUSE) {
+                            reject(err)
+                        } else {
+                            Log.error('Judge server error:', err)
+                        }
+                    });
+                    self.server.listen(parseInt(self._judge_url.port), self._judge_url.hostname, function () {
+                        self.enable();
+                        resolve(true)
+                    })
+                } else {
+                    throw new Error('This will not work!')
+                }
+            } catch (e) {
+                reject(e)
+            }
+        })
+            .then(async r => {
+                await self.progress.ready();
+                return r
+            })
     }
 
 
     async pending(): Promise<any> {
         let self = this;
+
+        // this.info('judge pending ...')
         await this.progress.startWhenReady();
 
-        return new Promise(function (resolve, reject) {
+        if (!this.isEnabled()) {
+            return Promise.resolve(true)
+        }
+
+
+        return new Promise(async function (resolve, reject) {
             try {
                 if (self.server) {
                     self.server.removeAllListeners();
-                    self.server.close(function () {
-                        self.disable();
-                        self.info('Judge service shutting down on ' + self.judge_url_f);
-                        resolve(true)
-                    });
+
                     for (let conn in self.$connections) {
                         self.$connections[conn].destroy()
                     }
+
+                    self.server.close(function () {
+                        self.disable();
+                        resolve(true)
+                    });
                 } else {
                     resolve(false)
                 }

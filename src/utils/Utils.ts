@@ -6,19 +6,24 @@ import {InterpolationSupport} from "commons-config";
 
 export class Utils {
 
-    static interpolate(msg:string, parameter:{[k:string]:string}):string{
-        let data = {msg:msg};
-        InterpolationSupport.exec(data,parameter);
+    static interpolate(msg: string, parameter: { [k: string]: string }): string {
+        let data = {msg: msg};
+        try {
+            InterpolationSupport.exec(data, parameter);
+        } catch (e) {
+            console.log(e, data, parameter)
+            throw e
+        }
         return data.msg
     }
 
-    static flattenDate(d:Date){
+    static flattenDate(d: Date) {
         // reset milliseconds for datefields
         let rest = d.getTime() % 1000;
         return new Date(d.getTime() - rest)
     }
 
-    static now(){
+    static now() {
         let now = new Date();
         // reset milliseconds for datefields
         let rest = now.getTime() % 1000;
@@ -109,9 +114,9 @@ export class Utils {
             }
             if (arr.hasOwnProperty(first)) {
                 let pointer: any = arr[first];
-                if(paths.length === 0){
+                if (paths.length === 0) {
                     return pointer
-                }else{
+                } else {
                     return Utils.get(pointer, paths.join('.'))
                 }
             } else {

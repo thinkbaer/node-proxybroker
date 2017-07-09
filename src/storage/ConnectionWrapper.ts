@@ -1,5 +1,6 @@
 import {Connection, EntityManager, getConnectionManager} from "typeorm";
 import {Storage} from "./Storage";
+import {Log} from "../logging/Log";
 
 export class ConnectionWrapper {
 
@@ -29,11 +30,16 @@ export class ConnectionWrapper {
      * @deprecated
      */
     async persist<Entity>(o: Entity): Promise<any> {
-        return this.manager.persist(o)
+        return this.manager.save(o)
     }
 
     async save<Entity>(o: Entity): Promise<any> {
-        return this.manager.save(o)
+        try {
+            return this.manager.save(o)
+        }catch(err){
+            Log.error(err)
+            throw err
+        }
     }
 
     async connect(): Promise<ConnectionWrapper> {

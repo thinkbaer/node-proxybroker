@@ -9,6 +9,7 @@ import {Utils} from "../utils/Utils";
 
 
 const ASYNC_QUEUE_DEFAULT: IAsyncQueueOptions = {
+    name:'none',
     concurrent: 5
 };
 
@@ -34,8 +35,9 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
 
     active: Array<QueueJob<T>> = [];
 
-    constructor(processor: IQueueProcessor<T>, options: IAsyncQueueOptions = {}) {
+    constructor(processor: IQueueProcessor<T>, options: IAsyncQueueOptions = {name:'none'}) {
         super();
+        this.setMaxListeners(100)
         this.options = Utils.merge(ASYNC_QUEUE_DEFAULT, options);
         this.processor = processor;
         this.on(AsyncWorkerQueue.E_DO_PROCESS, this.process.bind(this));
@@ -46,7 +48,8 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
     private next() {
         this.runningTasks--;
 
-        Log.debug('Tasks in queue INC:' + this._inc + ' DONE:' + this._done + ' RUNNING:' + this.running() + ' TODO:' + this.enqueued() + ' ACTIVE:' + this.active.length);
+        Log.debug('Tasks in queue['+this.options.name+'] INC:' + this._inc + ' DONE:' + this._done + ' RUNNING:' + this.running() + ' TODO:' + this.enqueued() + ' ACTIVE:' + this.active.length);
+        /*
         if (this.active.length < 5) {
             let out = '';
             this.active.forEach(_q => {
@@ -54,6 +57,7 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
             });
             Log.debug('Active tasks IDs:' + out)
         }
+        */
         if (this.isPaused()) {
             if (!this.isRunning()) {
                 this.emit(AsyncWorkerQueue.E_NO_RUNNING_JOBS)

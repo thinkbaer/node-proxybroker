@@ -5,7 +5,7 @@ import {ProxyDataFetchedEvent} from "./ProxyDataFetchedEvent";
 import {Storage} from "../storage/Storage";
 
 import {IQueueProcessor} from "../queue/IQueueProcessor";
-import {IProxyData} from "./IProxyData";
+
 import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
 import {IpAddr} from "../model/IpAddr";
 import {ProxyData} from "./ProxyData";
@@ -31,7 +31,7 @@ export class ProxyDataSelector implements IQueueProcessor<ProxyDataFetched> {
     constructor(storage: Storage) {
         let parallel = 200;
         this.storage = storage;
-        this.queue = new AsyncWorkerQueue<ProxyDataFetched>(this, {concurrent: parallel})
+        this.queue = new AsyncWorkerQueue<ProxyDataFetched>(this, {name:'proxy_data_selector',concurrent: parallel})
     }
 
     @subscribe(ProxyDataFetchedEvent)

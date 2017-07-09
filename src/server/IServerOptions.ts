@@ -1,5 +1,7 @@
 
 export interface IServerOptions {
+    url?: string
+
     stall?: number
     cert_file?: string
     cert?: string | Buffer
@@ -13,6 +15,5 @@ export interface IServerOptions {
     timeout?: number
     // dual_protocol?:boolean
 
-    url: string
     _debug?: boolean
 }

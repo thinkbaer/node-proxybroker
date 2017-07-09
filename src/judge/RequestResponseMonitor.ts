@@ -239,7 +239,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
         }
 
         this.sendedHead.split('\n').map((x: string) => {
-            this.addClientLog(MESSAGE.HED01.k,{header:x.trim()})
+            this.addClientLog(MESSAGE.HED01.k,{header:x ? x : '_UNKNOWN_' })
         })
     }
 
@@ -259,7 +259,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
             if(this.receivedHeadDone){
                 let headers = Utils.clone(this.receivedHead.split('\n'));
                 headers.map((x: string) => {
-                    this.addServerLog(MESSAGE.HED01.k,{header:x.trim()})
+                    this.addServerLog(MESSAGE.HED01.k,{header:x ? x : '_UNKNOWN_'})
                 });
 
 

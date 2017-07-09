@@ -58,7 +58,6 @@ export class JudgeFileCommand {
             });
 
             if (list.length) {
-
                 let judgeOptions: IJudgeOptions = Judge.default_options();
                 if (argv.config) {
                     judgeOptions = Utils.merge(judgeOptions, _.isString(argv.config) ? JSON.parse(argv.config) : argv.config)
@@ -75,9 +74,12 @@ export class JudgeFileCommand {
 
                 if (booted) {
                     try {
+                        let inc = 0
                         for(let _q of list){
+                            inc++
                             validator.push(_q)
                         }
+                        Log.info('Added '+inc+ ' proxies to check')
                         await validator.await()
                     } catch (err) {
                         Log.error(err)

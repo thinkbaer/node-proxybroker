@@ -43,7 +43,6 @@ export class Job {
     updated_at: Date;
 
 
-
     @BeforeInsert()
     @BeforeUpdate()
     _prepare(){

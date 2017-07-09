@@ -59,7 +59,7 @@ class AsyncQueueTests {
     async enqueueMultipleWorkloadAndWaitUntilAllDone() {
         let parallel : number = 5;
         let p = new Processor();
-        let q = new AsyncWorkerQueue<Workload>(p, {concurrent:parallel});
+        let q = new AsyncWorkerQueue<Workload>(p, {name:'enqueue_test',concurrent:parallel});
 
         for(let i=0;i<20;i++){
             q.push(new Workload());

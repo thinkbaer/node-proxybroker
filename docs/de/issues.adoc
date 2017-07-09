@@ -161,8 +161,41 @@ Impl. ProviderManager
 Write documentation for the configuration possible configuration
 settings.
 
+@TASK:{counter:task} 20170709 +
+Add docker support
+
+@TASK:{counter:task} 20170709 +
+update commons-config
+```
+// set options and return them
+options = Config.set(key, options)
+
+// get fallback values
+options = Config.get(key, fallback)
+
+// get all config settings
+options = Config.all()
+
+// save options in 'config_options' namespace
+options = Config.options(...)
+
+// file settings in options, if base file doesn't
+// exists then ignore it.
+// If interpolation doesn't work then also ignore the entry.
+Config.options({
+        configs: [
+            {type: 'system'},
+            {type: 'file', file: '${argv.configfile}'},
+        ]
+    });
+
+```
 
 
-
-
+@TASK:{counter:task} 20170709 +
+Exception
+```
+{ Error: SQLITE_CONSTRAINT: UNIQUE constraint failed: npb_ip_loc.ip
+    at Error (native) errno: 19, code: 'SQLITE_CONSTRAINT' }
+```
 

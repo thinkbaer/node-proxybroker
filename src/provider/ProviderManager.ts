@@ -27,13 +27,14 @@ import {ProviderRunEvent} from "./ProviderRunEvent";
 
 import {setTimeout,clearTimeout} from "timers"
 import Timer = NodeJS.Timer;
+import {Config} from "commons-config";
+import {Runtime} from "../lib/Runtime";
 
 
 
 const DEFAULT_PROVIDER: StringOrFunction[] = [
     FreeProxyListsCom
 ];
-
 
 
 const DEFAULT_OPTIONS: IProviderOptions = {
@@ -81,6 +82,9 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         if(this.options.schedule && this.options.schedule.enable){
             this.cron = require('cron-parser').parseExpression(this.options.schedule.pattern)
         }
+
+        Runtime.$().setConfig('provider',this.options)
+
     }
 
 
@@ -124,6 +128,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         let conn: ConnectionWrapper = null;
         let jobs: Job[] = [];
         if (this.storage) {
+
             conn = await this.storage.connect();
             // set all jobs inactive
             await conn.manager.createQueryBuilder<Job>(Job, "job").update({active: false}).execute();
@@ -259,23 +264,26 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
     findAll(query: { [_k: string]: string } = {}): IProviderDef[] {
         let ret: Array<IProviderDef> = [];
-        this.providers.forEach((value: IProviderDef) => {
+        for(let value of this.providers){
             let _value: boolean = true;
+
             Object.keys(query).forEach(k => {
                 if (value[k] && query[k] && (value[k].localeCompare(query[k]) == 0 || value[k] === __ALL__)) {
-                    _value = _value && true
+                    _value = _value && true;
                 } else {
-                    _value = _value && false
+                    _value = _value && false;
                 }
             });
 
             if (_value) {
-                ret.push(value)
+                value.job = _.find(this.jobs, {name:value.name, type:value.type});
+                ret.push(value);
             }
-        });
-
+        };
         return ret;
     }
+
+
 
 
     async createWorker(provider: IProviderDef): Promise<ProviderWorker> {

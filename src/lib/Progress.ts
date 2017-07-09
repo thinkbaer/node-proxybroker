@@ -14,6 +14,7 @@ export class Progress extends EventEmitter {
 
     constructor(){
         super()
+        this.setMaxListeners(10000)
     }
 
     waitTillDone(){
@@ -31,30 +32,33 @@ export class Progress extends EventEmitter {
 
     startWhenReady():Promise<boolean>{
         let self = this;
-        let q = self.enqueued++;
+        let siwtched = false
+        if(!self.progressing) {
+            self.progressing = siwtched = true;
+        }
         return new Promise((resolve, reject) => {
-            if(!self.progressing){
-                self.progressing = true;
+            if(siwtched){
                 resolve(self.progressing)
             }else{
-                self.once('stop_'+q,function () {
+                self.once('empty',function () {
                     resolve(self.progressing)
                 })
             }
         })
     }
 
-
     ready(){
         this.done++;
         this.progressing = false;
+        this.emit('empty')
+        /*
         if(this.done == this.enqueued){
-            this.emit('empty')
+
         }else if(this.done < this.enqueued){
             this.emit('stop_'+this.done)
         }else{
             throw new TodoException()
-        }
+        }*/
     }
 
 }

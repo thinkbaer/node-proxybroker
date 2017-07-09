@@ -3,11 +3,16 @@ export class Log {
 
     static enable: boolean = true;
 
+    static console: boolean = false;
+
 
     static log(level:string, ...args: any[]) {
         if (Log.enable) {
             let l = new LogEvent({args: args, level:level});
             l.fire()
+            if(Log.console){
+                console.log(l.out())
+            }
         }
     }
 

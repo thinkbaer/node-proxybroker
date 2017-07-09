@@ -9,6 +9,9 @@ import {ProxyDataSelector} from "./proxy/ProxyDataSelector";
 import {ProxyValidationController} from "./proxy/ProxyValidationController";
 import {EventBus} from "./events/EventBus";
 import {IJudgeOptions} from "./judge/IJudgeOptions";
+import {ProviderManager} from "./provider/ProviderManager";
+import {ProxyServer} from "./server/ProxyServer";
+import {Express} from "./server/Express";
 
 
 
@@ -19,6 +22,18 @@ class Main {
     proxy_data_selector: ProxyDataSelector;
 
     proxy_validation_controller: ProxyValidationController;
+
+    proxy_manager: ProviderManager;
+
+    proxy_server: ProxyServer;
+
+    application: Express;
+
+
+    async prepare(){
+
+    }
+
 
 
     initConfig() : Promise<void> {

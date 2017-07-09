@@ -8,6 +8,8 @@ import * as HttpProxy from "http-proxy"
 
 import {Server} from "./Server";
 import {IProxyServerOptions} from "./IProxyServerOptions";
+import {Config} from "commons-config";
+import {Runtime} from "../lib/Runtime";
 
 
 
@@ -21,6 +23,8 @@ export class ProxyServer extends Server {
 
     constructor(options: IProxyServerOptions) {
         super(options)
+
+        Runtime.$().setConfig('proxyserver',this._options)
     }
 
     get level(): number {

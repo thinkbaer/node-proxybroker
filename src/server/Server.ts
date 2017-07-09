@@ -1,6 +1,3 @@
-/**
- * Created by cezaryrk on 10.04.17.
- */
 
 import * as http from 'http'
 import * as tls from 'tls'
@@ -12,9 +9,11 @@ import * as url from "url";
 import Timer = NodeJS.Timer;
 import {IServerOptions} from "./IServerOptions";
 import {Connection} from "typeorm";
+import {Log} from "../logging/Log";
 
 
 export class Server {
+
     static readonly defaultOptions: IServerOptions = {
         url: 'http://localhost:3128',
         stall: 0,
@@ -190,6 +189,10 @@ export class Server {
         this.debug('onServerClientError')
     }
 
+    private onServerError(exception: Error, socket: net.Socket): void {
+        this.debug('onServerError')
+    }
+
     private onServerClose(): void {
         this.debug('onServerClose')
     }
@@ -208,6 +211,7 @@ export class Server {
         this.server.on('upgrade', this.onServerUpgrade.bind(this));
         //      this.server.on('request',this.onServerRequest.bind(this))
         this.server.on('connect', this.onServerConnect.bind(this));
+        this.server.on('error', this.onServerError.bind(this));
 
         let p = new Promise(function (resolve) {
             self.server = self.server.listen(parseInt(self._url.port), self._url.hostname, () => {
@@ -257,7 +261,7 @@ export class Server {
 
     debug(...msg: string[]) {
         if (this._options._debug) {
-            console.log.apply(console, msg)
+            Log.debug.apply(Log, msg)
         }
     }
 

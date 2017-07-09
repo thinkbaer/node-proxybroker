@@ -17,6 +17,7 @@ import {JudgeResult} from "../judge/JudgeResult";
 
 import {Utils} from "../utils/Utils";
 import {Log} from "../logging/Log";
+import {Config} from "commons-config";
 
 export class ProxyValidationController implements IQueueProcessor<ProxyData> {
 
@@ -33,7 +34,7 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
         let parallel: number = 200;
         this.storage = storage;
         this.judge = new Judge(judgeOptions);
-        this.queue = new AsyncWorkerQueue<ProxyData>(this, {concurrent: parallel})
+        this.queue = new AsyncWorkerQueue<ProxyData>(this, {name: 'proxy_validation_controller', concurrent: parallel})
     }
 
 
@@ -119,8 +120,11 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
                 ip_loc[k] = proxyData.results[k]
             }
 
-            ip_loc = await conn.save(ip_loc);
-
+            try {
+                await conn.save(ip_loc);
+            } catch (err) {
+                Log.error(err)
+            }
             // if we have no positive results for http and https then
             //     if record already exists then
             //         set update_at and last_error_at to now
@@ -180,14 +184,6 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
 
     async push(o: ProxyData): Promise<QueueJob<ProxyData>> {
         let enque = this.queue.push(o);
-        if (!this.judge.isEnabled()) {
-            try {
-                this.wakeuped = await this.judge.wakeup()
-            } catch (err) {
-                Log.error(err);
-                throw err
-            }
-        }
         return enque
     }
 
@@ -209,20 +205,27 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
         // If starting or stopping judge server then wait
         await this.judge.progressing();
 
-        if(this.judge.isEnabled()){
-            let results = await this.judge.validate(workLoad.ip, workLoad.port);
-            workLoad.results = results;
-            return Promise.resolve(results)
-        }else{
-            Log.error('Judge is not started!');
-            return Promise.resolve()
+        if (!this.judge.isEnabled()) {
+            try {
+                this.wakeuped = await this.judge.wakeup()
+            } catch (err) {
+                Log.error(err);
+                throw err
+            }
         }
+
+        // await this.judge.progressing();
+
+        let results = await this.judge.validate(workLoad.ip, workLoad.port);
+        workLoad.results = results;
+        return Promise.resolve(results)
     }
 
 
-    onEmpty(): Promise<void> {
-        this.judge.pending();
-        return null;
+    async onEmpty(): Promise<void> {
+        Log.info('queue is empty stop judge');
+        await this.judge.pending();
+        return Promise.resolve();
     }
 
 }

@@ -12,6 +12,7 @@ export class EventChannel extends EventEmitter {
 
     constructor(name: string) {
         super();
+        this.setMaxListeners(100)
         this.name = name;
         this.on(name, this.process.bind(this))
     }
