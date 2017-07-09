@@ -82,7 +82,7 @@ class ProviderManagerTest {
 
         let provider = providers.shift();
         let worker = await pm.createWorker(provider);
-        expect(worker['id']).to.eq('Z1bBgeW')
+        expect(worker['id']).to.eq('2ilQsa')
     }
 
     @test

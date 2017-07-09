@@ -1,9 +1,11 @@
 
 
-import {Config, IConfigData} from "commons-config";
+import {Config, ConfigJar, IConfigData} from "commons-config";
 export class Runtime {
 
     private static runtime:Runtime = null
+
+    private jar: ConfigJar;
 
     static $():Runtime{
         if(!this.runtime){
@@ -12,15 +14,19 @@ export class Runtime {
         return this.runtime
     }
 
+    constructor(){
+        this.jar = new ConfigJar()
+    }
+
 
     setConfig(key:string,data:any){
         let _data = {}
         _data[key] = data
-        Config.jar('_runtime_').merge(_data)
+        this.jar.merge(_data)
     }
 
     getConfig() : IConfigData{
-        return Config.jar('_runtime_').data
+        return this.jar.data
     }
 
 }

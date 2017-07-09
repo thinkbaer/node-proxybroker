@@ -62,10 +62,13 @@ export class Storage {
     constructor(options: IStorageOptions = DEFAULT_STORAGE_OPTIONS) {
 
         // check if options are set per config
+        /*
         let _options = <IStorageOptions>Config.get(K_STORAGE);
         if (_options) {
             options = _options
         }
+        */
+
 
         // Apply some unchangeable and fixed options
         options = Utils.merge(options, FIX_STORAGE_OPTIONS);
@@ -83,10 +86,10 @@ export class Storage {
 
         this.options = Object.assign({}, DEFAULT_STORAGE_OPTIONS, options);
         this._name = this.options.name;
+
         if (this.options.type == 'sqlite' /*&& this.options['database'] == ':memory:'*/) {
             this.memory = true
         }
-
 
         Runtime.$().setConfig('storage',this.options)
     }
