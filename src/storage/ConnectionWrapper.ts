@@ -1,6 +1,6 @@
 import {Connection, EntityManager, getConnectionManager} from "typeorm";
 import {Storage} from "./Storage";
-import {Log} from "../logging/Log";
+import {Log} from "../lib/logging/Log";
 
 export class ConnectionWrapper {
 
@@ -18,7 +18,7 @@ export class ConnectionWrapper {
 
     constructor(s: Storage, conn?: Connection) {
         this.storage = s;
-        this.memory = this.storage.isMemory;
+        this.memory = this.storage.isSingleConnection;
         this.connection = conn;
         this.name = this.storage.name
     }

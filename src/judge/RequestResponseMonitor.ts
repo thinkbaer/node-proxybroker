@@ -9,7 +9,7 @@ import * as _ from 'lodash'
 import {IHttpHeaders} from "../lib/IHttpHeaders";
 import {Url} from "url";
 import {ReqResEvent} from "./ReqResEvent";
-import {Log} from "../logging/Log";
+import {Log} from "../lib/logging/Log";
 import Exceptions from "../exceptions/Exceptions";
 import {NestedException} from "../exceptions/NestedException";
 import {Utils} from "../utils/Utils";

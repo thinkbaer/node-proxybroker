@@ -1,9 +1,10 @@
 
 
-import {Config, ConfigJar, IConfigData} from "commons-config";
+import {ConfigJar, IConfigData} from "commons-config";
+
 export class Runtime {
 
-    private static runtime:Runtime = null
+    private static runtime:Runtime = null;
 
     private jar: ConfigJar;
 
@@ -15,18 +16,18 @@ export class Runtime {
     }
 
     constructor(){
-        this.jar = new ConfigJar()
+        this.jar = new ConfigJar();
     }
 
 
     setConfig(key:string,data:any){
-        let _data = {}
-        _data[key] = data
-        this.jar.merge(_data)
+        let _data = {};
+        _data[key] = data;
+        this.jar.merge(_data);
     }
 
     getConfig() : IConfigData{
-        return this.jar.data
+        return this.jar.data;
     }
 
 }

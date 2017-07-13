@@ -1,7 +1,7 @@
 import {Judge} from "../judge/Judge";
 
 import StdConsole from "./StdConsole";
-import {Log} from "../logging/Log";
+import {Log} from "../lib/logging/Log";
 import Todo from "../exceptions/TodoException";
 import {Utils} from "../utils/Utils";
 import {IJudgeOptions} from "../judge/IJudgeOptions";

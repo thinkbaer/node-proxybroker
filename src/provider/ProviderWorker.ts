@@ -8,7 +8,7 @@ import {IQueueWorkload} from "../queue/IQueueWorkload";
 import {ClassLoader} from "../utils/ClassLoader";
 import {IProxyData} from "../proxy/IProxyData";
 import {AbstractProvider} from "./AbstractProvider";
-import {Log} from "../logging/Log";
+import {Log} from "../lib/logging/Log";
 
 
 export class ProviderWorker implements IQueueWorkload {

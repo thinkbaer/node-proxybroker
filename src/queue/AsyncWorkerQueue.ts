@@ -4,7 +4,7 @@ import {IAsyncQueueOptions} from "./IAsyncQueueOptions";
 import {IQueueProcessor} from "./IQueueProcessor";
 import {IQueueWorkload} from "./IQueueWorkload";
 import {QueueJob} from "./QueueJob";
-import {Log} from "../logging/Log";
+import {Log} from "../lib/logging/Log";
 import {Utils} from "../utils/Utils";
 
 

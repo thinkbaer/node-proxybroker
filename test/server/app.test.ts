@@ -5,7 +5,7 @@ import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOpt
 import {Storage} from "../../src/storage/Storage";
 import {ProviderManager} from "../../src/provider/ProviderManager";
 import {Express} from "../../src/server/Express";
-import {Log} from "../../src/logging/Log";
+import {Log} from "../../src/lib/logging/Log";
 import {Config} from "commons-config";
 import {ProxyDataSelector} from "../../src/proxy/ProxyDataSelector";
 import {EventBus} from "../../src/events/EventBus";

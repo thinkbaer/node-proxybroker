@@ -9,7 +9,7 @@ import {inspect} from "util";
 import * as http from 'http'
 import * as https from 'https'
 import {Judge} from "../../src/judge/Judge";
-import {Log} from "../../src/logging/Log";
+import {Log} from "../../src/lib/logging/Log";
 import {ProxyServer} from "../../src/server/ProxyServer";
 
 // https://www.proxynova.com/proxy-articles/proxy-anonymity-levels-explained

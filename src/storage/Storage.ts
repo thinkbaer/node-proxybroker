@@ -1,11 +1,11 @@
-import * as path from 'path';
-import * as _ from 'lodash'
-import {Connection, ConnectionManager, ConnectionOptions, createConnection, getConnectionManager} from "typeorm";
+import * as path from "path";
+import * as _ from "lodash";
+import {Connection, ConnectionOptions, getConnectionManager} from "typeorm";
 import {IStorageOptions} from "./IStorageOptions";
 
 
 import {Config} from "commons-config";
-import {K_STORAGE, K_WORKDIR} from "../types";
+import {K_WORKDIR} from "../types";
 import {Utils} from "../utils/Utils";
 import {Variable} from "../model/Variable";
 import {IpAddrState} from "../model/IpAddrState";
@@ -49,7 +49,7 @@ export class Storage {
     private _name: string = null;
 
     // if memory then on connection must be permanent
-    private memory: boolean = false;
+    private singleConnection: boolean = false;
 
 
     private connections: ConnectionWrapper[] = [];
@@ -88,7 +88,7 @@ export class Storage {
         this._name = this.options.name;
 
         if (this.options.type == 'sqlite' /*&& this.options['database'] == ':memory:'*/) {
-            this.memory = true
+            this.singleConnection = true
         }
 
         Runtime.$().setConfig('storage',this.options)
@@ -98,8 +98,8 @@ export class Storage {
         return this._name
     }
 
-    get isMemory() {
-        return this.memory
+    get isSingleConnection() {
+        return this.singleConnection
     }
 
 
@@ -116,7 +116,7 @@ export class Storage {
 
     async wrap(conn?: Connection): Promise<ConnectionWrapper> {
         let wrapper: ConnectionWrapper = null;
-        if ((this.memory && this.connections.length == 0) || !this.memory) {
+        if ((this.singleConnection && this.connections.length == 0) || !this.singleConnection) {
             if (conn) {
                 wrapper = new ConnectionWrapper(this, conn)
             } else {
@@ -124,7 +124,7 @@ export class Storage {
             }
 
             this.connections.push(wrapper)
-        } else if (this.memory && this.connections.length == 1) {
+        } else if (this.singleConnection && this.connections.length == 1) {
             wrapper = this.connections[0]
         }
         return Promise.resolve(wrapper)

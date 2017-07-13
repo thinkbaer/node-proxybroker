@@ -3,7 +3,7 @@ import {Judge} from "../../src/judge/Judge";
 
 import * as chai from 'chai'
 let expect = chai.expect;
-import {Log} from "../../src/logging/Log";
+import {Log} from "../../src/lib/logging/Log";
 import * as HttpProxy from "http-proxy";
 
 import * as http from 'http'

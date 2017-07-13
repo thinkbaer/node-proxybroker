@@ -10,7 +10,7 @@ import {expect} from "chai";
 import {inspect} from "util";
 import {Judge} from "../../src/judge/Judge";
 import {ProxyServer} from "../../src/server/ProxyServer";
-import {Log} from "../../src/logging/Log";
+import {Log} from "../../src/lib/logging/Log";
 import {RequestResponseMonitor} from "../../src/judge/RequestResponseMonitor";
 import {JudgeResults} from "../../src/judge/JudgeResults";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";

@@ -2,7 +2,7 @@ import * as http from "http";
 import * as tls from "tls";
 import * as https from "https";
 import * as _request from "request-promise-native";
-import {Log} from "../logging/Log";
+import {Log} from "../lib/logging/Log";
 import * as fs from 'fs'
 import * as mUrl from 'url'
 import * as net from 'net'

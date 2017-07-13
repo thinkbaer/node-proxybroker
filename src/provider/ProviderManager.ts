@@ -20,7 +20,7 @@ import {ConnectionWrapper} from "../storage/ConnectionWrapper";
 
 import {JobState} from "../model/JobState";
 import {ProxyDataFetchedEvent} from "../proxy/ProxyDataFetchedEvent";
-import {Log} from "../logging/Log";
+import {Log} from "../lib/logging/Log";
 import Exceptions from "../exceptions/Exceptions";
 import {IProviderVariantId} from "./IProviderVariantId";
 import {ProviderRunEvent} from "./ProviderRunEvent";

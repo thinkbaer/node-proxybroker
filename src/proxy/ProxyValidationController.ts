@@ -16,8 +16,8 @@ import {IpAddr} from "../model/IpAddr";
 import {JudgeResult} from "../judge/JudgeResult";
 
 import {Utils} from "../utils/Utils";
-import {Log} from "../logging/Log";
-import {Config} from "commons-config";
+import {Log} from "../lib/logging/Log";
+
 
 export class ProxyValidationController implements IQueueProcessor<ProxyData> {
 
@@ -38,7 +38,7 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
     }
 
 
-    buildState(addr: IpAddr, result: JudgeResult): IpAddrState {
+    static buildState(addr: IpAddr, result: JudgeResult): IpAddrState {
         let state = new IpAddrState();
         state.addr_id = addr.id;
         state.validation_id = addr.check_id;
@@ -135,13 +135,13 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
 
             if (proxyData.results.http) {
                 let _http = proxyData.results.http;
-                http_state = this.buildState(ip_addr, _http);
+                http_state =  ProxyValidationController.buildState(ip_addr, _http);
                 await conn.save(http_state)
             }
 
             if (proxyData.results.https) {
                 let _http = proxyData.results.https;
-                https_state = this.buildState(ip_addr, _http);
+                https_state = ProxyValidationController.buildState(ip_addr, _http);
                 await conn.save(https_state)
             }
 
@@ -179,12 +179,12 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
 
     async prepare(): Promise<boolean> {
         let booted = await this.judge.bootstrap();
-        return Promise.resolve(booted)
+        return Promise.resolve(booted);
     }
 
     async push(o: ProxyData): Promise<QueueJob<ProxyData>> {
         let enque = this.queue.push(o);
-        return enque
+        return enque;
     }
 
     async await(): Promise<void> {

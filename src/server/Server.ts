@@ -9,7 +9,7 @@ import * as url from "url";
 import Timer = NodeJS.Timer;
 import {IServerOptions} from "./IServerOptions";
 import {Connection} from "typeorm";
-import {Log} from "../logging/Log";
+import {Log} from "../lib/logging/Log";
 
 
 export class Server {

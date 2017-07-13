@@ -1,6 +1,6 @@
 
 import {ReqResEvent} from "../judge/ReqResEvent";
-import LogEvent from "../logging/LogEvent";
+import LogEvent from "../lib/logging/LogEvent";
 import subscribe from "../events/decorator/subscribe"
 
 export default class StdConsole {
@@ -19,7 +19,7 @@ export default class StdConsole {
 
     private out(o:LogEvent | ReqResEvent){
         if(StdConsole.$enabled){
-            console.error(o.out())
+            console.error(o.fullOut())
         }
     }
 }

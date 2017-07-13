@@ -1,0 +1,112 @@
+== Configuration
+
+
+Default-Konfiguration unter ${HOME}/.proxybroker/config +
+Ansonsten Angabe des Pfades bzw. direkt zur config-Datei
+
+
+* Backend
+** Tabelle-Prefix (npb_*)
+** Job automatation
+*** refresh - time / schedule
+
+* Proxy-Server
+** Aktivierung/Deaktivierung
+** IP/Port/Path
+
+* Frontend
+** aktivieren/deaktiviern
+** IP/Port/Path
+
+=== Logging
+
+For logging we're using "winston" module.
+
+[cols="1,1,2", options="header"]
+|===
+
+| Key
+| Default
+| Description
+
+| logging.enable
+| true
+| Activation of the logger
+
+| logging.level
+| warn
+| Log level
+
+| logging.transports
+|  [ {console:{}} ]
+| List of definitions for logging output sources
+(see the configuration possiblities below). Each configuration
+
+|===
+
+
+*Repeatable options for all transports*
+
+[cols="1,1,2", options="header"]
+|===
+
+| Key
+| Default
+| Description
+
+| [transport].category
+| _none_
+| Optional value for logging category where the logger should be
+  used (see below in "categories" section).
+
+|===
+
+*Console*
+
+[cols="1,1,2", options="header"]
+|===
+
+| Key
+| Default
+| Description
+
+| console
+| {}
+| Activation of the logger
+
+| console.logstash
+| _none_
+| Optional
+
+|===
+
+
+*Categories*
+
+* proxyserver
+* judge
+* validator
+* ui
+
+=== Storage
+
+Used for typeorm.
+
+[cols="1,1,2", options="header"]
+|===
+| Key
+| Default
+| Description
+
+| storage.type
+| sqlite
+| Type of database
+
+| storage.tablesPrefix
+| npb_
+| Table prefix
+
+| storage.database
+| -
+| Name of the database
+|===

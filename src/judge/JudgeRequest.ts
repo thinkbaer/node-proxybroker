@@ -5,7 +5,7 @@ import * as mUrl from 'url'
 import * as net from 'net'
 
 import * as _request from "request-promise-native";
-import {Log} from "../logging/Log";
+import {Log} from "../lib/logging/Log";
 import {RequestResponseMonitor} from "./RequestResponseMonitor";
 
 import {IHttpHeaders} from "../lib/IHttpHeaders";

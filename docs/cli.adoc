@@ -1,0 +1,91 @@
+== CLI
+
+
+=== Configuration
+
+Lookup
+- passed through configfile in arguments for file reference
+- enviroment configfile in arguments for file reference
+- manuell config asl JSON
+- current directory if the nothing else present
+
+=== Default options
+
+Options:
+|===
+| --verbose | -v | Output debug information
+| --config | -c | Passed through JSON configuration or a file reference
+|===
+
+
+=== Commands
+
+==== fetch provider
+
+Fetch proxy addresses from a provider. A variant must be given by
+which the proxies will be fetched.
+
+*Usage:*
+
+```
+fetch provider <provider> [variant]
+```
+
+*Options:*
+|===
+| --outputformat, -f  | The output format for the data set. The
+default value is "json" the other implemented format is "csv".
+|===
+
+Todo:
+
+* add option --dump to only output
+* rename command to "fetch"
+
+==== judge-ip
+
+Tests an ip and port for proxy ablitities. The results will be returned
+as JSON.
+
+*Usage:*
+```
+judge-ip <ip> <port>
+```
+
+
+*Options:*
+|===
+| --verbose, -v | Output debug information
+| --config, -c | Passed through JSON configuration
+|===
+
+
+==== judge-file
+```
+judge-file <file> [outputformat]
+```
+
+Ausführen eines Tests für die jeweilige IP + Port
+Oder Liste => @Task: Doku!
+
+
+
+
+==== update [task]
+
+Aktualisierung der ProxyListe
+
+
+==== start
+Starten der Application
+
+==== stop
+
+Stoppen der Application (über Rest-API Callback)
+
+
+==== print
+
+CSV, JSON, Liste Ausgabe der aktuellen Liste
+
+
