@@ -25,16 +25,6 @@ export class JudgeFileCommand {
 
     builder(yargs: any) {
         return yargs
-            .option("verbose", {
-                alias: 'v',
-                describe: "Enable logging",
-                'default': false
-            })
-            .option("config", {
-                alias: 'c',
-                describe: "Judge config json",
-                'default': '{}'
-            })
             .option('format', {
                 alias: 'f',
                 describe: "Set outputformat (default: json).",

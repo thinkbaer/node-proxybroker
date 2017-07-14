@@ -25,20 +25,7 @@
       "./typings/modules",
       "./node_modules/@types"
     ]
-    /*,
-    "types": [
-      "mocha",
-      "es6-promise",
-      "node",
-      "object-assign"
-    ]*/
   },
-  /*
-  "include": [
-    "src/** /*.ts",
-    "typings/** /*.ts",
-    "test/** /*.ts"
-  ],*/
   "exclude": [
     "node_modules",
     "build",

@@ -16,16 +16,6 @@ export class JudgeCommand {
 
     builder(yargs: any) {
         return yargs
-            .option("verbose", {
-                alias: 'v',
-                describe: "Enable logging",
-                'default': false
-            })
-            .option("config", {
-                alias: 'c',
-                describe: "Judge config json",
-                'default': '{}'
-            })
     }
 
     async handler(argv: any) {

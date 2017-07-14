@@ -9,18 +9,13 @@ import {Utils} from "../utils/Utils";
 
 export class FetchProviderProxyListCommand {
 
-    command = "fetch provider [provider] [variant]";
+    command = "fetch [provider] <variant>";
     aliases = "fp";
     describe = "Retrieve proxies from a <provider> source.";
 
 
     builder(yargs: any) {
         return yargs
-            .option("verbose", {
-                alias: 'v',
-                describe: "Enable logging",
-                'default': false
-            })
             .option('format', {
                 alias: 'f',
                 describe: "Set outputformat (default: json).",

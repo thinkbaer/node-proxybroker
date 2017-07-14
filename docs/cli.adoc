@@ -68,7 +68,9 @@ judge-file <file> [outputformat]
 Ausführen eines Tests für die jeweilige IP + Port
 Oder Liste => @Task: Doku!
 
+==== fetch [task] [variant]
 
+Aktualisierung der ProxyListe
 
 
 ==== update [task]

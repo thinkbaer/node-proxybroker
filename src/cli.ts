@@ -20,6 +20,8 @@ process.on('unhandledRejection', (err: Error) => {
     process.exit()
 });
 
+
+
 /*
  Config.options({
  configs: [
@@ -31,10 +33,13 @@ process.on('unhandledRejection', (err: Error) => {
  ]
  })
  */
+
 EventBus.register(new StdConsole());
 Log.options({
     enable: true,
-    transports: [{console: {defaultFormatter: true, stderrLevels: ['info', 'debug', 'error', 'warn']}}]
+    transports: [
+        {console: {defaultFormatter: true, stderrLevels: ['info', 'debug', 'error', 'warn']}}
+    ]
 })
 
 require("yargonaut")
@@ -49,7 +54,22 @@ require("yargs")
     .command(new JudgeCommand())
     .command(new JudgeFileCommand())
     .command(new FetchProviderProxyListCommand())
-    .demand(1)
+    .option("verbose", {
+        alias: 'v',
+        describe: "Enable logging.",
+        'default': false
+    })
+    .option("config", {
+        alias: 'c',
+        describe: "JSON string with configuration or name of the config file.",
+        'default': false
+    })
+    .coerce('config', (c: any) => {
+        if(c){
+
+        }
+    })
+    .demandCommand(1)
     // .version(() => require(process.cwd() + "/package.json").version)
     // .alias("v", "version")
     .help("h")

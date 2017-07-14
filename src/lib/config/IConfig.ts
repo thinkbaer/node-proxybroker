@@ -1,8 +1,9 @@
 
 
-import {IStorageOptions} from "../storage/IStorageOptions";
-import {IProviderOptions} from "../provider/IProviderOptions";
-import {IUrlBase} from "./IUrlBase";
+import {IStorageOptions} from "../../storage/IStorageOptions";
+import {IProviderOptions} from "../../provider/IProviderOptions";
+import {IUrlBase} from "../IUrlBase";
+import {ILoggerOptions} from "../logging/ILoggerOptions";
 
 
 export interface IServiceOptions extends IUrlBase {
@@ -17,7 +18,7 @@ export interface IProxyOptions extends IServiceOptions {}
 export interface IUIOptions  extends IServiceOptions {}
 
 
-export interface IAppConfig {
+export interface IConfig {
 
     /**
      * Path to the work directory or null
@@ -60,6 +61,12 @@ export interface IAppConfig {
      * Provider options
      */
     provider?: IProviderOptions
+
+
+    /**
+     * Logging configuration
+     */
+    logging?: ILoggerOptions
 
 }
 

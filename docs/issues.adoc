@@ -199,3 +199,18 @@ Exception
     at Error (native) errno: 19, code: 'SQLITE_CONSTRAINT' }
 ```
 
+@TASK:{counter:task} 20170714 +
+API
+
+* start / stop
+* delete long broken proxies (cleanup)
+* add new proxy(-ies)
+* delete single or mark as deleted
+* list be criteria
+* search by criteria
+* force re-validation
+
+NOTE: Automatic re-validation after a time period!
+
+
+

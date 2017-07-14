@@ -75,6 +75,31 @@ class ConfigTests {
         expect(Config.get(K_WORKDIR)).to.eq("/tmp")
     }
 
+    /**
+     * Load from file handing over by command line args
+     */
+    @test
+    'Given file doesn\'t exists'() {
+        // Mock command line arg
+        process.argv.push('--configfile', './files/config_non.json');
+        Config['$self'] = null;
+        let options = Config.options({
+            configs: [
+                {
+                    type: 'file',
+                    file: '${argv.configfile}',
+                },
+                {
+                    type: 'file',
+                    file: './some/file/name.json',
+                }
+            ]
+        });
+
+        expect(options.configs).to.deep.include({type: 'file', file: './files/config_non.json', state: false})
+        expect(options.configs).to.deep.include({type: 'file', file: './some/file/name.json', state: false})
+    }
+
 
     /**
      * Test the parameter for provider options
@@ -84,8 +109,8 @@ class ConfigTests {
 
         let pOptions: IProviderOptions = {
             providers: ['/some/dir', '/some/other/dir'],
-            schedule:{
-                enable:true
+            schedule: {
+                enable: true
             }
         };
 
