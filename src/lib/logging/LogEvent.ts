@@ -26,22 +26,28 @@ export default class LogEvent {
     }
 
     message() : string{
-        let _msgs:string[] = [];
+        let _msgs:any[] = [];
 
         if(!_.isEmpty(this._message)){
             _msgs.push(this._message)
+        }else{
+            // _msgs.push('')
         }
 
         if (!_.isEmpty(this.args)) {
             this.args.forEach(x => {
                 if(_.isString(x)){
-                    _msgs.push(x)
+                    _msgs.push(x);
+                }else if(_.isNumber(x)){
+                    _msgs.push(x+'');
+                }else if(_.isError(x)){
+                    _msgs.push(x.stack);
                 }else{
-                    _msgs.push('\n'+JSON.stringify(x, null, 2))
+                    _msgs.push(JSON.stringify(x,null,2));
                 }
             });
         }
-        return _msgs.join('; ')
+        return _msgs.join('\n')
     }
 
 

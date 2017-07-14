@@ -30,8 +30,7 @@ export class ReqResEvent {
         return str;
     }
 
-    out(): string {
-
+    fullOut(): string {
         return '['+moment(this.time).format('YYYY.MM.DD HH:mm:ss.SSS')+'] '+this.connId+' | '+ this.prefix + ' ' + this.message()
     }
 }

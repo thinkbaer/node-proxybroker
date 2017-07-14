@@ -10,6 +10,7 @@ import {inspect} from 'util'
 import SpawnCLI from "./SpawnCLI";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
 import {ProxyServer} from "../../src/server/ProxyServer";
+import {Log} from "../../src/lib/logging/Log";
 
 const cfg = {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"};
 
@@ -17,6 +18,9 @@ const cfg = {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1
 @suite('commands/JudgeFileCommand - CLI version') @timeout(20000)
 class CLIJudgeFileCommandTest {
 
+    static before(){
+        Log.options({enable:false})
+    }
 
 
     @test
@@ -33,7 +37,7 @@ class CLIJudgeFileCommandTest {
         let cli = await SpawnCLI.run('judge-file', 'test/_files/proxylists/list01.csv', '-v', '-c', JSON.stringify(cfg));
         await http_proxy_server.stop();
 
-       // console.log(cli.stdout)
+
         let data = JSON.parse(cli.stdout);
         data = data.shift();
         expect(data.ip).to.eq('127.0.0.1');

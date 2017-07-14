@@ -149,7 +149,8 @@ suite('Judge proxy variations', () => {
             static proxy_server : ProxyServer = null;
 
             static async before() {
-                Log.enable = data.debug;
+                Log.options({enable:data.debug});
+
 
                 let proxy_options = Object.assign({}, data.proxy_options, {
                     url: this.proxy_protocol + '://' + this.proxy_ip + ':' + this.proxy_port,

@@ -22,7 +22,7 @@ Ansonsten Angabe des Pfades bzw. direkt zur config-Datei
 
 For logging we're using "winston" module.
 
-[cols="1,1,2", options="header"]
+[cols="1,m,2", options="header"]
 |===
 
 | Key
@@ -31,39 +31,27 @@ For logging we're using "winston" module.
 
 | logging.enable
 | true
-| Activation of the logger
+| Enable logging
+
+| logging.events
+| true
+| Enable publishing log events to the intern event bus
 
 | logging.level
-| warn
+| info
 | Log level
 
 | logging.transports
-|  [ {console:{}} ]
+|  [ {console:{ name: 'console', timestamp: true, json: false}} ]
 | List of definitions for logging output sources
 (see the configuration possiblities below). Each configuration
 
 |===
 
 
-*Repeatable options for all transports*
-
-[cols="1,1,2", options="header"]
-|===
-
-| Key
-| Default
-| Description
-
-| [transport].category
-| _none_
-| Optional value for logging category where the logger should be
-  used (see below in "categories" section).
-
-|===
-
 *Console*
 
-[cols="1,1,2", options="header"]
+[cols="1,m,2", options="header"]
 |===
 
 | Key
@@ -80,13 +68,6 @@ For logging we're using "winston" module.
 
 |===
 
-
-*Categories*
-
-* proxyserver
-* judge
-* validator
-* ui
 
 === Storage
 

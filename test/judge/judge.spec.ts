@@ -21,6 +21,10 @@ describe('Judge', () => {
 
     describe('options tests', () => {
 
+        before(() => {
+            Log.options({enable:false});
+        })
+
         it('default settings', () => {
             let judge = new Judge();
             let options = judge.options;

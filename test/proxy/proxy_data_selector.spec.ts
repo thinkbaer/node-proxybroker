@@ -16,16 +16,20 @@ import {EventBus} from "../../src/events/EventBus";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {Utils} from "../../src/utils/Utils";
 import {ProxyDataFetched} from "../../src/proxy/ProxyDataFetched";
+import {Log} from "../../src/lib/logging/Log";
 
 @suite('proxy/ProxyDataSelector')
 class ProxyDataSelectorTest {
+
+    static before(){
+        Log.options({enable:false})
+    }
 
 
     @test
     async 'init'() {
         let storage = await Storage.$(<SqliteConnectionOptions>{
             name: 'proxy_data_validator',
-
             type: 'sqlite',
             database: ':memory:'
 

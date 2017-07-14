@@ -443,16 +443,10 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     }
 
-    log(level: string, ...msg: any[]) {
-        Log.log(level,...msg)
-    }
 
     debug(...msg: any[]) {
-        if (this._debug) {
-            msg.unshift('DEBUG RRM');
-            msg.unshift(this.id);
-            this.log.apply(this, msg)
-        }
+        msg.unshift(this.id);
+        Log.debug.apply(Log,msg)
     }
 
     /**

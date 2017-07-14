@@ -7,12 +7,14 @@ import {suite, test, slow, timeout, pending} from "mocha-typescript";
 import {expect} from "chai";
 import {LevelDetection} from "../../src/judge/LevelDetection";
 import DomainUtils from "../../src/utils/DomainUtils";
+import {Log} from "../../src/lib/logging/Log";
 
 
 @suite('judge/LevelDetection')
 class JudgeRequestScoring {
 
     static before() {
+        Log.options({enable: false});
         DomainUtils.reloadHosts()
     }
 

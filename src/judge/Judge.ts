@@ -398,7 +398,6 @@ export class Judge {
                 receivedHead = receivedHead.split("\r\n\r\n").shift()
             }
 
-
             let headers = receivedHead.split(/\r\n/);
             let head = headers[0].split(/\s+/);
             let method = head.shift();
@@ -421,6 +420,7 @@ export class Judge {
 
                 if (cached_req && self.enabled) {
                     self.debug('HEADER ADD: ', headers);
+
                     headers.forEach(function (head) {
                         cached_req.monitor.addLog(MESSAGE.HED01.k, {header: head ? head : '_UNKNOWN_'}, '>>')
                     })
@@ -537,9 +537,7 @@ export class Judge {
     }
 
     private debug(...msg: any[]) {
-        if (this._options.debug) {
-            Log.debug.apply(Log, msg)
-        }
+        Log.debug.apply(Log, msg)
 
     }
 }

@@ -15,6 +15,8 @@ import {ProxyData} from "../proxy/ProxyData";
 import {ProxyValidationController} from "../proxy/ProxyValidationController";
 
 
+
+
 export class JudgeFileCommand {
 
     command = "judge-file <file> [outputformat]";

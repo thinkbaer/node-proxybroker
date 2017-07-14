@@ -8,37 +8,19 @@ import {expect} from "chai";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
 import {ProxyServer} from "../../src/server/ProxyServer";
 import {JudgeFileCommand} from "../../src/commands/JudgeFileCommand";
+import {Log} from "../../src/lib/logging/Log";
 
 
-/*
- import subscribe from "../../src/events/decorator/subscribe"
- import {ReqResEvent} from "../../src/judge/ReqResEvent";
- import LogEvent from "../../src/logging/LogEvent";
- import {EventBus} from "../../src/events/EventBus";
-
- class _Console {
-
- @subscribe(ReqResEvent)
- onReqRes(rre: ReqResEvent) {
- this.out(rre)
- }
-
- @subscribe(LogEvent)
- onLog(rre: LogEvent) {
- this.out(rre)
- }
-
- private out(o: LogEvent | ReqResEvent) {
- console.error(o.out())
- }
- }
- */
-
+let stdMocks = require('std-mocks');
 
 const cfg = {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"};
 
 @suite('commands/JudgeFileCommand') @timeout(20000)
 class JudgeFileCommandTest {
+
+    static before(){
+        Log.options({enable:false})
+    }
 
 
     @test
@@ -56,16 +38,24 @@ class JudgeFileCommandTest {
 
         await http_proxy_server.start();
 
+        stdMocks.use();
         let jfc = new JudgeFileCommand();
         let list = await jfc.handler({
             file: __dirname + '/../_files/proxylists/list01.csv',
-            verbose: true,
+            verbose: false,
             config: cfg,
             format: 'json'
         });
+        stdMocks.restore()
+        let output = stdMocks.flush()
         await http_proxy_server.stop();
         //EventBus.unregister(c)
 
+        expect(output).to.have.keys('stdout','stderr')
+        expect(output.stdout).has.length(1)
+        expect(list).has.length(1)
+        let stdData = JSON.parse(output.stdout[0])
+        expect(stdData[0]).to.deep.eq(JSON.parse(JSON.stringify(list[0].results)))
         let data = list.shift();
         expect(data.ip).to.eq('127.0.0.1');
         expect(data.port).to.eq(3128);

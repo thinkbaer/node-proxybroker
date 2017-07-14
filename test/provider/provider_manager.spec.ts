@@ -22,6 +22,7 @@ import {JobState} from "../../src/model/JobState";
 import {IpAddr} from "../../src/model/IpAddr";
 import {MockedProxies01} from "./predefined_01/MockedProxies01";
 import {ProxyDataFetchedEvent} from "../../src/proxy/ProxyDataFetchedEvent";
+import {Log} from "../../src/lib/logging/Log";
 
 class X {
     test: Function;
@@ -45,6 +46,10 @@ class ProviderManagerTest {
         providers: [__dirname + '/predefined_01/*'],
         schedule: {enable: false}
     };
+
+    static before(){
+        Log.options({enable:false})
+    }
 
     @test
     async 'init with directory containing provider classes'() {

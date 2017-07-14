@@ -34,7 +34,7 @@ class LogTests {
     @test
     'check default options'() {
 
-        let opts = Log.options({enable: true})
+        let opts = Log.options({enable: true, level:'warn'})
         expect(opts).to.deep.include({
             enable: true,
             events: true,
@@ -58,7 +58,6 @@ class LogTests {
         stdMocks.restore();
 
         let output = stdMocks.flush();
-
         expect(output).to.contain.keys('stdout','stderr')
         expect(output.stdout).has.length(1)
         expect(output.stderr).has.length(1)
@@ -66,7 +65,21 @@ class LogTests {
         expect(output.stderr[0]).to.include('HalloError')
     }
 
+    @test
+    'handling output of multiple values'() {
+        Log.options({enable: true, level:'debug'})
+        stdMocks.use();
+        Log.info('String',1,{test:1})
+        Log.warn(new Error('SOME ERROR'),'After Error')
+        Log.error(new Error('SOME ERROR'))
+        stdMocks.restore();
+        let output = stdMocks.flush();
+        expect(output.stdout).has.length(2)
+        expect(output.stdout[0]).to.include('String\n1\n{\n  "test": 1\n}')
+        expect(output.stderr).has.length(1)
+        expect(output.stderr[0]).to.include('Error: SOME ERROR\n    at LogTests.handling output of multiple values')
 
+    }
 
 }
 

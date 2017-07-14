@@ -44,7 +44,8 @@ class JV {
     static http_judge: Judge = null;
 
     static async before() {
-        Log.enable = JV._debug;
+
+        Log.options({enable:JV._debug});
         let proxy_options : IProxyServerOptions = Object.assign({}, {
             url: 'http://' + JV.http_proxy_ip + ':' + JV.http_proxy_port,
             _debug: JV._debug,

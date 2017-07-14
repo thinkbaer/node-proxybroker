@@ -6,20 +6,36 @@ import {EventBus} from "./events/EventBus";
 import StdConsole from "./commands/StdConsole";
 import {JudgeFileCommand} from "./commands/JudgeFileCommand";
 import {FetchProviderProxyListCommand} from "./commands/FetchProviderProxyListCommand";
+import {Log} from "./lib/logging/Log";
+import {Config} from "commons-config";
 
 
-process.on('uncaughtException',(err:Error) => {
+process.on('uncaughtException', (err: Error) => {
     console.error(err);
     process.exit()
 });
 
-process.on('unhandledRejection',(err:Error) => {
+process.on('unhandledRejection', (err: Error) => {
     console.error(err);
     process.exit()
 });
 
-
+/*
+ Config.options({
+ configs: [
+ {type: 'system'},
+ // find in same directory proxybroker
+ {type: 'file', file: {dirname: './', filename: 'proxybroker'}},
+ // find in proxyborker
+ {type: 'file', file: '${argv.configfile}'},
+ ]
+ })
+ */
 EventBus.register(new StdConsole());
+Log.options({
+    enable: true,
+    transports: [{console: {defaultFormatter: true, stderrLevels: ['info', 'debug', 'error', 'warn']}}]
+})
 
 require("yargonaut")
     .style("blue")

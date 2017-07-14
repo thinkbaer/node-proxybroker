@@ -10,6 +10,7 @@ import {inspect} from 'util'
 import {RequestResponseMonitor} from "../../src/judge/RequestResponseMonitor";
 import * as _request from "request-promise-native";
 import {Server} from "../../src/server/Server";
+import {Log} from "../../src/lib/logging/Log";
 //import {DefaultHTTPServer, DefaultHTTPSServer} from "../helper/server";
 
 
@@ -19,6 +20,8 @@ import {Server} from "../../src/server/Server";
 const PROXY_LOCAL_HOST: string = 'proxy.local';
 const SSL_PATH = '../_files/ssl';
 const DEBUG = false;
+
+// Log.options({enable:true,level:'debug'})
 
 @suite('judge/RequestResponseMonitor')
 class ReqResMonitorTest {

@@ -18,6 +18,7 @@ import {IpLoc} from "../../src/model/IpLoc";
 import {IpAddr} from "../../src/model/IpAddr";
 import {IpAddrState} from "../../src/model/IpAddrState";
 import {Container} from "typedi";
+import {Log} from "../../src/lib/logging/Log";
 
 const proxy_options: IProxyServerOptions = Object.assign({}, {
     url: 'http://127.0.0.1:3128',
@@ -32,6 +33,10 @@ const judge_options: IJudgeOptions = {
 
 @suite('proxy/ProxyValidationController') @timeout(10000)
 class ProxyValidationControllerTest {
+
+    static before(){
+        Log.options({enable:false})
+    }
 
     @test
     async 'positiv validation'() {

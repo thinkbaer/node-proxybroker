@@ -7,11 +7,15 @@ import {suite, test, slow, timeout, pending} from "mocha-typescript";
 import {expect} from "chai";
 import {inspect} from 'util'
 import {FreeProxyListsCom} from "../../../src/provider/predefined/FreeProxyListsCom";
+import {Log} from "../../../src/lib/logging/Log";
 
 
 @suite('provider/predefined/FreeProxyListenCom') @timeout(10000)
 class FreeProxyListsComTest {
 
+    static before(){
+        Log.options({enable:false})
+    }
 
     @test
     async 'get anonym'(){

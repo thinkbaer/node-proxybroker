@@ -18,7 +18,7 @@ const DEFAULT_OPTIONS: ILoggerOptions = {
 
     events: true,
 
-    level: 'warn',
+    level: 'info',
 
     transports: [
         {
@@ -41,6 +41,8 @@ export class Log {
 
     static console: boolean = false;
 
+    private initial:boolean = false
+
     private defaultLogger: winston.LoggerInstance = null
 
     private _options: ILoggerOptions = null
@@ -50,6 +52,7 @@ export class Log {
 
     private create(opts: LoggerOptions): Log {
         this.defaultLogger = new (winston.Logger)(opts);
+        this.initial = true
         return this
     }
 
@@ -58,6 +61,14 @@ export class Log {
             this.self = new Log()
         }
         return this.self
+    }
+
+
+    get logger(): winston.LoggerInstance{
+        if(!this.initial){
+            this.options(DEFAULT_OPTIONS)
+        }
+        return this.defaultLogger
     }
 
     private static defaultFormatter(options: any) {
@@ -69,17 +80,16 @@ export class Log {
             (options.meta && Object.keys(options.meta).length ? '\n\t' + JSON.stringify(options.meta) : '' );
     }
 
-    static options(options: ILoggerOptions): ILoggerOptions {
-        options = _.defaults(options, DEFAULT_OPTIONS)
-        Log.enable = options.enable
-        Log.enableEvents = options.events
+    private options(options: ILoggerOptions){
+
+        this._options = _.defaults(options, DEFAULT_OPTIONS)
+        Log.enable = this._options.enable
+        Log.enableEvents = this._options.events
         let opts: LoggerOptions = {
-            level: options.level,
+            level: this._options.level,
             transports: []
         }
 
-        this._()._options = options
-        // this._()._logger.configure(opt)
 
         for (let opt of options.transports) {
 
@@ -116,9 +126,15 @@ export class Log {
                     throw new TodoException()
             }
         }
-        this._().create(opts)
-        return this._()._options
+        this.create(opts)
+        return this._options
     }
+
+
+    static options(options: ILoggerOptions): ILoggerOptions {
+        return this._().options(options)
+    }
+
 
     static log(level: string, ...args: any[]) {
         if (Log.enable) {
@@ -126,7 +142,7 @@ export class Log {
             if(Log.enableEvents){
                 l.fire()
             }
-            this._().defaultLogger.log(level.toLocaleLowerCase(), l.message());
+            this._().logger.log(level.toLocaleLowerCase(), l.message());
         }
     }
 
