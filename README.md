@@ -2,8 +2,9 @@
 
 # node-proxybroker
 
-![build status](https://travis-ci.org/thinkbaer/node-proxybroker.svg?branch=master)
+[![Build Status](https://travis-ci.org/thinkbaer/node-proxybroker.svg?branch=master)](https://travis-ci.org/thinkbaer/node-proxybroker)
 [![codecov](https://codecov.io/gh/thinkbaer/node-proxybroker/branch/master/graph/badge.svg)](https://codecov.io/gh/thinkbaer/node-proxybroker)
+[![Dependency Status](https://www.versioneye.com/user/projects/596932d5368b080056357b50/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/596932d5368b080056357b50)
 
 Under deveploment.
 

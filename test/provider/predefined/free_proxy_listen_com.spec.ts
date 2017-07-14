@@ -24,7 +24,6 @@ class FreeProxyListsComTest {
         let v = p.variant;
         expect(v.type).to.be.eq('anonym');
         let list = await p.get();
-        expect(list.length).to.not.be.empty
-
+        expect(list).to.not.be.empty
     }
 }
