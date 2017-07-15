@@ -51,6 +51,7 @@ export class JudgeFileCommand {
                 }
             });
 
+
             if (list.length) {
                 let judgeOptions: IJudgeOptions = Judge.default_options();
 
@@ -58,13 +59,6 @@ export class JudgeFileCommand {
                 if(!_.isEmpty(judgeCustomOptions)){
                     judgeOptions = Utils.merge(judgeOptions,judgeCustomOptions)
                 }
-
-
-                /*
-                if (argv.config) {
-                    judgeOptions = Utils.merge(judgeOptions, _.isString(argv.config) ? JSON.parse(argv.config) : argv.config)
-                }
-                */
 
                 let validator = new ProxyValidator(judgeOptions, null);
                 let booted = false;

@@ -9,17 +9,18 @@ import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
 import {ProxyServer} from "../../src/server/ProxyServer";
 import {JudgeFileCommand} from "../../src/commands/JudgeFileCommand";
 import {Log} from "../../src/lib/logging/Log";
+import {Config} from "commons-config";
 
 
 let stdMocks = require('std-mocks');
 
-const cfg = {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"};
+const cfg = {validator: {judge: {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"}}};
 
 @suite('commands/JudgeFileCommand') @timeout(20000)
 class JudgeFileCommandTest {
 
-    static before(){
-        Log.options({enable:false})
+    static before() {
+        Log.options({enable: false})
     }
 
 
@@ -28,6 +29,8 @@ class JudgeFileCommandTest {
         // Log.enable = true
         //let c = new _Console()
         //EventBus.register(c)
+        Config.clear()
+        Config.jar().merge(cfg)
 
         let proxy_options: IProxyServerOptions = Object.assign({}, {
             url: 'http://127.0.0.1:3128',
@@ -43,7 +46,7 @@ class JudgeFileCommandTest {
         let list = await jfc.handler({
             file: __dirname + '/../_files/proxylists/list01.csv',
             verbose: false,
-            config: cfg,
+            // config: cfg, // config can be ignored handler work on cli.ts level, so we previously defined settings directly
             format: 'json'
         });
         stdMocks.restore()
@@ -51,7 +54,7 @@ class JudgeFileCommandTest {
         await http_proxy_server.stop();
         //EventBus.unregister(c)
 
-        expect(output).to.have.keys('stdout','stderr')
+        expect(output).to.have.keys('stdout', 'stderr')
         expect(output.stdout).has.length(1)
         expect(list).has.length(1)
         let stdData = JSON.parse(output.stdout[0])
