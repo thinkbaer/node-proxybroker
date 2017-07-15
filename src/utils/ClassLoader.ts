@@ -32,7 +32,7 @@ export class ClassLoader {
 
         o.forEach(x => {
             if (Utils.isString(x)) {
-                let _x = PlatformUtils.pathNormilize(PlatformUtils.pathResolve(<string>x));
+                let _x = PlatformUtils.pathNormalize(PlatformUtils.pathResolve(<string>x));
                     let exported = ClassLoader.importClassesFromDirectories([_x]);
                     klasses = klasses.concat.apply(klasses,exported)
             } else if (x instanceof Function) {
@@ -61,7 +61,7 @@ export class ClassLoader {
     static importClassesFromDirectories(directories: string[], formats = [".js", ".ts"]): Function[] {
 
         const allFiles = directories.reduce((allDirs, dir) => {
-            let x = PlatformUtils.pathNormilize(dir);
+            let x = PlatformUtils.pathNormalize(dir);
             let y = PlatformUtils.load("glob").sync(x);
             return allDirs.concat(y);
         }, [] as string[]);
@@ -83,7 +83,7 @@ export class ClassLoader {
     static importJsonsFromDirectories(directories: string[], format = ".json"): any[] {
 
         const allFiles = directories.reduce((allDirs, dir) => {
-            return allDirs.concat(PlatformUtils.load("glob").sync(PlatformUtils.pathNormilize(dir)));
+            return allDirs.concat(PlatformUtils.load("glob").sync(PlatformUtils.pathNormalize(dir)));
         }, [] as string[]);
 
         return allFiles

@@ -14,7 +14,7 @@ import {IProviderOptions} from "../../src/provider/IProviderOptions";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {Storage} from "../../src/storage/Storage";
 import {Job} from "../../src/model/Job";
-import {ProxyDataSelector} from "../../src/proxy/ProxyDataSelector";
+import {ProxyFilter} from "../../src/proxy/ProxyFilter";
 import {EventBus} from "../../src/events/EventBus";
 import {Utils} from "../../src/utils/Utils";
 import {ProviderRunEvent} from "../../src/provider/ProviderRunEvent";
@@ -165,7 +165,7 @@ class ProviderManagerTest {
         await storage.init();
 
         let pm = new ProviderManager(this.options, storage, true);
-        let pds = new ProxyDataSelector(storage);
+        let pds = new ProxyFilter(storage);
         EventBus.register(pds);
         await pm.init();
 

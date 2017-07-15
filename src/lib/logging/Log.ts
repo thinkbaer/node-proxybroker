@@ -5,6 +5,7 @@ import {ILoggerOptions} from "./ILoggerOptions";
 import TodoException from "../../exceptions/TodoException";
 import {LoggerOptions, TransportInstance, TransportOptions} from "winston";
 import * as moment from "moment";
+import {Utils} from "../../utils/Utils";
 
 const DEFAULT_TRANSPORT_OPTIONS: TransportOptions = {
     timestamp: true,
@@ -80,7 +81,10 @@ export class Log {
             (options.meta && Object.keys(options.meta).length ? '\n\t' + JSON.stringify(options.meta) : '' );
     }
 
-    private options(options: ILoggerOptions){
+    private options(options: ILoggerOptions, append:boolean = false){
+        if(append && this._options){
+            options = Utils.merge(this._options,options)
+        }
 
         this._options = _.defaults(options, DEFAULT_OPTIONS)
         Log.enable = this._options.enable
@@ -131,8 +135,8 @@ export class Log {
     }
 
 
-    static options(options: ILoggerOptions): ILoggerOptions {
-        return this._().options(options)
+    static options(options: ILoggerOptions, append:boolean=false): ILoggerOptions {
+        return this._().options(options,append)
     }
 
 

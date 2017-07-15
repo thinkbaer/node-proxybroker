@@ -68,7 +68,7 @@
     "body-parser": "^1.17.2",
     "cheerio": "^1.0.0-rc.2",
     "clone": "^2.0.0",
-    "commons-config": "^0.4.0",
+    "commons-config": "^0.4.2",
     "cron-parser": "^2.4.1",
     "deepmerge": "^1.4.4",
     "es6-promise": "^4.0.5",

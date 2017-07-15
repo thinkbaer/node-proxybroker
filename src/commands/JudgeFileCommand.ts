@@ -12,14 +12,16 @@ import {JudgeResults} from "../judge/JudgeResults";
 import {IJudgeOptions} from "../judge/IJudgeOptions";
 import {Utils} from "../utils/Utils";
 import {ProxyData} from "../proxy/ProxyData";
-import {ProxyValidationController} from "../proxy/ProxyValidationController";
+import {ProxyValidator} from "../proxy/ProxyValidator";
+import {EventBus} from "../events/EventBus";
+import {Config} from "commons-config";
 
 
 
 
 export class JudgeFileCommand {
 
-    command = "judge-file <file> [outputformat]";
+    command = "judge-file <file>";
     aliases = 'jf';
     describe = "Test a list with addresses in <file> for proxy abilities. (Format: ip:port\\n)";
 
@@ -34,7 +36,7 @@ export class JudgeFileCommand {
     }
 
     async handler(argv: any):Promise<any> {
-        Log.enable = StdConsole.$enabled = argv.verbose;
+        EventBus.register(new StdConsole());
 
         if (PlatformUtils.fileExist(argv.file)) {
             let buffer = fs.readFileSync(argv.file);
@@ -51,11 +53,20 @@ export class JudgeFileCommand {
 
             if (list.length) {
                 let judgeOptions: IJudgeOptions = Judge.default_options();
+
+                let judgeCustomOptions = Config.get('validator.judge',{})
+                if(!_.isEmpty(judgeCustomOptions)){
+                    judgeOptions = Utils.merge(judgeOptions,judgeCustomOptions)
+                }
+
+
+                /*
                 if (argv.config) {
                     judgeOptions = Utils.merge(judgeOptions, _.isString(argv.config) ? JSON.parse(argv.config) : argv.config)
                 }
+                */
 
-                let validator = new ProxyValidationController(judgeOptions, null);
+                let validator = new ProxyValidator(judgeOptions, null);
                 let booted = false;
                 try {
                     booted = await validator.prepare()

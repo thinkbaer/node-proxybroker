@@ -1,22 +1,28 @@
 == Configuration
 
+The following components can be customizied through configuration:
 
-Default-Konfiguration unter ${HOME}/.proxybroker/config +
-Ansonsten Angabe des Pfades bzw. direkt zur config-Datei
+* Logging
+* Storage
+* ProxyServer
+* ProxyValidator
+* ProviderManager
+* APIServer
 
 
-* Backend
-** Tabelle-Prefix (npb_*)
-** Job automatation
-*** refresh - time / schedule
+The configuration can be passed by file or by JSON stringified data
+through argument (--config).
+    {type: 'file', file: '${argv.configfile}'},
+    {type: 'file', file: '${env.configfile}'},
+    {type: 'file', file: '${os.homedir}/.proxybroker/config.json'},
+    {type: 'file', file: './proxybroker.json'}
 
-* Proxy-Server
-** Aktivierung/Deaktivierung
-** IP/Port/Path
+Loading file order, merged:
 
-* Frontend
-** aktivieren/deaktiviern
-** IP/Port/Path
+1. look for filename passed by argument "configfile"
+1. look for filename passed by enviroment variable "configfile"
+1. look for file $HOMEDIR/.proxybroker/config.json
+1. look for file proxybroker.json in the current runtime directory
 
 === Logging
 
@@ -91,3 +97,26 @@ Used for typeorm.
 | -
 | Name of the database
 |===
+
+=== ProviderManager
+
+=== ProxyValidator
+
+=== ProxyServer
+
+=== APIServer
+
+=== #TODO#
+
+* Backend
+** Job automatation
+*** refresh - time / schedule
+
+* Proxy-Server
+** Aktivierung/Deaktivierung
+** IP/Port/Path
+
+* Frontend
+** aktivieren/deaktiviern
+** IP/Port/Path
+

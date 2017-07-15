@@ -7,11 +7,11 @@ import {ProviderManager} from "../provider/ProviderManager";
 import {Utils} from "../utils/Utils";
 
 
-export class FetchProviderProxyListCommand {
+export class FetchCommand {
 
-    command = "fetch [provider] <variant>";
+    command = "fetch <provider> [variant]";
     aliases = "fp";
-    describe = "Retrieve proxies from a <provider> source.";
+    describe = "Retrieve proxies from a <provider> and optional [variant].";
 
 
     builder(yargs: any) {
@@ -25,7 +25,7 @@ export class FetchProviderProxyListCommand {
     }
 
     async handler(argv: any) {
-        Log.enable = StdConsole.$enabled = argv.verbose;
+
         let manager = new ProviderManager({schedule: {enable: false}});
         await manager.init();
         let provider = null;
@@ -35,7 +35,22 @@ export class FetchProviderProxyListCommand {
         if (argv.provider) {
             let variants = manager.findAll({name: argv.provider});
 
-            if (!_.isEmpty(variants)) {
+            if (variants.length == 1) {
+                provider = argv.provider;
+                // if only one variant then take this
+                if (argv.variant) {
+                    // test if name is same
+                    if (argv.variant === variants[0].type) {
+                        variant = argv.variant;
+                        variant_found = variants.shift()
+                    } else {
+                        console.log('Provider with name ' + argv.provider + ' has no variant named ' + argv.variant + '.\n');
+                    }
+                } else {
+                    variant = argv.variant;
+                    variant_found = variants.shift()
+                }
+            } else if (!_.isEmpty(variants)) {
                 provider = argv.provider;
 
                 variants = manager.findAll({name: argv.provider, type: argv.variant});

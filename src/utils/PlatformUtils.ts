@@ -49,8 +49,15 @@ export class PlatformUtils {
     /**
      * Normalizes given path. Does "path.normalize".
      */
-    static pathNormilize(pathStr: string): string {
+    static pathNormalize(pathStr: string): string {
         return path.normalize(pathStr);
+    }
+
+    /**
+     * Normalizes given path. Does "path.normalize".
+     */
+    static pathResolveAndNormalize(pathStr: string): string {
+        return this.pathNormalize(this.pathResolve(pathStr));
     }
 
     /**
@@ -65,6 +72,13 @@ export class PlatformUtils {
      */
     static pathResolve(pathStr: string): string {
         return path.resolve(pathStr);
+    }
+
+    /**
+     * Test if path is absolute.
+     */
+    static isAbsolute(pathStr: string): boolean {
+        return path.isAbsolute(pathStr);
     }
 
     /**

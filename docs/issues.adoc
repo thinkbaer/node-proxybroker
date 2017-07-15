@@ -164,7 +164,7 @@ settings.
 @TASK:{counter:task} 20170709 +
 Add docker support
 
-@TASK:{counter:task} 20170709 +
+[.line-through]#@TASK:{counter:task} 20170709# +
 update commons-config
 ```
 // set options and return them
@@ -210,7 +210,39 @@ API
 * search by criteria
 * force re-validation
 
-NOTE: Automatic re-validation after a time period!
+@TASK:{counter:task} 20170715 +
+Rename: +
+ ProxyDataSelector => ProxyFilter +
+ ProxyValidationController => ProxyValidator +
+ ProxyDataValidateEvent => ProxyValidateEvent
 
+
+
+@TASK:{counter:task} 20170715 +
+Automatic re-validation after a time period! in ProxyVavalidator.
+Needed infos for passed by config
+
+- reschedule pattern
+- amount of taken proxies
+-
+
+
+@TASK:{counter:task} 20170715 +
+CLI Test
+
+
+@TASK:{counter:task} 20170715 +
+Impl. SystemLoader which initialize and handles the lifecycle of
+components (starts up, shutdown, dii) in the app. Or call it
+maybe AppLoader.
+
+* static Config and Logger
+* Storage
+
+@TASK:{counter:task} 20170715 +
+Extend commons-config by
+
+* parse single arguments, impl. seperate handler for this
+* parse json config
 
 

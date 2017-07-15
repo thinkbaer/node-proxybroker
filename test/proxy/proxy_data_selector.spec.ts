@@ -7,7 +7,7 @@ import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 import {inspect} from 'util'
 import {Storage} from "../../src/storage/Storage";
-import {ProxyDataSelector} from "../../src/proxy/ProxyDataSelector";
+import {ProxyFilter} from "../../src/proxy/ProxyFilter";
 import {ProxyDataFetchedEvent} from "../../src/proxy/ProxyDataFetchedEvent";
 import {IpAddr} from "../../src/model/IpAddr";
 import subscribe from "../../src/events/decorator/subscribe"
@@ -34,7 +34,7 @@ class ProxyDataSelectorTest {
             database: ':memory:'
 
         });
-        let proxy_data_selector = new ProxyDataSelector(storage);
+        let proxy_data_selector = new ProxyFilter(storage);
         expect(proxy_data_selector).to.exist;
         await storage.shutdown();
     }
@@ -48,7 +48,7 @@ class ProxyDataSelectorTest {
             database: ':memory:'
         });
 
-        let proxy_data_selector = new ProxyDataSelector(storage);
+        let proxy_data_selector = new ProxyFilter(storage);
         let c = await storage.connect();
 
         let p = new IpAddr();
@@ -163,7 +163,7 @@ class ProxyDataSelectorTest {
     @test
     async 'filter'() {
         let addr = {ip: '127.0.0.1', port: 3128};
-        class ProxyDataSelectorFilterTest extends ProxyDataSelector {
+        class ProxyDataSelectorFilterTest extends ProxyFilter {
             test: Function;
 
             constructor(storage: Storage, cb: Function) {

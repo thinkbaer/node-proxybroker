@@ -7,9 +7,9 @@ import {ProviderManager} from "../../src/provider/ProviderManager";
 import {Express} from "../../src/server/Express";
 import {Log} from "../../src/lib/logging/Log";
 import {Config} from "commons-config";
-import {ProxyDataSelector} from "../../src/proxy/ProxyDataSelector";
+import {ProxyFilter} from "../../src/proxy/ProxyFilter";
 import {EventBus} from "../../src/events/EventBus";
-import {ProxyValidationController} from "../../src/proxy/ProxyValidationController";
+import {ProxyValidator} from "../../src/proxy/ProxyValidator";
 
 process.on('unhandledRejection', (reason: any, p: any) => {
     console.error(reason)
@@ -44,10 +44,10 @@ let boot = async function (): Promise<void> {
     await storage.init();
     Container.set(Storage, storage)
 
-    let selector = new ProxyDataSelector(storage)
+    let selector = new ProxyFilter(storage)
     EventBus.register(selector)
 
-    let validator = new ProxyValidationController({
+    let validator = new ProxyValidator({
         selftest: true,
         remote_lookup: true,
         remote_url: 'http://127.0.0.1:8080',
@@ -59,7 +59,7 @@ let boot = async function (): Promise<void> {
     },storage)
     EventBus.register(validator)
     await validator.prepare()
-    Container.set(ProxyValidationController, validator)
+    Container.set(ProxyValidator, validator)
 
     let provider = new ProviderManager({
         schedule: {

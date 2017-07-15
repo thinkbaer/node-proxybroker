@@ -2,6 +2,7 @@
 import * as merge from 'deepmerge'
 import * as _ from 'lodash'
 import {InterpolationSupport} from "commons-config";
+import {Options} from "deepmerge";
 
 
 export class Utils {
@@ -48,13 +49,14 @@ export class Utils {
         return _.clone(obj)
     }
 
+    static mergeArray(dest:any[],source:any[],options:Options<any>){
+        let res = _.concat(dest,source);
+        res = _.uniqBy(res,(_r)=>{return JSON.stringify(_r)});
+        return res
+    }
+
     static merge(...args: any[]): any {
-        return merge.all(args)
-        /*
-         let tmp:any={}
-         args.forEach(_x => {tmp = mergeDeep(tmp,_x)})
-         return tmp
-         */
+        return merge.all(args, {arrayMerge: this.mergeArray})
     }
 
     static walk(root: any, fn: Function) {

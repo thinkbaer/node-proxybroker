@@ -11,8 +11,8 @@ import SpawnCLI from "./SpawnCLI";
 
 const cfg = {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"};
 
-@suite('commands/FetchProviderProxyListCommand') @timeout(20000)
-class FetchProviderProxyListCommandTest {
+@suite('commands/FetchCommand') @timeout(20000)
+class FetchCommandTest {
 /*
 
     @test

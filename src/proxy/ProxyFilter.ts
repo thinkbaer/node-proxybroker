@@ -14,7 +14,10 @@ import DomainUtils from "../utils/DomainUtils";
 import {ProxyDataValidateEvent} from "./ProxyDataValidateEvent";
 import {ProxyDataFetched} from "./ProxyDataFetched";
 
-export class ProxyDataSelector implements IQueueProcessor<ProxyDataFetched> {
+
+const PROXY_FILTER_NAME = 'proxy_filter'
+
+export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
 
     // TODO make this configurable
     chunk_size: number = 50;
@@ -31,7 +34,7 @@ export class ProxyDataSelector implements IQueueProcessor<ProxyDataFetched> {
     constructor(storage: Storage) {
         let parallel = 200;
         this.storage = storage;
-        this.queue = new AsyncWorkerQueue<ProxyDataFetched>(this, {name:'proxy_data_selector',concurrent: parallel})
+        this.queue = new AsyncWorkerQueue<ProxyDataFetched>(this, {name:PROXY_FILTER_NAME,concurrent: parallel})
     }
 
     @subscribe(ProxyDataFetchedEvent)

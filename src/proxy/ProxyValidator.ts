@@ -19,7 +19,9 @@ import {Utils} from "../utils/Utils";
 import {Log} from "../lib/logging/Log";
 
 
-export class ProxyValidationController implements IQueueProcessor<ProxyData> {
+const PROXY_VALIDATOR = 'proxy_validator'
+
+export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
     storage: Storage;
 
@@ -34,7 +36,7 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
         let parallel: number = 200;
         this.storage = storage;
         this.judge = new Judge(judgeOptions);
-        this.queue = new AsyncWorkerQueue<ProxyData>(this, {name: 'proxy_validation_controller', concurrent: parallel})
+        this.queue = new AsyncWorkerQueue<ProxyData>(this, {name: PROXY_VALIDATOR, concurrent: parallel})
     }
 
 
@@ -135,13 +137,13 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
 
             if (proxyData.results.http) {
                 let _http = proxyData.results.http;
-                http_state =  ProxyValidationController.buildState(ip_addr, _http);
+                http_state =  ProxyValidator.buildState(ip_addr, _http);
                 await conn.save(http_state)
             }
 
             if (proxyData.results.https) {
                 let _http = proxyData.results.https;
-                https_state = ProxyValidationController.buildState(ip_addr, _http);
+                https_state = ProxyValidator.buildState(ip_addr, _http);
                 await conn.save(https_state)
             }
 
@@ -213,8 +215,6 @@ export class ProxyValidationController implements IQueueProcessor<ProxyData> {
                 throw err
             }
         }
-
-        // await this.judge.progressing();
 
         let results = await this.judge.validate(workLoad.ip, workLoad.port);
         workLoad.results = results;

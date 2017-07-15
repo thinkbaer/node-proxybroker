@@ -5,8 +5,8 @@ import {Storage} from "./storage/Storage";
 
 import {Config} from "commons-config";
 import {IStorageOptions} from "./storage/IStorageOptions";
-import {ProxyDataSelector} from "./proxy/ProxyDataSelector";
-import {ProxyValidationController} from "./proxy/ProxyValidationController";
+import {ProxyFilter} from "./proxy/ProxyFilter";
+import {ProxyValidator} from "./proxy/ProxyValidator";
 import {EventBus} from "./events/EventBus";
 import {IJudgeOptions} from "./judge/IJudgeOptions";
 import {ProviderManager} from "./provider/ProviderManager";
@@ -19,9 +19,9 @@ class Main {
 
     storage : Storage;
 
-    proxy_data_selector: ProxyDataSelector;
+    proxy_data_selector: ProxyFilter;
 
-    proxy_validation_controller: ProxyValidationController;
+    proxy_validation_controller: ProxyValidator;
 
     proxy_manager: ProviderManager;
 
@@ -62,11 +62,11 @@ class Main {
     boot(){
 
 
-        this.proxy_data_selector = new ProxyDataSelector(this.storage);
+        this.proxy_data_selector = new ProxyFilter(this.storage);
         EventBus.register(this.proxy_data_selector);
 
         let options:IJudgeOptions = Config.get('judge') || {};
-        this.proxy_validation_controller = new ProxyValidationController(options,this.storage)
+        this.proxy_validation_controller = new ProxyValidator(options,this.storage)
 
     }
 

@@ -5,6 +5,7 @@ import {Log} from "../lib/logging/Log";
 import Todo from "../exceptions/TodoException";
 import {Utils} from "../utils/Utils";
 import {IJudgeOptions} from "../judge/IJudgeOptions";
+import {EventBus} from "../events/EventBus";
 
 
 export class JudgeCommand {
@@ -19,6 +20,7 @@ export class JudgeCommand {
     }
 
     async handler(argv: any) {
+        EventBus.register(new StdConsole());
         Log.enable = StdConsole.$enabled = argv.verbose;
         let judgeOptions: IJudgeOptions = Judge.default_options();
         if (argv.config) {

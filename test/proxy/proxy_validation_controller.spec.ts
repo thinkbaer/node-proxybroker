@@ -6,7 +6,7 @@ describe('', () => {
 import {suite, test, slow, timeout, pending} from "mocha-typescript";
 import {expect} from "chai";
 import {inspect} from 'util'
-import {ProxyValidationController} from "../../src/proxy/ProxyValidationController";
+import {ProxyValidator} from "../../src/proxy/ProxyValidator";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
 import {ProxyServer} from "../../src/server/ProxyServer";
 import {IJudgeOptions} from "../../src/judge/IJudgeOptions";
@@ -49,7 +49,7 @@ class ProxyValidationControllerTest {
         await storage.init();
 
         let http_proxy_server = new ProxyServer(proxy_options);
-        let proxyValidationController = new ProxyValidationController(judge_options, storage);
+        let proxyValidationController = new ProxyValidator(judge_options, storage);
         await proxyValidationController.prepare();
         await http_proxy_server.start();
 
@@ -98,7 +98,7 @@ class ProxyValidationControllerTest {
             database: ':memory:'
         });
         await storage.init();
-        let proxyValidationController = new ProxyValidationController(judge_options, storage);
+        let proxyValidationController = new ProxyValidator(judge_options, storage);
         await proxyValidationController.prepare();
 
         let proxyData = new ProxyData({ip: '127.0.0.30', port: 3128});

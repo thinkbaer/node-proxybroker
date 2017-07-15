@@ -12,21 +12,28 @@ import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
 import {ProxyServer} from "../../src/server/ProxyServer";
 import {Log} from "../../src/lib/logging/Log";
 
-const cfg = {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"};
+const cfg: any = {
+    validator: {
+        judge: {
+            remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"
+        }
+    }
+};
 
 
 @suite('commands/JudgeFileCommand - CLI version') @timeout(20000)
 class CLIJudgeFileCommandTest {
 
-    static before(){
-        Log.options({enable:false})
+    static before() {
+        Log.options({enable: false})
+        SpawnCLI.timeout = 18000
     }
 
 
     @test
     async 'judge file with file'() {
 
-        let proxy_options : IProxyServerOptions = Object.assign({}, {
+        let proxy_options: IProxyServerOptions = Object.assign({}, {
             url: 'http://127.0.0.1:3128',
             level: 3
         });
@@ -36,7 +43,6 @@ class CLIJudgeFileCommandTest {
         await http_proxy_server.start();
         let cli = await SpawnCLI.run('judge-file', 'test/_files/proxylists/list01.csv', '-v', '-c', JSON.stringify(cfg));
         await http_proxy_server.stop();
-
 
         let data = JSON.parse(cli.stdout);
         data = data.shift();
