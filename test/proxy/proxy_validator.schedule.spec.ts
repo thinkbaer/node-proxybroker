@@ -87,7 +87,7 @@ class ProxyValidationControllerTest {
     }
 
 
-    @test.only()
+    @test
     async 'schedule'() {
 
         // Log.options({enable:true})

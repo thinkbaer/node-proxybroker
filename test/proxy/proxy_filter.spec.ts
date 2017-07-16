@@ -18,7 +18,7 @@ import {Utils} from "../../src/utils/Utils";
 import {ProxyDataFetched} from "../../src/proxy/ProxyDataFetched";
 import {Log} from "../../src/lib/logging/Log";
 
-@suite('proxy/ProxyDataSelector')
+@suite('proxy/ProxyFilter')
 class ProxyDataSelectorTest {
 
     static before(){
@@ -62,9 +62,7 @@ class ProxyDataSelectorTest {
             {ip: '127.0.1.1', port: 3128}
         ]));
 
-
         expect(events.length).to.be.eq(1);
-        expect(events[0].isNew).to.be.true;
         expect(events[0].fired).to.be.true;
         expect(events[0].data.results).to.be.null;
         expect(events[0].data.ip).to.eq('127.0.1.1');
@@ -89,16 +87,7 @@ class ProxyDataSelectorTest {
             {ip: '127.0.0.1', port: 3128}
         ]));
         expect(events.length).to.be.eq(2);
-        expect(events[0].isNew).to.be.false;
-        expect(events[0].record).to.deep.include({
-            id: 1,
-            ip: '192.0.0.1',
-            port: 3129,
-            blocked: false
-        });
 
-        expect(events[1].isNew).to.be.true;
-        expect(events[1].record).to.be.null;
         expect(events[1].data).to.include({
             results: null,
             ip: '127.0.0.1',
