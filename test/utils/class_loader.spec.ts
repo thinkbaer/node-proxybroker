@@ -1,13 +1,11 @@
-import * as mocha from 'mocha';
+import {suite, test} from "mocha-typescript";
+import {expect} from "chai";
+import {inspect} from "util";
+
+import {ClassLoader} from "../../src/utils/ClassLoader";
 describe('', () => {
 });
 
-
-import {suite, test, slow, timeout, pending} from "mocha-typescript";
-import {expect} from "chai";
-import {inspect} from 'util'
-
-import {ClassLoader} from "../../src/utils/ClassLoader";
 
 interface ITest {
     somename?: string;

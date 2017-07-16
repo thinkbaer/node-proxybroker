@@ -1,11 +1,5 @@
-import * as mocha from 'mocha';
-describe('', () => {
-});
-
-
-import {suite, test, slow, timeout, pending} from "mocha-typescript";
+import {suite, test, timeout} from "mocha-typescript";
 import {expect} from "chai";
-import {inspect} from 'util'
 import {ProxyValidator} from "../../src/proxy/ProxyValidator";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
 import {ProxyServer} from "../../src/server/ProxyServer";
@@ -17,8 +11,10 @@ import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOpt
 import {IpLoc} from "../../src/model/IpLoc";
 import {IpAddr} from "../../src/model/IpAddr";
 import {IpAddrState} from "../../src/model/IpAddrState";
-import {Container} from "typedi";
 import {Log} from "../../src/lib/logging/Log";
+describe('', () => {
+});
+
 
 const proxy_options: IProxyServerOptions = Object.assign({}, {
     url: 'http://127.0.0.1:3128',
@@ -34,8 +30,8 @@ const judge_options: IJudgeOptions = {
 @suite('proxy/ProxyValidationController') @timeout(10000)
 class ProxyValidationControllerTest {
 
-    static before(){
-        Log.options({enable:false})
+    static before() {
+        Log.options({enable: false})
     }
 
     @test
@@ -49,7 +45,7 @@ class ProxyValidationControllerTest {
         await storage.init();
 
         let http_proxy_server = new ProxyServer(proxy_options);
-        let proxyValidationController = new ProxyValidator(judge_options, storage);
+        let proxyValidationController = new ProxyValidator({schedule: {enable: true}, judge: judge_options}, storage);
         await proxyValidationController.prepare();
         await http_proxy_server.start();
 
@@ -98,7 +94,7 @@ class ProxyValidationControllerTest {
             database: ':memory:'
         });
         await storage.init();
-        let proxyValidationController = new ProxyValidator(judge_options, storage);
+        let proxyValidationController = new ProxyValidator({schedule: {enable: true}, judge: judge_options}, storage);
         await proxyValidationController.prepare();
 
         let proxyData = new ProxyData({ip: '127.0.0.30', port: 3128});

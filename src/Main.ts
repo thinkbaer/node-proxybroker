@@ -1,18 +1,14 @@
-
-
 import "reflect-metadata";
 import {Storage} from "./storage/Storage";
 
 import {Config} from "commons-config";
-import {IStorageOptions} from "./storage/IStorageOptions";
 import {ProxyFilter} from "./proxy/ProxyFilter";
 import {ProxyValidator} from "./proxy/ProxyValidator";
 import {EventBus} from "./events/EventBus";
-import {IJudgeOptions} from "./judge/IJudgeOptions";
 import {ProviderManager} from "./provider/ProviderManager";
 import {ProxyServer} from "./server/ProxyServer";
-import {Express} from "./server/Express";
-
+import {Express} from "./server/AppServer";
+import {IProxyValidatiorOptions} from "./proxy/IProxyValidatiorOptions";
 
 
 class Main {
@@ -65,7 +61,7 @@ class Main {
         this.proxy_data_selector = new ProxyFilter(this.storage);
         EventBus.register(this.proxy_data_selector);
 
-        let options:IJudgeOptions = Config.get('judge') || {};
+        let options:IProxyValidatiorOptions = Config.get('validator') || {};
         this.proxy_validation_controller = new ProxyValidator(options,this.storage)
 
     }

@@ -1,6 +1,7 @@
 
 
 import {StringOrFunction} from "../types";
+import {FreeProxyListsCom} from "./predefined/FreeProxyListsCom";
 
 export interface IProviderOptions {
 
@@ -10,7 +11,6 @@ export interface IProviderOptions {
 
     schedule?: {
         enable?: boolean
-        recheck?: number
         pattern?:string
     }
 
@@ -20,3 +20,17 @@ export interface IProviderOptions {
      */
     parallel?:number
 }
+
+const DEFAULT_PROVIDER: StringOrFunction[] = [
+    FreeProxyListsCom
+];
+
+
+export const DEFAULT_PROVIDER_OPTIONS: IProviderOptions = {
+    schedule: {
+        enable: true,
+        pattern: `${(new Date()).getMinutes() + 1} ${(new Date()).getHours()} * * *`
+    },
+    providers: DEFAULT_PROVIDER
+};
+

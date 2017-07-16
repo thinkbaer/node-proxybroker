@@ -2,15 +2,19 @@
 
 
 
-[cols="1,1,2", options="header"]
+[cols="m,1,1,2,2", options="header"]
 |===
 
-| method
-| ad
-| as
+| Path
+| Method
+| Parameter
+| Return
+| Description
 
-| asd
-| ca
+| /config
+| GET
+| -
+| Config
 | asd
 
 |===

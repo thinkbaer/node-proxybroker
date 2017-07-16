@@ -23,7 +23,6 @@ class JudgeFileCommandTest {
         Log.options({enable: false})
     }
 
-
     @test
     async 'judge file with file'() {
         // Log.enable = true

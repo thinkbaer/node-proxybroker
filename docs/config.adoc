@@ -100,7 +100,63 @@ Used for typeorm.
 
 === ProviderManager
 
+[cols="1,m,2", options="header"]
+|===
+| Key
+| Default
+| Description
+
+| provider.schedule.enabled
+| true
+| Enable scheduled re-fetching of proxies from defined providers.
+
+| provider.schedule.pattern
+| {mm+1} {hh} * * *
+| Schedule re-fetching by cron pattern.
+If nothing configured then the current startup time plus 1 minute is token.
+So re-fetching start each 24h after the startup.
+
+| provider.providers
+| {...}
+| Providers configuration
+
+|===
+
 === ProxyValidator
+
+[cols="1,m,2", options="header"]
+|===
+| Key
+| Default
+| Description
+
+| validator.parallel
+| 100
+| Sets the maximal concurrent validation processes.
+
+| validator.schedule.enable
+| true
+| Enable re-validation of proxies after an given time periode.
+
+| validator.schedule.pattern
+| */10 * * * *
+| Schedule re-validation as cron pattern.
+
+| validator.schedule.time_distance
+| 21600
+| Minimal time distance after which the re-validation of a proxy
+should happen (in seconds). The default value is 6 hours.
+
+| validator.schedule.limit
+| 1000
+| Amount of records taken in consideration on each scheduled check.
+
+| validator.judge
+| {...}
+| Judge configuration
+
+|===
+
 
 === ProxyServer
 

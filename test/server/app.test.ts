@@ -4,7 +4,7 @@ import {Container} from "typedi";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {Storage} from "../../src/storage/Storage";
 import {ProviderManager} from "../../src/provider/ProviderManager";
-import {Express} from "../../src/server/Express";
+import {Express} from "../../src/server/AppServer";
 import {Log} from "../../src/lib/logging/Log";
 import {Config} from "commons-config";
 import {ProxyFilter} from "../../src/proxy/ProxyFilter";
@@ -48,15 +48,20 @@ let boot = async function (): Promise<void> {
     EventBus.register(selector)
 
     let validator = new ProxyValidator({
-        selftest: true,
-        remote_lookup: true,
-        remote_url: 'http://127.0.0.1:8080',
-        judge_url: 'http://0.0.0.0:8080',
-        request: {
-            socket_timeout: 10000,
-            connection_timeout: 5000
+        schedule: {
+            enable: true
+        },
+        judge: {
+            selftest: true,
+            remote_lookup: true,
+            remote_url: 'http://127.0.0.1:8080',
+            judge_url: 'http://0.0.0.0:8080',
+            request: {
+                socket_timeout: 10000,
+                connection_timeout: 5000
+            }
         }
-    },storage)
+    }, storage)
     EventBus.register(validator)
     await validator.prepare()
     Container.set(ProxyValidator, validator)
@@ -65,7 +70,7 @@ let boot = async function (): Promise<void> {
         schedule: {
             enable: false
         }
-    },storage)
+    }, storage)
     EventBus.register(provider)
     await provider.init()
 
@@ -76,7 +81,7 @@ let boot = async function (): Promise<void> {
     let express = new Express({
         _debug: true,
         routes: [
-            {type: "static_files", path: __dirname +'/../../tmp/proxybroker-ui/dist'}
+            {type: "static_files", path: __dirname + '/../../tmp/proxybroker-ui/dist'}
         ]
     })
     await express.prepare()

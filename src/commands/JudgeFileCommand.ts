@@ -53,14 +53,8 @@ export class JudgeFileCommand {
 
 
             if (list.length) {
-                let judgeOptions: IJudgeOptions = Judge.default_options();
-
-                let judgeCustomOptions = Config.get('validator.judge',{})
-                if(!_.isEmpty(judgeCustomOptions)){
-                    judgeOptions = Utils.merge(judgeOptions,judgeCustomOptions)
-                }
-
-                let validator = new ProxyValidator(judgeOptions, null);
+                let validatorCustomOptions = Config.get('validator',{})
+                let validator = new ProxyValidator(validatorCustomOptions, null);
                 let booted = false;
                 try {
                     booted = await validator.prepare()

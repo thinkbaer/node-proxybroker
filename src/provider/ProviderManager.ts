@@ -1,6 +1,6 @@
-import * as _ from 'lodash'
-import subscribe from "../events/decorator/subscribe"
-import {IProviderOptions} from "./IProviderOptions";
+import * as _ from "lodash";
+import subscribe from "../events/decorator/subscribe";
+import {DEFAULT_PROVIDER_OPTIONS, IProviderOptions} from "./IProviderOptions";
 import {IProviderDef} from "./IProviderDef";
 
 import {IProvider} from "./IProvider";
@@ -11,8 +11,6 @@ import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
 import {IQueueProcessor} from "../queue/IQueueProcessor";
 import {ClassLoader} from "../utils/ClassLoader";
 import {IProxyData} from "../proxy/IProxyData";
-import {FreeProxyListsCom} from "./predefined/FreeProxyListsCom";
-import {StringOrFunction} from "../types";
 import {Utils} from "../utils/Utils";
 import {Storage} from "../storage/Storage";
 import {Job} from "../model/Job";
@@ -25,33 +23,16 @@ import Exceptions from "../exceptions/Exceptions";
 import {IProviderVariantId} from "./IProviderVariantId";
 import {ProviderRunEvent} from "./ProviderRunEvent";
 
-import {setTimeout,clearTimeout} from "timers"
-import Timer = NodeJS.Timer;
-import {Config} from "commons-config";
+import {clearTimeout, setTimeout} from "timers";
 import {Runtime} from "../lib/Runtime";
+import Timer = NodeJS.Timer;
 
-
-
-const DEFAULT_PROVIDER: StringOrFunction[] = [
-    FreeProxyListsCom
-];
-
-
-const DEFAULT_OPTIONS: IProviderOptions = {
-    //enable:true,
-    schedule: {
-        enable: true,
-        pattern: `${(new Date()).getMinutes() + 1} ${(new Date()).getHours()} * * *`,
-        recheck: 1000
-    },
-    providers: DEFAULT_PROVIDER
-};
 
 const __ALL__ = '_all_';
 
 export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
-    options: IProviderOptions = DEFAULT_OPTIONS;
+    options: IProviderOptions = {};
 
     storage: Storage;
 
@@ -68,22 +49,21 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     next: Date = null;
 
 
-
     constructor(options: IProviderOptions = {}, storage: Storage = null, override: boolean = false) {
         if (override) {
             this.options = Utils.clone(options)
         } else {
-            this.options = Utils.merge(DEFAULT_OPTIONS, options)
+            this.options = Utils.merge(DEFAULT_PROVIDER_OPTIONS, options)
         }
         this.storage = storage;
         this.options.parallel = this.options.parallel || 5;
         this.queue = new AsyncWorkerQueue<IProviderVariantId>(this);
 
-        if(this.options.schedule && this.options.schedule.enable){
+        if (this.options.schedule && this.options.schedule.enable) {
             this.cron = require('cron-parser').parseExpression(this.options.schedule.pattern)
         }
 
-        Runtime.$().setConfig('provider',this.options)
+        Runtime.$().setConfig('provider', this.options)
 
     }
 
@@ -120,8 +100,6 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         await this.initJobs();
         this.checkSchedule()
     }
-
-
 
 
     private async initJobs(): Promise<void> {
@@ -164,11 +142,11 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     run(c: ProviderRunEvent): void {
         if (c.runAll()) {
             for (let v of this.providers) {
-                this.queue.push({name:v.name,type:v.type})
+                this.queue.push({name: v.name, type: v.type})
             }
         } else {
             for (let v of c.variants) {
-                this.queue.push({name:v.name,type:v.type});
+                this.queue.push({name: v.name, type: v.type});
             }
         }
     }
@@ -195,11 +173,11 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
             let worker = await this.createWorker(variant);
             addrs = await worker.fetch();
             jobState.count = addrs.length;
-        } catch ( err ) {
-            err = Exceptions.handle( err );
+        } catch (err) {
+            err = Exceptions.handle(err);
             jobState.error_message = err.message;
             jobState.error_code = err.code;
-            Log.error( err );
+            Log.error(err);
         }
 
         jobState.stop = new Date();
@@ -229,7 +207,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         let variant = _.find(this.providers, q);
         let job = _.find(this.jobs, q);
 
-        return {job:job, variant:variant};
+        return {job: job, variant: variant};
     }
 
     private async saveJobs(): Promise<void> {
@@ -240,7 +218,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     }
 
     private checkSchedule(): void {
-        if(this.options.schedule && this.options.schedule.enable){
+        if (this.options.schedule && this.options.schedule.enable) {
             let now = new Date();
             let next = this.cron.next();
             let offset = next.getTime() - now.getTime();
@@ -250,7 +228,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     }
 
 
-    private runScheduled(){
+    private runScheduled() {
         (new ProviderRunEvent([])).fire();
         clearTimeout(this.timer);
         this.checkSchedule();
@@ -264,7 +242,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
     findAll(query: { [_k: string]: string } = {}): IProviderDef[] {
         let ret: Array<IProviderDef> = [];
-        for(let value of this.providers){
+        for (let value of this.providers) {
             let _value: boolean = true;
 
             Object.keys(query).forEach(k => {
@@ -276,14 +254,13 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
             });
 
             if (_value) {
-                value.job = _.find(this.jobs, {name:value.name, type:value.type});
+                value.job = _.find(this.jobs, {name: value.name, type: value.type});
                 ret.push(value);
             }
-        };
+        }
+        ;
         return ret;
     }
-
-
 
 
     async createWorker(provider: IProviderDef): Promise<ProviderWorker> {

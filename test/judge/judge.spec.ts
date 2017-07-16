@@ -1,13 +1,10 @@
 import {Judge} from "../../src/judge/Judge";
 
-
-import * as chai from 'chai'
-let expect = chai.expect;
+import * as _ from "lodash";
+import * as chai from "chai";
 import {Log} from "../../src/lib/logging/Log";
-import * as HttpProxy from "http-proxy";
-
-import * as http from 'http'
-import * as url from "url";
+import {DEFAULT_JUDGE_OPTIONS} from "../../src/judge/IJudgeOptions";
+let expect = chai.expect;
 
 /**
  * Testing internal functionality and remote access to judge server
@@ -25,6 +22,7 @@ describe('Judge', () => {
             Log.options({enable:false});
         })
 
+
         it('default settings', () => {
             let judge = new Judge();
             let options = judge.options;
@@ -35,14 +33,14 @@ describe('Judge', () => {
         });
 
         it('change address settings', () => {
-            let options = Judge.default_options();
+            let options = _.clone(DEFAULT_JUDGE_OPTIONS);
             options.judge_url = 'http://judge.local:8081';
             let judge = new Judge(options);
             expect(judge.judge_url_f).to.equal('http://judge.local:8081/')
         });
 
         it('change remote address settings', () => {
-            let options = Judge.default_options();
+            let options = _.clone(DEFAULT_JUDGE_OPTIONS);
             options.remote_url = 'http://judge.local:8081';
             // options.remote_url = 'http://judge.local:8081'
             let judge = new Judge(options);
@@ -51,7 +49,7 @@ describe('Judge', () => {
         });
 
         it('enable https settings', () => {
-            let options = Judge.default_options();
+            let options = _.clone(DEFAULT_JUDGE_OPTIONS);
             options.judge_url = 'https://0.0.0.0:8081';
             options.key_file = __dirname + '/'+SSL_PATH+'/judge/server-key.pem';
             options.cert_file = __dirname + '/'+SSL_PATH+'/judge/server-cert.pem';
@@ -93,19 +91,18 @@ describe('Judge', () => {
 
 
         it('positive selftest', async function () {
-            let judge = new Judge({});
+
+            let judge = new Judge({debug: true});
 
             try {
                 await judge['get_remote_accessible_ip']();
-                expect(judge.remote_url.host).to.not.equal(initial_remote_ip);
-
                 let r_wakedup = await judge.wakeup(true);
-                expect(r_wakedup).to.equal(true);
-
                 let r_selftest = await judge['selftest']();
-                expect(r_selftest).to.equal(true);
-
                 let r_pended = await judge.pending();
+
+                expect(judge.remote_url.host).to.not.equal(initial_remote_ip);
+                expect(r_wakedup).to.equal(true);
+                expect(r_selftest).to.equal(true);
                 expect(r_pended).to.equal(true)
             } catch (err) {
                 throw err
@@ -133,10 +130,10 @@ describe('Judge', () => {
     });
 
     describe('tests service lifecycle operations (with SSL)', () => {
-        let initial_remote_ip = 'http://127.0.0.1:8080';
+        // let initial_remote_ip = 'http://127.0.0.1:8080';
 
         beforeEach(() => {
-            Log.enable = false
+            Log.enable = false;
         });
 
         afterEach(() => {
@@ -147,7 +144,7 @@ describe('Judge', () => {
          * Test can be only done local, because the certificate is registered for judge.local
          */
         it('positive selftest (judge.local)', async function () {
-            let options = Judge.default_options();
+            let options = _.clone(DEFAULT_JUDGE_OPTIONS);
             options.judge_url = 'https://judge.local:8081';
             options.remote_url = 'https://judge.local:8081';
             options.key_file = __dirname + '/'+SSL_PATH+'/judge/server-key.pem';

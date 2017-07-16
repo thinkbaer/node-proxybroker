@@ -57,13 +57,13 @@ m.post()
 Redesign the cli output of judge.
 
 
-@TASK:{counter:task} 20170623 +patch +
+[.line-through]#@TASK:{counter:task} 20170623 +patch# +
 Analyse warning on travis:
 ```
 WARNING: executing requirements for [object Object] failed, this types cannot be loaded
 ```
 
-@TASK:{counter:task} 20170623 +patch +
+[.line-through]#@TASK:{counter:task} 20170623 +patch# +
 Extract the validation of proxy lists in JudgeFileCommand to a seperate worker class.
 
 @TASK:{counter:task} 20170623 +
@@ -141,7 +141,7 @@ for a coming ui or other
 ** list proxy queue
 ** search by country, speed, level, etc.
 
-@TASK:{counter:task} 20170706 minor +
+[.line-through]#@TASK:{counter:task} 20170706 minor# +
 Impl. configurable winston logger and define the
 configuration parameter
 
@@ -210,7 +210,7 @@ API
 * search by criteria
 * force re-validation
 
-@TASK:{counter:task} 20170715 +
+[.line-through]#@TASK:{counter:task} 20170715# +
 Rename: +
  ProxyDataSelector => ProxyFilter +
  ProxyValidationController => ProxyValidator +
@@ -232,7 +232,7 @@ CLI Test
 
 
 @TASK:{counter:task} 20170715 +
-Impl. SystemLoader which initialize and handles the lifecycle of
+Impl. Loader which initialize and handles the lifecycle of
 components (starts up, shutdown, dii) in the app. Or call it
 maybe AppLoader.
 
@@ -246,3 +246,5 @@ Extend commons-config by
 * parse json config
 
 
+@TASK:{counter:task} 20170716 +
+Impl. IProxyValidatorOptions

@@ -11,7 +11,7 @@ import {shorthash} from "../lib/crypt";
 import {format} from "util"
 
 import {JudgeRequest} from "./JudgeRequest";
-import {IJudgeOptions} from "./IJudgeOptions";
+import {DEFAULT_JUDGE_OPTIONS, IJudgeOptions} from "./IJudgeOptions";
 
 import {JudgeResults} from "./JudgeResults";
 import DomainUtils from "../utils/DomainUtils";
@@ -20,7 +20,7 @@ import {MESSAGE} from "../lib/Messages";
 import {ProtocolType} from "../lib/ProtocolType";
 import Exceptions from "../exceptions/Exceptions";
 import {Progress} from "../lib/Progress";
-import {Config} from "commons-config";
+
 import {Runtime} from "../lib/Runtime";
 
 
@@ -28,23 +28,12 @@ const FREEGEOIP: string = 'http://freegeoip.net/json/%s';
 const IPCHECK_URL = 'https://api.ipify.org?format=json';
 
 
-const defaultOptions: IJudgeOptions = {
-    selftest: true,
-    remote_lookup: true,
-    debug: false,
-    remote_url: 'http://127.0.0.1:8080',
-    judge_url: 'http://0.0.0.0:8080',
-    request: {
-        socket_timeout: 10000,
-        connection_timeout: 5000
-    }
-};
 
 
 export class Judge {
 
     private inc: number = 0;
-    private _options: IJudgeOptions = Judge.default_options();
+    private _options: IJudgeOptions = {};
 
     private secured: boolean = false;
 
@@ -67,7 +56,8 @@ export class Judge {
 
 
     constructor(options: IJudgeOptions = {}) {
-        this._options = Utils.merge(this._options, options);
+        this._options = Utils.merge(DEFAULT_JUDGE_OPTIONS, options)
+        // this._options = Utils.merge(this._options, options);
         this._judge_url = mUrl.parse(this._options.judge_url);
         this._remote_url = mUrl.parse(this._options.remote_url);
 
@@ -142,9 +132,11 @@ export class Judge {
         return mUrl.format(this.judge_url)
     }
 
+    /*
     static default_options() {
         return Utils.clone(defaultOptions)
     }
+    */
 
     async bootstrap(): Promise<boolean> {
         try {

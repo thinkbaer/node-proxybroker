@@ -17,11 +17,14 @@ import {JudgeResult} from "../judge/JudgeResult";
 
 import {Utils} from "../utils/Utils";
 import {Log} from "../lib/logging/Log";
+import {DEFAULT_VALIDATOR_OPTIONS, IProxyValidatiorOptions} from "./IProxyValidatiorOptions";
 
 
 const PROXY_VALIDATOR = 'proxy_validator'
 
 export class ProxyValidator implements IQueueProcessor<ProxyData> {
+
+    _options: IProxyValidatiorOptions
 
     storage: Storage;
 
@@ -31,14 +34,17 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
     judge: Judge;
 
-
-    constructor(judgeOptions: IJudgeOptions, storage: Storage) {
-        let parallel: number = 200;
+    constructor(options: IProxyValidatiorOptions, storage: Storage) {
+        this._options = Utils.merge(DEFAULT_VALIDATOR_OPTIONS, options);
         this.storage = storage;
-        this.judge = new Judge(judgeOptions);
-        this.queue = new AsyncWorkerQueue<ProxyData>(this, {name: PROXY_VALIDATOR, concurrent: parallel})
+        this.queue = new AsyncWorkerQueue<ProxyData>(this, {name: PROXY_VALIDATOR, concurrent: this._options.parallel})
     }
 
+    async prepare(): Promise<boolean> {
+        this.judge = new Judge(this._options.judge);
+        let booted = await this.judge.bootstrap();
+        return Promise.resolve(booted);
+    }
 
     static buildState(addr: IpAddr, result: JudgeResult): IpAddrState {
         let state = new IpAddrState();
@@ -137,7 +143,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
             if (proxyData.results.http) {
                 let _http = proxyData.results.http;
-                http_state =  ProxyValidator.buildState(ip_addr, _http);
+                http_state = ProxyValidator.buildState(ip_addr, _http);
                 await conn.save(http_state)
             }
 
@@ -178,11 +184,6 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         return Promise.resolve(event)
     }
 
-
-    async prepare(): Promise<boolean> {
-        let booted = await this.judge.bootstrap();
-        return Promise.resolve(booted);
-    }
 
     async push(o: ProxyData): Promise<QueueJob<ProxyData>> {
         let enque = this.queue.push(o);

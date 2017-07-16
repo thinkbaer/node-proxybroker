@@ -3,9 +3,8 @@ import {Judge} from "../judge/Judge";
 import StdConsole from "./StdConsole";
 import {Log} from "../lib/logging/Log";
 import Todo from "../exceptions/TodoException";
-import {Utils} from "../utils/Utils";
-import {IJudgeOptions} from "../judge/IJudgeOptions";
 import {EventBus} from "../events/EventBus";
+import {Config} from "commons-config";
 
 
 export class JudgeCommand {
@@ -22,12 +21,9 @@ export class JudgeCommand {
     async handler(argv: any) {
         EventBus.register(new StdConsole());
         Log.enable = StdConsole.$enabled = argv.verbose;
-        let judgeOptions: IJudgeOptions = Judge.default_options();
-        if (argv.config) {
-            judgeOptions = Utils.merge(judgeOptions, JSON.parse(argv.config))
-        }
 
-        let judge = new Judge(judgeOptions);
+        let judgeCustomOptions = Config.get('validator.judge',{})
+        let judge = new Judge(judgeCustomOptions);
         let booted = await judge.bootstrap();
         if (booted) {
             try {
