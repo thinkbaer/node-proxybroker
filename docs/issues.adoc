@@ -218,8 +218,8 @@ Rename: +
 
 
 
-@TASK:{counter:task} 20170715 +
-Automatic re-validation after a time period! in ProxyValidator.
+[.line-through]##@TASK:{counter:task} 20170715 +vminor +
+##Automatic re-validation after a time period! in ProxyValidator.
 Needed infos for passed by config
 
 - reschedule pattern
