@@ -219,7 +219,7 @@ Rename: +
 
 
 @TASK:{counter:task} 20170715 +
-Automatic re-validation after a time period! in ProxyVavalidator.
+Automatic re-validation after a time period! in ProxyValidator.
 Needed infos for passed by config
 
 - reschedule pattern
@@ -246,5 +246,5 @@ Extend commons-config by
 * parse json config
 
 
-@TASK:{counter:task} 20170716 +
+[.line-through]#@TASK:{counter:task} 20170716# +
 Impl. IProxyValidatorOptions
