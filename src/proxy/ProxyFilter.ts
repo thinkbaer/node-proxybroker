@@ -111,7 +111,7 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
                     continue;
                 }
 
-                proxyDataValidateEvent.record = recordExists;
+                // proxyDataValidateEvent.record = recordExists;
 
                 if (!recordExists.last_checked_at || ((now.getTime() - self.recheck_after) > recordExists.last_checked_at.getTime())) {
                     // last check is longer then the recheck offset, so revalidate

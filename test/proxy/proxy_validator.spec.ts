@@ -27,7 +27,7 @@ const judge_options: IJudgeOptions = {
     judge_url: "http://127.0.0.1:8080"
 };
 
-@suite('proxy/ProxyValidationController') @timeout(10000)
+@suite('proxy/ProxyValidator') @timeout(10000)
 class ProxyValidationControllerTest {
 
     static before() {
@@ -45,7 +45,7 @@ class ProxyValidationControllerTest {
         await storage.init();
 
         let http_proxy_server = new ProxyServer(proxy_options);
-        let proxyValidationController = new ProxyValidator({schedule: {enable: true}, judge: judge_options}, storage);
+        let proxyValidationController = new ProxyValidator({schedule: {enable: false}, judge: judge_options}, storage);
         await proxyValidationController.prepare();
         await http_proxy_server.start();
 
@@ -94,7 +94,7 @@ class ProxyValidationControllerTest {
             database: ':memory:'
         });
         await storage.init();
-        let proxyValidationController = new ProxyValidator({schedule: {enable: true}, judge: judge_options}, storage);
+        let proxyValidationController = new ProxyValidator({schedule: {enable: false}, judge: judge_options}, storage);
         await proxyValidationController.prepare();
 
         let proxyData = new ProxyData({ip: '127.0.0.30', port: 3128});

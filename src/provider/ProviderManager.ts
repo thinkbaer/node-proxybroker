@@ -24,8 +24,8 @@ import {IProviderVariantId} from "./IProviderVariantId";
 import {ProviderRunEvent} from "./ProviderRunEvent";
 
 import {clearTimeout, setTimeout} from "timers";
-import {Runtime} from "../lib/Runtime";
 import Timer = NodeJS.Timer;
+import {Runtime} from "../lib/Runtime";
 
 
 const __ALL__ = '_all_';

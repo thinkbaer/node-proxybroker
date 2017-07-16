@@ -90,7 +90,10 @@ export class ProxyServer extends Server {
     }
 
     finalize() {
-        this.proxy.close()
+        if(this.proxy){
+            this.proxy.close()
+        }
+
     }
 
 }

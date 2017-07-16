@@ -1,6 +1,8 @@
 import subscribe from "../events/decorator/subscribe"
 
-import {IJudgeOptions} from "../judge/IJudgeOptions";
+import {clearTimeout, setTimeout} from "timers";
+import Timer = NodeJS.Timer;
+
 import {Judge} from "../judge/Judge";
 import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
 import {ProxyData} from "./ProxyData";
@@ -20,11 +22,16 @@ import {Log} from "../lib/logging/Log";
 import {DEFAULT_VALIDATOR_OPTIONS, IProxyValidatiorOptions} from "./IProxyValidatiorOptions";
 
 
+import {Runtime} from "../lib/Runtime";
+import {ValidatorRunEvent} from "./ValidatorRunEvent";
+import {DateUtils} from "typeorm/util/DateUtils";
+
+
 const PROXY_VALIDATOR = 'proxy_validator'
 
 export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
-    _options: IProxyValidatiorOptions
+    options: IProxyValidatiorOptions
 
     storage: Storage;
 
@@ -34,17 +41,81 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
     judge: Judge;
 
+    cron: any;
+
+    timer: Timer = null;
+
+    next: Date = null;
+
     constructor(options: IProxyValidatiorOptions, storage: Storage) {
-        this._options = Utils.merge(DEFAULT_VALIDATOR_OPTIONS, options);
+        this.options = Utils.merge(DEFAULT_VALIDATOR_OPTIONS, options);
         this.storage = storage;
-        this.queue = new AsyncWorkerQueue<ProxyData>(this, {name: PROXY_VALIDATOR, concurrent: this._options.parallel})
+        this.queue = new AsyncWorkerQueue<ProxyData>(this, {
+            name: PROXY_VALIDATOR,
+            concurrent: this.options.parallel || 200
+        })
+
+        if (this.options.schedule && this.options.schedule.enable) {
+            this.cron = require('cron-parser').parseExpression(this.options.schedule.pattern)
+        }
+
+
+        Runtime.$().setConfig('validator', this.options)
+
     }
 
+
     async prepare(): Promise<boolean> {
-        this.judge = new Judge(this._options.judge);
+        this.judge = new Judge(this.options.judge);
         let booted = await this.judge.bootstrap();
+        this.checkSchedule()
         return Promise.resolve(booted);
     }
+
+
+    private checkSchedule(): void {
+        if (this.options.schedule && this.options.schedule.enable) {
+            let now = new Date();
+            let next = this.cron.next();
+            let offset = next.getTime() - now.getTime();
+            this.next = new Date(next.getTime());
+            this.timer = setTimeout(this.runScheduled.bind(this), offset);
+        }
+    }
+
+
+    private runScheduled() {
+        (new ValidatorRunEvent()).fire();
+        clearTimeout(this.timer);
+        this.checkSchedule();
+    }
+
+
+    @subscribe(ValidatorRunEvent)
+    async run(e: ValidatorRunEvent) {
+        let c = await this.storage.connect()
+        let q = c.manager.getRepository(IpAddr).createQueryBuilder('ip')
+
+        let td = Date.now() - this.options.schedule.time_distance * 1000
+        q.where('ip.blocked = :blocked and ip.to_delete = :to_delete and (ip.last_checked_at is null OR ip.last_checked_at < :date) ', {
+            blocked:false,
+            to_delete:false,
+            date: DateUtils.mixedDateToDatetimeString(new Date(td))
+        })
+            .limit(this.options.schedule.limit)
+
+        try {
+            let ips: IpAddr[] = await q.getMany()
+            if (ips.length > 0) {
+                for (let ip of ips) {
+                    (new ProxyDataValidateEvent(new ProxyData(ip))).fire()
+                }
+            }
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
 
     static buildState(addr: IpAddr, result: JudgeResult): IpAddrState {
         let state = new IpAddrState();
