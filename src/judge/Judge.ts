@@ -238,7 +238,7 @@ export class Judge {
         let paths = req.url.split('/').filter((x) => {
             return x || x.length != 0
         });
-        this.debug('paths=' + JSON.stringify(paths));
+        this.debug('paths=',paths, req.url);
 
         let first_path = paths.shift();
         let cached_req: JudgeRequest = null;

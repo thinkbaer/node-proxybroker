@@ -110,14 +110,15 @@ class JV {
                 resolve()
             })
         });
-
         JV.http_proxy_server = null;
         JV.https_proxy_server = null;
         JV.http_judge = null
     }
 
+
     @test
     async proxyIpAndPortForHttp() {
+        // Log.options({enable:true,level:'debug'})
 
         let proxy_url_http = 'http://' + JV.http_proxy_ip + ':' + JV.http_proxy_port;
         //let proxy_url_https = 'https://' + JV.http_proxy_ip + ':' + JV.http_proxy_port

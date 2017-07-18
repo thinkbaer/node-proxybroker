@@ -169,7 +169,8 @@ export class ProxyServer extends Server {
             let _url = url.parse(_req_url);
             this.debug('proxing url ' + this._options.url, req.url, req.headers, _url);
             req.url = _req_url
-            this.proxy.web(req, res, {target: _req_url})
+
+            this.proxy.web(req, res, {target: _url.protocol+'//'+_url.host})
 
             /*
             //return;
