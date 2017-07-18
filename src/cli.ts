@@ -3,7 +3,7 @@
 
 import {JudgeCommand} from "./commands/JudgeCommand";
 import {EventBus} from "./events/EventBus";
-import StdConsole from "./commands/StdConsole";
+import StdConsole from "./lib/logging/StdConsole";
 import {JudgeFileCommand} from "./commands/JudgeFileCommand";
 import {FetchCommand} from "./commands/FetchCommand";
 import {Log} from "./lib/logging/Log";

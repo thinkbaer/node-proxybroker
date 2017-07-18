@@ -14,7 +14,7 @@ import {Log} from "../../src/lib/logging/Log";
 import {RequestResponseMonitor} from "../../src/judge/RequestResponseMonitor";
 import {JudgeResults} from "../../src/judge/JudgeResults";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
-import StdConsole from "../../src/commands/StdConsole";
+import StdConsole from "../../src/lib/logging/StdConsole";
 import {EventBus} from "../../src/events/EventBus";
 import {NestedException} from "../../src/exceptions/NestedException";
 
@@ -49,7 +49,8 @@ class JV {
         let proxy_options : IProxyServerOptions = Object.assign({}, {
             url: 'http://' + JV.http_proxy_ip + ':' + JV.http_proxy_port,
             _debug: JV._debug,
-            level: 3
+            level: 3,
+            toProxy:false
         });
         JV.http_proxy_server = new ProxyServer(proxy_options);
 
@@ -59,6 +60,7 @@ class JV {
             level: 3,
             key_file: __dirname + '/'+SSL_PATH+'/proxy/server-key.pem',
             cert_file: __dirname + '/'+SSL_PATH+'/proxy/server-cert.pem',
+            toProxy:false
 
         });
         JV.https_proxy_server = new ProxyServer(proxy_options2);

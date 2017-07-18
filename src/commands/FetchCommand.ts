@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
 
-import StdConsole from "./StdConsole";
+import StdConsole from "../lib/logging/StdConsole";
 import {Log} from "../lib/logging/Log";
 import Todo from "../exceptions/TodoException";
 import {ProviderManager} from "../provider/ProviderManager";

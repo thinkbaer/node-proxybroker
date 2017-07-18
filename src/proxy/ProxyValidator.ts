@@ -120,7 +120,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     static buildState(addr: IpAddr, result: JudgeResult): IpAddrState {
         let state = new IpAddrState();
         state.addr_id = addr.id;
-        state.validation_id = addr.check_id;
+        state.validation_id = addr.validation_id;
         state.level = result.level;
         state.protocol = result.protocol;
 
@@ -182,7 +182,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         let https_state: IpAddrState = null;
 
         if (proxyData.results) {
-            ip_addr.check_id++;
+            ip_addr.validation_id++;
 
             // check if IpLoc exists then update it else create a new entry
             let ip_loc = await conn.manager.findOne(IpLoc, {where: {ip: proxyData.ip}});

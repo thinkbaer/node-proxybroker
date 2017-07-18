@@ -7,20 +7,13 @@ import * as fs from 'fs'
 import * as url from "url";
 
 import Timer = NodeJS.Timer;
-import {IServerOptions} from "./IServerOptions";
+import {DEFAULT_SERVER_OPTIONS, IServerOptions} from "./IServerOptions";
 import {Connection} from "typeorm";
 import {Log} from "../lib/logging/Log";
 
 
 export class Server {
 
-    static readonly defaultOptions: IServerOptions = {
-        url: 'http://localhost:3128',
-        stall: 0,
-        timeout: 10000,
-        //dual_protocol:false,
-        _debug: false
-    };
 
     _options: IServerOptions;
     _url: url.Url = null;
@@ -37,7 +30,7 @@ export class Server {
     //server_port: { [key: string]: number }
 
     constructor(options: IServerOptions) {
-        this._options = Object.assign({}, Server.defaultOptions, options);
+        this._options = Object.assign({}, DEFAULT_SERVER_OPTIONS, options);
         this._url = url.parse(options.url);
       //  this._both = this._options.dual_protocol
         this._secured = /^https/.test(this.protocol);
@@ -117,11 +110,11 @@ export class Server {
                     self.debug('server timeout reached: ' + self._options.timeout);
                     socket.destroy();
                 });
-            server = http_server
+            server = http_server;
         }
-
-        return server
+        return server;
     }
+
 
     get protocol(): string {
         return this._url.protocol
@@ -135,6 +128,7 @@ export class Server {
         let json = JSON.stringify(data);
         res.end(json);
     }
+
 
     forcedShutdown() {
         this._abort = true;
@@ -160,8 +154,8 @@ export class Server {
      * @param upstream
      * @param head
      */
-    private onServerConnect(request: http.IncomingMessage, upstream: net.Socket, head: Buffer): void {
-        this.debug('onServerConnect');
+    onServerConnect(request: http.IncomingMessage, upstream: net.Socket, head: Buffer): void {
+        this.debug('onServerConnect '+ this._options.url + '\n'+head.toString('utf8'));
         let self = this;
         let rurl: url.Url = url.parse(`https://${request.url}`);
 
@@ -171,30 +165,35 @@ export class Server {
                 'HTTP/' + request.httpVersion + ' 200 Connection Established\r\n' +
                 'Proxy-agent: Proxybroker\r\n' +
                 '\r\n');
+
             downstream.write(head);
             downstream.pipe(upstream);
             upstream.pipe(downstream)
         });
     }
 
-    private onServerConnectData(data: Buffer): void {
+    onServerConnectData(data: Buffer): void {
         this.debug('onServerConnectData ' + data.toString('utf-8'))
     }
 
-    private onServerUpgrade(request: http.IncomingMessage, socket: net.Socket, head: Buffer): void {
-        this.debug('onServerUpgrade')
+    onServerUpgrade(request: http.IncomingMessage, socket: net.Socket, head: Buffer): void {
+        this.debug('onServerUpgrade '+ this._options.url)
     }
 
-    private onServerClientError(exception: Error, socket: net.Socket): void {
-        this.debug('onServerClientError')
+    onServerClientError(exception: Error, socket: net.Socket): void {
+        this.debug('onServerClientError '+ this._options.url)
     }
 
-    private onServerError(exception: Error, socket: net.Socket): void {
-        this.debug('onServerError')
+    onServerError(exception: Error, socket: net.Socket): void {
+        this.debug('onServerError '+ this._options.url)
     }
 
-    private onServerClose(): void {
-        this.debug('onServerClose')
+    onServerClose(): void {
+        this.debug('onServerClose '+ this._options.url)
+    }
+
+    onServerConnection(socket:net.Socket): void {
+        this.debug('onServerConnection '+ this._options.url)
     }
 
     // private onServerConnection(socket: net.Socket): void {  }
@@ -207,9 +206,9 @@ export class Server {
         //      this.server.on('checkExpectation',this.onServerCheckExpectation.bind(this))
         this.server.on('clientError', this.onServerClientError.bind(this));
         this.server.on('close', this.onServerClose.bind(this));
-        //this.server.on('connection', this.onServerConnection.bind(this))
+        this.server.on('connection', this.onServerConnection.bind(this))
         this.server.on('upgrade', this.onServerUpgrade.bind(this));
-        //      this.server.on('request',this.onServerRequest.bind(this))
+        //this.server.on('request',this.onServerRequest.bind(this))
         this.server.on('connect', this.onServerConnect.bind(this));
         this.server.on('error', this.onServerError.bind(this));
 
@@ -259,10 +258,9 @@ export class Server {
     }
 
 
-    debug(...msg: string[]) {
-        if (this._options._debug) {
-            Log.debug.apply(Log, msg)
-        }
+    debug(...msg: any[]) {
+        Log.debug.apply(Log, msg)
+
     }
 
 }

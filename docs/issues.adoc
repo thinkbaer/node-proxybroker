@@ -210,12 +210,12 @@ API
 * search by criteria
 * force re-validation
 
+
 [.line-through]#@TASK:{counter:task} 20170715# +
 Rename: +
  ProxyDataSelector => ProxyFilter +
  ProxyValidationController => ProxyValidator +
  ProxyDataValidateEvent => ProxyValidateEvent
-
 
 
 [.line-through]##@TASK:{counter:task} 20170715 +vminor +
@@ -224,7 +224,6 @@ Needed infos for passed by config
 
 - reschedule pattern
 - amount of taken proxies
--
 
 
 @TASK:{counter:task} 20170715 +
@@ -239,6 +238,7 @@ maybe AppLoader.
 * static Config and Logger
 * Storage
 
+
 @TASK:{counter:task} 20170715 +
 Extend commons-config by
 
@@ -248,3 +248,22 @@ Extend commons-config by
 
 [.line-through]#@TASK:{counter:task} 20170716# +
 Impl. IProxyValidatorOptions
+
+
+@TASK:{counter:task} 20170717 +
+Impl. proxy rotation mechanism for proxy server. On request the fastest in line
+proxy should be used for new connection. The request can also contain multiple
+selection headers.
+
+ Proxy-Select-Level: <number>
+ Proxy-Select-Country: <ISO-9601>
+ Proxy-Select-Speed-Limit: <milliseconds>
+ Proxy-Select-SSL: <true|false>
+ Proxy-Select-Fallback: <true|false>
+
+When criteria don't match then a bad response is created with
+the appropriate error message, but only when fallback is false.
+
+
+@TASK:{counter:task} 20170718 +
+Testing proxies for abilities of websocket, ..., other

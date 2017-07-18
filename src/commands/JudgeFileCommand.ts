@@ -3,7 +3,7 @@ import * as _ from 'lodash'
 
 import {Judge} from "../judge/Judge";
 
-import StdConsole from "./StdConsole";
+import StdConsole from "../lib/logging/StdConsole";
 import {Log} from "../lib/logging/Log";
 import {PlatformUtils} from "../utils/PlatformUtils";
 

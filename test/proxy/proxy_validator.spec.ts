@@ -18,7 +18,8 @@ describe('', () => {
 
 const proxy_options: IProxyServerOptions = Object.assign({}, {
     url: 'http://127.0.0.1:3128',
-    level: 3
+    level: 3,
+    toProxy:false
 });
 
 const judge_options: IJudgeOptions = {

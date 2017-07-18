@@ -35,7 +35,9 @@ class CLIJudgeFileCommandTest {
 
         let proxy_options: IProxyServerOptions = Object.assign({}, {
             url: 'http://127.0.0.1:3128',
-            level: 3
+            level: 3,
+            toProxy:false
+
         });
 
         let http_proxy_server = new ProxyServer(proxy_options);

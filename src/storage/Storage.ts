@@ -17,6 +17,7 @@ import {IpLoc} from "../model/IpLoc";
 import {JobState} from "../model/JobState";
 import {Job} from "../model/Job";
 import {Runtime} from "../lib/Runtime";
+import {IpRotate} from "../model/IpRotate";
 
 
 export const FIX_STORAGE_OPTIONS = {
@@ -26,7 +27,8 @@ export const FIX_STORAGE_OPTIONS = {
         IpAddr,
         IpLoc,
         Job,
-        JobState
+        JobState,
+        IpRotate
     ],
     migrations: [
         __dirname + "/migrations/*"

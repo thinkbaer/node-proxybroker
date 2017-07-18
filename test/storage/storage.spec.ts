@@ -40,7 +40,7 @@ class StorageTest {
             entityNames.push(entityMeta.targetName)
         });
         entityNames = entityNames.sort();
-        expect(entityNames).to.be.deep.eq(["IpAddrState", "IpAddr", "Variable","IpLoc","Job","JobState"].sort());
+        expect(entityNames).to.be.deep.eq(["IpAddrState", "IpAddr", "Variable","IpLoc","Job","JobState","IpRotate"].sort());
 
         expect(storage.size()).to.be.eq(1);
         await storage.shutdown();

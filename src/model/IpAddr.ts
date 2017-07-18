@@ -29,7 +29,7 @@ export class IpAddr {
     port: number;
 
     @Column()
-    check_id: number = 0;
+    validation_id: number = 0;
 
     @Column()
     protocols: number = 0;

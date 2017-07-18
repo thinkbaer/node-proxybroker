@@ -17,3 +17,12 @@ export interface IServerOptions {
 
     _debug?: boolean
 }
+
+
+export const DEFAULT_SERVER_OPTIONS: IServerOptions = {
+    url: 'http://localhost:3128',
+    stall: 0,
+    timeout: 10000,
+    //dual_protocol:false,
+    _debug: false
+};

@@ -1,22 +1,19 @@
-import * as mocha from 'mocha';
-describe('', () => {
-});
-
-
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
-import {inspect} from 'util'
 import {Storage} from "../../src/storage/Storage";
 import {ProxyFilter} from "../../src/proxy/ProxyFilter";
 import {ProxyDataFetchedEvent} from "../../src/proxy/ProxyDataFetchedEvent";
 import {IpAddr} from "../../src/model/IpAddr";
-import subscribe from "../../src/events/decorator/subscribe"
+import subscribe from "../../src/events/decorator/subscribe";
 import {ProxyDataValidateEvent} from "../../src/proxy/ProxyDataValidateEvent";
 import {EventBus} from "../../src/events/EventBus";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {Utils} from "../../src/utils/Utils";
 import {ProxyDataFetched} from "../../src/proxy/ProxyDataFetched";
 import {Log} from "../../src/lib/logging/Log";
+describe('', () => {
+});
+
 
 @suite('proxy/ProxyFilter')
 class ProxyDataSelectorTest {

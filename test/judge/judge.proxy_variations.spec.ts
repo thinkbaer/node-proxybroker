@@ -11,6 +11,7 @@ import * as https from 'https'
 import {Judge} from "../../src/judge/Judge";
 import {Log} from "../../src/lib/logging/Log";
 import {ProxyServer} from "../../src/server/ProxyServer";
+import {IJudgeOptions} from "../../src/judge/IJudgeOptions";
 
 // https://www.proxynova.com/proxy-articles/proxy-anonymity-levels-explained
 
@@ -155,10 +156,11 @@ suite('Judge proxy variations', () => {
                 let proxy_options = Object.assign({}, data.proxy_options, {
                     url: this.proxy_protocol + '://' + this.proxy_ip + ':' + this.proxy_port,
                     _debug: data.debug,
+                    toProxy:false
                 });
                 this.proxy_server = new ProxyServer(proxy_options);
 
-                let opts = {
+                let opts : IJudgeOptions= {
                     selftest: false,
                     remote_lookup: false,
                     debug: data.debug,
@@ -166,7 +168,7 @@ suite('Judge proxy variations', () => {
                     judge_url: this.judge_protocol + '://' + JUDGE_LOCAL_HOST + ':8080',
                     request:{
                         local_ip:'127.0.0.1',
-                        timeout: 1000
+                        //timeout: 1000
                     }
                 };
                 let options = Object.assign(opts, data.judge_options);
