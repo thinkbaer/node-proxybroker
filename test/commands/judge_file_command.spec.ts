@@ -63,7 +63,7 @@ class JudgeFileCommandTest {
         expect(data.ip).to.eq('127.0.0.1');
         expect(data.port).to.eq(3128);
 
-        console.log(data.results)
+        
         expect(data.results.http.error).to.be.null;
         expect(data.results.https.error).to.not.be.null;
     }

@@ -35,28 +35,36 @@ export class ProxyServer extends Server {
     }
 
     onProxyRequest(proxyReq: http.ClientRequest, req: http.IncomingMessage, res: http.ServerResponse, options: HttpProxy.ServerOptions): void {
-        this.debug('onProxyRequest ' + this._options.url);
-        this.debug('PR: ' + req.url);
+        this.debug('onProxyRequest ' + this._options.url + ' for '+ req.url);
+
+        proxyReq.removeHeader('Proxy-Select-Level')
+        proxyReq.removeHeader('Proxy-Select-Speed-Limit')
+        proxyReq.removeHeader('Proxy-Select-SSL')
+        proxyReq.removeHeader('Proxy-Select-Fallback')
+        proxyReq.removeHeader('Proxy-Select-Country')
 
         if (this.level == 3) {
+
             let sender_ip = req.socket.remoteAddress;
             let proxy_ip = req.socket.localAddress;
             let proxy_port = req.socket.localPort;
 
             proxyReq.setHeader('X-Forwarded-For', sender_ip);
-            proxyReq.setHeader('Via', 'proxybroker on ' + proxy_ip + ':' + proxy_port);
-            proxyReq.setHeader('X-Cache', 'DemoCache');
-            proxyReq.setHeader('X-Cache-Lookup', 'MISSED');
-            proxyReq.setHeader('X-Client-IP', sender_ip);
+            proxyReq.setHeader('Via', 'ProxyBroker on ' + proxy_ip + ':' + proxy_port);
+            // proxyReq.setHeader('X-Via', 'ProxyBroker on ' + proxy_ip + ':' + proxy_port);
+            //proxyReq.setHeader('X-Cache', 'Loader3');
+            //proxyReq.setHeader('X-Cache-Lookup', 'MISSED');
+            //proxyReq.setHeader('X-Client-IP', sender_ip);
 
         } else if (this.level == 2) {
 
             let proxy_ip = req.socket.localAddress;
             let proxy_port = req.socket.localPort;
 
-            proxyReq.setHeader('Via', 'proxybroker on ' + proxy_ip + ':' + proxy_port);
-            proxyReq.setHeader('X-Cache', 'DemoCache');
-            proxyReq.setHeader('X-Cache-Lookup', 'MISSED');
+            proxyReq.setHeader('Via', 'ProxyBroker on ' + proxy_ip + ':' + proxy_port);
+            //proxyReq.setHeader('X-Cache', 'Loader2');
+            //proxyReq.setHeader('X-Cache-Lookup', 'MISSED');
+
         }
     }
 

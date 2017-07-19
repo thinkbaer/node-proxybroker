@@ -10,7 +10,7 @@ let stdMocks = require('std-mocks');
 class CLITest {
 
     @test.skip()
-    'test'(){
+    'TODO: test'(){
         expect(1).to.eq(1)
     }
 
