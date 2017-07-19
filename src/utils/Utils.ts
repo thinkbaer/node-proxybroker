@@ -7,6 +7,15 @@ import {Options} from "deepmerge";
 
 export class Utils {
 
+
+    static wait(time:number):Promise<any>{
+        return new Promise(resolve => {
+            setTimeout(function(){
+                resolve()
+            },time)
+        })
+    }
+
     static interpolate(msg: string, parameter: { [k: string]: string }): string {
         let data = {msg: msg};
         try {

@@ -1,20 +1,21 @@
-import {suite, test} from "mocha-typescript";
+import {suite, test, timeout} from "mocha-typescript";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {Storage} from "../../src/storage/Storage";
 import {ProxyServer} from "../../src/server/ProxyServer";
 import * as request from "request-promise-native";
 import {Log} from "../../src/lib/logging/Log";
 import {expect} from "chai";
+import {Utils} from "../../src/utils/Utils";
 
 describe('', () => {
 });
 
-@suite('server/ProxyServer')
-class ProxyRotatorTest {
+@suite('server/ProxyServer') @timeout(10000)
+class ProxyServerTest {
 
     @test
     async 'redirect'() {
-        //Log.options({enable: true, level: 'debug'})
+        // Log.options({enable: true, level: 'debug'})
 
         let storage = new Storage(<SqliteConnectionOptions>{
             name: 'proxy_server',
@@ -47,10 +48,7 @@ class ProxyRotatorTest {
             headers: {
                 'Proxy-Select-Level': 1
             }
-
         };
-
-
 
         opts['proxyHeaderExclusiveList'] = [
             'proxy-select-level',
@@ -61,22 +59,21 @@ class ProxyRotatorTest {
         ];
 
         // Http request
-        let resp1 = await request.get('http://httpbin.org/headers', opts);
+        let resp1 = await request.get('http://httpbin.org/html', opts);
         // console.log(resp1.body);
 
         // Https request with tunneling
-        let resp2 = await request.get('https://httpbin.org/headers', opts);
+        let resp2 = await request.get('https://httpbin.org/html', opts);
         // console.log(resp2.body);
 
+        //console.log('WAITING!')
+        // await Utils.wait(500)
+        //console.log('WAITED!')
 
         await server_distrib.stop();
         await server_dest.stop();
-        expect(JSON.parse(resp1.body).headers).to.contain({
-            "Host": "httpbin.org"
-        });
-        expect(JSON.parse(resp2.body).headers).to.contain({
-            "Host": "httpbin.org"
-        });
+        expect(resp1.body).to.contain('Moby-Dick');
+        expect(resp2.body).to.contain('Moby-Dick');
     }
 }
 

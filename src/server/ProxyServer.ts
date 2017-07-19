@@ -34,6 +34,7 @@ export class ProxyServer extends Server {
         return this._options.level
     }
 
+
     onProxyRequest(proxyReq: http.ClientRequest, req: http.IncomingMessage, res: http.ServerResponse, options: HttpProxy.ServerOptions): void {
         this.debug('onProxyRequest ' + this._options.url + ' for '+ req.url);
 
@@ -163,42 +164,12 @@ export class ProxyServer extends Server {
             }
 
         } else {
-
-            if (/^\//.test(req.url)) {
-                // from proxy req
-
-            } else {
-                // direct req
-
-            }
-
-
             let _req_url = req.url.replace(/^\//, '')
             let _url = url.parse(_req_url);
             this.debug('proxing url ' + this._options.url, req.url, req.headers, _url);
             req.url = _req_url
 
             this.proxy.web(req, res, {target: _url.protocol+'//'+_url.host})
-
-            /*
-            //return;
-
-            let port = 80
-            if (!_url.port) {
-                if (_url.protocol === 'https:') {
-                    port = 443
-                }
-            } else {
-                port = parseInt(_url.port)
-            }
-
-            let downstream = net.connect(port, _url.host, function () {
-                // res.write('HTTP/' + req.httpVersion + ' 200 Connection Established\r\n' +'Proxy-agent: Node-Proxy\r\n' + '\r\n');
-
-                res.pipe(downstream)
-                downstream.pipe(res)
-            })
-*/
         }
 
 

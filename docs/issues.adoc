@@ -250,7 +250,7 @@ Extend commons-config by
 Impl. IProxyValidatorOptions
 
 
-@TASK:{counter:task} 20170717 +
+@TASK:{counter:task} 20170717 +minor +
 Impl. proxy rotation mechanism for proxy server. On request the fastest in line
 proxy should be used for new connection. The request can also contain multiple
 selection headers.
