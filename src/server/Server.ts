@@ -108,6 +108,7 @@ export class Server {
             http_server.setTimeout(
                 self._options.timeout, function (socket: net.Socket) {
                     self.debug('server timeout reached: ' + self._options.timeout);
+                    // socket.end()
                     socket.destroy();
                 });
             server = http_server;

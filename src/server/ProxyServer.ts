@@ -13,8 +13,9 @@ import {Runtime} from "../lib/Runtime";
 import {IUrlBase} from "../lib/IUrlBase";
 import {IpAddr} from "../model/IpAddr";
 import TodoException from "../exceptions/TodoException";
-import {Protocol} from "_debugger";
+
 import {ProtocolType} from "../lib/ProtocolType";
+import {SocketHandle} from "./SocketHandle";
 
 
 export class ProxyServer extends Server {
@@ -36,7 +37,7 @@ export class ProxyServer extends Server {
 
 
     onProxyRequest(proxyReq: http.ClientRequest, req: http.IncomingMessage, res: http.ServerResponse, options: HttpProxy.ServerOptions): void {
-        this.debug('onProxyRequest ' + this._options.url + ' for '+ req.url);
+        this.debug('onProxyRequest ' + this._options.url + ' for ' + req.url);
 
         proxyReq.removeHeader('Proxy-Select-Level')
         proxyReq.removeHeader('Proxy-Select-Speed-Limit')
@@ -75,6 +76,11 @@ export class ProxyServer extends Server {
 
     onProxyError(err: Error, req: http.IncomingMessage, res: http.ServerResponse): void {
         this.debug('onProxyError ' + this._options.url, err)
+
+        res.writeHead(400, {"Content-Type": "text/html"});
+        res.end(err.message)
+
+
     }
 
     onProxySocketOpen(proxySocket: net.Socket): void {
@@ -124,19 +130,41 @@ export class ProxyServer extends Server {
             if (proxy_url) {
                 let downstream = net.connect(proxy_url.port, proxy_url.host, function () {
                     self.debug('downstream connected to ' + request.url);
-                    let conn_string = 'CONNECT ' + request.url + ' HTTP/1.1\r\nHost: ' + request.url + '\r\n\r\n'
-                    downstream.write(conn_string)
+                    let conn_string = '' +
+                        'CONNECT ' + request.url + ' HTTP/' + request.httpVersion + '\r\n' +
+                        'Host: ' + request.url + '\r\n' +
+                        '\r\n';
+                    downstream.write(conn_string);
                     downstream.write(head);
                     downstream.pipe(upstream);
-                    upstream.pipe(downstream)
+                    upstream.pipe(downstream);
                 });
+
+                let handle = new SocketHandle(downstream)
+
+                handle.onFinish()
+                    .then(handle => {
+                        if(handle.statusCode >= 400){
+                            // some error
+                            // upstream.write(handle.data)
+                            upstream.destroy()
+                        }else{
+                            // nothing to do
+                            self.debug('test')
+                        }
+                    })
             } else {
-                throw new TodoException('What should happen if no url is given? Define a fallback')
+                throw new TodoException('What should happen if no url is given? Define a fallback');
             }
 
         } else {
+            proxy_url = {
+                protocol: 'https',
+                host: rurl.hostname,
+                port: parseInt(rurl.port)
+            };
 
-            let downstream = net.connect(parseInt(rurl.port), rurl.hostname, function () {
+            let downstream = net.connect(proxy_url.port, proxy_url.host, function () {
                 self.debug('downstream connected to ' + request.url);
                 upstream.write(
                     'HTTP/' + request.httpVersion + ' 200 Connection Established\r\n' +
@@ -144,10 +172,49 @@ export class ProxyServer extends Server {
                     '\r\n');
                 downstream.write(head);
                 downstream.pipe(upstream);
-                upstream.pipe(downstream)
+                upstream.pipe(downstream);
             });
+
+            let handle = new SocketHandle(downstream)
+            handle.onFinish()
+                .then(handle => {
+
+                    if (handle.error) {
+                        self.debug('Downstream finished with error on ' + self._options.url, proxy_url, handle.error)
+                        let data = JSON.stringify({error: handle.error, message: handle.error.message})
+
+                        upstream.write('HTTP/' + request.httpVersion + ' 400 Bad Request\r\n' +
+                            'Content-Length: ' + data.length + '\r\n' +
+                            'Proxy-agent: Proxybroker\r\n' +
+                            '\r\n');
+
+                        upstream.write(data + '\r\n\n');
+                        upstream.destroy()
+                    } else {
+                        self.debug('Downstream finished on ' + self._options.url, proxy_url)
+                    }
+                })
+                .catch((err) => {
+                    self.debug(err)
+                })
         }
     }
+
+
+    onSocketClose(urlStr: IUrlBase, start: Date, error: boolean) {
+        let now = (new Date())
+        let duration = now.getTime() - start.getTime()
+
+        this.debug('closed!!!' + urlStr.protocol + '://' + urlStr.host + ':' + urlStr.port + ' '
+            + start.getTime() + ' ' + (new Date()).getTime() + ' dur=' + duration + ' err=' + error)
+
+    }
+
+    onServerClientError(exception: Error, socket: net.Socket): void {
+        this.debug('onServerClientError ' + this._options.url,exception)
+        socket.destroy(exception)
+    }
+
 
     async root(req: http.IncomingMessage, res: http.ServerResponse) {
         this.debug('proxyResponse ' + this._options.url);
@@ -158,7 +225,14 @@ export class ProxyServer extends Server {
             let _str = proxy_url.protocol + '://' + proxy_url.host + ':' + proxy_url.port
             if (proxy_url) {
                 this.debug('proxing over proxy ' + _str + ' for url ' + req.url);
-                this.proxy.web(req, res, {target: _str, toProxy: true})
+                let opts = {
+                    target: _str,
+                    toProxy: true,
+                    proxyTimeout: 5000
+                }
+
+                res['connection'].on('close', this.onSocketClose.bind(this, proxy_url, new Date()))
+                this.proxy.web(req, res, opts)
             } else {
                 throw new TodoException('What should happen if no url is given? Define a fallback')
             }
@@ -169,14 +243,18 @@ export class ProxyServer extends Server {
             this.debug('proxing url ' + this._options.url, req.url, req.headers, _url);
             req.url = _req_url
 
-            this.proxy.web(req, res, {target: _url.protocol+'//'+_url.host})
+            let opts = {
+                target: _url.protocol + '//' + _url.host,
+                proxyTimeout: 5000
+            }
+            this.proxy.web(req, res, opts)
         }
 
 
     }
 
     prepare() {
-        this.proxy = HttpProxy.createProxyServer();
+        this.proxy = HttpProxy.createProxyServer({});
         this.proxy.on('proxyReq', this.onProxyRequest.bind(this));
         this.proxy.on('proxyRes', this.onProxyResponse.bind(this));
         this.proxy.on('error', this.onProxyError.bind(this));

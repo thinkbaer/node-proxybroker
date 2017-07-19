@@ -1,22 +1,18 @@
 // Reference mocha-typescript's global definitions:
 /// <reference path="../../node_modules/mocha-typescript/globals.d.ts" />
 
-import * as mocha from 'mocha';
-describe('',()=>{});
-
 import * as net from 'net'
-import {suite, test, slow, timeout, pending} from "mocha-typescript";
+import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
-import {inspect} from "util";
 import {Judge} from "../../src/judge/Judge";
 import {ProxyServer} from "../../src/server/ProxyServer";
 import {Log} from "../../src/lib/logging/Log";
 import {RequestResponseMonitor} from "../../src/judge/RequestResponseMonitor";
 import {JudgeResults} from "../../src/judge/JudgeResults";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
-import StdConsole from "../../src/lib/logging/StdConsole";
-import {EventBus} from "../../src/events/EventBus";
 import {NestedException} from "../../src/exceptions/NestedException";
+
+describe('',()=>{});
 
 const SSL_PATH = '../_files/ssl';
 const JUDGE_LOCAL_HOST: string = 'judge.local';
@@ -149,7 +145,8 @@ class JV {
         let rrm:RequestResponseMonitor = await judgeReq.performRequest();
         let err = rrm.lastError();
         expect(err instanceof NestedException).to.be.true;
-        expect(err.code).to.be.eq('SOCKET_TIMEDOUT')
+        //expect(err.code).to.be.eq('SOCKET_TIMEDOUT')
+        expect(err.code).to.be.eq('SOCKET_HANGUP')
     }
 
 
