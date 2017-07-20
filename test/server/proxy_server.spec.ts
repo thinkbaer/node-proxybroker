@@ -1,18 +1,16 @@
 import {suite, test, timeout} from "mocha-typescript";
-import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {Storage} from "../../src/storage/Storage";
 import {ProxyServer} from "../../src/server/ProxyServer";
 import * as request from "request-promise-native";
 import {Log} from "../../src/lib/logging/Log";
 import {expect} from "chai";
-import {Utils} from "../../src/utils/Utils";
 
 describe('', () => {
 });
 
-let storage :Storage = null;
-let server_dest : ProxyServer = null;
-let server_distrib: ProxyServer  = null;
+let storage: Storage = null;
+let server_dest: ProxyServer = null;
+let server_distrib: ProxyServer = null;
 let opts: request.RequestPromiseOptions = {
     resolveWithFullResponse: true,
     proxy: 'http://localhost:3180',
@@ -38,8 +36,8 @@ let https_string = 'As an asynchronous event driven JavaScript runtime'
 class ProxyServerTest {
 
 
-    async  before(){
-
+    async before() {
+        // Log.options({enable: true, level: 'debug'})
         server_dest = new ProxyServer({
             url: 'http://localhost:3128',
             level: 3,
@@ -61,7 +59,7 @@ class ProxyServerTest {
     }
 
 
-    async  after(){
+    async after() {
         await server_distrib.stop();
         await server_dest.stop();
     }
@@ -84,28 +82,51 @@ class ProxyServerTest {
     async 'http failing'() {
         // Http request
         let resp1 = null
+        let err = null
         try {
             resp1 = await request.get('http://asd-test-site.org/html', opts);
-
-        } catch (err) {
+            expect(true).to.be.false
+        } catch (_err) {
+            err = _err
             expect(err).to.exist
-            expect(err.statusCode).to.be.eq(400)
+            expect(err.message).to.not.contain('expected true to be false');
             resp1 = err.response
-            expect(resp1.body).to.contain('getaddrinfo ENOTFOUND asd-test-site.org asd-test-site.org:80');
+
         }
+        let json = JSON.parse(resp1.body)
+        expect(resp1.statusCode).to.be.eq(504)
+        expect(json).to.deep.include({
+            _code: 'ADDR_NOT_FOUND', _error: {
+                code: 'ENOTFOUND', "errno": "ENOTFOUND",
+                "host": "asd-test-site.org",
+                "hostname": "asd-test-site.org",
+                "port": 80,
+                "syscall": "getaddrinfo",
+            }
+        });
     }
 
     @test
     async 'https failing'() {
         // Log.options({enable:true,level:'debug'})
         // Http request
-        let resp1 = null
+        let resp1 = null;
+        let err = null;
         try {
             resp1 = await request.get('https://asd-test-site.org/html', opts);
-        } catch (err) {
-            expect(err).to.exist
-            expect(err.message).to.contain('Error: tunneling socket could not be established, statusCode=400');
+            expect(true).to.be.false
+        } catch (_err) {
+
+            err = _err;
+            expect(err).to.exist;
+            expect(err.message).to.not.contain('expected true to be false');
+            resp1 = err.response;
+
         }
+
+
+        expect(err.message).to.contain('tunneling socket could not be established, statusCode=504')
+
     }
 
 }

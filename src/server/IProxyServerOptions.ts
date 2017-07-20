@@ -6,6 +6,8 @@ export interface IProxyServerOptions extends IServerOptions {
     level: number
     toProxy: boolean
     target?: ((select?: any) => Promise<IUrlBase | IpAddr>) | string
+    onSuccess?: ((select?: any) => Promise<IUrlBase | IpAddr>)
+    onError?: ((select?: any) => Promise<IUrlBase | IpAddr>)
 }
 
 

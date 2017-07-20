@@ -230,6 +230,7 @@ export class Server {
 
     async stop(done: Function = null): Promise<any> {
         let self = this;
+        await this.preFinalize()
         let p = new Promise(function (resolve) {
             if (self.server) {
                 self.server.close(function () {
@@ -244,10 +245,10 @@ export class Server {
 
         if (done) {
             await p;
-            self.finalize();
+            await self.finalize();
             done()
         } else {
-            self.finalize();
+            await self.finalize();
             return p;
         }
     }
@@ -257,6 +258,10 @@ export class Server {
 
     finalize(): void {
     }
+
+    preFinalize(): void {
+    }
+
 
 
     debug(...msg: any[]) {

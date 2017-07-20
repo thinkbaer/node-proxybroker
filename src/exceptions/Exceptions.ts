@@ -6,6 +6,9 @@ export default class Exceptions {
     static EADDRINUSE = 'ADDRINUSE';
 
     static handle(err: Error):NestedException{
+        if(err instanceof NestedException){
+            return err
+        }
         let msg = err.message.trim();
 
         let classification = 'UNCLASSIFIED';
@@ -25,6 +28,8 @@ export default class Exceptions {
             classification = 'HOST_UNREACHABLE'
         }else if(/EPROTO.*SSL.*GET_SERVER_HELLO/.test(msg)){
             classification = 'SSL_UNSUPPORTED'
+        }else if(/getaddrinfo\sENOTFOUND/.test(msg)){
+            classification = 'ADDR_NOT_FOUND'
         }else if(/^(HTTP\/\d.\d)\s(\d{3})\s(.+)$/.test(msg)){
             let match = msg.match(/^(HTTP\/\d.\d)\s(\d{3})\s(.+)$/);
             classification = 'HTTP_ERROR_'+match[2];

@@ -22,7 +22,7 @@
     "noImplicitAny": true,
     "suppressImplicitAnyIndexErrors": true,
     "typeRoots": [
-      "./typings/modules",
+      // "./typings/modules",
       "./node_modules/@types"
     ]
   },
