@@ -445,7 +445,11 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
 
     debug(...msg: any[]) {
-        msg.unshift(this.id);
+        if(msg.length > 0 && typeof msg[0] === 'string'){
+            msg[0] = this.id + ' '+msg[0];
+        }else{
+            msg.unshift(this.id);
+        }
         Log.debug.apply(Log,msg)
     }
 

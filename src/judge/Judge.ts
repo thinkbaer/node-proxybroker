@@ -6,7 +6,6 @@ import {Log} from "../lib/logging/Log";
 import * as fs from 'fs'
 import * as mUrl from 'url'
 import * as net from 'net'
-import {RequestResponseMonitor} from "./RequestResponseMonitor";
 import {shorthash} from "../lib/crypt";
 import {format} from "util"
 
@@ -26,8 +25,6 @@ import {Runtime} from "../lib/Runtime";
 
 const FREEGEOIP: string = 'http://freegeoip.net/json/%s';
 const IPCHECK_URL = 'https://api.ipify.org?format=json';
-
-
 
 
 export class Judge {
@@ -235,10 +232,11 @@ export class Judge {
      * @param res
      */
     public async judge(req: http.IncomingMessage, res: http.ServerResponse) {
-        let paths = req.url.split('/').filter((x) => {
+        let _url: mUrl.Url = mUrl.parse(req.url)
+        let paths = _url.path.split('/').filter((x) => {
             return x || x.length != 0
         });
-        this.debug('paths=',paths, req.url);
+        this.debug('paths=', paths, req.url);
 
         let first_path = paths.shift();
         let cached_req: JudgeRequest = null;
@@ -333,7 +331,10 @@ export class Judge {
     }
 
 
-    async validate(ip: string, port: number): Promise<JudgeResults> {
+    async validate(ip: string, port: number, enable: { http: boolean, https: boolean } = {
+        http: true,
+        https: true
+    }): Promise<JudgeResults> {
         let results: JudgeResults = new JudgeResults();
         results.host = ip;
 
@@ -361,19 +362,21 @@ export class Judge {
             Log.error(e)
         }
 
-        let http_request: JudgeRequest = this.createRequest('http://' + ip + ':' + port);
-        //let http_monitor: RequestResponseMonitor =
-        await http_request.performRequest();
-        results.http = http_request.result(ProtocolType.HTTP);
-        this.removeFromCache(http_request.id);
+        if (enable.http) {
+            let http_request: JudgeRequest = this.createRequest('http://' + ip + ':' + port);
+            //let http_monitor: RequestResponseMonitor =
+            await http_request.performRequest();
+            results.http = http_request.result(ProtocolType.HTTP);
+            this.removeFromCache(http_request.id);
+        }
 
-
-        let https_request: JudgeRequest = this.createRequest('https://' + ip + ':' + port);
-        //let https_monitor: RequestResponseMonitor =
-        await https_request.performRequest();
-        results.https = https_request.result(ProtocolType.HTTPS);
-        this.removeFromCache(https_request.id);
-
+        if (enable.https) {
+            let https_request: JudgeRequest = this.createRequest('https://' + ip + ':' + port);
+            //let https_monitor: RequestResponseMonitor =
+            await https_request.performRequest();
+            results.https = https_request.result(ProtocolType.HTTPS);
+            this.removeFromCache(https_request.id);
+        }
 
         return Promise.resolve(results)
     }

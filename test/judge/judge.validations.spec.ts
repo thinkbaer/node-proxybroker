@@ -114,7 +114,7 @@ class JV {
 
     @test
     async proxyIpAndPortForHttp() {
-        // Log.options({enable:true,level:'debug'})
+        //Log.options({enable:true,level:'debug'})
 
         let proxy_url_http = 'http://' + JV.http_proxy_ip + ':' + JV.http_proxy_port;
         //let proxy_url_https = 'https://' + JV.http_proxy_ip + ':' + JV.http_proxy_port
@@ -158,6 +158,7 @@ class JV {
 
     }
 
+
     @test
     async validateSuccessOnHttpAndFailedOnHttps(){
         let results : JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST,JV.http_proxy_port);
@@ -166,12 +167,15 @@ class JV {
         expect(results.https.hasError()).to.be.true
     }
 
+
     @test
     async validateFailedOnHttpAndSuccessOnHttps(){
-        let results : JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST,JV.https_proxy_port);
+        // Log.options({enable:true,level:'debug'})
+        let results : JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST,JV.https_proxy_port/*,{http:true,https:true}*/);
         expect(results.http.hasError()).to.be.true;
         expect(results.https.hasError()).to.be.false
     }
+
 
     @test
     async validateSuccessOnHttpAndHttps(){

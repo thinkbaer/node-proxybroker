@@ -51,7 +51,7 @@ class ProxyServerTest {
             toProxy: true,
             target: (header?: any) => {
                 Log.debug('headers: ', header);
-                return Promise.resolve({host: 'localhost', port: 3128, protocol: 'http'})
+                return Promise.resolve({hostname: 'localhost', port: 3128, protocol: 'http'})
             }
         });
         await server_distrib.start();

@@ -1,15 +1,12 @@
-
 import * as http from 'http'
 import * as tls from 'tls'
 import * as https from 'https'
 import * as net from 'net'
 import * as fs from 'fs'
 import * as url from "url";
-
-import Timer = NodeJS.Timer;
 import {DEFAULT_SERVER_OPTIONS, IServerOptions} from "./IServerOptions";
-import {Connection} from "typeorm";
 import {Log} from "../lib/logging/Log";
+import Timer = NodeJS.Timer;
 
 
 export class Server {
@@ -177,6 +174,8 @@ export class Server {
         this.debug('onServerConnectData ' + data.toString('utf-8'))
     }
 
+
+
     onServerUpgrade(request: http.IncomingMessage, socket: net.Socket, head: Buffer): void {
         this.debug('onServerUpgrade '+ this._options.url)
     }
@@ -197,6 +196,10 @@ export class Server {
         this.debug('onServerConnection '+ this._options.url)
     }
 
+    onSecureConnection(socket: tls.TLSSocket): void {
+        this.debug('onSecureConnection ' + this._options.url)
+    }
+
     // private onServerConnection(socket: net.Socket): void {  }
 
     async start(done: Function = null): Promise<any> {
@@ -207,7 +210,13 @@ export class Server {
         //      this.server.on('checkExpectation',this.onServerCheckExpectation.bind(this))
         this.server.on('clientError', this.onServerClientError.bind(this));
         this.server.on('close', this.onServerClose.bind(this));
-        this.server.on('connection', this.onServerConnection.bind(this))
+
+        if(this._secured){
+            this.server.on('secureConnection', this.onSecureConnection.bind(this))
+        }else{
+            this.server.on('connection', this.onServerConnection.bind(this))
+        }
+
         this.server.on('upgrade', this.onServerUpgrade.bind(this));
         //this.server.on('request',this.onServerRequest.bind(this))
         this.server.on('connect', this.onServerConnect.bind(this));

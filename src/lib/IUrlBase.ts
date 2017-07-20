@@ -2,7 +2,7 @@ export interface IUrlBase {
 
     protocol: string
 
-    host: string
+    hostname: string
 
     port: number
 }
