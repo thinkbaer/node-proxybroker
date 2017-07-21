@@ -21,31 +21,31 @@ const cfg: any = {
 };
 
 
-@suite('commands/JudgeFileCommand - CLI version') @timeout(20000)
-class CLIJudgeFileCommandTest {
+@suite('commands/ValidateCommand - CLI version') @timeout(20000)
+class CLIValidateCommandTest {
 
     static before() {
         Log.options({enable: false})
-        SpawnCLI.timeout = 18000
+        SpawnCLI.timeout = 10000
     }
 
 
     @test
-    async 'judge file with file'() {
+    async 'passed file'() {
 
         let proxy_options: IProxyServerOptions = Object.assign({}, {
             url: 'http://127.0.0.1:3128',
             level: 3,
             toProxy:false
-
         });
 
         let http_proxy_server = new ProxyServer(proxy_options);
 
         await http_proxy_server.start();
-        let cli = await SpawnCLI.run('judge-file', 'test/_files/proxylists/list01.csv', '-v', '-c', JSON.stringify(cfg));
+        let cli = await SpawnCLI.run('validate', 'test/_files/proxylists/list01.csv', '-v', '-c', JSON.stringify(cfg));
         await http_proxy_server.stop();
 
+        // console.log(cli.stdout,cli.stderr)
         let data = JSON.parse(cli.stdout);
         data = data.shift();
         expect(data.ip).to.eq('127.0.0.1');
@@ -55,16 +55,16 @@ class CLIJudgeFileCommandTest {
     }
 
     @test
-    async 'judge file with empty parameter'() {
-        let cli = await SpawnCLI.run('judge-file');
-        expect(cli.stderr).to.contain('cli.ts judge-file <file>');
+    async 'no passed parameter'() {
+        let cli = await SpawnCLI.run('validate');
+        expect(cli.stderr).to.contain('cli.ts validate <host_or_file>');
         expect(cli.stderr).to.contain('--verbose, -v')
     }
 
     @test
-    async 'judge file in usage'() {
+    async 'usage'() {
         let cli = await SpawnCLI.run();
-        expect(cli.stderr).to.contain('judge-file <file>')
+        expect(cli.stderr).to.contain('validate <host_or_file>')
     }
 
 }

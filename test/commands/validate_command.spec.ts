@@ -7,17 +7,18 @@ import {suite, test, timeout} from "mocha-typescript";
 import {expect} from "chai";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
 import {ProxyServer} from "../../src/server/ProxyServer";
-import {JudgeFileCommand} from "../../src/commands/JudgeFileCommand";
+
 import {Log} from "../../src/lib/logging/Log";
 import {Config} from "commons-config";
+import {ValidateCommand} from "../../src/commands/ValidateCommand";
 
 
 let stdMocks = require('std-mocks');
 
 const cfg = {validator: {judge: {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"}}};
 
-@suite('commands/JudgeFileCommand') @timeout(20000)
-class JudgeFileCommandTest {
+@suite('commands/ValidateCommand') @timeout(20000)
+class ValidateCommandTest {
 
     static before() {
         Log.options({enable: false})
@@ -38,13 +39,13 @@ class JudgeFileCommandTest {
         });
 
         let http_proxy_server = new ProxyServer(proxy_options);
-
         await http_proxy_server.start();
 
         stdMocks.use();
-        let jfc = new JudgeFileCommand();
+        let jfc = new ValidateCommand();
         let list = await jfc.handler({
-            file: __dirname + '/../_files/proxylists/list01.csv',
+            _resolve:true,
+            host_or_file: __dirname + '/../_files/proxylists/list01.csv',
             verbose: false,
             // config: cfg, // config can be ignored handler work on cli.ts level, so we previously defined settings directly
             format: 'json'
@@ -54,6 +55,8 @@ class JudgeFileCommandTest {
         await http_proxy_server.stop();
         //EventBus.unregister(c)
 
+
+
         expect(output).to.have.keys('stdout', 'stderr')
         expect(output.stdout).has.length(1)
         expect(list).has.length(1)
@@ -62,7 +65,6 @@ class JudgeFileCommandTest {
         let data = list.shift();
         expect(data.ip).to.eq('127.0.0.1');
         expect(data.port).to.eq(3128);
-
 
         expect(data.results.http.error).to.be.null;
         expect(data.results.https.error).to.not.be.null;

@@ -117,7 +117,6 @@ class ProxyServerTest {
         EventBus.unregister(rotator)
         await server_distrib.stop();
         await server_dest.stop();
-
         await storage.shutdown()
     }
 

@@ -3,6 +3,7 @@ import * as path from "path";
 import {Config, IOptions} from "commons-config";
 import {PlatformUtils} from "./utils/PlatformUtils";
 import {Log} from "./lib/logging/Log";
+import StdConsole from "./lib/logging/StdConsole";
 
 const DEFAULT_CONFIG_LOAD_ORDER = [
     {type: 'system'},
@@ -43,6 +44,7 @@ export class Loader {
                     {console: {name:'stderr',defaultFormatter: true, stderrLevels: ['info', 'debug', 'error', 'warn']}}
                 ]
             }, true)
+
         }
     }
 

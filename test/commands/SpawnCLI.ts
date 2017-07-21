@@ -5,73 +5,76 @@ import Timer = NodeJS.Timer;
 export default class SpawnCLI {
 
 
-    static timeout : number = 10000
-    args:string[];
-    stderr:string = '';
-    stdout:string = '';
+    static timeout: number = 10000;
+    args: string[];
+    stderr: string = '';
+    stdout: string = '';
     cwd: string = PlatformUtils.pathNormalize(__dirname + '/../..');
 
 
-    constructor(...args:string[]){
+    constructor(...args: string[]) {
         args.unshift('src/cli.ts');
-        if(!process.env.NYC_PARENT_PID){
+        if (!process.env.NYC_PARENT_PID) {
             // if not embedded in nyc the register ts
-            args.unshift('--require','ts-node/register')
+            args.unshift('--require', 'ts-node/register')
         }
         this.args = args
     }
 
 
-    exec():Promise<SpawnCLI>{
-        let timer : Timer
+    exec(): Promise<SpawnCLI> {
+        let timer: Timer
         let self = this;
-        let cp:child_process.ChildProcess = null;
+        let cp: child_process.ChildProcess = null;
         return new Promise((resolve, reject) => {
-            cp = child_process.spawn('node',this.args,{
-                    cwd: PlatformUtils.pathNormalize(__dirname + '/../..'),
-                    env:process.env
-                });
-            cp.stdout.on('data',function (data:string) {
-                //console.log('out='+data)
-                self.stdout += data
+            cp = child_process.spawn('node', this.args, {
+                cwd: PlatformUtils.pathNormalize(__dirname + '/../..'),
+                env: process.env
             });
-            cp.stderr.on('data',function (data:string) {
-                //console.log('err='+data)
-                self.stderr += data
+
+            cp.stdout.on('data', function (data: string) {
+                // console.log('out=' + data)
+                self.stdout += data;
             });
-            cp.on('close',function () {
-                resolve(self)
+            cp.stderr.on('data', function (data: string) {
+                // console.log('err='+data)
+                self.stderr += data;
+            });
+            cp.on('close', function (code) {
+                resolve(self);
             });
             cp.on("error", function (err) {
                 reject(err)
             })
-            timer = setTimeout(function(){
-
-                if(cp){
-                    console.error('KILLED BY TIMEOUT')
-                    cp.kill()
+            timer = setTimeout(function () {
+                if (cp) {
+                    console.error('KILLED BY TIMEOUT');
+                    cp.kill();
                 }
+                resolve(self);
 
-            },SpawnCLI.timeout)
-        }).then(() =>{
+            }, SpawnCLI.timeout)
+        }).then(() => {
             clearTimeout(timer)
-            try{
-                cp.kill()
-                cp = null
-            }catch(e){}
+            try {
+                cp.kill();
+                cp = null;
+            } catch (e) {
+            }
             return self
-        }).catch((err) =>{
-            clearTimeout(timer)
-            try{
-                cp.kill()
-                cp = null
-            }catch(e){}
-            return err
+        }).catch((err) => {
+            clearTimeout(timer);
+            try {
+                cp.kill();
+                cp = null;
+            } catch (e) {
+            }
+            return err;
         })
     }
 
-    static run( ...args:string[]):Promise<SpawnCLI>{
+    static run(...args: string[]): Promise<SpawnCLI> {
         let spawnCLI = new SpawnCLI(...args);
-        return spawnCLI.exec()
+        return spawnCLI.exec();
     }
 }

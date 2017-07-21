@@ -1,13 +1,9 @@
 #!/usr/bin/env node
 // import "reflect-metadata";
 
-import {JudgeCommand} from "./commands/JudgeCommand";
-import {EventBus} from "./events/EventBus";
-import StdConsole from "./lib/logging/StdConsole";
-import {JudgeFileCommand} from "./commands/JudgeFileCommand";
+import {ValidateCommand} from "./commands/ValidateCommand";
+
 import {FetchCommand} from "./commands/FetchCommand";
-import {Log} from "./lib/logging/Log";
-import {Config} from "commons-config";
 import {Loader} from "./Loader";
 
 
@@ -44,8 +40,7 @@ require("yargonaut")
 
 require("yargs")
     .usage("Usage: $0 <command> [options]")
-    .command(new JudgeCommand())
-    .command(new JudgeFileCommand())
+    .command(new ValidateCommand())
     .command(new FetchCommand())
     .option("config", {
         alias: 'c',

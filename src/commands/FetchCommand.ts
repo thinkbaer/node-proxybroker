@@ -1,16 +1,14 @@
 import * as _ from 'lodash'
-
-import StdConsole from "../lib/logging/StdConsole";
-import {Log} from "../lib/logging/Log";
-import Todo from "../exceptions/TodoException";
+import TodoException from "../exceptions/TodoException";
 import {ProviderManager} from "../provider/ProviderManager";
 import {Utils} from "../utils/Utils";
+import {IProxyData} from "../proxy/IProxyData";
 
 
 export class FetchCommand {
 
     command = "fetch <provider> [variant]";
-    aliases = "fp";
+    aliases = "f";
     describe = "Retrieve proxies from a <provider> and optional [variant].";
 
 
@@ -31,6 +29,7 @@ export class FetchCommand {
         let provider = null;
         let variant = null;
         let variant_found = null;
+        let p: IProxyData[] = null
 
         if (argv.provider) {
             let variants = manager.findAll({name: argv.provider});
@@ -84,7 +83,7 @@ export class FetchCommand {
 
         } else if (provider && variant) {
             let worker = await manager.createWorker(variant_found);
-            let p = await worker.fetch();
+            p = await worker.fetch();
 
             switch (argv.format) {
                 case 'json':
@@ -99,13 +98,17 @@ export class FetchCommand {
                     console.log(rows.join('\n'));
                     break;
                 default:
-                    throw new Todo()
+                    throw new TodoException()
 
             }
 
         } else {
-            throw new Todo()
+            throw new TodoException()
         }
 
+        if (argv._resolve) {
+            return Promise.resolve(p)
+        }
+        return process.exit(0)
     }
 }
