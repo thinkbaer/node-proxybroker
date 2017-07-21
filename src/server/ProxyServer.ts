@@ -14,6 +14,8 @@ import TodoException from "../exceptions/TodoException";
 
 import {ProtocolType} from "../lib/ProtocolType";
 import {SocketHandle} from "./SocketHandle";
+import {ProxyUsedEvent} from "../proxy/ProxyUsedEvent";
+import {EventBus} from "../events/EventBus";
 
 
 export class ProxyServer extends Server {
@@ -218,8 +220,9 @@ export class ProxyServer extends Server {
             proxy_url = await this.getTarget(req.headers)
             //this.debug(proxy_url)
 
-            let _str = proxy_url.protocol + '://' + proxy_url.hostname + ':' + proxy_url.port
+
             if (proxy_url) {
+                let _str = proxy_url.protocol + '://' + proxy_url.hostname + ':' + proxy_url.port
                 this.debug('proxing over proxy ' + _str + ' for url ' + req.url);
                 let opts = {
                     target: _str,
@@ -322,19 +325,8 @@ export class ProxyServer extends Server {
 
 
     async onProxyToProxy(base: IUrlBase, handle: SocketHandle): Promise<any> {
-        if(this._options.status){
-            let self = this
-            return new Promise(async (resolve, reject) => {
-                try{
-                    await self._options.status(base, handle);
-                    resolve();
-                }catch(err){
-                    reject(err)
-                }
-            })
-        }else{
-            return Promise.resolve()
-        }
+        let e = new ProxyUsedEvent(base, handle)
+        return EventBus.post(e);
     }
 
 

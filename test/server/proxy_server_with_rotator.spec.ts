@@ -4,6 +4,18 @@ import {ProxyServer} from "../../src/server/ProxyServer";
 import * as request from "request-promise-native";
 import {Log} from "../../src/lib/logging/Log";
 import {expect} from "chai";
+import {IUrlBase} from "../../src/lib/IUrlBase";
+import {SocketHandle} from "../../src/server/SocketHandle";
+import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
+import {IpAddr} from "../../src/model/IpAddr";
+import {IpAddrState} from "../../src/model/IpAddrState";
+import {ProtocolType} from "../../src/lib/ProtocolType";
+import {ProxyRotator} from "../../src/proxy/ProxyRotator";
+import {ProxyUsedEvent} from "../../src/proxy/ProxyUsedEvent";
+import {EventBus} from "../../src/events/EventBus";
+import {IpRotate} from "../../src/model/IpRotate";
+import {Utils} from "../../src/utils/Utils";
+import {IpRotateLog} from "../../src/model/IpRotateLog";
 
 describe('', () => {
 });
@@ -32,11 +44,55 @@ let http_string = 'A good place to start is by skimming'
 let https_url = 'https://nodejs.org/en/about/'
 let https_string = 'As an asynchronous event driven JavaScript runtime'
 
+
+let rotator: ProxyRotator = null
+
+
 @suite('server/ProxyServer with integrated proxy/ProxyRotator') @timeout(20000)
 class ProxyServerTest {
 
 
     static async before() {
+        // Log.options({enable: true, level: 'debug'})
+        storage = new Storage(<SqliteConnectionOptions>{
+            name: 'proxy_rotator',
+            type: 'sqlite',
+            database: ':memory:'
+        })
+        await storage.init()
+
+        let c = await storage.connect();
+
+
+        let ip = new IpAddr();
+        ip.ip = '127.0.0.1';
+        ip.port = 3128;
+        ip.validation_id = 1
+        ip = await c.save(ip);
+
+        let ips_http = new IpAddrState();
+        ips_http.validation_id = ip.validation_id
+        ips_http.protocol = ProtocolType.HTTP
+        ips_http.addr_id = ip.id
+        ips_http.level = 1
+        ips_http.enabled = true
+        ips_http.duration = 100
+        ips_http = await c.save(ips_http);
+
+
+        let ips_https = new IpAddrState();
+        ips_https.validation_id = ip.validation_id
+        ips_https.protocol = ProtocolType.HTTPS
+        ips_https.addr_id = ip.id
+        ips_https.enabled = false
+
+        ips_https.duration = 5000
+        ips_https = await c.save(ips_https);
+
+
+        rotator = new ProxyRotator({}, storage)
+        EventBus.register(rotator)
+
 
         // Log.options({enable: true, level: 'debug'})
         server_dest = new ProxyServer({
@@ -50,11 +106,7 @@ class ProxyServerTest {
             url: 'http://localhost:3180',
             level: 3,
             toProxy: true,
-            target: (header?: any) => {
-                Log.debug('headers: ', header);
-                return Promise.resolve({hostname: 'localhost', port: 3128, protocol: 'http'})
-            },
-           // status: (options)
+            target: rotator.next.bind(rotator)
         });
         await server_distrib.start();
 
@@ -62,75 +114,159 @@ class ProxyServerTest {
 
 
     static async after() {
+        EventBus.unregister(rotator)
         await server_distrib.stop();
         await server_dest.stop();
+
+        await storage.shutdown()
     }
 
 
     @test
-    async 'http success'() {
+    async 'rotate and log'() {
         let resp1 = await request.get(http_url, opts);
-        expect(resp1.body).to.contain(http_string);
-    }
 
-    @test
-    async 'https success'() {
-        // Log.options({enable: true, level: 'debug'})
-        let resp1 = await request.get(https_url, opts);
-        expect(resp1.body).to.contain(https_string);
-    }
+        await Utils.wait(200)
+        let c = await storage.connect();
+        let data1 = await c.manager.find(IpRotate)
+        let data2 = await c.manager.find(IpRotateLog)
+        await c.close()
 
-    @test
-    async 'http failing'() {
-        // Http request
-        let resp1 = null
-        let err = null
+        expect(data1).to.has.length(1)
+        expect(data1[0].duration).to.be.eq(data1[0].duration_average)
+        expect(data1[0]).to.deep.include({
+            successes: 1,
+            errors: 0,
+            inc: 1,
+            used: 1,
+            id: 1,
+            protocol: 1,
+            addr_id: 1,
+        })
+
+        expect(data2).to.has.length(1)
+        expect(data2[0].duration).to.be.greaterThan(0)
+        expect(data2[0]).to.deep.include({
+            id: 1,
+            protocol: 1,
+            addr_id: 1,
+            error: null,
+            statusCode: 200,
+            success: true
+        })
+
+        await request.get(https_url, opts);
+
+
+        await Utils.wait(200)
+        c = await storage.connect();
+        data1 = await c.manager.find(IpRotate)
+        data2 = await c.manager.find(IpRotateLog)
+        await c.close()
+
+
+        expect(data1).to.has.length(1)
+        expect(data1[0]).to.deep.include({
+            successes: 2,
+            errors: 0,
+            inc: 2,
+            used: 2,
+            id: 1,
+            protocol: 1,
+            addr_id: 1,
+        })
+        expect(data2).to.has.length(2)
+        expect(data2[1].duration).to.be.greaterThan(0)
+        expect(data2[1]).to.deep.include({
+            id: 2,
+            protocol: 1,
+            addr_id: 1,
+            error: null,
+            statusCode: 200,
+            success: true
+        })
+
         try {
             resp1 = await request.get('http://asd-test-site.org/html', opts);
-            expect(true).to.be.false
+
         } catch (_err) {
-            err = _err
-            expect(err).to.exist
-            expect(err.message).to.not.contain('expected true to be false');
-            resp1 = err.response
 
         }
-        let json = JSON.parse(resp1.body)
-        expect(resp1.statusCode).to.be.eq(504)
-        expect(json).to.deep.include({
-            _code: 'ADDR_NOT_FOUND', _error: {
-                code: 'ENOTFOUND', "errno": "ENOTFOUND",
-                "host": "asd-test-site.org",
-                "hostname": "asd-test-site.org",
-                "port": 80,
-                "syscall": "getaddrinfo",
-            }
-        });
-    }
 
-    @test
-    async 'https failing'() {
-        // Log.options({enable:true,level:'debug'})
-        // Http request
-        let resp1 = null;
-        let err = null;
+        await Utils.wait(200)
+        c = await storage.connect();
+        data1 = await c.manager.find(IpRotate)
+        data2 = await c.manager.find(IpRotateLog)
+        await c.close()
+
+
+        expect(data1).to.has.length(1)
+        expect(data1[0]).to.deep.include({
+            successes: 2,
+            errors: 1,
+            inc: 3,
+            used: 3,
+            id: 1,
+            protocol: 1,
+            addr_id: 1,
+        })
+        expect(data2).to.has.length(3)
+        expect(data2[2].duration).to.be.greaterThan(0)
+        expect(data2[2]).to.deep.include({
+            id: 3,
+            protocol: 1,
+            addr_id: 1,
+            statusCode: 504,
+            success: false
+        })
+
+
         try {
             resp1 = await request.get('https://asd-test-site.org/html', opts);
-            expect(true).to.be.false
-        } catch (_err) {
 
-            err = _err;
-            expect(err).to.exist;
-            expect(err.message).to.not.contain('expected true to be false');
-            resp1 = err.response;
+        } catch (_err) {
 
         }
 
+        await Utils.wait(200)
+        c = await storage.connect();
+        data1 = await c.manager.find(IpRotate)
+        data2 = await c.manager.find(IpRotateLog)
+        await c.close()
 
-        expect(err.message).to.contain('tunneling socket could not be established, statusCode=504')
+        //console.log(data1, data2)
+        expect(data1).to.has.length(1)
+        expect(data1[0]).to.deep.include({
+            successes: 2,
+            errors: 2,
+            inc: 4,
+            used: 4,
+            id: 1,
+            protocol: 1,
+            addr_id: 1,
+        })
+        expect(data2).to.has.length(4)
+        expect(data2[3].duration).to.be.greaterThan(0)
+        expect(data2[3]).to.deep.include({
+            id: 4,
+            protocol: 1,
+            addr_id: 1,
+
+            statusCode: 504,
+            success: false
+        })
 
     }
+
 
 }
 
 
+process.on('unhandledRejection', (reason: any, p: any) => {
+    console.error(reason)
+});
+
+process.on('uncaughtException', (err: any) => {
+    console.error(err, err.stack)
+
+});

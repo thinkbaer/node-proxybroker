@@ -10,6 +10,7 @@ import {ProxyUsedEvent} from "./ProxyUsedEvent";
 
 import subscribe from "../events/decorator/subscribe"
 import {IpRotateLog} from "../model/IpRotateLog";
+import {Log} from "../lib/logging/Log";
 
 /**
  * create and keep a fifo queue with proxy references
@@ -75,6 +76,7 @@ export class ProxyRotator  {
 
     @subscribe(ProxyUsedEvent)
     async log(event: ProxyUsedEvent):Promise<IpRotate>{
+        Log.debug('ProxyRotator->log ',event)
 
         let ipRotate:IpRotate = null
         // add to log
@@ -115,12 +117,13 @@ export class ProxyRotator  {
             ipRotate['_log'] = log
 
         }
-
+        Log.debug('ProxyRotator->log: done')
         return ipRotate;
 
     }
 
     async next(select?: any): Promise<IpAddr> {
+        Log.debug('ProxyRotator->next ',select)
         select = this.parseProxyHeader(select)
         let c = await this.storage.connect();
         let q = c.manager.createQueryBuilder(IpAddr, 'ip');

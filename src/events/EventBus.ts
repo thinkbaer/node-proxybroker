@@ -66,7 +66,7 @@ export class EventBus {
         })
 
     }
-        // static unregister
+
 
     private static postOnChannel(namespace: string, o: any): Promise<any> {
         let self = this;
@@ -81,8 +81,8 @@ export class EventBus {
         })
     }
 
-    static post(o: any): Promise<any> {
 
+    static post(o: any): Promise<any> {
         // TODO check is supported type?
         let self = this;
         let info = EventBusMeta.$().getNamespacesForEvent(o);

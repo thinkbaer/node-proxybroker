@@ -7,7 +7,7 @@ export interface IProxyServerOptions extends IServerOptions {
     level: number
     toProxy: boolean
     target?: ((select?: any) => Promise<IUrlBase | IpAddr>) | string
-    status?: ((url:IUrlBase, handle:SocketHandle) => Promise<void>)
+    // status?: ((url:IUrlBase, handle:SocketHandle) => Promise<void>)
 
 }
 
