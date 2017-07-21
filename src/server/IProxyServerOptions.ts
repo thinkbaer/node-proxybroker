@@ -1,13 +1,14 @@
 import {DEFAULT_SERVER_OPTIONS, IServerOptions} from "./IServerOptions";
 import {IpAddr} from "../model/IpAddr";
 import {IUrlBase} from "../lib/IUrlBase";
+import {SocketHandle} from "./SocketHandle";
 
 export interface IProxyServerOptions extends IServerOptions {
     level: number
     toProxy: boolean
     target?: ((select?: any) => Promise<IUrlBase | IpAddr>) | string
-    onSuccess?: ((select?: any) => Promise<IUrlBase | IpAddr>)
-    onError?: ((select?: any) => Promise<IUrlBase | IpAddr>)
+    status?: ((url:IUrlBase, handle:SocketHandle) => Promise<void>)
+
 }
 
 

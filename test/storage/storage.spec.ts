@@ -1,4 +1,5 @@
 import * as mocha from 'mocha';
+
 describe('', () => {
 });
 
@@ -40,7 +41,9 @@ class StorageTest {
             entityNames.push(entityMeta.targetName)
         });
         entityNames = entityNames.sort();
-        expect(entityNames).to.be.deep.eq(["IpAddrState", "IpAddr", "Variable","IpLoc","Job","JobState","IpRotate"].sort());
+        expect(entityNames).to.be.deep.eq([
+            "IpAddrState", "IpAddr", "Variable", "IpLoc", "Job", "JobState", "IpRotate", "IpRotateLog"
+        ].sort());
 
         expect(storage.size()).to.be.eq(1);
         await storage.shutdown();

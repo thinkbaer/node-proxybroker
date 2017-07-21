@@ -321,13 +321,20 @@ export class ProxyServer extends Server {
     }
 
 
-    async onProxyToProxy(base: IUrlBase, handle: SocketHandle): Promise<void> {
-        if (handle.hasError()) {
-
-        } else {
-
+    async onProxyToProxy(base: IUrlBase, handle: SocketHandle): Promise<any> {
+        if(this._options.status){
+            let self = this
+            return new Promise(async (resolve, reject) => {
+                try{
+                    await self._options.status(base, handle);
+                    resolve();
+                }catch(err){
+                    reject(err)
+                }
+            })
+        }else{
+            return Promise.resolve()
         }
-        return null
     }
 
 

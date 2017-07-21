@@ -6,7 +6,10 @@ import {IpLoc} from "../model/IpLoc";
 import {ProtocolType} from "../lib/ProtocolType";
 import {IpAddrState} from "../model/IpAddrState";
 import {IpRotate} from "../model/IpRotate";
+import {ProxyUsedEvent} from "./ProxyUsedEvent";
 
+import subscribe from "../events/decorator/subscribe"
+import {IpRotateLog} from "../model/IpRotateLog";
 
 /**
  * create and keep a fifo queue with proxy references
@@ -33,7 +36,7 @@ export class IpDesc {
 
 }
 
-export class ProxyRotator {
+export class ProxyRotator  {
 
     options: IProxyRotatorOptions
 
@@ -46,19 +49,7 @@ export class ProxyRotator {
         this.storage = storage;
     }
 
-    async reload() {
-        let c = await this.storage.connect();
-        let q = c.manager.createQueryBuilder(IpAddr, 'ip')
-            .innerJoin(IpAddrState, 'state', 'state.validation_id = ip.validation_id and state.addr_id = ip.id')
-            .where('state.enabled = :enable', {enable: true})
-            .orderBy('state.duration', 'ASC')
-            .limit(1000)
 
-        console.log(q.getSqlAndParameters())
-
-        let list = await q.getRawAndEntities()
-        console.log(list)
-    }
 
     parseProxyHeader(headers: any) {
         let _headers: any = {};
@@ -81,6 +72,53 @@ export class ProxyRotator {
         return _headers
     }
 
+
+    @subscribe(ProxyUsedEvent)
+    async log(event: ProxyUsedEvent):Promise<IpRotate>{
+
+        let ipRotate:IpRotate = null
+        // add to log
+        let c = await this.storage.connect();
+        let ipAddr = await c.manager.findOne(IpAddr,{ip:event.hostname, port:event.port})
+        if(ipAddr){
+
+            let log = new IpRotateLog();
+            log.addr_id = ipAddr.id;
+            log.protocol = event.protocol;
+            log.duration = event.duration;
+            log.success = event.success;
+            log.start = event.start
+            log.stop = event.stop
+            // TODO maybe cleanup filename references in paths
+            log.error = event.error ? event.error.stack : null;
+            log.statusCode = event.statusCode;
+            await c.manager.save(log);
+
+            ipRotate = await c.manager.findOne(IpRotate,{addr_id: ipAddr.id, protocol:event.protocol});
+            if(!ipRotate){
+                ipRotate = new IpRotate()
+                ipRotate.addr_id = ipAddr.id
+                ipRotate.protocol = event.protocol
+            }
+
+            if(event.success){
+                ipRotate.duration += event.duration;
+                ipRotate.successes += 1;
+                if(ipRotate.duration > 0 && ipRotate.successes > 0){
+                    ipRotate.duration_average = ipRotate.duration / ipRotate.successes;
+                }
+            }else{
+                ipRotate.errors += 1;
+            }
+            await c.manager.save(ipRotate);
+
+            ipRotate['_log'] = log
+
+        }
+
+        return ipRotate;
+
+    }
 
     async next(select?: any): Promise<IpAddr> {
         select = this.parseProxyHeader(select)

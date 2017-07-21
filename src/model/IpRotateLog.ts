@@ -13,8 +13,8 @@ import {Entity} from "typeorm/decorator/entity/Entity";
 
 
 @Entity()
-@Index("unique_addr_proto", (ipaddr: IpRotate) => [ipaddr.protocol, ipaddr.addr_id], { unique: true })
-export class IpRotate {
+//@Index("unique_addr_proto", (ipaddr: IpRotate) => [ipaddr.protocol, ipaddr.addr_id], { unique: true })
+export class IpRotateLog {
 
     @PrimaryGeneratedColumn()
     id: number;
@@ -25,35 +25,30 @@ export class IpRotate {
     @Column({nullable:false})
     addr_id: number;
 
-    @Column({nullable:false})
-    successes:number = 0
+    @Column({type:'boolean', nullable:false})
+    success:boolean = true
 
-    @Column({nullable:false})
-    errors:number = 0
+    @Column({type:'datetime',nullable:true})
+    start: Date = null;
+
+    @Column({type:'datetime',nullable:true})
+    stop: Date = null;
+
 
     @Column({nullable:false})
     duration:number = 0
 
-    @Column({nullable:false})
-    duration_average:number = 0
+    @Column({nullable:true})
+    error:string
 
-    @Column({nullable:false})
-    inc:number = 0
-
-    @Column({nullable:false})
-    used:number = 0
+    @Column({nullable:true})
+    statusCode:number
 
     @CreateDateColumn()
     created_at: Date;
 
-    @UpdateDateColumn()
-    updated_at: Date;
 
-
-    constructor(){
-
-    }
-
+    constructor(){}
 
 
     flattenDates(){
@@ -61,9 +56,6 @@ export class IpRotate {
             this.created_at = Utils.flattenDate(this.created_at)
         }
 
-        if(this.updated_at){
-            this.updated_at = Utils.flattenDate(this.updated_at)
-        }
     }
 
 

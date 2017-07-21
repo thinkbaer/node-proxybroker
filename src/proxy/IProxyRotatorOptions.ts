@@ -1,5 +1,7 @@
-
-
+/**
+ *
+ * TODO config rotation log cleanup and statistics
+ */
 export interface IProxyRotatorOptions {
 
 }

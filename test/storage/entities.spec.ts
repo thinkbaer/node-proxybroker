@@ -15,20 +15,24 @@ import {ProtocolType} from "../../src/lib/ProtocolType";
 import {IpAddrState} from "../../src/model/IpAddrState";
 import {IpAddr} from "../../src/model/IpAddr";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
+import {IpRotate} from "../../src/model/IpRotate";
+import {IpRotateLog} from "../../src/model/IpRotateLog";
+import {IpLoc} from "../../src/model/IpLoc";
+import {JobState} from "../../src/model/JobState";
+import {Job} from "../../src/model/Job";
 
 let storage: Storage = null;
 
 @suite('storage/entity/*')
 class EntitiesTest {
 
-
     static async before() {
-        storage = await Storage.$(<SqliteConnectionOptions>{
+        storage = new Storage(<SqliteConnectionOptions>{
             name: 'entity_test',
             type: 'sqlite',
             database: ':memory:'
-
         })
+        await storage.init()
     }
 
     static async after() {
@@ -36,6 +40,35 @@ class EntitiesTest {
         storage = Storage['$$'] = null
     }
 
+    @test.skip()
+    'TODO: entity: Job'(){
+        let e = new Job()
+    }
+
+    @test.skip()
+    'TODO: entity: JobState'(){
+        let e = new JobState()
+    }
+
+    @test.skip()
+    'TODO: entity: IpLoc'(){
+        let e = new IpLoc()
+    }
+
+    @test.skip()
+    'TODO: entity: IpRotate'(){
+        let e = new IpRotate()
+    }
+
+    @test.skip()
+    'TODO: entity: IpRotateLog'(){
+        let e = new IpRotateLog()
+    }
+
+    @test.skip()
+    async 'TODO: entity: IpAddrStatus'() {
+        let e = new IpAddrState()
+    }
 
     @test
     async 'entity: IpAddr'() {
@@ -43,11 +76,11 @@ class EntitiesTest {
         e.ip = '127.0.0.1';
         e.port = 12345;
 
-        expect(e.blocked).to.be.false;
-        expect(e.to_delete).to.be.false;
+        expect( e.blocked  ).to.be.false;
+        expect( e.to_delete ).to.be.false;
 
         let c = await storage.connect();
-        let ne = await c.persist(e);
+        let ne = await c.save(e);
 
         await c.close();
         expect(ne).to.deep.eq(e);
@@ -88,13 +121,6 @@ class EntitiesTest {
     }
 
 
-    @test
-    async 'entity: IpAddrStatus'() {
-        let e = new IpAddrState()
-
-        //expect( e ).to.be.false
-        //expect( e.to_delete ).to.be.false
-    }
 
 
     @test
@@ -104,7 +130,7 @@ class EntitiesTest {
         e.value = 'data';
 
         let c = await storage.connect();
-        let ne = await c.persist(e);
+        let ne = await c.save(e);
         await c.close();
         expect(ne).to.deep.eq(e);
 
@@ -112,7 +138,6 @@ class EntitiesTest {
         ne = await c.connection.manager.findOneById(Variable, 'test');
         await c.close();
         expect(ne).to.deep.eq(e)
-
     }
 }
 

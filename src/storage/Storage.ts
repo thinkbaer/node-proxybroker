@@ -18,6 +18,7 @@ import {JobState} from "../model/JobState";
 import {Job} from "../model/Job";
 import {Runtime} from "../lib/Runtime";
 import {IpRotate} from "../model/IpRotate";
+import {IpRotateLog} from "../model/IpRotateLog";
 
 
 export const FIX_STORAGE_OPTIONS = {
@@ -28,7 +29,8 @@ export const FIX_STORAGE_OPTIONS = {
         IpLoc,
         Job,
         JobState,
-        IpRotate
+        IpRotate,
+        IpRotateLog
     ],
     migrations: [
         __dirname + "/migrations/*"
@@ -142,11 +144,16 @@ export class Storage {
     }
 
     async shutdown(): Promise<any> {
+        let name = this.name
         let ps: Promise<any>[] = [];
         while (this.connections.length > 0) {
-            ps.push(this.connections.shift().close())
+            ps.push(this.connections.shift().close(true));
         }
-        return Promise.all(ps)
+
+        return Promise.all(ps).then(()=>{
+            // remove connection definition from typeorm
+            _.remove(getConnectionManager()['connections'], (connection) =>  { return connection.name === name; });
+        })
     }
 
 

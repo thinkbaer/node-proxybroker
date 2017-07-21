@@ -1,4 +1,4 @@
-import {Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
+import {BeforeInsert, BeforeUpdate, Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
 
 import {ProtocolType} from "../lib/ProtocolType";
 import {Entity} from "typeorm/decorator/entity/Entity";
@@ -12,11 +12,14 @@ export class IpAddrState {
     @Column({type:"boolean",nullable:false})
     enabled: boolean;
 
+
     @Column({nullable:false})
     protocol: ProtocolType;
 
+
     @Column({nullable:false})
     addr_id: number;
+
 
     // intern counter for done checks, independently of the result
     @Column({nullable:false})
@@ -49,5 +52,8 @@ export class IpAddrState {
 
     @UpdateDateColumn()
     updated_at: Date;
+
+
+
 
 }

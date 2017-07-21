@@ -14,6 +14,7 @@ import {Log} from "../../src/lib/logging/Log";
 describe('', () => {
 });
 
+let storage:Storage = null
 
 @suite('proxy/ProxyFilter')
 class ProxyDataSelectorTest {
@@ -22,28 +23,29 @@ class ProxyDataSelectorTest {
         Log.options({enable:false})
     }
 
-
-    @test
-    async 'init'() {
-        let storage = await Storage.$(<SqliteConnectionOptions>{
+    async before(){
+        storage = await Storage.$(<SqliteConnectionOptions>{
             name: 'proxy_data_validator',
             type: 'sqlite',
             database: ':memory:'
 
         });
+        await storage.init()
+    }
+
+    async after(){
+        await storage.shutdown();
+    }
+
+    @test
+    async 'init'() {
         let proxy_data_selector = new ProxyFilter(storage);
         expect(proxy_data_selector).to.exist;
-        await storage.shutdown();
     }
 
 
     @test
     async 'verify if validation is necessary'() {
-        let storage = await Storage.$(<SqliteConnectionOptions>{
-            name: 'proxy_data_validator',
-            type: 'sqlite',
-            database: ':memory:'
-        });
 
         let proxy_data_selector = new ProxyFilter(storage);
         let c = await storage.connect();
@@ -142,7 +144,6 @@ class ProxyDataSelectorTest {
         }]));
         expect(events.length).to.eq(0);
 
-        await storage.shutdown();
     }
 
 
@@ -162,12 +163,6 @@ class ProxyDataSelectorTest {
             }
         }
 
-        let storage = await Storage.$(<SqliteConnectionOptions>{
-            name: 'proxy_data_validator',
-            type: 'sqlite',
-            database: ':memory:'
-
-        });
 
         let _q:ProxyDataFetched = null;
         let proxy_data_selector = new ProxyDataSelectorFilterTest(storage, (w: ProxyDataFetched) => {
@@ -210,7 +205,6 @@ class ProxyDataSelectorTest {
         await proxy_data_selector.filter(e);
         expect(_q.list).to.deep.eq([{ip: '127.0.1.1', port: 65530}]);
 
-        await storage.shutdown();
     }
 
 }

@@ -10,7 +10,7 @@ export class ConnectionWrapper {
 
     private name:string = null;
 
-    memory: boolean = false;
+    singleConnection: boolean = false;
 
     storage: Storage;
 
@@ -18,7 +18,7 @@ export class ConnectionWrapper {
 
     constructor(s: Storage, conn?: Connection) {
         this.storage = s;
-        this.memory = this.storage.isSingleConnection;
+        this.singleConnection = this.storage.isSingleConnection;
         this.connection = conn;
         this.name = this.storage.name
     }
@@ -43,7 +43,7 @@ export class ConnectionWrapper {
     }
 
     async connect(): Promise<ConnectionWrapper> {
-        if (this.memory) {
+        if (this.singleConnection) {
             if (!this.connection || !this.connection.isConnected) {
                 this.connection = await getConnectionManager().get(this.name)
             }
@@ -57,8 +57,8 @@ export class ConnectionWrapper {
         return this.connection.manager
     }
 
-    async close(): Promise<ConnectionWrapper> {
-        if (!this.memory) {
+    async close(force:boolean = false): Promise<ConnectionWrapper> {
+        if (!this.singleConnection || force) {
             if (this.connection.isConnected) {
                 await this.connection.close();
             }
