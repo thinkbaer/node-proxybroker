@@ -43,7 +43,7 @@ class ProxyValidationControllerTest {
             type: 'sqlite',
             database: ':memory:'
         });
-        await storage.init();
+        await storage.prepare();
 
         let http_proxy_server = new ProxyServer(proxy_options);
         let proxyValidationController = new ProxyValidator({schedule: {enable: false}, judge: judge_options}, storage);
@@ -94,7 +94,7 @@ class ProxyValidationControllerTest {
             type: 'sqlite',
             database: ':memory:'
         });
-        await storage.init();
+        await storage.prepare();
         let proxyValidationController = new ProxyValidator({schedule: {enable: false}, judge: judge_options}, storage);
         await proxyValidationController.prepare();
 

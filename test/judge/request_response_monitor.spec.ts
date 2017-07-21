@@ -40,7 +40,7 @@ class ReqResMonitorTest {
         server.stall = 1000;
 
         setTimeout(function () {
-            server.forcedShutdown()
+            server.shutdown()
         }, 100);
 
         let _url = server.url();

@@ -1,16 +1,14 @@
-import * as mocha from 'mocha';
-describe('', () => {
-});
-
-
-import {suite, test, slow, timeout, pending} from "mocha-typescript";
+import {suite, test, timeout} from "mocha-typescript";
 import {expect} from "chai";
-import {inspect} from 'util'
 
 import SpawnCLI from "./SpawnCLI";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
 import {ProxyServer} from "../../src/server/ProxyServer";
 import {Log} from "../../src/lib/logging/Log";
+
+describe('', () => {
+});
+
 
 const cfg: any = {
     validator: {

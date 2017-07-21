@@ -5,6 +5,7 @@ import {ValidateCommand} from "./commands/ValidateCommand";
 
 import {FetchCommand} from "./commands/FetchCommand";
 import {Loader} from "./Loader";
+import {StartupCommand} from "./commands/StartupCommand";
 
 
 process.on('uncaughtException', (err: Error) => {
@@ -42,6 +43,7 @@ require("yargs")
     .usage("Usage: $0 <command> [options]")
     .command(new ValidateCommand())
     .command(new FetchCommand())
+    .command(new StartupCommand())
     .option("config", {
         alias: 'c',
         describe: "JSON string with configuration or name of the config file.",

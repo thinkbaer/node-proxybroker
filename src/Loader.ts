@@ -1,9 +1,21 @@
 import * as _ from "lodash";
-import * as path from "path";
 import {Config, IOptions} from "commons-config";
 import {PlatformUtils} from "./utils/PlatformUtils";
 import {Log} from "./lib/logging/Log";
-import StdConsole from "./lib/logging/StdConsole";
+import {ProxyFilter} from "./proxy/ProxyFilter";
+import {ProxyValidator} from "./proxy/ProxyValidator";
+import {ProviderManager} from "./provider/ProviderManager";
+import {ProxyServer} from "./server/ProxyServer";
+import {AppServer, IExpressOptions, K_APPSERVER} from "./server/AppServer";
+import {ProxyRotator} from "./proxy/ProxyRotator";
+
+import {IStorageOptions, K_STORAGE} from "./storage/IStorageOptions";
+import {Storage} from "./storage/Storage";
+import {EventBus} from "./events/EventBus";
+import {IProxyRotatorOptions, K_ROTATOR} from "./proxy/IProxyRotatorOptions";
+import {IProxyValidatiorOptions, K_VALIDATOR} from "./proxy/IProxyValidatiorOptions";
+import {DEFAULT_PROXY_SERVER_OPTIONS, IProxyServerOptions, K_PROXYSERVER} from "./server/IProxyServerOptions";
+import {IProviderOptions, K_PROVIDER} from "./provider/IProviderOptions";
 
 const DEFAULT_CONFIG_LOAD_ORDER = [
     {type: 'system'},
@@ -22,8 +34,85 @@ export class Loader {
 
     private cfgOptions: IOptions = null
 
-    private VERBOSE_DONE:boolean = false
+    private VERBOSE_DONE: boolean = false
 
+
+    private storage: Storage;
+
+    private proxyFilter: ProxyFilter;
+
+    private proxyRotator: ProxyRotator;
+
+    private proxyValidator: ProxyValidator;
+
+    private providerManager: ProviderManager;
+
+    private proxy_server: ProxyServer;
+
+    private server: AppServer;
+
+
+    async boot() {
+
+        Log.info('init storage')
+        let o_storage: IStorageOptions = Config.get(K_STORAGE, {})
+        this.storage = new Storage(o_storage);
+        await this.storage.prepare()
+
+        this.proxyFilter = new ProxyFilter(this.storage)
+        EventBus.register(this.proxyFilter)
+
+        let o_rotator: IProxyRotatorOptions = Config.get(K_ROTATOR, {})
+        this.proxyRotator = new ProxyRotator(o_rotator, this.storage)
+        EventBus.register(this.proxyRotator)
+
+
+        let o_validator: IProxyValidatiorOptions = Config.get(K_VALIDATOR, {})
+        this.proxyValidator = new ProxyValidator(o_validator, this.storage)
+        EventBus.register(this.proxyRotator)
+        await this.proxyValidator.prepare()
+
+        let o_provider: IProviderOptions = Config.get(K_PROVIDER, {})
+        this.providerManager = new ProviderManager(o_provider, this.storage)
+        EventBus.register(this.providerManager)
+        await this.providerManager.prepare()
+
+
+        let o_proxyserver: IProxyServerOptions = Config.get(K_PROXYSERVER, DEFAULT_PROXY_SERVER_OPTIONS)
+        if (o_proxyserver.enable) {
+            o_proxyserver.toProxy = true
+            o_proxyserver.target = this.proxyRotator.next.bind(this.proxyRotator);
+            this.proxy_server = new ProxyServer(o_proxyserver);
+            await this.proxy_server.start()
+        }
+
+        let o_appserver: IExpressOptions = Config.get(K_APPSERVER, {});
+        this.server = new AppServer(o_appserver);
+        await this.server.prepare();
+
+        process.on('exit', this.shutdown.bind(this))
+        process.on('unhandledRejection', this.throwedUnhandledRejection.bind(this))
+        process.on('uncaughtException', this.throwedUncaughtException.bind(this))
+        process.on('warning', Log.warn.bind(Log))
+        // Support exit throw Ctrl+C
+        process.on('SIGINT', this.shutdown.bind(this))
+    }
+
+    async shutdown() {
+        await this.proxy_server.shutdown();
+        await this.server.shutdown();
+        await this.providerManager.shutdown();
+        await this.proxyValidator.shutdown();
+        await this.storage.shutdown();
+    }
+
+    throwedUnhandledRejection(reason: any, err: Error) {
+        Log.error('unhandledRejection', reason, err)
+    }
+
+    throwedUncaughtException(err: Error) {
+        Log.error('uncaughtException', err)
+    }
 
     static _(): Loader {
         if (!this.$self) {
@@ -34,14 +123,20 @@ export class Loader {
     }
 
     static verbose(c: any) {
-        if (this._().VERBOSE_DONE)  return
+        if (this._().VERBOSE_DONE) return
         this._().VERBOSE_DONE = true
-        if(c === true){
+        if (c === true) {
             Log.options({
                 enable: true,
                 level: 'debug',
                 transports: [
-                    {console: {name:'stderr',defaultFormatter: true, stderrLevels: ['info', 'debug', 'error', 'warn']}}
+                    {
+                        console: {
+                            name: 'stderr',
+                            defaultFormatter: true,
+                            stderrLevels: ['info', 'debug', 'error', 'warn']
+                        }
+                    }
                 ]
             }, true)
 
@@ -49,7 +144,7 @@ export class Loader {
     }
 
     config(c: any) {
-        if (this.CONFIG_LOADED)  return
+        if (this.CONFIG_LOADED) return
         this.CONFIG_LOADED = true
 
         // check if it is an file
@@ -76,7 +171,7 @@ export class Loader {
                 let cfg = DEFAULT_CONFIG_LOAD_ORDER
                 if (PlatformUtils.fileExist(configfile)) {
                     cfg.push({type: 'file', file: configfile})
-                }else{
+                } else {
                     // INFO that file couldn't be loaded, because it doesn't exist
                 }
                 this.cfgOptions = Config.options({configs: cfg});

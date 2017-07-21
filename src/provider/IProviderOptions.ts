@@ -3,6 +3,9 @@
 import {StringOrFunction} from "../types";
 import {FreeProxyListsCom} from "./predefined/FreeProxyListsCom";
 
+
+export const K_PROVIDER = 'provider'
+
 export interface IProviderOptions {
 
     // enable : boolean

@@ -43,7 +43,6 @@ export class ProxyRotator  {
 
     storage: Storage
 
-    queue: IpDesc[]
 
     constructor(opts: IProxyRotatorOptions, storage: Storage) {
         this.options = Utils.merge(DEFAULT_ROTATOR_OPTIONS, opts);

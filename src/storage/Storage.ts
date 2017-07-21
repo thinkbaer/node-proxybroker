@@ -107,7 +107,7 @@ export class Storage {
     }
 
 
-    async init(): Promise<void> {
+    async prepare(): Promise<void> {
         if (!getConnectionManager().has(this.name)) {
             let c = await getConnectionManager().create(<ConnectionOptions>this.options);
             c = await c.connect();
@@ -160,7 +160,7 @@ export class Storage {
     static async $(options: IStorageOptions = DEFAULT_STORAGE_OPTIONS): Promise<Storage> {
         if (!this.$$) {
             this.$$ = new Storage(options);
-            await this.$$.init()
+            await this.$$.prepare()
         }
         return Promise.resolve(this.$$)
     }

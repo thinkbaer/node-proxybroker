@@ -16,9 +16,9 @@ export default class SpawnCLI {
         args.unshift('src/cli.ts');
         if (!process.env.NYC_PARENT_PID) {
             // if not embedded in nyc the register ts
-            args.unshift('--require', 'ts-node/register')
+            args.unshift('--require', 'ts-node/register');
         }
-        this.args = args
+        this.args = args;
     }
 
 
@@ -45,7 +45,7 @@ export default class SpawnCLI {
             });
             cp.on("error", function (err) {
                 reject(err)
-            })
+            });
             timer = setTimeout(function () {
                 if (cp) {
                     console.error('KILLED BY TIMEOUT');
@@ -53,7 +53,7 @@ export default class SpawnCLI {
                 }
                 resolve(self);
 
-            }, SpawnCLI.timeout)
+            }, SpawnCLI.timeout);
         }).then(() => {
             clearTimeout(timer)
             try {

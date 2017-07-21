@@ -4,7 +4,7 @@ import {Container} from "typedi";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {Storage} from "../../src/storage/Storage";
 import {ProviderManager} from "../../src/provider/ProviderManager";
-import {Express} from "../../src/server/AppServer";
+import {AppServer} from "../../src/server/AppServer";
 import {Log} from "../../src/lib/logging/Log";
 import {Config} from "commons-config";
 import {ProxyFilter} from "../../src/proxy/ProxyFilter";
@@ -41,7 +41,7 @@ let boot = async function (): Promise<void> {
         type: 'sqlite',
         database: __dirname + '/tmp/sqlite.app.db'
     });
-    await storage.init();
+    await storage.prepare();
     Container.set(Storage, storage)
 
     let selector = new ProxyFilter(storage)
@@ -72,13 +72,13 @@ let boot = async function (): Promise<void> {
         }
     }, storage)
     EventBus.register(provider)
-    await provider.init()
+    await provider.prepare()
 
 
     Container.set(ProviderManager, provider)
     useContainer(Container)
 
-    let express = new Express({
+    let express = new AppServer({
         _debug: true,
         routes: [
             {type: "static_files", path: __dirname + '/../../tmp/proxybroker-ui/dist'}

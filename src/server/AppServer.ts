@@ -1,14 +1,15 @@
-import * as bodyParser from "body-parser";
 import * as express from "express";
-import * as path from "path";
 import * as _ from 'lodash'
-import {createExpressServer, RoutingControllersOptions, useContainer} from "routing-controllers";
+import {createExpressServer, RoutingControllersOptions} from "routing-controllers";
 import {DataAccessController} from "./api/controllers/DataAccessController";
 import {Server} from "./Server";
 import {IServerOptions} from "./IServerOptions";
 import TodoException from "../exceptions/TodoException";
-import {Config} from "commons-config";
 import {Runtime} from "../lib/Runtime";
+
+
+
+export const K_APPSERVER = 'server'
 
 const K_EXPRESS_STATIC = 'static_files'
 const K_EXPRESS_ROUTING = 'routing_controller'
@@ -47,20 +48,20 @@ const FIXED_API_OPTIONS: IRoutingController = {
     classTransformer:false
 }
 
-const DEFAULT_OPTIONS: IExpressOptions = {
+const DEFAULT_SERVER_OPTIONS: IExpressOptions = {
     url: 'http://localhost:32323',
     routes:[]
 }
 
-export class Express extends Server {
+export class AppServer extends Server {
 
     options: IExpressOptions
 
     app: express.Application
 
 
-    constructor(options: IExpressOptions = DEFAULT_OPTIONS) {
-        options = _.defaults(options, DEFAULT_OPTIONS);
+    constructor(options: IExpressOptions = DEFAULT_SERVER_OPTIONS) {
+        options = _.defaults(options, DEFAULT_SERVER_OPTIONS);
         super(options)
 
         // check if options are set per config

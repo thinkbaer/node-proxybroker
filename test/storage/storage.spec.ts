@@ -34,7 +34,7 @@ class StorageTest {
             type: "sqlite",
             database: ":memory:"
         });
-        await storage.init();
+        await storage.prepare();
         let entityNames: Array<string> = [];
         let cw = await storage.connect();
         cw.connection.entityMetadatas.forEach(entityMeta => {

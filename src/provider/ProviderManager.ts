@@ -68,7 +68,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     }
 
 
-    async init(): Promise<void> {
+    async prepare(): Promise<void> {
         let clazzes = ClassLoader.importClassesFromAny(this.options.providers);
         let self = this;
         let clazzFn = clazzes.map(clazz => {

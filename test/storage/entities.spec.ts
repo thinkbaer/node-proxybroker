@@ -32,7 +32,7 @@ class EntitiesTest {
             type: 'sqlite',
             database: ':memory:'
         })
-        await storage.init()
+        await storage.prepare()
     }
 
     static async after() {

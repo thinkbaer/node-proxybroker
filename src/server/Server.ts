@@ -29,7 +29,7 @@ export class Server {
     constructor(options: IServerOptions) {
         this._options = Object.assign({}, DEFAULT_SERVER_OPTIONS, options);
         this._url = url.parse(options.url);
-      //  this._both = this._options.dual_protocol
+        //  this._both = this._options.dual_protocol
         this._secured = /^https/.test(this.protocol);
 
         // if(this._secured && this._both){
@@ -128,7 +128,7 @@ export class Server {
     }
 
 
-    forcedShutdown() {
+    shutdown(): Promise<any> {
         this._abort = true;
         for (let x in this.cache) {
             if (this.cache[x].t) {
@@ -139,8 +139,7 @@ export class Server {
             }
             delete this.cache[x]
         }
-        this.stop(() => {
-        })
+        return this.stop()
     }
 
     /**
@@ -153,7 +152,7 @@ export class Server {
      * @param head
      */
     onServerConnect(request: http.IncomingMessage, upstream: net.Socket, head: Buffer): void {
-        this.debug('onServerConnect '+ this._options.url + '\n'+head.toString('utf8'));
+        this.debug('onServerConnect ' + this._options.url + '\n' + head.toString('utf8'));
         let self = this;
         let rurl: url.Url = url.parse(`https://${request.url}`);
 
@@ -175,25 +174,24 @@ export class Server {
     }
 
 
-
     onServerUpgrade(request: http.IncomingMessage, socket: net.Socket, head: Buffer): void {
-        this.debug('onServerUpgrade '+ this._options.url)
+        this.debug('onServerUpgrade ' + this._options.url)
     }
 
     onServerClientError(exception: Error, socket: net.Socket): void {
-        this.debug('onServerClientError '+ this._options.url)
+        this.debug('onServerClientError ' + this._options.url)
     }
 
     onServerError(exception: Error, socket: net.Socket): void {
-        this.debug('onServerError '+ this._options.url)
+        this.debug('onServerError ' + this._options.url)
     }
 
     onServerClose(): void {
-        this.debug('onServerClose '+ this._options.url)
+        this.debug('onServerClose ' + this._options.url)
     }
 
-    onServerConnection(socket:net.Socket): void {
-        this.debug('onServerConnection '+ this._options.url)
+    onServerConnection(socket: net.Socket): void {
+        this.debug('onServerConnection ' + this._options.url)
     }
 
     onSecureConnection(socket: tls.TLSSocket): void {
@@ -211,9 +209,9 @@ export class Server {
         this.server.on('clientError', this.onServerClientError.bind(this));
         this.server.on('close', this.onServerClose.bind(this));
 
-        if(this._secured){
+        if (this._secured) {
             this.server.on('secureConnection', this.onSecureConnection.bind(this))
-        }else{
+        } else {
             this.server.on('connection', this.onServerConnection.bind(this))
         }
 
@@ -270,7 +268,6 @@ export class Server {
 
     preFinalize(): void {
     }
-
 
 
     debug(...msg: any[]) {

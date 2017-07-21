@@ -15,6 +15,8 @@ export interface IProxyValidatiorOptions {
     judge?: IJudgeOptions
 }
 
+export const K_VALIDATOR = 'validator'
+
 const hours6 = 6 * 60 * 60
 
 export const DEFAULT_VALIDATOR_OPTIONS: IProxyValidatiorOptions = {

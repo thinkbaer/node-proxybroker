@@ -59,7 +59,7 @@ class ProxyServerTest {
             type: 'sqlite',
             database: ':memory:'
         })
-        await storage.init()
+        await storage.prepare()
 
         let c = await storage.connect();
 

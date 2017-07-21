@@ -55,7 +55,7 @@ class ProviderManagerTest {
     async 'init with directory containing provider classes'() {
 
         let pm = new ProviderManager(this.options, null, true);
-        await pm.init();
+        await pm.prepare();
         expect(pm.providers.length).to.eq(4);
         let providers = pm.findAll();
         expect(providers.length).to.eq(4);
@@ -80,7 +80,7 @@ class ProviderManagerTest {
     @test
     async 'find explicit provider and instance a worker'() {
         let pm = new ProviderManager(this.options);
-        await pm.init();
+        await pm.prepare();
 
         let providers = pm.findAll({name: 'mockproxy02'});
         expect(providers.length).to.eq(1);
@@ -97,10 +97,10 @@ class ProviderManagerTest {
             type: 'sqlite',
             database: ':memory:'
         });
-        await storage.init();
+        await storage.prepare();
 
         let pm = new ProviderManager(this.options, storage, true);
-        await pm.init();
+        await pm.prepare();
         await pm.shutdown();
         expect(pm.jobs.length).to.eq(4);
         expect(_.some(pm.jobs, {
@@ -162,12 +162,12 @@ class ProviderManagerTest {
             type: 'sqlite',
             database: ':memory:'
         });
-        await storage.init();
+        await storage.prepare();
 
         let pm = new ProviderManager(this.options, storage, true);
         let pds = new ProxyFilter(storage);
         EventBus.register(pds);
-        await pm.init();
+        await pm.prepare();
 
         let jobState = await pm.do({name: "mockproxy01", type: "anonym"});
         let jobState2 = Utils.clone(jobState);
@@ -195,11 +195,11 @@ class ProviderManagerTest {
             type: 'sqlite',
             database: ':memory:'
         });
-        await storage.init();
+        await storage.prepare();
 
         let pm = new ProviderManager(this.options, storage, true);
         EventBus.register(pm);
-        await pm.init();
+        await pm.prepare();
 
 
         let event = new ProviderRunEvent({name: "mockproxy01", type: "anonym"});
@@ -236,7 +236,7 @@ class ProviderManagerTest {
             type: 'sqlite',
             database: ':memory:'
         });
-        await storage.init();
+        await storage.prepare();
         let sec = new Date(now.getTime() + 2000);
         let options: IProviderOptions = {
             providers: [__dirname + '/predefined_01/MockedProxies01.*'],
@@ -257,7 +257,7 @@ class ProviderManagerTest {
 
         let pm = new ProviderManager(options, storage, true);
         EventBus.register(pm);
-        await pm.init();
+        await pm.prepare();
 
         let offset = pm.next.getTime() - (new Date()).getTime();
         expect(offset).to.be.lessThan(2000);

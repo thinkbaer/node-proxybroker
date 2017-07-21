@@ -50,7 +50,7 @@ class ConfigTests {
         let options : IStorageOptions = storage['options'];
         expect(options.type).to.eq("sqlite");
 
-        await storage.init();
+        await storage.prepare();
         expect(PlatformUtils.fileExist(__dirname + '/temp/test03.db')).to.be.true;
         fs.unlinkSync(__dirname + '/temp/test03.db')
     }

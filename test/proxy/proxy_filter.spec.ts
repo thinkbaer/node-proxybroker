@@ -30,7 +30,7 @@ class ProxyDataSelectorTest {
             database: ':memory:'
 
         });
-        await storage.init()
+        await storage.prepare()
     }
 
     async after(){

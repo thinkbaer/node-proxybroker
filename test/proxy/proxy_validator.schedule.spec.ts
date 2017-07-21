@@ -43,7 +43,7 @@ class ProxyValidationControllerTest {
             type: 'sqlite',
             database: ':memory:'
         });
-        await storage.init();
+        await storage.prepare();
 
         let ip = new IpAddr()
         ip.ip = '127.0.0.1'
@@ -99,7 +99,7 @@ class ProxyValidationControllerTest {
             type: 'sqlite',
             database: ':memory:'
         });
-        await storage.init();
+        await storage.prepare();
 
         let ip = new IpAddr()
         ip.ip = '127.0.0.1'

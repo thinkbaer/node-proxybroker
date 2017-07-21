@@ -25,7 +25,7 @@ export class FetchCommand {
     async handler(argv: any) {
 
         let manager = new ProviderManager({schedule: {enable: false}});
-        await manager.init();
+        await manager.prepare();
         let provider = null;
         let variant = null;
         let variant_found = null;
