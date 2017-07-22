@@ -81,6 +81,10 @@ export class PlatformUtils {
         return path.isAbsolute(pathStr);
     }
 
+    static directory(file: string): string {
+        return path.dirname(file);
+    }
+
     /**
      * Synchronously checks if file exist. Does "fs.existsSync".
      */

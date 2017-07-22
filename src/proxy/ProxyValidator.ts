@@ -77,8 +77,10 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         if (this.options.schedule && this.options.schedule.enable) {
             let now = new Date();
             let next = this.cron.next();
+
             let offset = next.getTime() - now.getTime();
             this.next = new Date(next.getTime());
+            Log.info('Validator scheduled for '+ this.next)
             this.timer = setTimeout(this.runScheduled.bind(this), offset);
         }
     }
@@ -105,14 +107,16 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
             .limit(this.options.schedule.limit)
 
         try {
+
             let ips: IpAddr[] = await q.getMany()
+            Log.info('Validator recheck proxies: '+ ips.length)
             if (ips.length > 0) {
                 for (let ip of ips) {
                     (new ProxyDataValidateEvent(new ProxyData(ip))).fire()
                 }
             }
         } catch (e) {
-            console.error(e)
+            Log.error(e);
         }
     }
 

@@ -98,7 +98,7 @@ export class Judge {
             }
         }
 
-        Runtime.$().setConfig('judge', this._options)
+
     }
 
     get ip(): string {

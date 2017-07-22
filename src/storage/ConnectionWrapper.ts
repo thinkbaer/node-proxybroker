@@ -44,7 +44,8 @@ export class ConnectionWrapper {
 
     async connect(): Promise<ConnectionWrapper> {
         if (this.singleConnection) {
-            if (!this.connection || !this.connection.isConnected) {
+            let has = getConnectionManager().has(this.name)
+            if ((!this.connection || !this.connection.isConnected) && has) {
                 this.connection = await getConnectionManager().get(this.name)
             }
         } else {

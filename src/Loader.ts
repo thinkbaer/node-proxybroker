@@ -1,4 +1,5 @@
 import * as _ from "lodash";
+import * as url from "url";
 import {Config, IOptions} from "commons-config";
 import {PlatformUtils} from "./utils/PlatformUtils";
 import {Log} from "./lib/logging/Log";
@@ -16,9 +17,9 @@ import {IProxyRotatorOptions, K_ROTATOR} from "./proxy/IProxyRotatorOptions";
 import {IProxyValidatiorOptions, K_VALIDATOR} from "./proxy/IProxyValidatiorOptions";
 import {DEFAULT_PROXY_SERVER_OPTIONS, IProxyServerOptions, K_PROXYSERVER} from "./server/IProxyServerOptions";
 import {IProviderOptions, K_PROVIDER} from "./provider/IProviderOptions";
+import {ILoggerOptions, K_LOGGING} from "./lib/logging/ILoggerOptions";
 
 const DEFAULT_CONFIG_LOAD_ORDER = [
-    {type: 'system'},
     {type: 'file', file: '${argv.configfile}'},
     {type: 'file', file: '${env.configfile}'},
     {type: 'file', file: '${os.homedir}/.proxybroker/config.json'},
@@ -53,6 +54,8 @@ export class Loader {
 
 
     async boot() {
+        let o_logging: ILoggerOptions = Config.get(K_LOGGING, {})
+        Log.options(o_logging);
 
         Log.info('init storage')
         let o_storage: IStorageOptions = Config.get(K_STORAGE, {})
@@ -69,7 +72,7 @@ export class Loader {
 
         let o_validator: IProxyValidatiorOptions = Config.get(K_VALIDATOR, {})
         this.proxyValidator = new ProxyValidator(o_validator, this.storage)
-        EventBus.register(this.proxyRotator)
+        EventBus.register(this.proxyValidator)
         await this.proxyValidator.prepare()
 
         let o_provider: IProviderOptions = Config.get(K_PROVIDER, {})
@@ -84,26 +87,34 @@ export class Loader {
             o_proxyserver.target = this.proxyRotator.next.bind(this.proxyRotator);
             this.proxy_server = new ProxyServer(o_proxyserver);
             await this.proxy_server.start()
+            Log.info('Start proxy server on ' + this.proxy_server.url());
         }
 
         let o_appserver: IExpressOptions = Config.get(K_APPSERVER, {});
         this.server = new AppServer(o_appserver);
         await this.server.prepare();
+        await this.server.start()
+        Log.info('Start app server on ' + this.server.url());
 
-        process.on('exit', this.shutdown.bind(this))
         process.on('unhandledRejection', this.throwedUnhandledRejection.bind(this))
         process.on('uncaughtException', this.throwedUncaughtException.bind(this))
         process.on('warning', Log.warn.bind(Log))
         // Support exit throw Ctrl+C
-        process.on('SIGINT', this.shutdown.bind(this))
+//        process.on('exit', this.shutdown.bind(this))
+  //      process.on('SIGINT', this.shutdown.bind(this))
     }
 
     async shutdown() {
-        await this.proxy_server.shutdown();
-        await this.server.shutdown();
-        await this.providerManager.shutdown();
-        await this.proxyValidator.shutdown();
-        await this.storage.shutdown();
+        Log.info("Shutdown ...")
+        try {
+            await this.proxy_server.stop()
+            await this.server.stop()
+            await this.providerManager.shutdown();
+            await this.proxyValidator.shutdown();
+            await this.storage.shutdown();
+        } catch (err) {
+            Log.error('Shutdown error', err)
+        }
     }
 
     throwedUnhandledRejection(reason: any, err: Error) {
@@ -144,41 +155,55 @@ export class Loader {
     }
 
     config(c: any) {
+
         if (this.CONFIG_LOADED) return
         this.CONFIG_LOADED = true
 
         // check if it is an file
-        if (c === false) {
-            this.cfgOptions = Config.options({configs: DEFAULT_CONFIG_LOAD_ORDER});
-        } else if (_.isString(c)) {
-            // can be file or JSON with config
-            try {
-                c = JSON.parse(c)
-            } catch (e) {
-            }
-
-            if (_.isObject(c)) {
+        try {
+            if (c === false) {
                 this.cfgOptions = Config.options({configs: DEFAULT_CONFIG_LOAD_ORDER});
-                Config.jar().merge(c)
-            } else {
-                let configfile: string = null
-                if (PlatformUtils.isAbsolute(c)) {
-                    configfile = PlatformUtils.pathNormalize(c)
-                } else {
-                    configfile = PlatformUtils.pathResolveAndNormalize(c)
+            } else if (_.isString(c)) {
+                // can be file or JSON with config
+                try {
+                    c = JSON.parse(c);
+                } catch (e) {
                 }
 
-                let cfg = DEFAULT_CONFIG_LOAD_ORDER
-                if (PlatformUtils.fileExist(configfile)) {
-                    cfg.push({type: 'file', file: configfile})
+                if (_.isObject(c)) {
+                    this.cfgOptions = Config.options({configs: DEFAULT_CONFIG_LOAD_ORDER});
+                    Config.jar().merge(c)
                 } else {
-                    // INFO that file couldn't be loaded, because it doesn't exist
-                }
-                this.cfgOptions = Config.options({configs: cfg});
+                    let configfile: string = null;
 
+                    if (PlatformUtils.isAbsolute(c)) {
+                        configfile = PlatformUtils.pathNormalize(c);
+                    } else {
+                        configfile = PlatformUtils.pathResolveAndNormalize(c);
+                    }
+
+                    let cfg = _.clone(DEFAULT_CONFIG_LOAD_ORDER);
+                    if (PlatformUtils.fileExist(configfile)) {
+                        cfg.push({type: 'file', file: configfile});
+                    } else {
+                        // INFO that file couldn't be loaded, because it doesn't exist
+                    }
+                    this.cfgOptions = Config.options({configs: cfg});
+
+                    this.cfgOptions.configs.forEach(_c => {
+                        if(_c.state && _c.type != 'system'){
+                            console.log('Loading configuration from '+_c.file);
+                        }
+
+                    })
+                }
             }
-
+        } catch (err) {
+            console.error(err)
+            process.exit(1)
         }
+
+
     }
 
     static configStatic(c: any) {

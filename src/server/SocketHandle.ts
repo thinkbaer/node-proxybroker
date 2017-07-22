@@ -3,6 +3,7 @@ import * as _ from 'lodash'
 import * as net from 'net'
 import {Log} from "../lib/logging/Log";
 import Exceptions from "../exceptions/Exceptions";
+import Timer = NodeJS.Timer;
 
 
 export class SocketHandle {
@@ -12,6 +13,8 @@ export class SocketHandle {
     readonly id: number;
 
     readonly start: Date;
+
+    repeat: number = 0
 
     stop: Date;
 
@@ -27,7 +30,7 @@ export class SocketHandle {
 
     error: Error = null;
 
-    socketError:boolean = false
+    socketError: boolean = false
 
     statusCode: number;
 
@@ -39,18 +42,25 @@ export class SocketHandle {
 
     body: Buffer;
 
-    ssl: boolean
+    options: { ssl?: boolean, timeout?: number };
+
+    timer: Timer;
 
 
-    constructor(socket: net.Socket, ssl: boolean = false) {
-        this.ssl = ssl
+    constructor(socket: net.Socket, opts: { ssl?: boolean, timeout?: number } = {ssl: false, timeout: 5000}) {
+        this.options = opts
         this.socket = socket
         this.start = new Date()
-        socket.setKeepAlive(true)
+
+        this.socket.setKeepAlive(true)
+        this.socket.setTimeout(this.options.timeout)
+
         this.socket.on('data', this.onData.bind(this))
         this.socket.on('end', this.onEnd.bind(this))
         this.socket.on('close', this.onClose.bind(this))
+        this.socket.on('timeout', this.onTimeout.bind(this))
         this.socket.on('error', this.onError.bind(this))
+
         this.id = SocketHandle.inc++;
         this.socket['handle_id'] = this.id
     }
@@ -58,9 +68,10 @@ export class SocketHandle {
     onData(data: Buffer) {
         this.ended = false
         // this.debug('socket data ' + data.length)
-        if (!data || this.ssl) {
+        if (!data) {
             return;
         }
+
         if (this.data) {
             this.data = Buffer.concat([this.data, data])
             if (this.body) {
@@ -132,10 +143,8 @@ export class SocketHandle {
         this.headers = Buffer.allocUnsafe(strEntries.length);
         this.headers.write(strEntries);
 
-        return Buffer.concat([
-            this.query, buf, this.headers, buf, buf, this.body]
-        );
-
+        let list: Buffer[] = [this.query, buf, this.headers, buf, buf, this.body]
+        return Buffer.concat(list);
     }
 
     hasError() {
@@ -157,17 +166,33 @@ export class SocketHandle {
         this.ended = true
     }
 
-    onClose(had_error: boolean) {
+    onTimeout() {
+        /*
+        this.debug('socket timeout duration=' + this.duration);
+        this.finished = true;
+        this.socket.emit('finished');
+        */
+        this.stop = new Date();
+        this.duration = this.stop.getTime() - this.start.getTime();
+        this.debug('socket timeout after ' + this.duration);
+        if(!this.socket.destroyed){
+            this.socket.destroy(new Error('ESOCKETTIMEDOUT'))
+        }
 
+    }
+
+    onClose(had_error: boolean) {
         this.stop = new Date();
         this.duration = this.stop.getTime() - this.start.getTime();
         this.debug('socket close error=' + had_error + ' duration=' + this.duration);
         this.finished = true;
         this.socket.emit('finished');
+
     }
 
     onFinish(): Promise<SocketHandle> {
         let self = this;
+
         return new Promise(resolve => {
             self.socket.once('finished', resolve.bind(resolve, self));
         })
@@ -179,7 +204,6 @@ export class SocketHandle {
         }
         return ''
     }
-
 
 
     debug(...args: any[]) {

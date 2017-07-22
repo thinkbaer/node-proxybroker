@@ -1,35 +1,12 @@
 #!/usr/bin/env node
-// import "reflect-metadata";
 
+import "reflect-metadata";
 import {ValidateCommand} from "./commands/ValidateCommand";
 
 import {FetchCommand} from "./commands/FetchCommand";
 import {Loader} from "./Loader";
 import {StartupCommand} from "./commands/StartupCommand";
 
-
-process.on('uncaughtException', (err: Error) => {
-    console.error(err);
-    process.exit()
-});
-
-process.on('unhandledRejection', (err: Error) => {
-    console.error(err);
-    process.exit()
-});
-
-
-/*
- Config.options({
- configs: [
- {type: 'system'},
- // find in same directory proxybroker
- {type: 'file', file: {dirname: './', filename: 'proxybroker'}},
- // find in proxyborker
- {type: 'file', file: '${argv.configfile}'},
- ]
- })
- */
 
 
 require("yargonaut")

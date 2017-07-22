@@ -57,7 +57,10 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         }
         this.storage = storage;
         this.options.parallel = this.options.parallel || 5;
-        this.queue = new AsyncWorkerQueue<IProviderVariantId>(this);
+        this.queue = new AsyncWorkerQueue<IProviderVariantId>(this, {
+            name: 'provider_manager',
+            concurrent: this.options.parallel
+        });
 
         if (this.options.schedule && this.options.schedule.enable) {
             this.cron = require('cron-parser').parseExpression(this.options.schedule.pattern)
@@ -141,11 +144,14 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     @subscribe(ProviderRunEvent)
     run(c: ProviderRunEvent): void {
         if (c.runAll()) {
+
             for (let v of this.providers) {
+                Log.info(`Recheck provider ${v.name}:${v.type}`)
                 this.queue.push({name: v.name, type: v.type})
             }
         } else {
             for (let v of c.variants) {
+                Log.info(`Recheck provider ${v.name}:${v.type}`)
                 this.queue.push({name: v.name, type: v.type});
             }
         }
@@ -223,6 +229,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
             let next = this.cron.next();
             let offset = next.getTime() - now.getTime();
             this.next = new Date(next.getTime());
+            Log.info('Manager scheduled for '+ this.next)
             this.timer = setTimeout(this.runScheduled.bind(this), offset);
         }
     }

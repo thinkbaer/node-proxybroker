@@ -38,3 +38,15 @@ pb$ node --require ts-node/register src/cli.ts judge-file /tmp/proxies_anonym.cs
 mocha --opts test/mocha.all.opts
 ```
 
+
+## Startup
+
+```
+$ node --require ts-node/register src/cli.ts start -c config/proxybroker.yml
+```
+
+
+### curl over proxy
+```
+$ curl -x http://localhost:3128 -L http://httpbin.org/headers
+```

@@ -41,6 +41,48 @@ export class FreeProxyListsCom extends AbstractProvider {
             pattern: /href=(\"|\')elite\/d(\d+)\.html(\"|\')/g,
             path_load: 'elite',
             flags: ProxyType.HTTP_ANON
+        },
+        {
+            type: 'https',
+            path: 'https.html',
+            pattern: /href=(\"|\')https\/d(\d+)\.html(\"|\')/g,
+            path_load: 'https',
+            flags: ProxyType.HTTPS_ANON
+        },
+        {
+            type: 'standard',
+            path: 'standard.html',
+            pattern: /href=(\"|\')standard\/d(\d+)\.html(\"|\')/g,
+            path_load: 'standard',
+            flags: ProxyType.HTTPS_ANON
+        },
+        {
+            type: 'us',
+            path: 'us.html',
+            pattern: /href=(\"|\')us\/d(\d+)\.html(\"|\')/g,
+            path_load: 'us',
+            flags: ProxyType.HTTP_ANON
+        },
+        {
+            type: 'uk',
+            path: 'uk.html',
+            pattern: /href=(\"|\')uk\/d(\d+)\.html(\"|\')/g,
+            path_load: 'uk',
+            flags: ProxyType.HTTP_ANON
+        },
+        {
+            type: 'ca',
+            path: 'ca.html',
+            pattern: /href=(\"|\')ca\/d(\d+)\.html(\"|\')/g,
+            path_load: 'ca',
+            flags: ProxyType.HTTP_ANON
+        },
+        {
+            type: 'fr',
+            path: 'fr.html',
+            pattern: /href=(\"|\')fr\/d(\d+)\.html(\"|\')/g,
+            path_load: 'fr',
+            flags: ProxyType.HTTP_ANON
         }
     ];
 

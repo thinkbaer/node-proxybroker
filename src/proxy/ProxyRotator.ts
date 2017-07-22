@@ -130,7 +130,7 @@ export class ProxyRotator  {
         q = q.innerJoinAndMapOne('ip.state', IpAddrState, 'state', 'state.validation_id = ip.validation_id and state.addr_id = ip.id')
         q = q.leftJoinAndMapOne('ip.rotate', IpRotate, 'rotate', 'rotate.addr_id = ip.id and rotate.protocol = state.protocol')
         q = q.orderBy('rotate.used', 'ASC');
-        q = q.orderBy('state.duration', 'ASC');
+        q = q.addOrderBy('state.duration', 'ASC');
         q = q.limit(1)
 
         q = q.where('state.enabled = :enable', {enable: true})
@@ -174,7 +174,6 @@ export class ProxyRotator  {
             }
 
             ipaddr['rotate'] = await c.save(iprotate)
-
         }
         await c.close()
         return ipaddr

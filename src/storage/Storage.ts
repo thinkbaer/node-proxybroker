@@ -19,6 +19,9 @@ import {Job} from "../model/Job";
 import {Runtime} from "../lib/Runtime";
 import {IpRotate} from "../model/IpRotate";
 import {IpRotateLog} from "../model/IpRotateLog";
+import {PlatformUtils} from "../utils/PlatformUtils";
+import TodoException from "../exceptions/TodoException";
+import {Log} from "../lib/logging/Log";
 
 
 export const FIX_STORAGE_OPTIONS = {
@@ -83,8 +86,26 @@ export class Storage {
                 !_.isEmpty(opts.database) &&
                 !path.isAbsolute(opts.database)) {
                 // TODO check if file exists
-                let _path = Config.get(K_WORKDIR) + '/' + opts.database;
-                options = Utils.merge(options, {type: 'sqlite', database: _path})
+
+                let possibleFiles = []
+                possibleFiles.push(PlatformUtils.pathResolveAndNormalize(opts.database));
+
+                let _path = Config.get(K_WORKDIR, process.cwd()) + '/' + opts.database;
+                possibleFiles.push(PlatformUtils.pathResolveAndNormalize(_path));
+
+                let found = false
+                for (let test of possibleFiles) {
+                    if (PlatformUtils.fileExist(test) || PlatformUtils.fileExist(PlatformUtils.directory(test))) {
+                        options = Utils.merge(options, {type: 'sqlite', database: test})
+                        found = true
+                    }
+                }
+
+                if (!found) {
+                    throw new TodoException('File ' + opts.database + ' for database can\'t be found.')
+                }
+
+                Log.info('Sqlite: Use database ' + options['database'] + '.')
             }
         }
 
@@ -95,7 +116,7 @@ export class Storage {
             this.singleConnection = true
         }
 
-        Runtime.$().setConfig('storage',this.options)
+        Runtime.$().setConfig('storage', this.options)
     }
 
     get name() {
@@ -109,16 +130,17 @@ export class Storage {
 
     async prepare(): Promise<void> {
         if (!getConnectionManager().has(this.name)) {
-            let c = await getConnectionManager().create(<ConnectionOptions>this.options);
+            let c = await  getConnectionManager().create(<ConnectionOptions>this.options);
             c = await c.connect();
-            await (await this.wrap(c)).close();
-        } else {
-            await (await this.wrap()).close()
+            await(await this.wrap(c)).close();
+        }
+        else {
+            await(await this.wrap()).close()
         }
         return Promise.resolve()
     }
 
-    async wrap(conn?: Connection): Promise<ConnectionWrapper> {
+    async wrap(conn ?: Connection): Promise<ConnectionWrapper> {
         let wrapper: ConnectionWrapper = null;
         if ((this.singleConnection && this.connections.length == 0) || !this.singleConnection) {
             if (conn) {
@@ -145,14 +167,16 @@ export class Storage {
 
     async shutdown(): Promise<any> {
         let name = this.name
-        let ps: Promise<any>[] = [];
+        let ps: Promise<any> [] = [];
         while (this.connections.length > 0) {
             ps.push(this.connections.shift().close(true));
         }
 
-        return Promise.all(ps).then(()=>{
+        return Promise.all(ps).then(() => {
             // remove connection definition from typeorm
-            _.remove(getConnectionManager()['connections'], (connection) =>  { return connection.name === name; });
+            _.remove(getConnectionManager()['connections'], (connection) => {
+                return connection.name === name;
+            });
         })
     }
 

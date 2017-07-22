@@ -10,6 +10,7 @@ export interface IProxyServerOptions extends IServerOptions {
     level: number
     toProxy: boolean
     target?: ((select?: any) => Promise<IUrlBase | IpAddr>) | string
+    repeatLimit?:number
     // status?: ((url:IUrlBase, handle:SocketHandle) => Promise<void>)
 
 }
@@ -19,6 +20,7 @@ export const DEFAULT_PROXY_SERVER_OPTIONS: IProxyServerOptions = {
     ...DEFAULT_SERVER_OPTIONS,
     level: 3,
     toProxy: false,
-    enable:true
+    enable:true,
+    repeatLimit:0
 
 };

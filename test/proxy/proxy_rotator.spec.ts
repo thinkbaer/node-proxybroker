@@ -6,7 +6,6 @@ import {IpAddr} from "../../src/model/IpAddr";
 import {IpAddrState} from "../../src/model/IpAddrState";
 import {ProtocolType} from "../../src/lib/ProtocolType";
 import {ProxyRotator} from "../../src/proxy/ProxyRotator";
-import {IpRotate} from "../../src/model/IpRotate";
 import {ProxyUsedEvent} from "../../src/proxy/ProxyUsedEvent";
 
 describe('', () => {

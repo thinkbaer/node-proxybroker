@@ -123,9 +123,10 @@ class ProxyServerTest {
 
     @test
     async 'rotate and log'() {
+        let wait = 400
         let resp1 = await request.get(http_url, opts);
 
-        await Utils.wait(200)
+        await Utils.wait(wait)
         let c = await storage.connect();
         let data1 = await c.manager.find(IpRotate)
         let data2 = await c.manager.find(IpRotateLog)
@@ -157,7 +158,7 @@ class ProxyServerTest {
         await request.get(https_url, opts);
 
 
-        await Utils.wait(200)
+        await Utils.wait(wait)
         c = await storage.connect();
         data1 = await c.manager.find(IpRotate)
         data2 = await c.manager.find(IpRotateLog)
@@ -192,7 +193,7 @@ class ProxyServerTest {
 
         }
 
-        await Utils.wait(200)
+        await Utils.wait(wait)
         c = await storage.connect();
         data1 = await c.manager.find(IpRotate)
         data2 = await c.manager.find(IpRotateLog)
@@ -227,13 +228,13 @@ class ProxyServerTest {
 
         }
 
-        await Utils.wait(200)
+        await Utils.wait(wait)
         c = await storage.connect();
         data1 = await c.manager.find(IpRotate)
         data2 = await c.manager.find(IpRotateLog)
         await c.close()
 
-        //console.log(data1, data2)
+
         expect(data1).to.has.length(1)
         expect(data1[0]).to.deep.include({
             successes: 2,

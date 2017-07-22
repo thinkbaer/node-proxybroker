@@ -93,9 +93,11 @@ class ProxyServerTest {
             resp1 = err.response
 
         }
-        let json = JSON.parse(resp1.body)
+
+        let json = JSON.parse(resp1.headers['proxy-broker-error'])
+
         expect(resp1.statusCode).to.be.eq(504)
-        expect(json).to.deep.include({
+        expect(json.error).to.deep.include({
             _code: 'ADDR_NOT_FOUND', _error: {
                 code: 'ENOTFOUND', "errno": "ENOTFOUND",
                 "host": "asd-test-site.org",
