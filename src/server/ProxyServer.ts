@@ -133,9 +133,9 @@ export class ProxyServer extends Server {
             if (upstream && !upstream.destroyed) {
                 upstream.destroy()
             }
-
         }
     }
+
 
     private async handleResponseAfterFinishedRequest(reqHandle: SocketHandle, handle: SocketHandle, req: http.IncomingMessage, res: http.ServerResponse) {
         handle.debug('handleResponseAfterFinishedRequest finished=' + reqHandle.finished + ' error=' + handle.hasError())
@@ -159,8 +159,8 @@ export class ProxyServer extends Server {
                 res.end();
             }
         }
-
     }
+
 
     async onServerConnect(req: http.IncomingMessage, upstream: net.Socket, head: Buffer) {
         let self = this;

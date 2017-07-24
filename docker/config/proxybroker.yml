@@ -2,12 +2,16 @@
 logging:
   enable: true
   level: debug
+  transports:
+  - console: {}
+  - file:
+      filename: /data/out.log
 #  events: true
 # transports: - list
 
 storage:
   type: sqlite
-  database: ./tmp/database.db
+  database: /data/database.db
 
 
 rotator:

@@ -15,7 +15,5 @@ export interface ILoggerOptions  {
 
     events?: boolean
 
-    transports?: [{
-        [k: string]: TransportOptions
-    }]
+    transports?: {[k: string]: TransportOptions}[]
 }
