@@ -105,7 +105,6 @@ export class Storage {
                     throw new TodoException('File ' + opts.database + ' for database can\'t be found.')
                 }
 
-                Log.info('Sqlite: Use database ' + options['database'] + '.')
             }
         }
 
@@ -116,6 +115,7 @@ export class Storage {
             this.singleConnection = true
         }
 
+        Log.info(`storage: use ${this.options.type} for storage with options:\n${JSON.stringify(this.options,null,2)} `)
         Runtime.$().setConfig('storage', this.options)
     }
 
@@ -177,6 +177,8 @@ export class Storage {
             _.remove(getConnectionManager()['connections'], (connection) => {
                 return connection.name === name;
             });
+
+            Log.info(`storage: shutdown`)
         })
     }
 

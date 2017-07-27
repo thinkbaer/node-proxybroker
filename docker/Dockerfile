@@ -27,10 +27,12 @@ RUN apt-get update && \
 
 RUN npm -g install \
       mocha \
+      gulp \
       typescript
 
-
-
+# RUN mkdir -p /node_modules
+# ENV NPM_CONFIG_PREFIX=/node_modules
+# ENV NODE_PATH=/node_modules
 
 VOLUME /opt/proxybroker
 VOLUME /data

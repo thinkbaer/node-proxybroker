@@ -77,7 +77,6 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         if (this.options.schedule && this.options.schedule.enable) {
             let now = new Date();
             let next = this.cron.next();
-
             let offset = next.getTime() - now.getTime();
             this.next = new Date(next.getTime());
             Log.info('Validator scheduled for '+ this.next)

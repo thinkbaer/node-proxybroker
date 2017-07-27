@@ -12,10 +12,6 @@ The following components can be customizied through configuration:
 
 The configuration can be passed by file or by JSON stringified data
 through argument (--config).
-    {type: 'file', file: '${argv.configfile}'},
-    {type: 'file', file: '${env.configfile}'},
-    {type: 'file', file: '${os.homedir}/.proxybroker/config.json'},
-    {type: 'file', file: './proxybroker.json'}
 
 Loading file order, merged:
 

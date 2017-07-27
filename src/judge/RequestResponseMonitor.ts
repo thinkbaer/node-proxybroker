@@ -48,10 +48,10 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     private constructor(request: mRequest.RequestPromise, id: string) {
         super();
-        this.debug('Enable monitor for '+id);
+        // this.debug('Enable monitor for '+id);
         request.on('socket', this.onSocket.bind(this));
         request.on('error', this.onError.bind(this));
-        request.on('drain', this.onDrain.bind(this));
+        //request.on('drain', this.onDrain.bind(this));
         request.on('request', this.onRequest.bind(this));
 
         this.id = id;
@@ -83,7 +83,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
      * @param request
      */
     onRequest(request: http.ClientRequest) {
-        this.debug('onRequest');
+        // this.debug('onRequest');
 
         if (this.proxy) {
             this.addLog(MESSAGE.ORQ01.k,{uri:mUrl.format(this.uri),proxy_uri:mUrl.format(this.proxy)});
@@ -100,21 +100,21 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
         if (this.proxy && this.tunnel) {
             this.addLog(MESSAGE.ORQ04.k);
-            this.debug('tunneling enabled')
+            // this.debug('tunneling enabled')
         }
 
-        request.on('abort', this.onRequestAbort.bind(this));
-        request.on('aborted', this.onRequestAborted.bind(this));
-        request.on('connect', this.onRequestConnect.bind(this));
-        request.on('continue', this.onRequestContinue.bind(this));
+        //request.on('abort', this.onRequestAbort.bind(this));
+        //request.on('aborted', this.onRequestAborted.bind(this));
+        //request.on('connect', this.onRequestConnect.bind(this));
+        //request.on('continue', this.onRequestContinue.bind(this));
         request.once('response', this.onRequestResponse.bind(this));
-        request.on('upgrade', this.onRequestUpgrade.bind(this));
+        //request.on('upgrade', this.onRequestUpgrade.bind(this));
 
         for (let k in request['_headers']) {
             this.headers_request[k] = request.getHeader(k)
         }
     }
-
+/*
     onRequestConnect(response: http.IncomingMessage, socket: net.Socket, head: Buffer) {
         this.debug('onRequestConnect')
     }
@@ -122,17 +122,18 @@ export class RequestResponseMonitor extends events.EventEmitter {
     onRequestContinue() {
         this.debug('onRequestContinue')
     }
-
+*/
     onRequestResponse(response: http.IncomingMessage) {
+        /*
         this.debug('onRequestResponse');
         response.on('aborted', this.onRequestResponseAborted.bind(this));
         response.on('close', this.onRequestResponseClose.bind(this));
-
+*/
         for (let k in response.headers) {
             this.headers_response[k] = response.headers[k]
         }
     }
-
+/*
     onRequestResponseAborted() {
         this.debug('onRequestResponseAborted')
     }
@@ -140,7 +141,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     onRequestResponseClose() {
         this.debug('onRequestResponseClose')
     }
-
+*/
     /**
      * Duplicate of onSocket
 
@@ -149,36 +150,39 @@ export class RequestResponseMonitor extends events.EventEmitter {
     }
      */
 
-    /**
-     *
-     */
+    /*
     onRequestUpgrade(response: http.IncomingMessage, socket: net.Socket, head: Buffer) {
         this.debug('onRequestUpgrade')
     }
+    */
 
     /**
      * Emitted when the request has been aborted by the client. This event is only emitted on the first call to abort().
-     */
+
     onRequestAbort() {
         this.debug('onRequestAbort')
     }
+     */
 
     /**
      * Emitted when the request has been aborted by the server and the network socket has closed.
-     */
+
     onRequestAborted() {
         this.debug('onRequestAborted')
     }
+     */
 
 
     onError(error: Error) {
-        this.debug('onError');
+        //this.debug('onError');
         this.handleError(error)
     }
 
+    /*
     onDrain() {
         this.debug('onDrain')
     }
+    */
 
 
     /**
@@ -187,7 +191,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
      * @param socket
      */
     onSocket(socket: net.Socket) {
-        this.debug('onSocket');
+        // this.debug('onSocket');
         this.socket = socket;
 
 
@@ -199,33 +203,35 @@ export class RequestResponseMonitor extends events.EventEmitter {
         socket.on('close', this.onSocketClose.bind(this));
         socket.on('connect', this.onSocketConnect.bind(this));
         socket.on('data', this.onSocketData.bind(this));
-        socket.on('drain', this.onSocketDrain.bind(this));
+      //  socket.on('drain', this.onSocketDrain.bind(this));
         socket.on('end', this.onSocketEnd.bind(this));
-        socket.on('agentRemove', this.onSocketAgentRemove.bind(this));
+        //socket.on('agentRemove', this.onSocketAgentRemove.bind(this));
         //socket.on('agentRemove', this.onSocketAgentRemove.bind(this))
         socket.on('error', this.onSocketError.bind(this));
         socket.on('lookup', this.onSocketLookup.bind(this));
         socket.on('timeout', this.onSocketTimeout.bind(this));
 
         if (socket instanceof tls.TLSSocket) {
-            this.debug('IS TLSSocket');
+            // this.debug('IS TLSSocket');
             this.secured = true;
-            socket.on('OCSPResponse', this.onTLSSocketOCSPResponse.bind(this));
+    //        socket.on('OCSPResponse', this.onTLSSocketOCSPResponse.bind(this));
             socket.on('secureConnect', this.onTLSSocketSecureConnect.bind(this))
         }
     }
 
     onSocketClose(had_error: boolean) {
-        this.debug('onSocketClose with error: ' + had_error);
+      //  this.debug('onSocketClose with error: ' + had_error);
         this.finished()
     }
 
+    /*
     onSocketAgentRemove(): void {
         this.debug('onSocketAgentRemove')
     }
+    */
 
     onSocketConnect() {
-        this.debug('onSocketConnect');
+        // this.debug('onSocketConnect');
         this.connected = true;
 
         if (this.proxy) {
@@ -244,7 +250,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     }
 
     onSocketData(data: Buffer) {
-        this.debug('onSocketData', data.length);
+        // this.debug('onSocketData', data.length);
 
         if (!this.receivedHeadDone) {
             let tmp: Buffer = Buffer.allocUnsafe(data.length);
@@ -279,37 +285,39 @@ export class RequestResponseMonitor extends events.EventEmitter {
         this.length += data.length
     }
 
+    /*
     onSocketDrain() {
         this.debug('onSocketDrain')
     }
+    */
 
     onSocketEnd() {
-        this.debug('onSocketEnd');
+        //this.debug('onSocketEnd');
         this.addClientLog(MESSAGE.OSE01.k)
     }
 
     onSocketError(error: Error) {
-        this.debug('onSocketError');
+        //this.debug('onSocketError');
         this.handleError(error)
     }
 
     onSocketLookup(error: Error|null, address: string, family: string|null, host: string) {
-        this.debug('onSocketLookup');
+        //this.debug('onSocketLookup');
         this.handleError(error)
     }
 
     onSocketTimeout() {
         this.stop();
-        this.debug('onSocketTimeout', `after ${this.duration}ms`);
+        //this.debug('onSocketTimeout', `after ${this.duration}ms`);
         this.addLog(MESSAGE.OST01.k,{duration:this.duration})
     }
-
+/*
     onTLSSocketOCSPResponse(buffer: Buffer) {
         this.debug('onTLSSocketOCSPResponse')
     }
-
+*/
     onTLSSocketSecureConnect() {
-        this.debug('onTLSSocketSecureConnect');
+  //      this.debug('onTLSSocketSecureConnect');
         this.stop();
         this.addLog(MESSAGE.OTS01.k,{duration:this.duration})
     }
@@ -364,8 +372,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
         if (_error) {
             let error = Exceptions.handle(_error);
 
-
-            this.debug('error: '+error.message);
             let exists = false;
             for (let i = 0; i < this.errors.length; i++) {
                 if (this.errors[i].message == error.message) {
@@ -402,9 +408,8 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     finished() {
         this.stop();
-        this.debug('finished');
+//        this.debug('finished');
 
-        let str: string = '';
         let last_error = this.lastError();
 
         if (!this.errors.length) {
@@ -430,11 +435,13 @@ export class RequestResponseMonitor extends events.EventEmitter {
         }
 
 
+
+
         this.emit('finished', last_error)
     }
 
     promise(): Promise<RequestResponseMonitor> {
-        var self = this;
+        let self = this;
         return new Promise(function (resolve, reject) {
             self.once('finished', function () {
                 resolve(self)

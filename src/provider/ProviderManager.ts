@@ -67,10 +67,8 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         }
 
         Runtime.$().setConfig('provider', this.options)
-
     }
-
-
+    
     async prepare(): Promise<void> {
         let clazzes = ClassLoader.importClassesFromAny(this.options.providers);
         let self = this;
@@ -146,12 +144,12 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         if (c.runAll()) {
 
             for (let v of this.providers) {
-                Log.info(`Recheck provider ${v.name}:${v.type}`)
+                Log.info(`provider manager: recheck provider ${v.name}:${v.type}`)
                 this.queue.push({name: v.name, type: v.type})
             }
         } else {
             for (let v of c.variants) {
-                Log.info(`Recheck provider ${v.name}:${v.type}`)
+                Log.info(`provider manager: recheck provider ${v.name}:${v.type}`)
                 this.queue.push({name: v.name, type: v.type});
             }
         }
@@ -229,7 +227,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
             let next = this.cron.next();
             let offset = next.getTime() - now.getTime();
             this.next = new Date(next.getTime());
-            Log.info('Manager scheduled for '+ this.next)
+            Log.info('provider manager: next scheduled reload on '+ this.next)
             this.timer = setTimeout(this.runScheduled.bind(this), offset);
         }
     }

@@ -267,3 +267,23 @@ the appropriate error message, but only when fallback is false.
 
 @TASK:{counter:task} 20170718 +
 Testing proxies for abilities of websocket, ..., other
+
+
+@TASK:{counter:task} 20170727 +
+Remove or correct log message
+
+* Error messages should be thrown on errors
+* Single message line in useless methods
+* Refactor content of log messages
+*
+
+@TASK:{counter:task} 20170727 +
+On Ctrl+C kill all running tasks (validator; manager)
+
+@TASK:{counter:task} 20170727 +
+Impl. options for proxy filter, currently multiple fields are set
+static.
+
+@TASK:{counter:task} 20170727 +
+Impl. timeout for judge selftest on startup. If no response is received
+then the system stucks (blocking firewall!).

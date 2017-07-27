@@ -63,15 +63,6 @@ export class AppServer extends Server {
     constructor(options: IExpressOptions = DEFAULT_SERVER_OPTIONS) {
         options = _.defaults(options, DEFAULT_SERVER_OPTIONS);
         super(options)
-
-        // check if options are set per config
-        /*
-         let _options = <IExpressOptions>Config.get(K_UI_SERVER);
-         if (_options) {
-         options = _options
-         }
-         */
-
         options.routes.unshift(FIXED_API_OPTIONS)
         options.routes = _.uniq(options.routes)
         this.options = options

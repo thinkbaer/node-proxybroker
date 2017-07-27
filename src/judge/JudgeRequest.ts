@@ -48,8 +48,8 @@ export class JudgeRequest {
     private socket_timeout: number = 10000;
 
     readonly id: string;
-    private url: string;
-    private proxy_url: string;
+    url: string;
+    proxy_url: string;
 
     local_ip: string = null;
     proxy_ip: string = null;
@@ -114,7 +114,6 @@ export class JudgeRequest {
 
 
     private onSocket(socket: net.Socket) {
-        this.debug('JR onSocket');
         this.socket = socket;
         socket.setKeepAlive(false);
         socket.setTimeout(this.socket_timeout);
@@ -122,7 +121,7 @@ export class JudgeRequest {
     }
 
     private onSocketError(error: Error) {
-        this.debug('JR onSocketError');
+        Log.error('judge request ['+this.id+']: onSocketError',error);
         if(this.socket){
             this.socket.destroy()
         }
@@ -199,19 +198,4 @@ export class JudgeRequest {
         return result;
     }
 
-
-    private info(...msg: any[]) {
-        Log.info.apply(Log, msg)
-    }
-
-    private debug(...msg: any[]) {
-        //if (this._debug) {
-            Log.debug.apply(Log, msg)
-        //}
-    }
-
-    private throwedError(err: Error, ret?: any): any {
-        Log.error(err);
-        return ret
-    }
 }

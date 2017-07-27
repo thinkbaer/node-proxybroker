@@ -37,6 +37,7 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
         this.queue = new AsyncWorkerQueue<ProxyDataFetched>(this, {name:PROXY_FILTER_NAME,concurrent: parallel})
     }
 
+
     @subscribe(ProxyDataFetchedEvent)
     async filter(fetched: ProxyDataFetchedEvent): Promise<void> {
         // - verify if the address and port are correct
@@ -75,21 +76,6 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
         cqb = cqb.select();
         let i = 0;
         workLoad.list.forEach(_proxy_ip => {
-            /*
-             TODO this must be a bug in typeorm
-             { ip0: '192.0.0.1', port0: 3129 }
-             { ip0: '127.0.1.1', port0: 3128 }
-             [ 'SELECT "addr"."id" AS "addr_id", "addr"."ip" AS "addr_ip", "addr"."port" AS "addr_port", "addr"."blocked" AS "addr_blocked", "addr"."last_checked" AS "addr_last_checked", "addr"."created_at" AS "addr_created_at", "addr"."updated_at" AS "addr_updated_at" FROM "ip_addr" "addr" WHERE ("addr"."ip" = $1 and "addr"."port" = $2) OR ("addr"."ip" = $3 and "addr"."port" = $4)',
-             [ '127.0.1.1', 3128, '127.0.1.1', 3128 ] ]
-
-             let k = null
-             let data:any = {}
-             k = 'ip'+i
-             data[k] = _proxy_ip.ip
-             k = 'port'+i
-             data[k] = _proxy_ip.port
-             console.log(data)
-             */
             cqb = cqb.orWhere(`(addr.ip = "${_proxy_ip.ip}" and addr.port = ${_proxy_ip.port})`)
         });
 
@@ -137,11 +123,4 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
         return Promise.resolve(events)
     }
 
-    // TODO need a functional
-    /*
-     onEmpty(): Promise<void> {
-     console.log('DONE?')
-     return null;
-     }
-     */
 }

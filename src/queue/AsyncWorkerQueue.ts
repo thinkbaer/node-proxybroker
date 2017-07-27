@@ -48,16 +48,7 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
     private next() {
         this.runningTasks--;
 
-        Log.debug('Tasks in queue['+this.options.name+'] INC:' + this._inc + ' DONE:' + this._done + ' RUNNING:' + this.running() + ' TODO:' + this.enqueued() + ' ACTIVE:' + this.active.length);
-        /*
-        if (this.active.length < 5) {
-            let out = '';
-            this.active.forEach(_q => {
-                out += _q.workload()['ip'] + ':' + _q.workload()['port'] + '; '
-            });
-            Log.debug('Active tasks IDs:' + out)
-        }
-        */
+        Log.debug('queue['+this.options.name+'] inc=' + this._inc + ' done=' + this._done + ' running=' + this.running() + ' todo=' + this.enqueued() + ' active=' + this.active.length);
         if (this.isPaused()) {
             if (!this.isRunning()) {
                 this.emit(AsyncWorkerQueue.E_NO_RUNNING_JOBS)

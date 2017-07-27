@@ -1,13 +1,12 @@
 import * as http from "http";
-import * as tls from "tls";
 import * as https from "https";
 import * as _request from "request-promise-native";
 import {Log} from "../lib/logging/Log";
 import * as fs from 'fs'
 import * as mUrl from 'url'
 import * as net from 'net'
-import {shorthash} from "../lib/crypt";
-import {format} from "util"
+
+
 
 import {JudgeRequest} from "./JudgeRequest";
 import {DEFAULT_JUDGE_OPTIONS, IJudgeOptions} from "./IJudgeOptions";
@@ -15,15 +14,16 @@ import {DEFAULT_JUDGE_OPTIONS, IJudgeOptions} from "./IJudgeOptions";
 import {JudgeResults} from "./JudgeResults";
 import DomainUtils from "../utils/DomainUtils";
 import {Utils} from "../utils/Utils";
-import {MESSAGE} from "../lib/Messages";
+import {MESSAGE, Messages} from "../lib/Messages";
 import {ProtocolType} from "../lib/ProtocolType";
 import Exceptions from "../exceptions/Exceptions";
 import {Progress} from "../lib/Progress";
 
 import {Runtime} from "../lib/Runtime";
+import {CryptUtils} from "../utils/CryptUtils";
 
 
-const FREEGEOIP: string = 'http://freegeoip.net/json/%s';
+const FREEGEOIP: string = 'http://freegeoip.net/json/';
 const IPCHECK_URL = 'https://api.ipify.org?format=json';
 
 
@@ -44,7 +44,7 @@ export class Judge {
     private progress: Progress = new Progress();
     private runnable: boolean = false;
     private running: boolean = false;
-
+    private cache_sum:number = 0
     private cache: { [key: string]: JudgeRequest } = {};
 
     private $connections: { [key: string]: net.Socket } = {};
@@ -53,21 +53,9 @@ export class Judge {
 
 
     constructor(options: IJudgeOptions = {}) {
-        this._options = Utils.merge(DEFAULT_JUDGE_OPTIONS, options)
-        // this._options = Utils.merge(this._options, options);
+        this._options = Utils.merge(DEFAULT_JUDGE_OPTIONS, options);
         this._judge_url = mUrl.parse(this._options.judge_url);
         this._remote_url = mUrl.parse(this._options.remote_url);
-
-        /*
-         let self = this
-         // @see http://stackoverflow.com/questions/3653065/get-local-ip-address-in-node-js
-         let ifaces = os.networkInterfaces();
-         Object.keys(ifaces).forEach(function (ifname:string) {
-         ifaces[ifname].forEach(function (iface) {
-         self.addr.push(iface.address);
-         });
-         });
-         */
 
         this.secured = this._judge_url.protocol === 'https:';
 
@@ -106,15 +94,15 @@ export class Judge {
     }
 
     get isSecured(): boolean {
-        return this.secured
+        return this.secured;
     }
 
     get options(): IJudgeOptions {
-        return this._options
+        return this._options;
     }
 
     get remote_url(): mUrl.Url {
-        return this._remote_url
+        return this._remote_url;
     }
 
     get remote_url_f(): string {
@@ -129,32 +117,33 @@ export class Judge {
         return mUrl.format(this.judge_url)
     }
 
-    /*
-    static default_options() {
-        return Utils.clone(defaultOptions)
-    }
-    */
-
     async bootstrap(): Promise<boolean> {
+        let infos :any = {
+            ip:this.remote_url_f
+        }
+
         try {
             if (this._options.remote_lookup) {
-                Log.info('The remote IP before: ' + this.remote_url_f);
                 this._remote_url = await this.get_remote_accessible_ip();
-                Log.info('The remote IP after: ' + this.remote_url_f)
-            } else {
-                Log.info('remote lookup: skipped')
+                infos.ip = this.remote_url_f
             }
+
             if (this._options.selftest) {
                 await this.wakeup(true);
                 this.runnable = await this.selftest();
                 await this.pending();
-                Log.info('selftest was ' + (this.runnable ? 'successful' : 'failed'))
             } else {
-                Log.info('selftest: skipped');
-                this.runnable = true
+                this.runnable = true;
             }
-            Runtime.$().setConfig('judge', {judge_url: this.judge_url_f, remote_url: this.remote_url_f})
-            return Promise.resolve(this.runnable)
+
+            Runtime.$().setConfig('judge', {judge_url: this.judge_url_f, remote_url: this.remote_url_f});
+
+            infos.runnable = this.runnable;
+            infos.selftest = this._options.selftest;
+
+            Log.info(Messages.get(MESSAGE.JDG02.k,infos));
+
+            return Promise.resolve(this.runnable);
         } catch (err) {
             Log.error(err);
             throw err
@@ -187,13 +176,19 @@ export class Judge {
             if (this.isSecured) {
                 options.ca = this.options.ssl_options.cert
             }
+
             let res = await _request.get(ping_url, options);
-            var s = JSON.parse(res);
-            var stop = new Date();
-            var c_s = s.time - start.getTime();
-            var s_c = stop.getTime() - s.time;
-            var full = stop.getTime() - start.getTime();
-            this.debug('Self Time: C -> S: ' + c_s + ', S -> C: ' + s_c + ', G:' + full + ' on ' + ping_url);
+            let s = JSON.parse(res);
+
+            let stop = new Date();
+            let c_s = s.time - start.getTime();
+            let s_c = stop.getTime() - s.time;
+            let full = stop.getTime() - start.getTime();
+
+            this.info('Selftest results for request to '+ping_url+'\n' +
+                ' - duration from client to judge service: ' + c_s + 'ms\n' +
+                ' - duration from judge service to client: ' + s_c + 'ms\n' +
+                ' - summarized: ' + full + 'ms');
             return true
         } catch (err) {
             return this.throwedError(err, false)
@@ -204,22 +199,23 @@ export class Judge {
     createRequest(proxy_url: string, options: { local_ip?: string, socket_timeout?: number, connection_timeout?: number } = {}): JudgeRequest {
         let judge_url = this.remote_url_f;
         let inc = this.inc++;
-        let req_id = shorthash(judge_url + '-' + proxy_url + '-' + (new Date().getTime()) + '-' + inc);
+        let req_id = CryptUtils.shorthash(judge_url + '-' + proxy_url + '-' + (new Date().getTime()) + '-' + inc);
         judge_url += 'judge/' + req_id;
-        this.debug('createRequest to ' + judge_url + ' identified by ' + req_id);
+        this.debug('judge: create request ' + req_id + ' over ' + proxy_url + ' (cached: '+this.cache_sum+')');
         let req_options = Object.assign(this.options.request, options);
         let judgeReq = new JudgeRequest(this, req_id, judge_url, proxy_url, req_options);
-        return this.addToCache(judgeReq)
+        return this.addToCache(judgeReq);
     }
 
     private addToCache(req: JudgeRequest): JudgeRequest {
+        this.cache_sum++;
         this.cache[req.id] = req;
         return this.cache[req.id]
     }
 
     private removeFromCache(id: string) {
         if (this.cache[id]) {
-            Log.info(id + ' REMOVE');
+            this.cache_sum--;
             delete this.cache[id]
         }
     }
@@ -234,75 +230,76 @@ export class Judge {
     public async judge(req: http.IncomingMessage, res: http.ServerResponse) {
         let _url: mUrl.Url = mUrl.parse(req.url)
         let paths = _url.path.split('/').filter((x) => {
-            return x || x.length != 0
+            return x || x.length != 0;
         });
-        this.debug('paths=', paths, req.url);
-
         let first_path = paths.shift();
         let cached_req: JudgeRequest = null;
 
         if (first_path === 'judge' && paths.length == 1) {
             let self = this;
             let req_id = paths.shift();
-            this.debug('JUDGE_ID: ' + req_id);
 
             if (this.cache[req_id]) {
                 cached_req = this.cache[req_id];
                 req.socket.once('end', function () {
-                    self.removeFromCache(req_id)
+                    self.removeFromCache(req_id);
                 })
             }
 
             if (cached_req && this.enabled) {
                 await cached_req.onJudge(req, res);
                 res.writeHead(200, {"Content-Type": "application/json"});
-                var json = JSON.stringify({time: (new Date()).getTime(), headers: req.headers});
+                let json = JSON.stringify({time: (new Date()).getTime(), headers: req.headers});
                 res.end(json);
             } else {
+                Log.error('judge: no cache id for incoming request with ' + req_id + ' from '+req.url)
                 res.writeHead(400, {"Content-Type": "application/json"});
-                var json = JSON.stringify({'error': '400'});
+                let json = JSON.stringify({'error': '400'});
                 res.end(json);
             }
 
         } else if (first_path === 'ping') {
             res.writeHead(200, {"Content-Type": "application/json"});
-            var json = JSON.stringify({time: (new Date()).getTime(), ping: true});
+            let json = JSON.stringify({time: (new Date()).getTime(), ping: true});
             res.end(json);
         } else {
+            Log.error('judge: unknown request from '+req.url);
             res.writeHead(404, {"Content-Type": "application/json"});
-            var json = JSON.stringify({'error': '404'});
+            let json = JSON.stringify({'error': '404'});
             res.end(json);
         }
 
     }
 
     isEnabled() {
-        return this.enabled
+        return this.enabled;
     }
 
     private enable() {
         this.server.on('connection', this.onServerConnection.bind(this));
-        this.enabled = true
+        this.enabled = true;
         this.info('Judge service startup on ' + this.judge_url_f + ' (SSL: ' + this.isSecured + ')');
 
     }
 
     private disable() {
-        this.server = null
-
-        this.enabled = false
+        this.server = null;
+        this.enabled = false;
         this.info('Judge service shutting down on ' + this.judge_url_f);
 
     }
 
     private setupTLS(server: net.Server) {
+        /*
         server.on('newSession', this.onTLSNewSession.bind(this));
         server.on('OCSPRequest', this.onTLSOCSPRequest.bind(this));
         server.on('resumeSession', this.onTLSResumeSession.bind(this));
         server.on('secureConnection', this.onTLSSecureConnection.bind(this));
         server.on('tlsClientError', this.onTLSClientError.bind(this))
+        */
     }
 
+    /*
     private onTLSNewSession(sessionId: any, sessionData: any, callback: Function) {
         this.debug('onTLSNewSession');
         callback()
@@ -329,7 +326,7 @@ export class Judge {
     private onTLSClientError(exception: Error, tlsSocket: tls.TLSSocket) {
         this.debug('onTLSClientError')
     }
-
+*/
 
     async validate(ip: string, port: number, enable: { http: boolean, https: boolean } = {
         http: true,
@@ -346,7 +343,7 @@ export class Judge {
 
         // Geo resolve
         results.geo = false;
-        let geo_url = format(FREEGEOIP, ip);
+        let geo_url = FREEGEOIP + ip;
         try {
             let geodata: string = await _request.get(geo_url);
             if (geodata) {
@@ -363,17 +360,19 @@ export class Judge {
         }
 
         if (enable.http) {
-            let http_request: JudgeRequest = this.createRequest('http://' + ip + ':' + port);
-            //let http_monitor: RequestResponseMonitor =
+            let url = 'http://' + ip + ':' + port;
+            let http_request: JudgeRequest = this.createRequest(url);
             await http_request.performRequest();
             results.http = http_request.result(ProtocolType.HTTP);
+            this.debug('judge: finished request ' + http_request.id + ' from ' + url + ' t='+results.http.duration+' error='+results.http.hasError()+' (cached: '+this.cache_sum+')');
             this.removeFromCache(http_request.id);
         }
 
         if (enable.https) {
-            let https_request: JudgeRequest = this.createRequest('https://' + ip + ':' + port);
-            //let https_monitor: RequestResponseMonitor =
+            let url = 'https://' + ip + ':' + port;
+            let https_request: JudgeRequest = this.createRequest(url);
             await https_request.performRequest();
+            this.debug('judge: finished request ' + https_request.id + ' from ' + url + ' t='+results.https.duration+' error='+results.https.hasError()+' (cached: '+this.cache_sum+')');
             results.https = https_request.result(ProtocolType.HTTPS);
             this.removeFromCache(https_request.id);
         }
@@ -406,16 +405,11 @@ export class Judge {
 
             if (first_path === 'judge' && paths.length == 1) {
                 let req_id = paths.shift();
-                self.debug('JUDGE_REQ_ID: ' + req_id);
-
                 if (self.cache[req_id]) {
-                    self.debug('JUDGE_REQ_ID FOUND: ' + req_id);
                     cached_req = self.cache[req_id]
                 }
 
                 if (cached_req && self.enabled) {
-                    self.debug('HEADER ADD: ', headers);
-
                     headers.forEach(function (head) {
                         cached_req.monitor.addLog(MESSAGE.HED01.k, {header: head ? head : '_UNKNOWN_'}, '>>')
                     })
@@ -528,7 +522,7 @@ export class Judge {
 
     private throwedError(err: Error, ret?: any): any {
         Log.error(err);
-        return ret
+        return ret;
     }
 
     private debug(...msg: any[]) {

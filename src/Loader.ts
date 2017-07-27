@@ -57,7 +57,6 @@ export class Loader {
         let o_logging: ILoggerOptions = Config.get(K_LOGGING, {})
         Log.options(o_logging);
 
-        Log.info('init storage')
         let o_storage: IStorageOptions = Config.get(K_STORAGE, {})
         this.storage = new Storage(o_storage);
         await this.storage.prepare()
@@ -87,14 +86,14 @@ export class Loader {
             o_proxyserver.target = this.proxyRotator.next.bind(this.proxyRotator);
             this.proxy_server = new ProxyServer(o_proxyserver);
             await this.proxy_server.start()
-            Log.info('Start proxy server on ' + this.proxy_server.url());
+            Log.info('start proxy server on ' + this.proxy_server.url());
         }
 
         let o_appserver: IExpressOptions = Config.get(K_APPSERVER, {});
         this.server = new AppServer(o_appserver);
         await this.server.prepare();
         await this.server.start()
-        Log.info('Start app server on ' + this.server.url());
+        Log.info('start app server on ' + this.server.url());
 
         process.on('unhandledRejection', this.throwedUnhandledRejection.bind(this))
         process.on('uncaughtException', this.throwedUncaughtException.bind(this))

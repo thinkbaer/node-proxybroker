@@ -99,7 +99,7 @@ export class FreeProxyListsCom extends AbstractProvider {
             this.selectVariant(variant)
         }
 
-        Log.info('FreeProxyListsCom ('+this.url+') selected variant is ' + this.variant.type);
+        Log.info('FreeProxyListsCom: ('+this.url+') selected variant is ' + this.variant.type);
         let cookies = request.jar();
         let req = await request.get(this.url + '/' + this.variant.path, {jar: cookies, resolveWithFullResponse: false});
 
@@ -114,7 +114,7 @@ export class FreeProxyListsCom extends AbstractProvider {
             let url = self.url + '/load_' + self.variant.path_load + '_d' + id + '.html';
             let r = request.get(url, {jar: cookies})
                 .then((html: string) => {
-                    Log.info('FreeProxyListsCom ('+this.url+') fetch url = ' + url);
+                    Log.info('FreeProxyListsCom: ('+this.url+') fetch url = ' + url);
                     let matcher: any;
 
                     let inc = 0;
@@ -126,12 +126,13 @@ export class FreeProxyListsCom extends AbstractProvider {
                         inc++;
                         self.push(proxyData)
                     }
-                    Log.info('FreeProxyListsCom (' + url + ') found='+inc + ' all='+self.proxies.length)
+                    Log.info('FreeProxyListsCom: (' + url + ') found='+inc + ' all='+self.proxies.length)
                 });
             promises.push(r)
         });
 
         return Promise.all(promises).then(() => {
+            Log.info('FreeProxyListsCom: variant=' + this.variant.type+' finished');
             return self.proxies
         })
     }

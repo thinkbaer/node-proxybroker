@@ -34,6 +34,13 @@ export const MESSAGE = {
     LVL03: {k: 'LVL03', _: '- Has via header: ${key} = ${value}'},
     LVL04: {k: 'LVL04', _: '- Has forward header: ${key} = ${value}'},
 
+    JDG02: {k: 'JDG02', _:
+        'Bootstrap judge service status:\n' +
+        '- selftest active: ${selftest}\n' +
+        '- the by remote accessible ip is ${ip}\n' +
+        '- the service is runnable: ${runnable}'
+    },
+
 };
 
 
