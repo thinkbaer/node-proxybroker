@@ -1,4 +1,5 @@
 import * as mocha from 'mocha';
+
 describe('', () => {
 });
 
@@ -46,7 +47,7 @@ class ReqResMonitorTest {
         let _url = server.url();
         let req = _request.get(_url);
         let rrm = RequestResponseMonitor.monitor(req);
-        rrm._debug = DEBUG;
+        //rrm._debug = DEBUG;
 
         try {
             await req.promise()
@@ -56,11 +57,13 @@ class ReqResMonitorTest {
         await rrm.promise();
 
         let log: string = rrm.logToString();
-        if (rrm._debug) {
-            console.log('-------->');
-            console.log(log);
-            console.log('<--------')
-        }
+        /*
+                if (rrm._debug) {
+                    console.log('-------->');
+                    console.log(log);
+                    console.log('<--------')
+                }
+                */
         expect(log).to.contain("Try connect to " + _url);
         expect(log).to.match(new RegExp("Connection aborted"));
         expect(log).to.match(new RegExp("socket hang up"));
@@ -86,7 +89,7 @@ class ReqResMonitorTest {
         let _url = server.url();
         let req = _request.get(_url);
         let rrm = RequestResponseMonitor.monitor(req);
-        rrm._debug = DEBUG;
+        //rrm._debug = DEBUG;
         try {
             await req.promise()
         } catch (err) {
@@ -94,12 +97,13 @@ class ReqResMonitorTest {
         }
         await rrm.promise();
         let log: string = rrm.logToString();
-
-        if (rrm._debug) {
-            console.log('-------->');
-            console.log(log);
-            console.log('<--------')
-        }
+        /*
+                if (rrm._debug) {
+                    console.log('-------->');
+                    console.log(log);
+                    console.log('<--------')
+                }
+                */
         expect(log).to.contain("Try connect to " + _url);
         expect(log).to.match(new RegExp("Connection aborted"));
         expect(log).to.match(new RegExp("socket hang up"));
@@ -111,7 +115,7 @@ class ReqResMonitorTest {
      * Test simple request to the server
      */
     @test
-    async    'http server simple request'() {
+    async 'http server simple request'() {
 
         let server: Server = new Server({url: 'http://127.0.0.1:8000', _debug: DEBUG});
 
@@ -120,18 +124,19 @@ class ReqResMonitorTest {
         let _url = server.url();
         let req = _request.get(_url);
         let rrm = RequestResponseMonitor.monitor(req);
-        rrm._debug = DEBUG;
+        //rrm._debug = DEBUG;
         await req.promise();
         await rrm.promise();
 
         let log: string = rrm.logToString();
 
+        /*
         if (rrm._debug) {
             console.log('-------->');
             console.log(log);
             console.log('<--------')
 
-        }
+        }*/
 
         expect(log).to.contain("Try connect to " + _url);
         expect(log).to.match(new RegExp("set TCP_NODELAY"));

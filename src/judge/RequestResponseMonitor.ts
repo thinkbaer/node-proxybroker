@@ -20,15 +20,15 @@ import {MESSAGE} from "../lib/Messages";
 
 export class RequestResponseMonitor extends events.EventEmitter {
 
-
-    // static cache:{[key:string]:RequestResponseMonitor} = {}
-    _debug: boolean = true;//false
+    // _debug: boolean = false
     inc: number = 0;
     id: string = null;
     log_arr: Array<ReqResEvent> = [];
     length: number = 0;
     errors: NestedException[] = [];
     socket: net.Socket = null;
+    // static cache:{[key:string]:RequestResponseMonitor} = {}
+
     request: mRequest.RequestPromise = null;
     start: Date = new Date();
     end: Date = null;
@@ -330,12 +330,14 @@ export class RequestResponseMonitor extends events.EventEmitter {
     }
 
 
-    static monitor(_request: mRequest.RequestPromise, id?: string, options?:{debug?:boolean}): RequestResponseMonitor {
+    static monitor(_request: mRequest.RequestPromise, id?: string/*, options?:{debug?:boolean}*/): RequestResponseMonitor {
         let rrm = new RequestResponseMonitor(_request, id);
+        /*
         options = options || {};
         if(options && options.debug){
             rrm._debug = options.debug
         }
+        */
         return rrm
     }
 

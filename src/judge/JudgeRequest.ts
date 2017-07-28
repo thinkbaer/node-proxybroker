@@ -104,7 +104,7 @@ export class JudgeRequest {
         this.request = _request.get(this.url, opts);
         this.request.on('socket', this.onSocket.bind(this));
 
-        this.monitor = RequestResponseMonitor.monitor(this.request, this.id, {debug: this._debug});
+        this.monitor = RequestResponseMonitor.monitor(this.request, this.id/*, {debug: this._debug}*/);
         try {
             this.response = await this.request.promise()
         } catch (e) {
