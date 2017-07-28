@@ -1,6 +1,9 @@
 ## API
 
+Prefix: /api
+Version: v1
 
+### System
 
 [cols="m,1,1,2,2", options="header"]
 |===
@@ -18,3 +21,118 @@
 | asd
 
 |===
+
+### Entities
+
+General parameters:
+
+ * Filtering
+
+ GET /entities?count>0&name=*foo*
+
+ * Sorting
+
+ GET /entities?sort=-count,+id
+
+ * Paging with offset and limit
+
+ GET /entities?offset=10&limit=10
+
+ * Field selection with list of given fields
+
+ GET /entities?fields=id,name
+
+
+
+[cols="m,1,m,2", options="header"]
+|===
+
+| Path
+| Method
+| Return
+| Description
+
+| /ips
+| GET
+| IpAddr & {location:IpLoc}[]
+|
+
+| /ips/:id
+| GET
+| IpAddr & {location:IpLoc}
+|
+
+| /ips/:id/active_states
+| GET
+| IpAddr & {location:IpLoc} & {state:IpAddrState[]}
+|
+
+| /ips/:id/states
+| GET
+| IpAddrState[]
+|
+
+| /ips/:id/states/:state_id
+| GET
+| IpAddrState
+|
+
+
+| /ip_states
+| GET
+| IpAddrState & {addr: IpAddr} & {location: IpLoc}[]
+|
+
+| /ip_states/:state_id
+| GET
+| IpAddrState & {addr: IpAddr} & {location: IpLoc}
+|
+
+| /ip_locs
+| GET
+| IpLoc[]
+|
+
+| /ip_locs/:id
+| GET
+| IpLoc
+|
+
+| /ip_locs/:id/ips
+| GET
+| IpAddr[]
+|
+
+
+| /ip_usage
+| GET
+| IpRotate & {addr:IpAddr}[]
+|
+
+| /ip_usage/:id
+| GET
+| IpRotate & {addr:IpAddr}
+|
+
+| /ip_usage/:id/log
+| GET
+| IpRotateLog
+|
+
+| /jobs
+| GET
+| Job[]
+|
+
+| /jobs/:id
+| GET
+| Job
+|
+
+| /jobs/:id/states
+| GET
+| JobState[]
+|
+
+|===
+

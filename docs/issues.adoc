@@ -53,7 +53,7 @@ m.post()
 
 ```
 
-@TASK:{counter:task} 20170622 +minor +
+[.line-through]#@TASK:{counter:task} 20170622# +minor +
 Redesign the cli output of judge.
 
 
@@ -161,7 +161,7 @@ Impl. ProviderManager
 Write documentation for the configuration possible configuration
 settings.
 
-@TASK:{counter:task} 20170709 +
+[.line-through]#@TASK:{counter:task} 20170709# +
 Add docker support
 
 [.line-through]#@TASK:{counter:task} 20170709# +
@@ -192,7 +192,7 @@ Config.options({
 ```
 
 
-@TASK:{counter:task} 20170709 +
+[.line-through]#@TASK:{counter:task} 20170709# +
 Exception
 ```
 { Error: SQLITE_CONSTRAINT: UNIQUE constraint failed: npb_ip_loc.ip
@@ -230,7 +230,7 @@ Needed infos for passed by config
 CLI Test
 
 
-@TASK:{counter:task} 20170715 +
+[.line-through]#@TASK:{counter:task} 20170715# +
 Impl. Loader which initialize and handles the lifecycle of
 components (starts up, shutdown, dii) in the app. Or call it
 maybe AppLoader.
@@ -296,3 +296,7 @@ when a recheck was already ordered. (extend table)
 
 @TASK:{counter:task} 20170728 +
 Add bash startup scripts in bin directory.
+
+@TASK:{counter:task} 20170728 +
+Impl. socks4 and socks5 support.
+

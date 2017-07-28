@@ -88,11 +88,6 @@ export class FreeProxyListsCom extends AbstractProvider {
 
 
 
-    do(api: IProviderWorkerAPI): Promise<void> {
-        return null
-    }
-
-
     async  get(variant?: IProviderVariant):Promise<IProxyData[]> {
         let self = this;
         if (variant) {

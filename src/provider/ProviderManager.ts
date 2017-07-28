@@ -71,6 +71,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     
     async prepare(): Promise<void> {
         let clazzes = ClassLoader.importClassesFromAny(this.options.providers);
+
         let self = this;
         let clazzFn = clazzes.map(clazz => {
             return Promise.resolve(clazz).then(_clazz => {
@@ -116,18 +117,18 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         }
 
 
-        for (let p of this.providers) {
-            let job = _.find(jobs, {name: p.name, type: p.type});
+        for (let provider of this.providers) {
+            let job = _.find(jobs, {name: provider.name, type: provider.type});
             if (!job) {
                 // create new one
                 job = new Job();
                 // TODO map data
-                job.name = p.name;
-                job.type = p.type;
+                job.name = provider.name;
+                job.type = provider.type;
                 job.enabled = true
             }
             job.active = true;
-            job.data = Utils.clone(p);
+            job.data = Utils.clone(provider);
             this.jobs.push(job)
         }
 

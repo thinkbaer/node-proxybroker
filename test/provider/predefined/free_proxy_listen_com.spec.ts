@@ -1,13 +1,10 @@
-import * as mocha from 'mocha';
-describe('', () => {
-});
-
-
-import {suite, test, slow, timeout, pending} from "mocha-typescript";
+import {suite, test, timeout} from "mocha-typescript";
 import {expect} from "chai";
-import {inspect} from 'util'
 import {FreeProxyListsCom} from "../../../src/provider/predefined/FreeProxyListsCom";
 import {Log} from "../../../src/lib/logging/Log";
+
+describe('', () => {
+});
 
 
 @suite('provider/predefined/FreeProxyListenCom') @timeout(10000)

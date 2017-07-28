@@ -4,12 +4,12 @@ import {ProtocolType} from "../lib/ProtocolType";
 
 
 export class JudgeResult {
+    
     error: NestedException = null;
 
     protocol: ProtocolType;
 
     id:string;
-
 
     log: ReqResEvent[];
 

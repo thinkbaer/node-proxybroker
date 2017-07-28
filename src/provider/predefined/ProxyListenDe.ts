@@ -2,13 +2,119 @@
  * http://www.proxy-listen.de/Proxy/Proxyliste.html
  */
 
-// import {ProviderSpec} from '../lib/provider_spec'
+import * as request from "request-promise-native";
+import * as _ from 'lodash'
 
+import {AbstractProvider} from "../AbstractProvider";
+import {IProviderVariant} from "../IProviderVariant";
+import {IProxyData} from "../../proxy/IProxyData";
+import {Log} from "../../lib/logging/Log";
+
+
+const NAME = 'proxylistende';
 const BASE_URL = 'http://www.proxy-listen.de';
 const PROXY_LIST_DE = BASE_URL + '/Proxy/Proxyliste.html';
+const ip_regex = /&gt;(\d+\.\d+\.\d+\.\d+)&lt;\/td&gt;&lt;td&gt;(\d+)&lt;/g;
+
+const MATCH_IP_PORT_REGEX = />(\d+\.\d+\.\d+\.\d+)[^\d]+(\d+)/g;
 
 
+export class ProxyListenDe extends AbstractProvider {
 
+    url: string = BASE_URL;
+
+    name: string = NAME;
+
+    variants: IProviderVariant[] = [
+        {
+            type: 'http',
+        },
+        {
+            type: 'https',
+        },
+        {
+            type: 'httphttps',
+        }
+    ];
+
+
+    async get(variant?: IProviderVariant): Promise<IProxyData[]> {
+        let self = this;
+        if (variant) {
+            this.selectVariant(variant)
+        }
+
+        Log.info('ProxyListenDe: (' + this.url + ') selected variant is ' + this.variant.type);
+
+        let cookies = request.jar()
+
+        let form_data = {
+            filter_port: '',
+            filter_http_gateway: '',
+            filter_http_anon: '',
+            filter_response_time_http: '',
+            filter_country: '',
+            filter_timeouts1: '',
+            liststyle: 'info',
+            proxies: '300',
+            type: this.variant.type,
+            submit: 'Anzeigen',
+        }
+
+
+        let c1 = request.cookie('cookieconsent_dismissed=yes');
+        cookies.setCookie(c1, BASE_URL);
+        let c2 = request.cookie('_gat=1');
+        cookies.setCookie(c2, BASE_URL);
+
+        let html = await request.get(PROXY_LIST_DE, {jar: cookies})
+
+        let matched = html.match(/(<input[^>]+type=("|')hidden("|')[^>]*>)/g)
+        let hidden_input = matched.shift()
+        let name = hidden_input.match(/name=("|')([^("|')]+)("|')/)[2]
+        let value = hidden_input.match(/value=("|')([^("|')]+)("|')/)[2]
+        form_data[name] = value;
+
+        let inc = 0
+        let skip = false
+        while (inc < 5 && !skip) {
+
+            let size_before = self.proxies.length
+            let _form_data = _.clone(form_data);
+
+            if (inc > 0) {
+                delete _form_data['submit']
+                _form_data['next'] = 'nächste Seite'
+            }
+
+            let html = await request.post(PROXY_LIST_DE, {
+                form: _form_data,
+                jar: cookies
+            });
+            inc++;
+
+
+            let matcher = null
+            while ((matcher = MATCH_IP_PORT_REGEX.exec(html)) !== null) {
+                let proxyData: IProxyData = {
+                    ip: matcher[1],
+                    port: parseInt(matcher[2])
+                };
+                self.push(proxyData)
+            }
+
+            let size_after = self.proxies.length;
+            skip = size_before === size_after;
+
+            Log.debug('ProxyListenDe: variant=' + this.variant.type +' count=' + size_after + ' skipping='+skip + ' round='+inc)
+
+        }
+        Log.info('ProxyListenDe: variant=' + this.variant.type + ' finished');
+
+        return self.proxies
+    }
+
+}
 
 /*
 

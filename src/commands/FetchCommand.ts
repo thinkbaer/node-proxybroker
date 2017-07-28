@@ -7,7 +7,7 @@ import {IProxyData} from "../proxy/IProxyData";
 
 export class FetchCommand {
 
-    command = "fetch <provider> [variant]";
+    command = "fetch [provider] [variant]";
     aliases = "f";
     describe = "Retrieve proxies from a <provider> and optional [variant].";
 

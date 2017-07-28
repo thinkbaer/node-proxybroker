@@ -2,6 +2,7 @@
 
 import {StringOrFunction} from "../types";
 import {FreeProxyListsCom} from "./predefined/FreeProxyListsCom";
+import {ProxyListenDe} from "./predefined/ProxyListenDe";
 
 
 export const K_PROVIDER = 'provider'
@@ -25,7 +26,7 @@ export interface IProviderOptions {
 }
 
 const DEFAULT_PROVIDER: StringOrFunction[] = [
-    FreeProxyListsCom
+    FreeProxyListsCom, ProxyListenDe
 ];
 
 
