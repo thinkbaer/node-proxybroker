@@ -245,6 +245,8 @@ Extend commons-config by
 * parse single arguments, impl. seperate handler for this
 * parse json config
 
+This must be moved to the package task queue.
+
 
 [.line-through]#@TASK:{counter:task} 20170716# +
 Impl. IProxyValidatorOptions
