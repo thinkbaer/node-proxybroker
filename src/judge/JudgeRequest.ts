@@ -18,6 +18,7 @@ import {LevelDetection} from "./LevelDetection";
 import {MESSAGE} from "../lib/Messages";
 import {JudgeResult} from "./JudgeResult";
 import {ProtocolType} from "../lib/ProtocolType";
+import Exceptions from "../exceptions/Exceptions";
 
 
 // interface JudgeConfig
@@ -118,12 +119,34 @@ export class JudgeRequest {
         socket.setKeepAlive(false);
         socket.setTimeout(this.socket_timeout);
         socket.on('error', this.onSocketError.bind(this))
+        socket.on('timeout', this.onSocketTimeout.bind(this))
+        socket.on('lookup', this.onSocketLookup.bind(this))
+    }
+
+    onSocketLookup(error: Error|null, address: string, family: string|null, host: string) {
+        //this.debug('onSocketLookup');
+        if(error){
+            this.handleError('lookup error',error)
+        }
+
+    }
+
+    onSocketTimeout() {
+        this.socket.destroy(new Error('ESOCKETTIMEDOUT'))
     }
 
     private onSocketError(error: Error) {
-        Log.error('judge request ['+this.id+']: onSocketError',error);
-        if(this.socket){
-            this.socket.destroy()
+        this.handleError('socket error',error)
+    }
+
+    private handleError(type:string,error: Error){
+        Log.error('judge request ['+this.id+'] type='+type, error);
+        if(this.socket && !this.socket.destroyed){
+            if(error){
+                this.socket.destroy(error)
+            }else{
+                this.socket.destroy()
+            }
         }
     }
 

@@ -250,7 +250,7 @@ Extend commons-config by
 Impl. IProxyValidatorOptions
 
 
-@TASK:{counter:task} 20170717 +minor +
+[.line-through]#@TASK:{counter:task} 20170717# +minor +
 Impl. proxy rotation mechanism for proxy server. On request the fastest in line
 proxy should be used for new connection. The request can also contain multiple
 selection headers.
@@ -269,13 +269,13 @@ the appropriate error message, but only when fallback is false.
 Testing proxies for abilities of websocket, ..., other
 
 
-@TASK:{counter:task} 20170727 +
+[.line-through]#@TASK:{counter:task} 20170727# +
 Remove or correct log message
 
 * Error messages should be thrown on errors
 * Single message line in useless methods
 * Refactor content of log messages
-*
+
 
 @TASK:{counter:task} 20170727 +
 On Ctrl+C kill all running tasks (validator; manager)
@@ -287,3 +287,10 @@ static.
 @TASK:{counter:task} 20170727 +
 Impl. timeout for judge selftest on startup. If no response is received
 then the system stucks (blocking firewall!).
+
+@TASK:{counter:task} 20170728 +
+Verify that proxies selected by the validator for recheck are ignored
+when a recheck was already ordered. (extend table)
+
+@TASK:{counter:task} 20170728 +
+Add bash startup scripts in bin directory.

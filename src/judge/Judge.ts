@@ -7,7 +7,6 @@ import * as mUrl from 'url'
 import * as net from 'net'
 
 
-
 import {JudgeRequest} from "./JudgeRequest";
 import {DEFAULT_JUDGE_OPTIONS, IJudgeOptions} from "./IJudgeOptions";
 
@@ -364,17 +363,17 @@ export class Judge {
             let http_request: JudgeRequest = this.createRequest(url);
             await http_request.performRequest();
             results.http = http_request.result(ProtocolType.HTTP);
-            this.debug('judge: finished request ' + http_request.id + ' from ' + url + ' t='+results.http.duration+' error='+results.http.hasError()+' (cached: '+this.cache_sum+')');
             this.removeFromCache(http_request.id);
+            this.debug('judge: finished request ' + http_request.id + ' from ' + url + ' t='+results.http.duration+' error='+results.http.hasError()+' (cached: '+this.cache_sum+')');
         }
 
         if (enable.https) {
             let url = 'https://' + ip + ':' + port;
             let https_request: JudgeRequest = this.createRequest(url);
             await https_request.performRequest();
-            this.debug('judge: finished request ' + https_request.id + ' from ' + url + ' t='+results.https.duration+' error='+results.https.hasError()+' (cached: '+this.cache_sum+')');
             results.https = https_request.result(ProtocolType.HTTPS);
             this.removeFromCache(https_request.id);
+            this.debug('judge: finished request ' + https_request.id + ' from ' + url + ' t='+results.https.duration+' error='+results.https.hasError()+' (cached: '+this.cache_sum+')');
         }
 
         return Promise.resolve(results)

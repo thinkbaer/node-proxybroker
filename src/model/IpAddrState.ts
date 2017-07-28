@@ -23,7 +23,7 @@ export class IpAddrState {
 
     // intern counter for done checks, independently of the result
     @Column({nullable:false})
-    validation_id: number = null;
+    validation_id: number;
 
 
     @Column()

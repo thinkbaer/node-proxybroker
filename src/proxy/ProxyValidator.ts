@@ -1,7 +1,6 @@
 import subscribe from "../events/decorator/subscribe"
 
 import {clearTimeout, setTimeout} from "timers";
-import Timer = NodeJS.Timer;
 
 import {Judge} from "../judge/Judge";
 import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
@@ -25,6 +24,7 @@ import {DEFAULT_VALIDATOR_OPTIONS, IProxyValidatiorOptions} from "./IProxyValida
 import {Runtime} from "../lib/Runtime";
 import {ValidatorRunEvent} from "./ValidatorRunEvent";
 import {DateUtils} from "typeorm/util/DateUtils";
+import Timer = NodeJS.Timer;
 
 
 const PROXY_VALIDATOR = 'proxy_validator'
@@ -98,7 +98,8 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         let q = c.manager.getRepository(IpAddr).createQueryBuilder('ip')
 
         let td = Date.now() - this.options.schedule.time_distance * 1000
-        q.where('ip.blocked = :blocked and ip.to_delete = :to_delete and (ip.last_checked_at is null OR ip.last_checked_at < :date) ', {
+        q.where('ip.blocked = :blocked and ip.to_delete = :to_delete and ' +
+            '(ip.last_checked_at is null OR ip.last_checked_at < :date) ', {
             blocked:false,
             to_delete:false,
             date: DateUtils.mixedDateToDatetimeString(new Date(td))
@@ -174,10 +175,12 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         if (!ip_addr) {
             ip_addr = new IpAddr();
             ip_addr.ip = proxyData.ip;
-            ip_addr.port = proxyData.port
+            ip_addr.port = proxyData.port;
+            ip_addr.validation_id = 0;
         }
 
         // increment the state identifier
+        ip_addr.validation_id += 1;
         ip_addr.last_checked_at = now;
         ip_addr = await conn.save(ip_addr);
 
@@ -185,13 +188,13 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         let https_state: IpAddrState = null;
 
         if (proxyData.results) {
-            ip_addr.validation_id++;
+
 
             // check if IpLoc exists then update it else create a new entry
             let ip_loc = await conn.manager.findOne(IpLoc, {where: {ip: proxyData.ip}});
 
             if (!ip_loc) {
-                ip_loc = new IpLoc()
+                ip_loc = new IpLoc();
             }
 
             let props = ['ip', 'country_code', 'country_name',
@@ -199,7 +202,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
                 'time_zone', 'metro_code', 'latitude', 'longitude'];
 
             for (let k of props) {
-                ip_loc[k] = proxyData.results[k]
+                ip_loc[k] = proxyData.results[k];
             }
 
             try {
@@ -231,6 +234,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
                 event.jobState.validated++;
                 ip_addr.count_success++;
                 ip_addr.count_errors = 0;
+                ip_addr.errors_since_at = null
 
                 if (!ip_addr.success_since_at) {
                     ip_addr.success_since_at = now
@@ -240,6 +244,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
                 ip_addr.count_success = 0;
                 ip_addr.count_errors++;
 
+                ip_addr.success_since_at = null
                 if (!ip_addr.errors_since_at) {
                     ip_addr.errors_since_at = now
                 }
@@ -253,6 +258,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         if (event.jobState.id) {
             await conn.save(event.jobState)
         }
+
         await conn.close();
 
         return Promise.resolve(event)
@@ -298,7 +304,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
 
     async onEmpty(): Promise<void> {
-        Log.info('queue is empty stop judge');
+        Log.info('queue['+this.queue.options.name+'] is empty stop judge');
         await this.judge.pending();
         return Promise.resolve();
     }

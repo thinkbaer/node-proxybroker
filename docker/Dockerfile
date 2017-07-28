@@ -28,7 +28,13 @@ RUN apt-get update && \
 RUN npm -g install \
       mocha \
       gulp \
-      typescript
+      typescript \
+      nyc \
+      codecov
+
+RUN /bin/sh -c 'echo "\n127.0.0.10 judge.local\n" >> /etc/hosts' \
+    /bin/sh -c 'echo "127.0.0.11 proxy.local\n" >> /etc/hosts'
+
 
 # RUN mkdir -p /node_modules
 # ENV NPM_CONFIG_PREFIX=/node_modules
@@ -39,6 +45,7 @@ VOLUME /data
 
 EXPOSE 32323
 EXPOSE 3128
+EXPOSE 8080
 
 COPY ./docker-entrypoint.sh /
 

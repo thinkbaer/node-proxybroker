@@ -8,13 +8,15 @@ import Timer = NodeJS.Timer;
 
 export class SocketHandle {
 
-    private static inc: number = 1
+    private static inc: number = 1;
 
     readonly id: number;
 
     readonly start: Date;
 
-    repeat: number = 0
+    meta : any = {}
+
+    // repeat: number = 0;
 
     stop: Date;
 
@@ -22,21 +24,21 @@ export class SocketHandle {
 
     socket: net.Socket;
 
-    finished: boolean = false
+    finished: boolean = false;
 
-    ended: boolean = true
+    ended: boolean = true;
 
     data: Buffer;
 
     error: Error = null;
 
-    socketError: boolean = false
+    socketError: boolean = false;
 
     statusCode: number;
 
     query: Buffer;
 
-    headersList: { key: string, orgKey: string, value: string }[] = []
+    headersList: { key: string, orgKey: string, value: string }[] = [];
 
     headers: Buffer;
 
@@ -48,32 +50,32 @@ export class SocketHandle {
 
 
     constructor(socket: net.Socket, opts: { ssl?: boolean, timeout?: number } = {ssl: false, timeout: 5000}) {
-        this.options = opts
-        this.socket = socket
-        this.start = new Date()
+        this.options = opts;
+        this.socket = socket;
+        this.start = new Date();
 
-        this.socket.setKeepAlive(true)
-        this.socket.setTimeout(this.options.timeout)
+        this.socket.setKeepAlive(true);
+        this.socket.setTimeout(this.options.timeout);
 
-        this.socket.on('data', this.onData.bind(this))
-        this.socket.on('end', this.onEnd.bind(this))
-        this.socket.on('close', this.onClose.bind(this))
-        this.socket.on('timeout', this.onTimeout.bind(this))
-        this.socket.on('error', this.onError.bind(this))
+        this.socket.on('data', this.onData.bind(this));
+        this.socket.on('end', this.onEnd.bind(this));
+        this.socket.on('close', this.onClose.bind(this));
+        this.socket.on('timeout', this.onTimeout.bind(this));
+        this.socket.on('error', this.onError.bind(this));
 
         this.id = SocketHandle.inc++;
         this.socket['handle_id'] = this.id
     }
 
     onData(data: Buffer) {
-        this.ended = false
+        this.ended = false;
         // this.debug('socket data ' + data.length)
         if (!data) {
             return;
         }
 
         if (this.data) {
-            this.data = Buffer.concat([this.data, data])
+            this.data = Buffer.concat([this.data, data]);
             if (this.body) {
                 this.body = Buffer.concat([this.body, data])
             }

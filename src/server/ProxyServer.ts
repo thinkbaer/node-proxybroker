@@ -104,16 +104,25 @@ export class ProxyServer extends Server {
         return Promise.resolve(_url)
     }
 
-
+    private hasFallbackHeader(reqHandle:SocketHandle):boolean{
+        let res = _.find(reqHandle.headersList, {key:'proxy-select-fallback'})
+        if(res && res.value){
+            return true;
+        }
+        return false;
+    }
 
 
     private async handleUpstreamAfterFinishedRequest(reqHandle: SocketHandle, handle: SocketHandle, req: http.IncomingMessage, upstream: net.Socket, head: Buffer) {
         handle.debug('handleUpstreamAfterFinishedRequest finished=' + reqHandle.finished + ' error=' + handle.hasError())
         if (handle.hasError() && handle.hasSocketError()) {
             //if (!reqHandle.finished && !reqHandle.ended) {
-            if (reqHandle.repeat < this.maxRepeats && this._options.toProxy) {
-                reqHandle.repeat++
+            if (reqHandle.meta.repeat < this.maxRepeats && this._options.toProxy) {
+                reqHandle.meta.repeat++
                 await this.connectToExternProxy(true, reqHandle, req, null, upstream, head);
+            } else if (reqHandle.meta.repeat >= this.maxRepeats &&
+                this._options.toProxy && this.hasFallbackHeader(reqHandle)) {
+                await this.onServerConnect(req,upstream,head,true)
             } else {
                 let data = JSON.stringify({error: handle.error, message: handle.error.message})
                 upstream.write('HTTP/' + req.httpVersion + ' 504 Gateway Time-out\r\n' +
@@ -142,9 +151,12 @@ export class ProxyServer extends Server {
 
         if (handle.hasError()) {
             // Todo make this configurable
-            if (reqHandle.repeat < this.maxRepeats && this._options.toProxy) {
-                reqHandle.repeat++
+            if (reqHandle.meta.repeat < this.maxRepeats && this._options.toProxy) {
+                reqHandle.meta.repeat++
                 await this.connectToExternProxy(false, reqHandle, req, res);
+            } else if (reqHandle.meta.repeat >= this.maxRepeats &&
+                this._options.toProxy && this.hasFallbackHeader(reqHandle)) {
+                await this.root(req,res,true)
             } else {
                 let data = JSON.stringify({error: handle.error, message: handle.error.message})
                 res.writeHead(504, 'Gateway Time-out', {
@@ -162,43 +174,6 @@ export class ProxyServer extends Server {
     }
 
 
-    async onServerConnect(req: http.IncomingMessage, upstream: net.Socket, head: Buffer) {
-        let self = this;
-        let rurl: url.Url = url.parse(`https://${req.url}`);
-        let proxy_url: IUrlBase = null
-        let req_handle = this.getSocketHandle(req.socket)
-        this.onProxyRequest(req_handle, req)
-        this.debug('onServerConnect ' + this._options.url + ' url=' + rurl.href + ' handle=' + (req_handle ? req_handle.id : 'none'));
-
-        if (this._options.toProxy && this._options.target) {
-            await this.connectToExternProxy(true, req_handle, req, null,upstream,head);
-        } else {
-
-            proxy_url = {
-                protocol: 'https',
-                hostname: rurl.hostname,
-                port: parseInt(rurl.port)
-            };
-
-            let downstream = net.connect(proxy_url.port, proxy_url.hostname, function () {
-                self.debug('downstream connected to ' + req.url);
-                upstream.write(
-                    'HTTP/' + req.httpVersion + ' 200 Connection Established\r\n' +
-                    'Proxy-agent: Proxybroker\r\n' +
-                    '\r\n');
-                downstream.write(head);
-                downstream.pipe(upstream);
-                upstream.pipe(downstream);
-            });
-
-            let handle = this.createSocketHandle(downstream)
-            handle.onFinish()
-                .then(handle => {
-                    return self.handleUpstreamAfterFinishedRequest(req_handle, handle, req, upstream, head);
-                })
-                .catch(err => Log.error.bind(Log))
-        }
-    }
 
     async connectToExternProxy(ssl: boolean, reqHandle: SocketHandle, req: http.IncomingMessage, res?: http.ServerResponse, upstream?: net.Socket, head?: Buffer) {
         let self = this
@@ -206,7 +181,7 @@ export class ProxyServer extends Server {
         let proxy_url = await this.getTarget(req.headers)
         if (proxy_url) {
             let _str = proxy_url.protocol + '://' + proxy_url.hostname + ':' + proxy_url.port
-            this.debug('proxing over proxy ' + _str + ' for url ' + req.url + ' (' + reqHandle.repeat + ')');
+            this.debug('proxing over proxy ' + _str + ' for url ' + req.url + ' (' + reqHandle.meta.repeat + ')');
 
             let downstream: net.Socket = null
             if (ssl) {
@@ -253,7 +228,48 @@ export class ProxyServer extends Server {
         }
     }
 
-    async root(req: http.IncomingMessage, res: http.ServerResponse) {
+
+    async onServerConnect(req: http.IncomingMessage, upstream: net.Socket, head: Buffer, disable_proxy_to_proxy:boolean = false) {
+        let self = this;
+        let rurl: url.Url = url.parse(`https://${req.url}`);
+        let proxy_url: IUrlBase = null
+        let req_handle = this.getSocketHandle(req.socket)
+        this.onProxyRequest(req_handle, req)
+        this.debug('onServerConnect ' + this._options.url + ' url=' + rurl.href + ' handle=' + (req_handle ? req_handle.id : 'none'));
+
+        if (this._options.toProxy && this._options.target && !disable_proxy_to_proxy) {
+            await this.connectToExternProxy(true, req_handle, req, null,upstream,head);
+        } else {
+
+            proxy_url = {
+                protocol: 'https',
+                hostname: rurl.hostname,
+                port: parseInt(rurl.port)
+            };
+
+            let downstream = net.connect(proxy_url.port, proxy_url.hostname, function () {
+                self.debug('downstream connected to ' + req.url);
+                upstream.write(
+                    'HTTP/' + req.httpVersion + ' 200 Connection Established\r\n' +
+                    'Proxy-agent: Proxybroker\r\n' +
+                    '\r\n');
+                downstream.write(head);
+                downstream.pipe(upstream);
+                upstream.pipe(downstream);
+            });
+
+            let handle = this.createSocketHandle(downstream)
+            handle.onFinish()
+                .then(handle => {
+                    return self.handleUpstreamAfterFinishedRequest(req_handle, handle, req, upstream, head);
+                })
+                .catch(err => Log.error.bind(Log))
+        }
+    }
+
+
+
+    async root(req: http.IncomingMessage, res: http.ServerResponse, disable_proxy_to_proxy:boolean = false) {
         let self = this
 
         let req_handle = this.getSocketHandle(req.socket)
@@ -262,7 +278,7 @@ export class ProxyServer extends Server {
         // TODO request handle must be present
         this.onProxyRequest(req_handle, req)
 
-        if (this._options.toProxy && this._options.target) {
+        if (this._options.toProxy && this._options.target && !disable_proxy_to_proxy) {
             await this.connectToExternProxy(false, req_handle, req, res);
         } else {
             let _req_url = req.url.replace(/^\//, '')
@@ -319,6 +335,8 @@ export class ProxyServer extends Server {
         timeout: 30000
     }): SocketHandle {
         let handle = new SocketHandle(socket, opts);
+        handle.meta.repeat = 0
+
         this.handles.push(handle);
         this.debug('createSocketHandle ' + handle.id)
         let self = this

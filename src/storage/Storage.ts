@@ -115,7 +115,13 @@ export class Storage {
             this.singleConnection = true
         }
 
-        Log.info(`storage: use ${this.options.type} for storage with options:\n${JSON.stringify(this.options,null,2)} `)
+        let out = ""
+        for(let x in this.options){
+            if(typeof this.options[x] === 'string'){
+                out += "\t"+x+" = "+this.options[x]+"\n"
+            }
+        }
+        Log.info(`storage: use ${this.options.type} for storage with options:\n${out} `)
         Runtime.$().setConfig('storage', this.options)
     }
 

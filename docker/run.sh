@@ -17,10 +17,13 @@ if [ "$1" = 'renew' ]; then
            -v $(pwd)/..:/opt/$NAME \
            -v $(pwd)/local:/data \
            -v $(pwd)/config:/etc/$NAME \
-           -p 8080:8080 \
-           -p 127.0.0.1:3128:3128 \
-           -p 127.0.0.1:32323:32323 \
+           --net=host \
            -it $NAME:$VERSION /bin/bash
+
+#           -p 8080:8080 \
+#           -p 127.0.0.1:3128:3128 \
+#           -p 127.0.0.1:32323:32323 \
+
 fi
 
 if [ "$1" = 'build' ]; then

@@ -249,6 +249,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
         })
     }
 
+    // TODO use SocketHandle
     onSocketData(data: Buffer) {
         // this.debug('onSocketData', data.length);
 
@@ -274,7 +275,8 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
                 if(http_heads.length === 3){
                     if(/^\d{3}$/.test(http_heads[1])){
-                        if(['200'].indexOf(http_heads[1]) === -1){
+                        let code = parseInt(http_heads[1])
+                        if(!(200 <= code && code < 300)){
                             this.socket.destroy(new Error(http_head))
                         }
                     }
@@ -308,7 +310,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     onSocketTimeout() {
         this.stop();
-        //this.debug('onSocketTimeout', `after ${this.duration}ms`);
         this.addLog(MESSAGE.OST01.k,{duration:this.duration})
     }
 /*
@@ -380,7 +381,9 @@ export class RequestResponseMonitor extends events.EventEmitter {
                 }
             }
 
+
             if (!exists) {
+
                 if (error.message.match(/ECONNREFUSED/)) {
                     this.connected = false;
                     this.addLog(MESSAGE.ERR03.k,null,'#')
@@ -392,6 +395,8 @@ export class RequestResponseMonitor extends events.EventEmitter {
                     this.addLog(MESSAGE.ERR05.k,null,'#')
                 }
                 this.errors.push(error);
+
+
                 return true
             }
         }
@@ -415,6 +420,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
         if (!this.errors.length) {
             this.addLog(MESSAGE.RCL01.k, {length:this.length})
         }
+
 
 
         // this.socket.removeAllListeners(this)

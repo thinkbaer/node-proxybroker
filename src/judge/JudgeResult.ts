@@ -17,9 +17,9 @@ export class JudgeResult {
 
     stop: Date;
 
-    duration: number;
+    duration: number = -1;
 
-    level: number;
+    level: number = -2;
 
     logStr: string;
 

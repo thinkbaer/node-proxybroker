@@ -25,17 +25,6 @@ import {Log} from "../lib/logging/Log";
  *
  */
 
-export class IpDesc {
-
-    ipAddr: IpAddr
-
-    ipLoc: IpLoc
-
-    duration: number
-
-    protocol: ProtocolType
-
-}
 
 export class ProxyRotator  {
 
@@ -48,7 +37,6 @@ export class ProxyRotator  {
         this.options = Utils.merge(DEFAULT_ROTATOR_OPTIONS, opts);
         this.storage = storage;
     }
-
 
 
     parseProxyHeader(headers: any) {
