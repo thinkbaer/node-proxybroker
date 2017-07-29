@@ -35,6 +35,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     duration: number = Infinity;
     secured: boolean = false;
     connected: boolean = false;
+    has_connected: boolean = false;
     timeouted:boolean = false;
     aborted: boolean = false;
     okay: boolean = false;
@@ -252,6 +253,8 @@ export class RequestResponseMonitor extends events.EventEmitter {
     // TODO use SocketHandle
     onSocketData(data: Buffer) {
         // this.debug('onSocketData', data.length);
+
+        this.socket.removeListener('timeout', this.onSocketTimeout.bind(this))
 
         if (!this.receivedHeadDone) {
             let tmp: Buffer = Buffer.allocUnsafe(data.length);

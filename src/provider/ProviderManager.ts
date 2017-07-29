@@ -46,6 +46,8 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
     timer: Timer = null;
 
+    last: Date = null;
+
     next: Date = null;
 
 
@@ -156,6 +158,38 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         }
     }
 
+
+    async status():Promise<any>{
+
+
+        return {
+            last_scheduled: this.last,
+            next_schedule:this.next,
+            queue: this.queue.status(),
+
+        }
+    }
+
+    
+    async list():Promise<any>{
+        let data:any = []
+
+        let c = await this.storage.connect()
+        let q = c.manager.createQueryBuilder(JobState,'state')
+        q.innerJoin(Job,'job','job.last_state_id = state.id')
+        let list = await q.getMany();
+        await c.close();
+
+        for (let value of this.jobs) {
+            let y:any = _.clone(value)
+            y.state = _.find(list,{job_id: y.id})
+            data.push(y);
+        }
+
+        return data;
+    }
+
+
     /**
      * Implementation of queue processor method
      *
@@ -166,6 +200,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         let _defs = this.get(q);
         let addrs: IProxyData[] = null;
         let jobState = new JobState();
+
         let job = _defs.job;
         let variant = _defs.variant;
 
@@ -204,6 +239,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         return Promise.resolve(jobState)
     }
 
+
     get(q: IProviderVariantId | { name: string, type?: string }): { job: Job, variant: IProviderDef } {
         if (!q.type) {
             q.type = __ALL__;
@@ -215,6 +251,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         return {job: job, variant: variant};
     }
 
+
     private async saveJobs(): Promise<void> {
         let conn = await this.storage.connect();
         this.jobs = await conn.manager.save(this.jobs);
@@ -222,8 +259,10 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         return Promise.resolve();
     }
 
+
     private checkSchedule(): void {
         if (this.options.schedule && this.options.schedule.enable) {
+            this.last = this.next
             let now = new Date();
             let next = this.cron.next();
             let offset = next.getTime() - now.getTime();

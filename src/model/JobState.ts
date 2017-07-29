@@ -9,7 +9,6 @@ export class JobState {
     @PrimaryGeneratedColumn()
     id: number;
 
-
     @Column()
     job_id: number;
 

@@ -29,7 +29,7 @@ validator:
     judge_url: http://0.0.0.0:8080
     request:
       socket_timeout: 10000
-      connection_timeout: 5000
+      connection_timeout: 10000
 
 
 proxyserver:

@@ -7,5 +7,5 @@ export interface IJudgeRequestOptions {
 
 export const DEFAULT_JUDGE_REQUEST_OPTIONS: IJudgeRequestOptions = {
     socket_timeout: 10000,
-    connection_timeout: 5000
+    connection_timeout: 10000
 }

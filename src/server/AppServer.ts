@@ -1,13 +1,12 @@
 import * as express from "express";
 import * as _ from 'lodash'
-import {createExpressServer, RoutingControllersOptions} from "routing-controllers";
+import {createExpressServer, RoutingControllersOptions, useContainer} from "routing-controllers";
 import {DataAccessController} from "./api/controllers/DataAccessController";
 import {Server} from "./Server";
 import {IServerOptions} from "./IServerOptions";
 import TodoException from "../exceptions/TodoException";
 import {Runtime} from "../lib/Runtime";
-
-
+import {Container} from "typedi";
 
 export const K_APPSERVER = 'server'
 
@@ -38,18 +37,27 @@ export type IExpressRoute = IRoutingController | IStaticFiles
  */
 
 export interface IExpressOptions extends IServerOptions {
+
     routes?: IExpressRoute[]
+
 }
 
 const FIXED_API_OPTIONS: IRoutingController = {
+
     type: K_EXPRESS_ROUTING,
+
     routePrefix:'/api',
+
     controllers: [DataAccessController],
+
     classTransformer:false
+
 }
 
 const DEFAULT_SERVER_OPTIONS: IExpressOptions = {
+
     url: 'http://localhost:32323',
+
     routes:[]
 }
 
@@ -75,6 +83,7 @@ export class AppServer extends Server {
     prepare(): Promise<void> {
         this.app = express()
         this.app.disable("x-powered-by");
+        useContainer(Container);
 
         for(let app of this.options.routes){
             if(app.type == K_EXPRESS_ROUTING){

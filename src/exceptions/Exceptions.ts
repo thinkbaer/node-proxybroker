@@ -38,4 +38,8 @@ export default class Exceptions {
         return new NestedException(err,classification);
 
     }
+
+    static newSocketTimeout(){
+        return Exceptions.handle(new Error('ESOCKETTIMEDOUT'))
+    }
 }

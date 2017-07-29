@@ -5,20 +5,75 @@ Version: v1
 
 ### System
 
-[cols="m,1,1,2,2", options="header"]
+[cols="m,1,1,a", options="header"]
 |===
 
 | Path
 | Method
-| Parameter
 | Return
 | Description
 
+
 | /config
 | GET
-| -
 | Config
-| asd
+| Return the current configuration informations
+
+
+| /stats
+| GET
+| -
+a|
+
+* runtime information
+** running since
+** startup
+** count ips
+** by levels
+** by http/s
+** by success/errors
+** by locations
+* component information
+** validator
+*** last scheduled
+*** next schedule
+*** updated
+
+
+| /providers
+| GET
+| -
+| List provider variants
+
+
+| /run/revalidate
+| GET
+| -
+| Enqueue revalidation for proxy rechecking
+
+
+| /run/provider/_all
+| GET
+| -
+| Start validation of all registered provider and their variants
+
+
+| /run/provider/:provider/_all
+| GET
+| -
+a| Run all provider variants
+
+| /run/provider/:provider/:variant
+| GET
+| -
+a| Run a special variant of provider
+
+
+| /info/log
+| GET
+| -
+a|
+
 
 |===
 

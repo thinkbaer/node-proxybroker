@@ -208,7 +208,7 @@ export class ProxyServer extends Server {
 
             }
 
-            let handle = self.createSocketHandle(downstream, {timeout: 5000})
+            let handle = self.createSocketHandle(downstream, {timeout: 10000})
             handle.onFinish()
                 .then(async handle => {
                     let p = null

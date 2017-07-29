@@ -21,6 +21,7 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
     static readonly E_ENQUEUE = 'enqueue';
 
     _inc: number = 0;
+
     _done: number = 0;
 
     _paused: boolean = false;
@@ -57,6 +58,16 @@ export class AsyncWorkerQueue<T extends IQueueWorkload> extends events.EventEmit
             this.fireProcess()
         }
 
+    }
+
+    status(){
+        return {
+            all: this._inc,
+            done: this._done,
+            running: this.running(),
+            enqueued: this.enqueued(),
+            active:this.active.length
+        }
     }
 
     private paused() {

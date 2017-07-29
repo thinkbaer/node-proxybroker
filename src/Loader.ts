@@ -1,5 +1,4 @@
 import * as _ from "lodash";
-import * as url from "url";
 import {Config, IOptions} from "commons-config";
 import {PlatformUtils} from "./utils/PlatformUtils";
 import {Log} from "./lib/logging/Log";
@@ -18,6 +17,8 @@ import {IProxyValidatiorOptions, K_VALIDATOR} from "./proxy/IProxyValidatiorOpti
 import {DEFAULT_PROXY_SERVER_OPTIONS, IProxyServerOptions, K_PROXYSERVER} from "./server/IProxyServerOptions";
 import {IProviderOptions, K_PROVIDER} from "./provider/IProviderOptions";
 import {ILoggerOptions, K_LOGGING} from "./lib/logging/ILoggerOptions";
+import {Container} from "typedi";
+import {Statistics} from "./storage/Statistics";
 
 const DEFAULT_CONFIG_LOAD_ORDER = [
     {type: 'file', file: '${argv.configfile}'},
@@ -37,6 +38,7 @@ export class Loader {
 
     private VERBOSE_DONE: boolean = false
 
+    private start: Date = new Date()
 
     private storage: Storage;
 
@@ -60,6 +62,7 @@ export class Loader {
         let o_storage: IStorageOptions = Config.get(K_STORAGE, {})
         this.storage = new Storage(o_storage);
         await this.storage.prepare()
+        Container.set(Storage, this.storage)
 
         this.proxyFilter = new ProxyFilter(this.storage)
         EventBus.register(this.proxyFilter)
@@ -67,7 +70,6 @@ export class Loader {
         let o_rotator: IProxyRotatorOptions = Config.get(K_ROTATOR, {})
         this.proxyRotator = new ProxyRotator(o_rotator, this.storage)
         EventBus.register(this.proxyRotator)
-
 
         let o_validator: IProxyValidatiorOptions = Config.get(K_VALIDATOR, {})
         this.proxyValidator = new ProxyValidator(o_validator, this.storage)
@@ -78,7 +80,7 @@ export class Loader {
         this.providerManager = new ProviderManager(o_provider, this.storage)
         EventBus.register(this.providerManager)
         await this.providerManager.prepare()
-
+        Container.set(ProviderManager, this.providerManager)
 
         let o_proxyserver: IProxyServerOptions = Config.get(K_PROXYSERVER, DEFAULT_PROXY_SERVER_OPTIONS)
         if (o_proxyserver.enable) {
@@ -88,6 +90,8 @@ export class Loader {
             await this.proxy_server.start()
             Log.info('start proxy server on ' + this.proxy_server.url());
         }
+
+
 
         let o_appserver: IExpressOptions = Config.get(K_APPSERVER, {});
         this.server = new AppServer(o_appserver);
@@ -99,9 +103,29 @@ export class Loader {
         process.on('uncaughtException', this.throwedUncaughtException.bind(this))
         process.on('warning', Log.warn.bind(Log))
         // Support exit throw Ctrl+C
-//        process.on('exit', this.shutdown.bind(this))
-  //      process.on('SIGINT', this.shutdown.bind(this))
+        // process.on('exit', this.shutdown.bind(this))
+        // process.on('SIGINT', this.shutdown.bind(this))
     }
+
+    async status(): Promise<any> {
+
+        let infos = {
+            start: this.start.toLocaleString(),
+            start_timestamp: this.start.getTime(),
+            duration: Date.now() - this.start.getTime(),
+        }
+
+        let manager_status = await this.providerManager.status()
+        let validator_status = await  this.proxyValidator.status()
+
+        return {...infos,provider:manager_status,validator: validator_status}
+    }
+
+    async stats(): Promise<any> {
+        let s = new Statistics(this.storage)
+        return await s.stats()
+    }
+
 
     async shutdown() {
         Log.info("Shutdown ...")
@@ -190,8 +214,8 @@ export class Loader {
                     this.cfgOptions = Config.options({configs: cfg});
 
                     this.cfgOptions.configs.forEach(_c => {
-                        if(_c.state && _c.type != 'system'){
-                            console.log('Loading configuration from '+_c.file);
+                        if (_c.state && _c.type != 'system') {
+                            console.log('Loading configuration from ' + _c.file);
                         }
 
                     })

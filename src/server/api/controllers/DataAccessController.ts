@@ -7,13 +7,13 @@ import {Utils} from "../../../utils/Utils";
 import {Config, IConfigData} from "commons-config";
 import {Runtime} from "../../../lib/Runtime";
 import {ProviderRunEvent} from "../../../provider/ProviderRunEvent";
+import {Statistics} from "../../../storage/Statistics";
+import {Storage} from "../../../storage/Storage";
+import {Loader} from "../../../Loader";
 
 
 @JsonController()
 export class DataAccessController {
-
-    //@Inject()
-    //private storage: Storage
 
     @Inject()
     private providerManager: ProviderManager
@@ -24,16 +24,20 @@ export class DataAccessController {
         return Runtime.$().getConfig()
     }
 
+    @Get("/stats")
+    stats(): any {
+        return Loader._().stats()
+    }
+
+    @Get("/status")
+    status(): any {
+        return Loader._().status()
+    }
+
 
     @Get("/providers")
-    providers(): IProviderVariant[] {
-        let list:IProviderVariant[] = []
-        this.providerManager.findAll().forEach(_x => {
-            let y = Utils.clone(_x)
-            // delete y['clazz']
-            list.push(<IProviderVariant>y)
-        })
-        return list
+    providers(): any {
+        return this.providerManager.list();
     }
 
     @Get("/provider/:name/:type/run")

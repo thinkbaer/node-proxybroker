@@ -6,6 +6,7 @@ import * as fs from 'fs'
 import * as url from "url";
 import {DEFAULT_SERVER_OPTIONS, IServerOptions} from "./IServerOptions";
 import {Log} from "../lib/logging/Log";
+import Exceptions from "../exceptions/Exceptions";
 import Timer = NodeJS.Timer;
 
 
@@ -106,7 +107,7 @@ export class Server {
                 self._options.timeout, function (socket: net.Socket) {
                     self.debug('server timeout reached: ' + self._options.timeout);
                     // socket.end()
-                    socket.destroy();
+                    socket.destroy(Exceptions.newSocketTimeout());
                 });
             server = http_server;
         }

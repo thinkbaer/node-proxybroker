@@ -109,7 +109,7 @@ export class FreeProxyListsCom extends AbstractProvider {
             let url = self.url + '/load_' + self.variant.path_load + '_d' + id + '.html';
             let r = request.get(url, {jar: cookies})
                 .then((html: string) => {
-                    Log.info('FreeProxyListsCom: ('+this.url+') fetch url = ' + url);
+                    Log.debug('FreeProxyListsCom: ('+this.url+') fetch url = ' + url);
                     let matcher: any;
 
                     let inc = 0;

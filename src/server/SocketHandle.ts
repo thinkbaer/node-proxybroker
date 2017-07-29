@@ -49,7 +49,7 @@ export class SocketHandle {
     timer: Timer;
 
 
-    constructor(socket: net.Socket, opts: { ssl?: boolean, timeout?: number } = {ssl: false, timeout: 5000}) {
+    constructor(socket: net.Socket, opts: { ssl?: boolean, timeout?: number } = {ssl: false, timeout: 10000}) {
         this.options = opts;
         this.socket = socket;
         this.start = new Date();

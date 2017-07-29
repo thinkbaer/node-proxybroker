@@ -45,7 +45,7 @@ const IP_REGEX = /\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}/;
 export class JudgeRequest {
 
     _debug: boolean = false;
-    private connect_timeout: number = 2000;
+    private connect_timeout: number = 10000;
     private socket_timeout: number = 10000;
 
     readonly id: string;
@@ -121,18 +121,27 @@ export class JudgeRequest {
         socket.on('error', this.onSocketError.bind(this))
         socket.on('timeout', this.onSocketTimeout.bind(this))
         socket.on('lookup', this.onSocketLookup.bind(this))
+        socket.on('data', this.onSocketData.bind(this))
     }
+
+
+    onSocketData(data: Buffer) {
+        this.socket.setTimeout(0)
+
+    }
+
 
     onSocketLookup(error: Error|null, address: string, family: string|null, host: string) {
         //this.debug('onSocketLookup');
         if(error){
             this.handleError('lookup error',error)
         }
-
     }
 
     onSocketTimeout() {
-        this.socket.destroy(new Error('ESOCKETTIMEDOUT'))
+        if(!this.judgeConnected){
+            this.socket.destroy(new Error('ESOCKETTIMEDOUT'))
+        }
     }
 
     private onSocketError(error: Error) {
@@ -159,6 +168,7 @@ export class JudgeRequest {
     async onJudge(req: http.IncomingMessage, res: http.ServerResponse):Promise<void> {
         this.judgeConnected = true;
         this.judgeDate = new Date();
+        //this.monitor.has_connected = true
 
         this.monitor.stop();
         this.monitor.addLog(MESSAGE.JDG01.k,{addr:req.socket.remoteAddress,port:req.socket.remotePort,duration:this.monitor.duration}, '*');

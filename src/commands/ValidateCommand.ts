@@ -89,7 +89,14 @@ export class ValidateCommand {
 
         } else {
 
+
+            if(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}$/.test(argv.host_or_file)){
+                argv.host_or_file = 'http://'+argv.host_or_file
+            }
+
             let _url = url.parse(argv.host_or_file)
+
+
 
             if (!_url.port) {
                 _url.port = "3128"

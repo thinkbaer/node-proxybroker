@@ -35,7 +35,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
     storage: Storage;
 
-    wakeuped: boolean = false;
+    //wakeuped: boolean = false;
 
     queue: AsyncWorkerQueue<ProxyData>;
 
@@ -44,6 +44,8 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     cron: any;
 
     timer: Timer = null;
+
+    last: Date = null;
 
     next: Date = null;
 
@@ -75,12 +77,25 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
     private checkSchedule(): void {
         if (this.options.schedule && this.options.schedule.enable) {
+            this.last = this.next;
             let now = new Date();
             let next = this.cron.next();
             let offset = next.getTime() - now.getTime();
             this.next = new Date(next.getTime());
-            Log.info('Validator scheduled for '+ this.next)
+            Log.info('Validator scheduled for ' + this.next);
             this.timer = setTimeout(this.runScheduled.bind(this), offset);
+        }
+    }
+
+    async status() {
+
+
+
+        return {
+            last_scheduled: this.last,
+            next_schedule: this.next,
+            judge: this.judge.isEnabled(),
+            queue: this.queue.status()
         }
     }
 
@@ -98,18 +113,19 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         let q = c.manager.getRepository(IpAddr).createQueryBuilder('ip')
 
         let td = Date.now() - this.options.schedule.time_distance * 1000
-        q.where('ip.blocked = :blocked and ip.to_delete = :to_delete and ' +
-            '(ip.last_checked_at is null OR ip.last_checked_at < :date) ', {
-            blocked:false,
-            to_delete:false,
-            date: DateUtils.mixedDateToDatetimeString(new Date(td))
-        })
+        q
+            .where('ip.blocked = :blocked and ip.to_delete = :to_delete and ' +
+                '(ip.last_checked_at is null OR ip.last_checked_at < :date) ', {
+                blocked: false,
+                to_delete: false,
+                date: DateUtils.mixedDateToDatetimeString(new Date(td))
+            })
             .limit(this.options.schedule.limit)
 
         try {
 
             let ips: IpAddr[] = await q.getMany()
-            Log.info('Validator recheck proxies: '+ ips.length)
+            Log.info('Validator recheck proxies: ' + ips.length)
             if (ips.length > 0) {
                 for (let ip of ips) {
                     (new ProxyDataValidateEvent(new ProxyData(ip))).fire()
@@ -188,7 +204,6 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         let https_state: IpAddrState = null;
 
         if (proxyData.results) {
-
 
             // check if IpLoc exists then update it else create a new entry
             let ip_loc = await conn.manager.findOne(IpLoc, {where: {ip: proxyData.ip}});
@@ -280,7 +295,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
     async shutdown() {
         if (this.judge.isEnabled()) {
-            this.wakeuped = await this.judge.pending()
+            await this.judge.pending()
         }
     }
 
@@ -290,7 +305,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
         if (!this.judge.isEnabled()) {
             try {
-                this.wakeuped = await this.judge.wakeup()
+                await this.judge.wakeup()
             } catch (err) {
                 Log.error(err);
                 throw err
@@ -304,7 +319,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
 
     async onEmpty(): Promise<void> {
-        Log.info('queue['+this.queue.options.name+'] is empty stop judge');
+        Log.info('queue[' + this.queue.options.name + '] is empty stop judge');
         await this.judge.pending();
         return Promise.resolve();
     }
