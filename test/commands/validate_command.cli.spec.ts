@@ -24,7 +24,7 @@ class CLIValidateCommandTest {
 
     static before() {
         Log.options({enable: false})
-        SpawnCLI.timeout = 10000
+        SpawnCLI.timeout = 15000
     }
 
 

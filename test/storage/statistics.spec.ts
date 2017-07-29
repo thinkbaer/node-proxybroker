@@ -27,7 +27,7 @@ class EntitiesTest {
         await storage.shutdown();
     }
 
-    @test
+    @test.skip()
     async 'build'(){
         let s = new Statistics(storage);
 

@@ -170,19 +170,19 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         }
     }
 
-    
-    async list():Promise<any>{
-        let data:any = []
 
-        let c = await this.storage.connect()
-        let q = c.manager.createQueryBuilder(JobState,'state')
-        q.innerJoin(Job,'job','job.last_state_id = state.id')
+    async list():Promise<any>{
+        let data:any = [];
+
+        let c = await this.storage.connect();
+        let q = c.manager.createQueryBuilder(JobState,'state');
+        q.innerJoin(Job,'job','job.last_state_id = state.id');
         let list = await q.getMany();
         await c.close();
 
         for (let value of this.jobs) {
-            let y:any = _.clone(value)
-            y.state = _.find(list,{job_id: y.id})
+            let y:any = _.clone(value);
+            y.state = _.find(list,{job_id: y.id});
             data.push(y);
         }
 
@@ -262,12 +262,12 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
     private checkSchedule(): void {
         if (this.options.schedule && this.options.schedule.enable) {
-            this.last = this.next
+            this.last = this.next;
             let now = new Date();
             let next = this.cron.next();
             let offset = next.getTime() - now.getTime();
             this.next = new Date(next.getTime());
-            Log.info('provider manager: next scheduled reload on '+ this.next)
+            Log.info('provider manager: next scheduled reload on '+ this.next);
             this.timer = setTimeout(this.runScheduled.bind(this), offset);
         }
     }
@@ -311,7 +311,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     async createWorker(provider: IProviderDef): Promise<ProviderWorker> {
         let pw = new ProviderWorker(this, provider);
         await pw.initialize();
-        return pw
+        return pw;
     }
 
 
