@@ -13,6 +13,8 @@ import {ProxyData} from "../proxy/ProxyData";
 import {ProxyValidator} from "../proxy/ProxyValidator";
 
 
+const REGEX = /^((http|https):\/\/)?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):?(\d{1,5})?$/
+
 export class ValidateCommand {
 
     command = "validate <host_or_file>";
@@ -43,11 +45,33 @@ export class ValidateCommand {
 
 
             data.split(/\n/).forEach((value, index, array) => {
-                let d = value.trim().split(/:|;/);
-                // TODO check ip pattern
-                if (d.length == 2 && d[0] && /[1-9]\d*/.test(d[1])) {
-                    list.push(new ProxyData(d[0], parseInt(d[1])))
+//                let d = value.trim().split(/:|;/);
+                let matched = value.trim().match(REGEX)
+
+
+                if(matched){
+                    let schema:string = null
+                    let ip:string = null
+                    let port:number = 3128
+
+                    if(matched[1] && matched[2]){
+                        // http or https exists
+                        schema = matched[2]
+                    }
+
+                    ip = matched[3]
+
+                    if(matched[4]){
+                        // port
+                        port = parseInt(matched[4])
+                    }
+
+                    if(ip && port){
+                        list.push(new ProxyData(ip, port))
+                    }
+
                 }
+
             });
 
 
@@ -89,18 +113,42 @@ export class ValidateCommand {
 
         } else {
 
+            let matched = argv.host_or_file.match(REGEX)
+            let schema:string = 'http'
+            let ip:string = '127.0.0.1'
+            let port:number = 3128
 
+            if(matched){
+                if(matched[1] && matched[2]){
+                    // http or https exists
+                    schema = matched[2]
+                }else{
+
+                }
+
+                ip = matched[3]
+
+                if(matched[4]){
+                    // port
+                    port = parseInt(matched[4])
+                }else{
+
+                }
+            }else{
+                return process.exit(1)
+            }
+
+/*
             if(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}$/.test(argv.host_or_file)){
                 argv.host_or_file = 'http://'+argv.host_or_file
             }
 
             let _url = url.parse(argv.host_or_file)
 
-
-
             if (!_url.port) {
                 _url.port = "3128"
             }
+*/
 
             let judgeCustomOptions = Config.get('validator.judge', {})
             let judge = new Judge(judgeCustomOptions);
@@ -108,7 +156,7 @@ export class ValidateCommand {
 
             if (booted) {
                 try {
-                    let proxy = new ProxyData(_url.hostname, parseInt(_url.port))
+                    let proxy = new ProxyData(ip, port)
                     await judge.wakeup();
                     proxy.results = await judge.validate(proxy.ip, proxy.port);
                     await judge.pending();
