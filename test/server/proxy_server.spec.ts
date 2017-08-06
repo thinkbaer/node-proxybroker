@@ -39,14 +39,18 @@ class ProxyServerTest {
     async before() {
         // Log.options({enable: true, level: 'debug'})
         server_dest = new ProxyServer({
-            url: 'http://localhost:3128',
+            protocol:'http',
+            ip:'localhost',
+            port:3128,
             level: 3,
             toProxy: false
         });
         await server_dest.start();
 
         server_distrib = new ProxyServer({
-            url: 'http://localhost:3180',
+            protocol:'http',
+            ip:'localhost',
+            port:3180,
             level: 3,
             toProxy: true,
             target: (header?: any) => {

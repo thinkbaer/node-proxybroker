@@ -32,7 +32,6 @@ export class ValidateCommand {
     }
 
     async handler(argv: any) {
-        StdConsole.$enabled = Log.enable
         EventBus.register(new StdConsole());
         let list: ProxyData[] = [];
 
@@ -177,13 +176,9 @@ export class ValidateCommand {
                 let data: JudgeResults[] = [];
                 list.forEach(_x => {
                     if (_x.results) {
-                        if (_x.results.http) {
-                            _x.results.http.logStr = _x.results.http.logToString();
-                            _x.results.http.log = null
-                        }
-                        if (_x.results.https) {
-                            _x.results.https.logStr = _x.results.https.logToString();
-                            _x.results.https.log = null
+                        for(let res of _x.results.getVariants()){
+                            res.logStr = res.logToString()
+                            delete res.log
                         }
                         data.push(_x.results)
                     }
@@ -227,19 +222,9 @@ export class ValidateCommand {
     }
 
     static resultToCsvRow(results: JudgeResults): any[] {
-        return [
+        let data = [
             results.ip,
             results.port,
-            results.http.hasError() ? '"' + (results.http.error.toString()).replace('"', '""') + '"' : '',
-            results.http.hasError() ? '"' + (results.http.error.code).replace('"', '""') + '"' : '',
-            results.http.level,
-            results.http.duration,
-            '"' + results.http.logToString().replace('"', '""') + '"',
-            results.https.hasError() ? '"' + (results.https.error.toString()).replace('"', '""') + '"' : '',
-            results.https.hasError() ? '"' + (results.https.error.code).replace('"', '""') + '"' : '',
-            results.https.level,
-            results.https.duration,
-            '"' + results.https.logToString().replace('"', '""') + '"',
             results.country_code,
             results.country_name,
             results.region_code,
@@ -247,7 +232,20 @@ export class ValidateCommand {
             results.city,
             results.latitude,
             results.longitude
-        ];
+        ]
+
+        for(let res of results.getVariants()){
+            data.push(
+                res.hasError() ? '"' + (res.error.toString()).replace('"', '""') + '"' : '',
+                res.hasError() ? '"' + (res.error.code).replace('"', '""') + '"' : '',
+                res.level,
+                res.duration,
+                '"' + res.logToString().replace('"', '""') + '"',
+
+            )
+        }
+
+        return data;
     }
 
     static emptyCsvRow(): any[] {
@@ -257,23 +255,33 @@ export class ValidateCommand {
     static csvHeader = [
         "ip",
         "port",
-        "http.error",
-        "http.error.code",
-        "http.level",
-        "http.duration",
-        "http.log",
-        "https.error",
-        "https.error.code",
-        "https.level",
-        "https.duration",
-        "https.log",
         "country_code",
         "country_name",
         "region_code",
         "region_name",
         "city",
         "latitude",
-        "longitude"
+        "longitude",
+        "http_http.error",
+        "http_http.error.code",
+        "http_http.level",
+        "http_http.duration",
+        "http_http.log",
+        "http_https.error",
+        "http_https.error.code",
+        "http_https.level",
+        "http_https.duration",
+        "http_https.log",
+        "https_http.error",
+        "https_http.error.code",
+        "https_http.level",
+        "https_http.duration",
+        "https_http.log",
+        "https_https.error",
+        "https_https.error.code",
+        "https_https.level",
+        "https_https.duration",
+        "https_https.log"
 
     ]
 

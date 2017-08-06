@@ -1,17 +1,15 @@
-import * as mocha from 'mocha';
-
-describe('', () => {
-});
-
-
-import {suite, test, slow, timeout, pending} from "mocha-typescript";
+import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
-import {inspect} from 'util'
 
 import {RequestResponseMonitor} from "../../src/judge/RequestResponseMonitor";
 import * as _request from "request-promise-native";
 import {Server} from "../../src/server/Server";
 import {Log} from "../../src/lib/logging/Log";
+
+describe('', () => {
+});
+
+
 //import {DefaultHTTPServer, DefaultHTTPSServer} from "../helper/server";
 
 
@@ -27,6 +25,10 @@ const DEBUG = false;
 @suite('judge/RequestResponseMonitor')
 class ReqResMonitorTest {
 
+    static before(){
+        Log.options({enable:false})
+    }
+
     /**
      * Server abort scenarios
      */
@@ -35,7 +37,7 @@ class ReqResMonitorTest {
      */
     @test
     async 'server abort'() {
-        let server: Server = new Server({url: 'http://localhost:8000'});
+        let server: Server = new Server({ip:'localhost',port:8000, protocol:'http'});
         await server.start();
 
         server.stall = 1000;
@@ -80,7 +82,7 @@ class ReqResMonitorTest {
      */
     @test
     async 'server timeout'() {
-        let server: Server = new Server({url: 'http://127.0.0.1:8000', timeout: 100});
+        let server: Server = new Server({ip:'localhost',port:8000, protocol:'http', timeout: 100});
 
         await server.start();
 
@@ -117,31 +119,23 @@ class ReqResMonitorTest {
     @test
     async 'http server simple request'() {
 
-        let server: Server = new Server({url: 'http://127.0.0.1:8000', _debug: DEBUG});
+        let server: Server = new Server({ip:'localhost',port:8000, protocol:'http', _debug: DEBUG});
 
         await server.start();
 
         let _url = server.url();
         let req = _request.get(_url);
         let rrm = RequestResponseMonitor.monitor(req);
-        //rrm._debug = DEBUG;
+
         await req.promise();
         await rrm.promise();
 
         let log: string = rrm.logToString();
 
-        /*
-        if (rrm._debug) {
-            console.log('-------->');
-            console.log(log);
-            console.log('<--------')
-
-        }*/
-
         expect(log).to.contain("Try connect to " + _url);
         expect(log).to.match(new RegExp("set TCP_NODELAY"));
         expect(log).to.match(new RegExp("Received 285 byte from sender"));
-        expect(log).to.match(new RegExp("Connection closed to " + _url + " \\(\\d+ms\\)"));
+        expect(log).to.match(new RegExp("Connection closed to " + _url + "\\/ \\(\\d+ms\\)"));
 
         await         server.stop()
     }
@@ -152,7 +146,7 @@ class ReqResMonitorTest {
     @test
     async 'http server socket timeout request'() {
 
-        let server: Server = new Server({url: 'http://127.0.0.1:8000', _debug: DEBUG});
+        let server: Server = new Server({ip:'localhost',port:8000, protocol:'http', _debug: DEBUG});
 
         await server.start();
 
@@ -194,7 +188,7 @@ class ReqResMonitorTest {
     async 'https server socket timeout request encrypted request'() {
 
         let server: Server = new Server({
-            url: 'https://' + PROXY_LOCAL_HOST + ':8000',
+            ip:PROXY_LOCAL_HOST,port:8000, protocol:'https',
             key_file: __dirname + '/' + SSL_PATH + '/proxy/server-key.pem',
             cert_file: __dirname + '/' + SSL_PATH + '/proxy/server-cert.pem',
         });

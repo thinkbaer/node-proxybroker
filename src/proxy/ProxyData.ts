@@ -8,12 +8,15 @@ import {IpAddr} from "../model/IpAddr";
 export class ProxyData implements IQueueWorkload, IProxyData {
 
     ip: string;
+
     port: number;
+
     job_state_id: number = null;
+
     results: JudgeResults = null;
 
 
-    constructor(ip: string | { ip: string, port: number, job_state_id?: number } | IpAddr, port?: number, job_state_id?: number) {
+    constructor(ip: string | IProxyData | IpAddr, port?: number, job_state_id?: number) {
         if (_.isString(ip) && port) {
             this.ip = ip;
             this.port = port;

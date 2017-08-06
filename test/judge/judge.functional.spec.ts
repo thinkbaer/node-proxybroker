@@ -13,7 +13,7 @@ describe('', () => {
 
 const SSL_PATH = '../_files/ssl';
 
-let initial_remote_ip = 'http://127.0.0.1:8080';
+let initial_remote_ip = '127.0.0.1';
 @suite('judge/Judge - functional')
 class JudgeTestSuite1 {
 
@@ -21,9 +21,9 @@ class JudgeTestSuite1 {
     @test
     async 'get remote ip'() {
         let judge = new Judge();
-        let erg = await judge['get_remote_accessible_ip']();
-        expect(erg.href).to.not.equal(initial_remote_ip);
-        expect(erg.hostname).to.match(/\d+\.\d+\.\d+\.\d+/)
+        let erg = await judge['getRemoteAccessibleIp']();
+        expect(erg).to.not.equal(initial_remote_ip);
+        expect(erg).to.match(/\d+\.\d+\.\d+\.\d+/)
     }
     
 

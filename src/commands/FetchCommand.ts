@@ -92,7 +92,7 @@ export class FetchCommand {
                 case 'csv':
                     let rows: string[] = [];
                     p.forEach(_rowData => {
-                        rows.push([_rowData.ip, _rowData.port].join(';'))
+                        rows.push([_rowData.ip, _rowData.port].join(':'))
                     });
                     rows = Utils.unique_array(rows);
                     console.log(rows.join('\n'));

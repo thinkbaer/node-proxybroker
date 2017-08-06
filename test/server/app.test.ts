@@ -54,8 +54,9 @@ let boot = async function (): Promise<void> {
         judge: {
             selftest: true,
             remote_lookup: true,
-            remote_url: 'http://127.0.0.1:8080',
-            judge_url: 'http://0.0.0.0:8080',
+            remote_ip:'127.0.0.1',
+            ip:'0.0.0.0',
+            http_port:8080,
             request: {
                 socket_timeout: 10000,
                 connection_timeout: 5000

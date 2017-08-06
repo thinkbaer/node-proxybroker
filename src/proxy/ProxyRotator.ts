@@ -63,31 +63,34 @@ export class ProxyRotator  {
 
     @subscribe(ProxyUsedEvent)
     async log(event: ProxyUsedEvent):Promise<IpRotate>{
-        Log.debug('ProxyRotator->log ',event)
+        Log.debug('ProxyRotator->log ',event);
 
-        let ipRotate:IpRotate = null
+        let ipRotate:IpRotate = null;
         // add to log
         let c = await this.storage.connect();
-        let ipAddr = await c.manager.findOne(IpAddr,{ip:event.hostname, port:event.port})
+        let ipAddr = await c.manager.findOne(IpAddr,{ip:event.hostname, port:event.port});
         if(ipAddr){
 
             let log = new IpRotateLog();
             log.addr_id = ipAddr.id;
             log.protocol = event.protocol;
+            log.protocol_dest = event.protocol_dest;
+
             log.duration = event.duration;
             log.success = event.success;
-            log.start = event.start
-            log.stop = event.stop
+            log.start = event.start;
+            log.stop = event.stop;
             // TODO maybe cleanup filename references in paths
             log.error = event.error ? event.error.stack : null;
             log.statusCode = event.statusCode;
             await c.manager.save(log);
 
-            ipRotate = await c.manager.findOne(IpRotate,{addr_id: ipAddr.id, protocol:event.protocol});
+            ipRotate = await c.manager.findOne(IpRotate,{addr_id: ipAddr.id, protocol_src: event.protocol});
             if(!ipRotate){
-                ipRotate = new IpRotate()
-                ipRotate.addr_id = ipAddr.id
-                ipRotate.protocol = event.protocol
+                ipRotate = new IpRotate();
+                ipRotate.addr_id = ipAddr.id;
+                ipRotate.protocol_src = event.protocol;
+
             }
 
             if(event.success){
@@ -101,10 +104,10 @@ export class ProxyRotator  {
             }
             await c.manager.save(ipRotate);
 
-            ipRotate['_log'] = log
+            ipRotate['_log'] = log;
 
         }
-        Log.debug('ProxyRotator->log: done')
+        Log.debug('ProxyRotator->log: done');
         return ipRotate;
 
     }
@@ -116,7 +119,7 @@ export class ProxyRotator  {
         let q = c.manager.createQueryBuilder(IpAddr, 'ip');
 
         q = q.innerJoinAndMapOne('ip.state', IpAddrState, 'state', 'state.validation_id = ip.validation_id and state.addr_id = ip.id')
-        q = q.leftJoinAndMapOne('ip.rotate', IpRotate, 'rotate', 'rotate.addr_id = ip.id and rotate.protocol = state.protocol')
+        q = q.leftJoinAndMapOne('ip.rotate', IpRotate, 'rotate', 'rotate.addr_id = ip.id and rotate.protocol_src = state.protocol_src')
         q = q.orderBy('rotate.used', 'ASC');
         q = q.addOrderBy('state.duration', 'ASC');
         q = q.limit(1)
@@ -137,7 +140,7 @@ export class ProxyRotator  {
                 q = q.andWhere('state.duration < :speed_limit', {speed_limit: select['speed-limit']})
             }
             if (select.ssl) {
-                q = q.andWhere('state.protocol = :protocol', {protocol: ProtocolType.HTTPS})
+                q = q.andWhere('state.protocol_dest = :protocol', {protocol: ProtocolType.HTTPS})
             }
         }
 
@@ -151,7 +154,7 @@ export class ProxyRotator  {
             } else {
                 iprotate = new IpRotate()
                 iprotate.addr_id = ipaddr.id
-                iprotate.protocol = ipaddr['state'].protocol
+                iprotate.protocol_src = ipaddr['state'].protocol_src
             }
 
             iprotate.inc++;

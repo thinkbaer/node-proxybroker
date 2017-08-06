@@ -1,13 +1,11 @@
-import * as mocha from 'mocha';
-describe('', () => {
-});
-
-
-import {suite, test, slow, timeout, pending} from "mocha-typescript";
+import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 import {LevelDetection} from "../../src/judge/LevelDetection";
 import DomainUtils from "../../src/utils/DomainUtils";
 import {Log} from "../../src/lib/logging/Log";
+
+describe('', () => {
+});
 
 
 @suite('judge/LevelDetection')

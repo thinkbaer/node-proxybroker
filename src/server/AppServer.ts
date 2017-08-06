@@ -56,7 +56,11 @@ const FIXED_API_OPTIONS: IRoutingController = {
 
 const DEFAULT_SERVER_OPTIONS: IExpressOptions = {
 
-    url: 'http://localhost:32323',
+    protocol: 'http',
+
+    ip: '127.0.0.1',
+
+    port :32323,
 
     routes:[]
 }

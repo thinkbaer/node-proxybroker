@@ -5,7 +5,7 @@ logging:
   transports:
   - console: {}
   - file:
-      filename: /data/out.log
+      filename: /data/out-170730.log
 #  events: true
 # transports: - list
 

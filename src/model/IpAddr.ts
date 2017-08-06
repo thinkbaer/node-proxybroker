@@ -32,7 +32,10 @@ export class IpAddr {
     validation_id: number = 0;
 
     @Column()
-    protocols: number = 0;
+    protocols_src: number = 0;
+
+    @Column()
+    protocols_dest: number = 0;
 
     @Column({type:'boolean'})
     blocked: boolean = false;
@@ -71,17 +74,6 @@ export class IpAddr {
         if(!this.key){
             this.key = [this.ip,this.port].join(':')
         }
-        // let now = Utils.now()
-        // if(this.blocked === null || this.blocked === undefined){
-        //     this.blocked = false
-        // }
-        //
-        // if(this.to_delete === null || this.to_delete === undefined) {
-        //     this.to_delete = false
-        // }
-        // if(!this.last_checked_at){
-        //     this.last_checked_at = now
-        // }
     }
 
     flattenDates(){
@@ -94,17 +86,32 @@ export class IpAddr {
         }
     }
 
+    addSourceProtocol(pt: ProtocolType){
+        this.protocols_src = this.protocols_src | pt
+    }
+
+    removeSourceProtocol(pt: ProtocolType){
+        if((this.protocols_src & pt) == pt){
+            this.protocols_src = this.protocols_src & ~pt
+        }
+    }
+
 
     addProtocol(pt: ProtocolType){
-        this.protocols = this.protocols | pt
+        this.protocols_dest = this.protocols_dest | pt
     }
 
     removeProtocol(pt: ProtocolType){
-        this.protocols = this.protocols & ~pt
+        this.protocols_dest = this.protocols_dest & ~pt
     }
 
+
     supportsProtocol(p:ProtocolType):boolean{
-        return (this.protocols & p) == p
+        return (this.protocols_dest & p) == p
+    }
+
+    supportsSourceProtocol(p:ProtocolType):boolean{
+        return (this.protocols_src & p) == p
     }
 
     supportsHttp():boolean{

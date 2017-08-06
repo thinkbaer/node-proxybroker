@@ -13,7 +13,9 @@ describe('', () => {
 const cfg: any = {
     validator: {
         judge: {
-            remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"
+            remote_lookup: false,
+            selftest: false,
+            ip: "127.0.0.1"
         }
     }
 };
@@ -31,11 +33,14 @@ class CLIValidateCommandTest {
     @test
     async 'passed file'() {
 
-        let proxy_options: IProxyServerOptions = Object.assign({}, {
-            url: 'http://127.0.0.1:3128',
+        let proxy_options: IProxyServerOptions = {
+            //url: 'http://127.0.0.1:3128',
+            ip:'proxy.local',
+            protocol:'http',
+            port:3128,
             level: 3,
             toProxy:false
-        });
+        }
 
         let http_proxy_server = new ProxyServer(proxy_options);
 
@@ -43,13 +48,26 @@ class CLIValidateCommandTest {
         let cli = await SpawnCLI.run('validate', 'test/_files/proxylists/list01.csv', '-v', '-c', JSON.stringify(cfg));
         await http_proxy_server.stop();
 
-        // console.log(cli.stdout,cli.stderr)
+
         let data = JSON.parse(cli.stdout);
         data = data.shift();
-        expect(data.ip).to.eq('127.0.0.1');
+        expect(data.ip).to.eq('127.0.0.11');
         expect(data.port).to.eq(3128);
-        expect(data.http.error).to.be.null;
-        expect(data.https.error).to.not.be.null
+
+        let http_http = data.variants.shift()
+        let http_https = data.variants.shift()
+        let https_http = data.variants.shift()
+        let https_https = data.variants.shift()
+
+
+        expect(http_http.error).to.be.null;
+        expect(http_http.level).to.eq(3);
+
+        expect(http_https.error).to.be.null;
+        expect(http_https.level).to.eq(1);
+
+        expect(https_http).to.not.be.null
+        expect(https_https).to.not.be.null
     }
 
     @test

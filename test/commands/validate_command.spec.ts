@@ -1,41 +1,51 @@
-import * as mocha from 'mocha';
-describe('', () => {
-});
-
-
 import {suite, test, timeout} from "mocha-typescript";
 import {expect} from "chai";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
 import {ProxyServer} from "../../src/server/ProxyServer";
-
 import {Log} from "../../src/lib/logging/Log";
 import {Config} from "commons-config";
 import {ValidateCommand} from "../../src/commands/ValidateCommand";
+import {ProtocolType} from "../../src/lib/ProtocolType";
+
+describe('', () => {
+});
 
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 let stdMocks = require('std-mocks');
 
-const cfg = {validator: {judge: {remote_lookup: false, selftest: false, judge_url: "http://127.0.0.1:8080"}}};
+const cfg = {
+    validator: {
+        judge: {
+            remote_lookup: false,
+            selftest: false,
+            ip: "judge.local",
+            remote_ip: 'judge.local',
+            request:{
+                local_ip:'127.0.0.1'
+            }
+        }
+    }
+};
 
 @suite('commands/ValidateCommand') @timeout(20000)
 class ValidateCommandTest {
 
     static before() {
-        Log.options({enable: false})
+        Log.options({enable: false, events: false, level: 'debug'})
     }
 
     @test
     async 'judge file with file'() {
-        // Log.enable = true
-        //let c = new _Console()
-        //EventBus.register(c)
         Config.clear()
         Config.jar().merge(cfg)
 
         let proxy_options: IProxyServerOptions = Object.assign({}, {
-            url: 'http://127.0.0.1:3128',
+            ip: '127.0.0.11',
+            port: 3128,
+            protocol: 'http',
             level: 3,
-            toProxy:false
+            toProxy: false
         });
 
         let http_proxy_server = new ProxyServer(proxy_options);
@@ -44,7 +54,7 @@ class ValidateCommandTest {
         stdMocks.use();
         let jfc = new ValidateCommand();
         let list = await jfc.handler({
-            _resolve:true,
+            _resolve: true,
             host_or_file: __dirname + '/../_files/proxylists/list01.csv',
             verbose: false,
             // config: cfg, // config can be ignored handler work on cli.ts level, so we previously defined settings directly
@@ -53,7 +63,6 @@ class ValidateCommandTest {
         stdMocks.restore()
         let output = stdMocks.flush()
         await http_proxy_server.stop();
-        //EventBus.unregister(c)
 
 
 
@@ -62,12 +71,23 @@ class ValidateCommandTest {
         expect(list).has.length(1)
         let stdData = JSON.parse(output.stdout[0])
         expect(stdData[0]).to.deep.eq(JSON.parse(JSON.stringify(list[0].results)))
+
         let data = list.shift();
-        expect(data.ip).to.eq('127.0.0.1');
+        expect(data.ip).to.eq('127.0.0.11');
         expect(data.port).to.eq(3128);
 
-        expect(data.results.http.error).to.be.null;
-        expect(data.results.https.error).to.not.be.null;
+        let http_http = data.results.getVariant(ProtocolType.HTTP, ProtocolType.HTTP);
+        let http_https = data.results.getVariant(ProtocolType.HTTP, ProtocolType.HTTPS);
+        let https_http = data.results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
+        let https_https = data.results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
+
+        expect(http_http.hasError()).to.be.false;
+        expect(http_http.level).to.be.eq(3);
+        expect(http_https.hasError()).to.be.false;
+        expect(http_https.level).to.be.eq(1);
+        expect(https_http.hasError()).to.be.true;
+        expect(https_https.hasError()).to.be.true;
+
     }
 
 

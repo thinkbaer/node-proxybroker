@@ -6,9 +6,13 @@ export interface IProxyValidatiorOptions {
     parallel?:number
 
     schedule: {
+
         enable: boolean
+
         pattern?: string
+
         time_distance?: number
+
         limit?: number
     }
 
@@ -24,9 +28,13 @@ export const DEFAULT_VALIDATOR_OPTIONS: IProxyValidatiorOptions = {
     parallel:100,
 
     schedule: {
+
         enable: true,
+
         pattern: '*/10 * * * *',
+
         time_distance: hours6,
+
         limit: 1000
     },
 

@@ -36,6 +36,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
  * + L3 - Transparent Proxies
  */
 
+
 let debug = false;
 
 interface Variation {
@@ -45,11 +46,7 @@ interface Variation {
         key_file?:string
         cert_file?:string
     },
-    debug: boolean,
-    judge_options: {
-        key_file?:string
-        cert_file?:string
-    }
+    debug: boolean
 
 
 }
@@ -57,83 +54,55 @@ interface Variation {
 suite('Judge proxy variations', () => {
     let variations:Array<Variation> = [
         {
-            title: 'Client <-> HTTP Proxy L3 <-> HTTP Judge',
+            title: 'Client <-> HTTP Proxy L3 <-> HTTP(S) Judge',
             proxy_options: {level: 3},
-            debug: debug,
-            judge_options: {}
-        }
-        ,
+            debug: debug
+        },
         {
-            title: 'Client <-> HTTP Proxy L2 <-> HTTP Judge',
+            title: 'Client <-> HTTP Proxy L2 <-> HTTP(S) Judge',
             proxy_options: {level: 2},
-            debug: debug,
-            judge_options: {}
-
-        }
-        ,
+            debug: debug
+        },
         {
-            title: 'Client <-> HTTP Proxy L1 <-> HTTP Judge',
+            title: 'Client <-> HTTP Proxy L1 <-> HTTP(S) Judge',
             proxy_options: {level: 1},
-            debug: debug,
-            judge_options: {}
-        }
-        ,
+            debug: debug
+        },
         {
-            title: 'Client <-> HTTP Proxy L1 <-> HTTPS Judge (only L1; because proxy by pass tunnel)',
-            proxy_options: {level: 1},
-            debug: debug,
-            judge_options: {
-                key_file: __dirname + '/'+SSL_PATH+'/judge/server-key.pem',
-                cert_file: __dirname + '/'+SSL_PATH+'/judge/server-cert.pem',
-            }
-        }
-        ,
-        {
-            title: 'Client <-> HTTPS Proxy L1 <-> HTTPS Judge (only L1; because proxy by pass tunnel)',
+            title: 'Client <-> HTTPS Proxy L1 <-> HTTP(S) Judge',
             proxy_options: {
                 level: 1,
                 key_file: __dirname + '/'+SSL_PATH+'/proxy/server-key.pem',
                 cert_file: __dirname + '/'+SSL_PATH+'/proxy/server-cert.pem',
             },
-            debug: debug,
-            //debug: true,
-            judge_options: {
-                key_file: __dirname + '/'+SSL_PATH+'/judge/server-key.pem',
-                cert_file: __dirname + '/'+SSL_PATH+'/judge/server-cert.pem',
-            }
-        }
-        ,
+            debug: debug
+        },
         {
-            title: 'Client <-> HTTPS Proxy L3 <-> HTTP Judge',
+            title: 'Client <-> HTTPS Proxy L3 <-> HTTP(S) Judge',
             proxy_options: {
                 level: 3,
                 key_file: __dirname + '/'+SSL_PATH+'/proxy/server-key.pem',
                 cert_file: __dirname + '/'+SSL_PATH+'/proxy/server-cert.pem',
             },
-            debug: debug,
-            judge_options: {}
-        }
-        ,
+            debug: debug
+        },
         {
-            title: 'Client <-> HTTPS Proxy L2 <-> HTTP Judge',
+            title: 'Client <-> HTTPS Proxy L2 <-> HTTP(S) Judge',
             proxy_options: {
                 level: 2,
                 key_file: __dirname + '/'+SSL_PATH+'/proxy/server-key.pem',
                 cert_file: __dirname + '/'+SSL_PATH+'/proxy/server-cert.pem',
             },
-            debug: debug,
-            judge_options: {}
-        }
-        ,
+            debug: debug
+        },
         {
-            title: 'Client <-> HTTPS Proxy L1 <-> HTTP Judge',
+            title: 'Client <-> HTTPS Proxy L1 <-> HTTP(S) Judge',
             proxy_options: {
                 level: 1,
                 key_file: __dirname + '/'+SSL_PATH+'/proxy/server-key.pem',
                 cert_file: __dirname + '/'+SSL_PATH+'/proxy/server-cert.pem',
             },
-            debug: debug,
-            judge_options: {}
+            debug: debug
         }
     ];
 
@@ -143,19 +112,21 @@ suite('Judge proxy variations', () => {
 
             static proxy_port = 5008;
             static proxy_ip = PROXY_LOCAL_HOST;
-            static judge_protocol = (data.judge_options.key_file && data.judge_options.cert_file  ? 'https' : 'http');
+
             static proxy_protocol = (data.proxy_options.key_file && data.proxy_options.cert_file  ? 'https' : 'http');
 
             static judge : Judge = null;
             static proxy_server : ProxyServer = null;
 
             static async before() {
-                Log.options({enable:data.debug});
+                Log.options({enable:data.debug,level:'debug'});
 
 
                 let proxy_options = Object.assign({}, data.proxy_options, {
-                    url: this.proxy_protocol + '://' + this.proxy_ip + ':' + this.proxy_port,
-                    _debug: data.debug,
+                    //url: this.proxy_protocol + '://' + this.proxy_ip + ':' + this.proxy_port,
+                    port:this.proxy_port,
+                    protocol: this.proxy_protocol,
+                    ip: this.proxy_ip,
                     toProxy:false
                 });
                 this.proxy_server = new ProxyServer(proxy_options);
@@ -163,16 +134,17 @@ suite('Judge proxy variations', () => {
                 let opts : IJudgeOptions= {
                     selftest: false,
                     remote_lookup: false,
-                    debug: data.debug,
-                    remote_url: this.judge_protocol + '://' + JUDGE_LOCAL_HOST + ':8080',
-                    judge_url: this.judge_protocol + '://' + JUDGE_LOCAL_HOST + ':8080',
+                    remote_ip: JUDGE_LOCAL_HOST,
+                    ip: JUDGE_LOCAL_HOST,
+                    http_port:8080,
+                    https_port:8181,
                     request:{
                         local_ip:'127.0.0.1',
                         //timeout: 1000
                     }
                 };
-                let options = Object.assign(opts, data.judge_options);
-                this.judge = new Judge(options);
+
+                this.judge = new Judge(opts);
 
                 let erg = await this.judge.bootstrap();
                 expect(erg).to.equal(true);
@@ -194,10 +166,10 @@ suite('Judge proxy variations', () => {
 
 
             @test
-            async request() {
+            async http_request() {
 
                 let proxy_url = Clazz.proxy_server.url();
-                let judgeReq = Clazz.judge.createRequest(proxy_url);
+                let judgeReq = Clazz.judge.createRequest('http', proxy_url);
                 judgeReq._debug = data.debug;
 
                 try {
@@ -213,6 +185,32 @@ suite('Judge proxy variations', () => {
                     expect(judgeReq.level).to.be.equal(data.proxy_options.level);
                     expect(log).to.match(/Judge connected/);
                     expect(log).to.match(new RegExp('Proxy is L' + data.proxy_options.level))
+                } catch (err) {
+                    console.error(err);
+                    throw err
+                }
+            }
+
+            @test
+            async https_request() {
+
+                let proxy_url = Clazz.proxy_server.url();
+                let judgeReq = Clazz.judge.createRequest('https',proxy_url);
+                judgeReq._debug = data.debug;
+
+                try {
+                    let rrm = await judgeReq.performRequest();
+                    let log = rrm.logToString();
+
+                    if (judgeReq._debug) {
+                        console.log('-------->');
+                        console.log(log);
+                        console.log('<--------')
+                    }
+
+                    expect(judgeReq.level).to.be.equal(1);
+                    expect(log).to.match(/Judge connected/);
+                    expect(log).to.match(new RegExp('Proxy is L1'))
                 } catch (err) {
                     console.error(err);
                     throw err

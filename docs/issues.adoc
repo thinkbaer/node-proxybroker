@@ -300,3 +300,10 @@ Add bash startup scripts in bin directory.
 @TASK:{counter:task} 20170728 +
 Impl. socks4 and socks5 support.
 
+@TASK:{counter:task} 20170804 +
+Why all HTTPS proxies seam to fail?
+
+@TASK:{counter:task} 20170804 +
+Bug: in fetch command if no config options a specified
+and the -v options is passed then the logger logs to std.out
+and not to std.err

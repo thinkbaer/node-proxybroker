@@ -23,6 +23,9 @@ export class IpRotateLog {
     protocol: ProtocolType;
 
     @Column({nullable:false})
+    protocol_dest: ProtocolType;
+
+    @Column({nullable:false})
     addr_id: number;
 
     @Column({type:'boolean', nullable:false})

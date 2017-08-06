@@ -154,6 +154,63 @@ should happen (in seconds). The default value is 6 hours.
 |===
 
 
+*Judge*
+
+
+[cols="1,m,2", options="header"]
+|===
+| Key
+| Default
+| Description
+
+| selftest
+| true
+| Execute a test to check functionality.
+
+| remote_lookup
+| true
+| Lookup remote address.
+
+| remote_ip
+| 127.0.0.1
+| Give address if looking up is disabled.
+
+| ip
+| 127.0.0.1
+| Address
+
+| http_port
+| 3128
+| HTTP Port
+
+| https_port
+| 3182
+| HTTPS Port
+
+| ssl.key
+|
+| TODO
+
+| ssl.key_file
+|
+| TODO
+
+| ssl.cert
+|
+| TODO
+
+| ssl.cert_file
+|
+| TODO
+
+| request
+|
+| TODO
+
+|===
+
+
+
 === ProxyServer
 
 === APIServer

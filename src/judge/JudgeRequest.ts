@@ -97,17 +97,21 @@ export class JudgeRequest {
             forever: false
         };
 
-        if (this.judge.isSecured && this.judge.options.ssl_options.cert) {
-            opts.ca = this.judge.options.ssl_options.cert
+        /*
+        if (this.judge.isSecured && this.judge.options.ssl.cert) {
+            opts.ca = this.judge.options.ssl.cert
         }
+        */
 
         this.request = _request.get(this.url, opts);
+        this.request.on('error', this.onRequestError.bind(this));
         this.request.on('socket', this.onSocket.bind(this));
 
         this.monitor = RequestResponseMonitor.monitor(this.request, this.id/*, {debug: this._debug}*/);
         try {
             this.response = await this.request.promise()
         } catch (e) {
+            // Log.error(this.id,e)
             // Will be also in ReqResMonitor
         }
         return this.monitor.promise()
@@ -115,6 +119,7 @@ export class JudgeRequest {
 
 
     private onSocket(socket: net.Socket) {
+        Log.debug('JudgeRequest->onSocket '+this.id);
         this.socket = socket;
         socket.setKeepAlive(false);
         socket.setTimeout(this.socket_timeout);
@@ -126,13 +131,13 @@ export class JudgeRequest {
 
 
     onSocketData(data: Buffer) {
+        Log.debug('JudgeRequest->onSocketData '+this.id)
         this.socket.setTimeout(0)
-
     }
 
 
     onSocketLookup(error: Error|null, address: string, family: string|null, host: string) {
-        //this.debug('onSocketLookup');
+        Log.debug('JudgeRequest->onSocketLookup '+this.id);
         if(error){
             this.handleError('lookup error',error)
         }
@@ -142,6 +147,10 @@ export class JudgeRequest {
         if(!this.judgeConnected){
             this.socket.destroy(new Error('ESOCKETTIMEDOUT'))
         }
+    }
+
+    private onRequestError(error: Error) {
+        this.handleError('request error',error)
     }
 
     private onSocketError(error: Error) {
@@ -217,9 +226,8 @@ export class JudgeRequest {
     }
 
 
-    result(p:ProtocolType): JudgeResult {
-        let result = new JudgeResult(p);
-
+    result(from:ProtocolType,to:ProtocolType): JudgeResult {
+        let result = new JudgeResult(from,to);
         result.id = this.id;
         result.start = this.monitor.start;
         result.stop = this.monitor.end;

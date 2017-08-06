@@ -28,8 +28,10 @@ class JudgeTestSuite1 {
     'default settings'() {
         let judge = new Judge();
         let options = judge.options;
-        expect(judge.isSecured).to.equal(false);
-        expect(judge.judge_url_f).to.equal('http://0.0.0.0:8080/');
+
+        expect(judge.ip).to.equal('0.0.0.0');
+        expect(options.http_port).to.equal(8080);
+        expect(options.https_port).to.equal(8181);
         expect(options.selftest).to.equal(true);
         expect(options.remote_lookup).to.equal(true)
     }
@@ -37,34 +39,38 @@ class JudgeTestSuite1 {
     @test
     'change address settings'() {
         let options = _.clone(DEFAULT_JUDGE_OPTIONS);
-        options.judge_url = 'http://judge.local:8081';
+        options.ip = 'judge.local';
+        options.http_port = 8081
         let judge = new Judge(options);
-        expect(judge.judge_url_f).to.equal('http://judge.local:8081/')
+        expect(judge.url('http')).to.equal('http://judge.local:8081')
+        expect(judge.url('https')).to.equal('https://judge.local:8181')
     }
 
     @test
     'change remote address settings'() {
         let options = _.clone(DEFAULT_JUDGE_OPTIONS);
-        options.remote_url = 'http://judge.local:8081';
+        options.remote_ip = 'judge.local';
+        options.http_port = 8081
         // options.remote_url = 'http://judge.local:8081'
         let judge = new Judge(options);
         // expect(judge.judge_url_f).to.equal('http://judge.local:8081/')
-        expect(judge.remote_url_f).to.equal('http://judge.local:8081/')
+        expect(judge.remote_url('http')).to.equal('http://judge.local:8081')
     }
 
     @test
     'enable https settings'() {
         let options = _.clone(DEFAULT_JUDGE_OPTIONS);
-        options.judge_url = 'https://0.0.0.0:8081';
-        options.key_file = __dirname + '/' + SSL_PATH + '/judge/server-key.pem';
-        options.cert_file = __dirname + '/' + SSL_PATH + '/judge/server-cert.pem';
+        options.http_port = 8081;
+        options.ssl.key_file = __dirname + '/' + SSL_PATH + '/judge/server-key.pem';
+        options.ssl.cert_file = __dirname + '/' + SSL_PATH + '/judge/server-cert.pem';
         let judge = new Judge(options);
 
         options = judge.options;
-        expect(judge.isSecured).to.equal(true);
-        expect(judge.judge_url_f).to.equal('https://0.0.0.0:8081/');
-        expect(options.ssl_options.key).to.be.not.empty;
-        expect(options.ssl_options.cert).to.be.not.empty;
+
+        expect(judge.url('http')).to.equal('http://0.0.0.0:8081');
+        expect(judge.url('https')).to.equal('https://0.0.0.0:8181');
+        expect(options.ssl.key).to.be.not.empty;
+        expect(options.ssl.cert).to.be.not.empty;
         expect(options.selftest).to.equal(true);
         expect(options.remote_lookup).to.equal(true)
     }

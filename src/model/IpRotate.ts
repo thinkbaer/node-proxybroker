@@ -13,14 +13,15 @@ import {Entity} from "typeorm/decorator/entity/Entity";
 
 
 @Entity()
-@Index("unique_addr_proto", (ipaddr: IpRotate) => [ipaddr.protocol, ipaddr.addr_id], { unique: true })
+@Index("unique_addr_proto", (ipaddr: IpRotate) => [ipaddr.protocol_src, ipaddr.addr_id], { unique: true })
 export class IpRotate {
 
     @PrimaryGeneratedColumn()
     id: number;
 
     @Column({nullable:false})
-    protocol: ProtocolType;
+    protocol_src: ProtocolType;
+
 
     @Column({nullable:false})
     addr_id: number;

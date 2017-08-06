@@ -1,5 +1,5 @@
 import * as _ from 'lodash'
-
+import * as tls from 'tls'
 import * as net from 'net'
 import {Log} from "../lib/logging/Log";
 import Exceptions from "../exceptions/Exceptions";
@@ -26,7 +26,7 @@ export class SocketHandle {
 
     finished: boolean = false;
 
-    ended: boolean = true;
+    // ended: boolean = true;
 
     data: Buffer;
 
@@ -35,6 +35,8 @@ export class SocketHandle {
     socketError: boolean = false;
 
     statusCode: number;
+
+    ssl:boolean = false;
 
     query: Buffer;
 
@@ -49,8 +51,9 @@ export class SocketHandle {
     timer: Timer;
 
 
-    constructor(socket: net.Socket, opts: { ssl?: boolean, timeout?: number } = {ssl: false, timeout: 10000}) {
-        this.options = opts;
+    constructor(socket: net.Socket, opts: { ssl?: boolean, timeout?: number } = {}) {
+        this.options = _.defaults(opts,{ssl: false, timeout: 10000});
+
         this.socket = socket;
         this.start = new Date();
 
@@ -68,11 +71,18 @@ export class SocketHandle {
     }
 
     onData(data: Buffer) {
-        this.ended = false;
+        // this.ended = false;
         // this.debug('socket data ' + data.length)
         if (!data) {
             return;
         }
+
+        if (this.ssl || data[0] == 0x16 || data[0] == 0x80 || data[0] == 0x00) {
+            this.debug('TLS detected ' + data.length)
+            this.ssl = true
+            return;
+        }
+
 
         if (this.data) {
             this.data = Buffer.concat([this.data, data]);
@@ -133,6 +143,14 @@ export class SocketHandle {
     }
 
     build(): Buffer {
+        if(!this.query || this.ssl){
+            if(this.data){
+                return this.data
+            }else {
+                return null;
+            }
+        }
+
         const buf = Buffer.allocUnsafe(2)
         buf.write('\r\n')
 
@@ -165,7 +183,7 @@ export class SocketHandle {
 
     onEnd() {
         this.debug('onEnd');
-        this.ended = true
+       // this.ended = true
     }
 
     onTimeout() {
@@ -188,15 +206,19 @@ export class SocketHandle {
         this.duration = this.stop.getTime() - this.start.getTime();
         this.debug('socket close error=' + had_error + ' duration=' + this.duration);
         this.finished = true;
-        this.socket.emit('finished');
+        this.socket.emit('socket_finished');
 
     }
 
     onFinish(): Promise<SocketHandle> {
         let self = this;
-
         return new Promise(resolve => {
-            self.socket.once('finished', resolve.bind(resolve, self));
+            self.socket.once('socket_finished',
+                function(){
+                    resolve(self)
+                }
+
+            );
         })
     }
 

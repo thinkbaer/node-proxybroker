@@ -23,16 +23,17 @@ export class ProxyServer extends Server {
 
 
     _options: IProxyServerOptions;
+
     handles: SocketHandle[] = []
 
     // proxy: HttpProxy = null;
 
     constructor(options: IProxyServerOptions) {
         super(Object.assign({}, DEFAULT_PROXY_SERVER_OPTIONS, options))
-
-
         Runtime.$().setConfig(K_PROXYSERVER, this._options)
     }
+
+
 
     get level(): number {
         return this._options.level
@@ -44,7 +45,7 @@ export class ProxyServer extends Server {
 
 
     onProxyRequest(handle: SocketHandle, req: http.IncomingMessage): void {
-        this.debug('onProxyRequest ' + this._options.url + ' for ' + req.url);
+        this.debug('onProxyRequest ' + this.url() + ' for ' + req.url);
 
         handle.removeHeader('Proxy-Select-Level');
         handle.removeHeader('Proxy-Select-Speed-Limit');
@@ -83,7 +84,7 @@ export class ProxyServer extends Server {
         if (_.isString(this._options.target)) {
             let __url = url.parse(this._options.target)
             _url = {
-                protocol: __url.protocol,
+                protocol: __url.protocol.replace(':',''),
                 hostname: __url.hostname,
                 port: parseInt(__url.port)
             }
@@ -92,7 +93,7 @@ export class ProxyServer extends Server {
             if (t instanceof IpAddr) {
                 // IpAddr
                 _url = {
-                    protocol: t['state'].protocol === ProtocolType.HTTP ? 'http' : 'https',
+                    protocol: t['state'].protocol_src === ProtocolType.HTTP ? 'http' : 'https',
                     hostname: t.ip,
                     port: t.port
                 }
@@ -235,7 +236,7 @@ export class ProxyServer extends Server {
         let proxy_url: IUrlBase = null
         let req_handle = this.getSocketHandle(req.socket)
         this.onProxyRequest(req_handle, req)
-        this.debug('onServerConnect ' + this._options.url + ' url=' + rurl.href + ' handle=' + (req_handle ? req_handle.id : 'none'));
+        this.debug('ProxyServer->onServerConnect ' + this.url() + ' url=' + rurl.href + ' handle=' + (req_handle ? req_handle.id : 'none'));
 
         if (this._options.toProxy && this._options.target && !disable_proxy_to_proxy) {
             await this.connectToExternProxy(true, req_handle, req, null,upstream,head);
@@ -248,17 +249,21 @@ export class ProxyServer extends Server {
             };
 
             let downstream = net.connect(proxy_url.port, proxy_url.hostname, function () {
-                self.debug('downstream connected to ' + req.url);
+                self.debug('ProxyServer->onServerConnect: downstream connected to ' + req.url);
                 upstream.write(
                     'HTTP/' + req.httpVersion + ' 200 Connection Established\r\n' +
                     'Proxy-agent: Proxybroker\r\n' +
                     '\r\n');
-                downstream.write(head);
-                downstream.pipe(upstream);
+
+                if(head){
+                    downstream.write(head);
+                }
                 upstream.pipe(downstream);
+                downstream.pipe(upstream);
+
             });
 
-            let handle = this.createSocketHandle(downstream)
+            let handle = this.createSocketHandle(downstream,{ssl:true})
             handle.onFinish()
                 .then(handle => {
                     return self.handleUpstreamAfterFinishedRequest(req_handle, handle, req, upstream, head);
@@ -273,7 +278,7 @@ export class ProxyServer extends Server {
         let self = this
 
         let req_handle = this.getSocketHandle(req.socket)
-        this.debug('proxyResponse ' + this._options.url + ' RH:' + (req_handle ? req_handle.id : 'none'));
+        this.debug('proxyResponse ' + this.url() + ' RH:' + (req_handle ? req_handle.id : 'none'));
 
         // TODO request handle must be present
         this.onProxyRequest(req_handle, req)
@@ -294,11 +299,15 @@ export class ProxyServer extends Server {
                 }
             }
 
-            this.debug('proxing url ' + this._options.url + ' url=' + req.url + ' ssl='+req_handle.options.ssl);
+            this.debug('proxing url ' + this.url()+ ' url=' + req.url + ' ssl='+req_handle.options.ssl);
+
 
             let downstream = net.connect(parseInt(_url.port), _url.hostname, function () {
-                downstream.write(req_handle.build())
-                //req.pipe(downstream)
+                let req_buf = req_handle.build()
+                if(req_buf) {
+                    downstream.write(req_buf)
+                }
+
                 downstream.pipe(req.socket)
                 req.socket.pipe(downstream)
             })
@@ -310,30 +319,34 @@ export class ProxyServer extends Server {
         }
     }
 
+    /*
     onServerClientError(exception: Error, socket: net.Socket): void {
-        this.debug('onServerClientError ' + this._options.url, exception)
-        socket.destroy(exception)
+        super.onServerClientError(exception,socket)
     }
+    */
 
 
     async onSecureConnection(socket: tls.TLSSocket): Promise<void> {
-        this.debug('onSecureConnection ' + this._options.url)
+        super.onSecureConnection(socket)
+        this.debug('ProxyServer->onSecureConnection ' + this.url())
         this.createSocketHandle(socket, {ssl: true, timeout: 30000})
         return Promise.resolve()
     }
 
 
     async onServerConnection(socket: net.Socket): Promise<void> {
-        this.debug('onServerConnection ' + this._options.url)
+        super.onServerConnection(socket)
+        this.debug('ProxyServer->onServerConnection ' + this.url())
         this.createSocketHandle(socket, {ssl: false, timeout: 30000})
         return Promise.resolve()
     }
 
 
-    private createSocketHandle(socket: net.Socket, opts: { ssl?: boolean, timeout?: number } = {
-        ssl: false,
-        timeout: 30000
-    }): SocketHandle {
+    private createSocketHandle(socket: net.Socket, opts: { ssl?: boolean, timeout?: number } = {}): SocketHandle {
+        opts = _.defaults(opts,{
+            ssl: false,
+            timeout: 30000
+        })
         let handle = new SocketHandle(socket, opts);
         handle.meta.repeat = 0
 
@@ -360,6 +373,7 @@ export class ProxyServer extends Server {
 
 
     async onProxyToProxy(base: IUrlBase, handle: SocketHandle): Promise<any> {
+
         let e = new ProxyUsedEvent(base, handle)
         return EventBus.post(e);
     }

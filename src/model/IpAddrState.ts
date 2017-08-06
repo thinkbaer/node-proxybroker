@@ -12,9 +12,12 @@ export class IpAddrState {
     @Column({type:"boolean",nullable:false})
     enabled: boolean;
 
+    @Column({nullable:false})
+    protocol_src: ProtocolType = ProtocolType.HTTP;
+
 
     @Column({nullable:false})
-    protocol: ProtocolType;
+    protocol_dest: ProtocolType;
 
 
     @Column({nullable:false})

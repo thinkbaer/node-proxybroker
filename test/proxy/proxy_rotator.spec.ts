@@ -7,6 +7,7 @@ import {IpAddrState} from "../../src/model/IpAddrState";
 import {ProtocolType} from "../../src/lib/ProtocolType";
 import {ProxyRotator} from "../../src/proxy/ProxyRotator";
 import {ProxyUsedEvent} from "../../src/proxy/ProxyUsedEvent";
+import {Log} from "../../src/lib/logging/Log";
 
 describe('', () => {
 });
@@ -19,6 +20,7 @@ class ProxyRotatorTest {
 
 
     async before() {
+        Log.options({enable:false,level:'debug'})
         storage = new Storage(<SqliteConnectionOptions>{
             name: 'proxy_rotator',
             type: 'sqlite',
@@ -28,7 +30,6 @@ class ProxyRotatorTest {
 
         let c = await storage.connect();
 
-
         let ip = new IpAddr();
         ip.ip = '127.0.0.1';
         ip.port = 3128;
@@ -37,17 +38,18 @@ class ProxyRotatorTest {
 
         let ips_http = new IpAddrState();
         ips_http.validation_id = ip.validation_id
-        ips_http.protocol = ProtocolType.HTTP
+        ips_http.protocol_src = ProtocolType.HTTP
+        ips_http.protocol_dest = ProtocolType.HTTP
         ips_http.addr_id = ip.id
         ips_http.level = 1
         ips_http.enabled = true
         ips_http.duration = 100
         ips_http = await c.save(ips_http);
 
-
         let ips_https = new IpAddrState();
         ips_https.validation_id = ip.validation_id
-        ips_https.protocol = ProtocolType.HTTPS
+        ips_https.protocol_src = ProtocolType.HTTP
+        ips_https.protocol_dest = ProtocolType.HTTPS
         ips_https.addr_id = ip.id
         ips_https.enabled = false
 
@@ -65,11 +67,13 @@ class ProxyRotatorTest {
 
     @test
     async 'log success'() {
+
         let e = new ProxyUsedEvent()
         e.statusCode = 201
         e.duration = 1000
         e.success = true
         e.protocol = ProtocolType.HTTP
+        e.protocol_dest = ProtocolType.HTTP
         e.start = new Date()
         e.stop = new Date()
         e.hostname = '127.0.0.1'
@@ -77,6 +81,7 @@ class ProxyRotatorTest {
 
         let rotator = new ProxyRotator({}, storage)
         let rotate = await rotator.log(e)
+
 
         expect(rotate).to.deep.include({
             successes: 1,
@@ -86,7 +91,7 @@ class ProxyRotatorTest {
             inc: 0,
             used: 0,
             addr_id: 1,
-            protocol: 1,
+            protocol_src: 1,
             id: 1,
         })
 
@@ -109,6 +114,7 @@ class ProxyRotatorTest {
         e.duration = 1000
         e.success = false
         e.protocol = ProtocolType.HTTP
+        e.protocol_dest = ProtocolType.HTTP
         e.start = new Date()
         e.stop = new Date()
         e.hostname = '127.0.0.1'
@@ -127,7 +133,7 @@ class ProxyRotatorTest {
             inc: 0,
             used: 0,
             addr_id: 1,
-            protocol: 1,
+            protocol_src: 1,
             id: 1,
         })
 
@@ -151,12 +157,15 @@ class ProxyRotatorTest {
         let next_addr = await rotator.next();
         expect(next_addr).to.not.be.empty
 
+        //console.log(next_addr)
+
         expect(next_addr).to.deep.include({
             id: 1,
             key: '127.0.0.1:3128',
             ip: '127.0.0.1',
             validation_id: 1,
-            protocols: 0,
+            protocols_src: 0,
+            protocols_dest: 0,
             blocked: false,
             to_delete: false,
             count_errors: 0,

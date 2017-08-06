@@ -39,6 +39,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     timeouted:boolean = false;
     aborted: boolean = false;
     okay: boolean = false;
+    _finished:boolean = false;
 
     sendedHead: string = '';
     receivedHead: string = '';
@@ -174,9 +175,15 @@ export class RequestResponseMonitor extends events.EventEmitter {
      */
 
 
+    /**
+     * Fired for example if socket can't be estabilshed on tunneling to wrong host
+     *
+     * @param {Error} error
+     */
     onError(error: Error) {
         //this.debug('onError');
         this.handleError(error)
+        this.finished()
     }
 
     /*
@@ -195,15 +202,9 @@ export class RequestResponseMonitor extends events.EventEmitter {
         // this.debug('onSocket');
         this.socket = socket;
 
-
-        if (socket['_pendingData']) {
-            this.sendedHead = socket['_pendingData'];
-            this.sendedHead = this.sendedHead.split('\r\n\r\n').shift()
-        }
-
         socket.on('close', this.onSocketClose.bind(this));
         socket.on('connect', this.onSocketConnect.bind(this));
-        socket.on('data', this.onSocketData.bind(this));
+
       //  socket.on('drain', this.onSocketDrain.bind(this));
         socket.on('end', this.onSocketEnd.bind(this));
         //socket.on('agentRemove', this.onSocketAgentRemove.bind(this));
@@ -217,11 +218,19 @@ export class RequestResponseMonitor extends events.EventEmitter {
             this.secured = true;
     //        socket.on('OCSPResponse', this.onTLSSocketOCSPResponse.bind(this));
             socket.on('secureConnect', this.onTLSSocketSecureConnect.bind(this))
+        }else{
+            socket.on('data', this.onSocketData.bind(this));
+
+            if (socket['_pendingData']) {
+                this.sendedHead = socket['_pendingData'];
+                this.sendedHead = this.sendedHead.split('\r\n\r\n').shift()
+            }
+
         }
     }
 
     onSocketClose(had_error: boolean) {
-      //  this.debug('onSocketClose with error: ' + had_error);
+       this.debug('RRM->onSocketClose with error: ' + had_error);
         this.finished()
     }
 
@@ -256,6 +265,14 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
         this.socket.removeListener('timeout', this.onSocketTimeout.bind(this))
 
+        this.length += data.length
+
+        if (data[0] == 0x16 || data[0] == 0x80 || data[0] == 0x00) {
+            this.debug('TLS detected ' + data.length)
+            return;
+        }
+
+
         if (!this.receivedHeadDone) {
             let tmp: Buffer = Buffer.allocUnsafe(data.length);
             data.copy(tmp);
@@ -287,7 +304,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
             }
         }
 
-        this.length += data.length
+
     }
 
     /*
@@ -297,7 +314,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     */
 
     onSocketEnd() {
-        //this.debug('onSocketEnd');
+        this.debug('RRM->onSocketEnd');
         this.addClientLog(MESSAGE.OSE01.k)
     }
 
@@ -334,14 +351,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
 
     static monitor(_request: mRequest.RequestPromise, id?: string/*, options?:{debug?:boolean}*/): RequestResponseMonitor {
-        let rrm = new RequestResponseMonitor(_request, id);
-        /*
-        options = options || {};
-        if(options && options.debug){
-            rrm._debug = options.debug
-        }
-        */
-        return rrm
+        return  new RequestResponseMonitor(_request, id);
     }
 
     get logs(){
@@ -417,8 +427,9 @@ export class RequestResponseMonitor extends events.EventEmitter {
     }
 
     finished() {
+
         this.stop();
-//        this.debug('finished');
+        this.debug('RRM->finished');
 
         let last_error = this.lastError();
 
@@ -445,18 +456,21 @@ export class RequestResponseMonitor extends events.EventEmitter {
             this.addLog(MESSAGE.CNE01.k)
         }
 
-
-
-
+        this._finished = true
         this.emit('finished', last_error)
     }
 
     promise(): Promise<RequestResponseMonitor> {
+
         let self = this;
         return new Promise(function (resolve, reject) {
-            self.once('finished', function () {
-                resolve(self)
-            })
+            if(!self._finished){
+                self.once('finished', function () {
+                    resolve(self);
+                })
+            }else{
+                resolve(self);
+            }
         })
 
     }

@@ -8,6 +8,7 @@ import {Loader} from "./Loader";
 import {StartupCommand} from "./commands/StartupCommand";
 
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 require("yargonaut")
     .style("blue")

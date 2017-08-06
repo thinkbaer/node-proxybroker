@@ -2,9 +2,10 @@ import * as http from "http";
 import * as https from "https";
 import * as _request from "request-promise-native";
 import {Log} from "../lib/logging/Log";
-import * as fs from 'fs'
+import * as tls from 'tls'
 import * as mUrl from 'url'
 import * as net from 'net'
+import * as _ from 'lodash'
 
 
 import {JudgeRequest} from "./JudgeRequest";
@@ -15,83 +16,124 @@ import DomainUtils from "../utils/DomainUtils";
 import {Utils} from "../utils/Utils";
 import {MESSAGE, Messages} from "../lib/Messages";
 import {ProtocolType} from "../lib/ProtocolType";
-import Exceptions from "../exceptions/Exceptions";
 import {Progress} from "../lib/Progress";
 
 import {Runtime} from "../lib/Runtime";
 import {CryptUtils} from "../utils/CryptUtils";
+import {IServerApi, Server} from "../server/Server";
+import TodoException from "../exceptions/TodoException";
+import {JudgeResult} from "./JudgeResult";
 
 
 const FREEGEOIP: string = 'http://freegeoip.net/json/';
 const IPCHECK_URL = 'https://api.ipify.org?format=json';
 
 
-export class Judge {
+export class Judge implements IServerApi {
 
     private inc: number = 0;
+
     private _options: IJudgeOptions = {};
 
-    private secured: boolean = false;
+    // private secured: boolean = false;
 
-    private server: net.Server = null;
+    private httpServer: Server = null;
 
-    private _remote_url: mUrl.Url = null;
+    private httpsServer: Server = null;
 
-    private _judge_url: mUrl.Url = null;
+    // private _remote_url: mUrl.Url = null;
+
+    // private _judge_url: mUrl.Url = null;
 
     private enabled: boolean = false;
+
     private progress: Progress = new Progress();
+
     private runnable: boolean = false;
-    private running: boolean = false;
-    private cache_sum:number = 0
+
+    private cache_sum: number = 0
+
     private cache: { [key: string]: JudgeRequest } = {};
 
-    private $connections: { [key: string]: net.Socket } = {};
+    // private $connections: { [key: string]: net.Socket } = {};
 
     // private addr: Array<string> = []
 
 
     constructor(options: IJudgeOptions = {}) {
-        this._options = Utils.merge(DEFAULT_JUDGE_OPTIONS, options);
-        this._judge_url = mUrl.parse(this._options.judge_url);
-        this._remote_url = mUrl.parse(this._options.remote_url);
+        this._options = _.defaults(options, DEFAULT_JUDGE_OPTIONS);
 
-        this.secured = this._judge_url.protocol === 'https:';
 
-        if (this.secured || this._options.key_file || this._options.cert_file) {
+        //this._judge_url = mUrl.parse(this._options.judge_url);
+        //this._remote_url = mUrl.parse(this._options.remote_url);
+
+        //this.secured = this._judge_url.protocol === 'https:';
+
+        /*
+        if (this._options.ssl.key_file || this._options.ssl.cert_file) {
             let has_ssl = false;
-            if (!this._options.ssl_options) {
-                this._options.ssl_options = {}
-            } else {
-                has_ssl = true
+
+            if (!this._options.ssl) {
+                this._options.ssl = {}
             }
 
-            if (this._options.key_file) {
-                this._options.ssl_options.key = fs.readFileSync(this._options.key_file);
-                has_ssl = true
+            if (this._options.ssl.key_file) {
+                this._options.ssl.key = fs.readFileSync(this._options.ssl.key_file);
             }
 
-            if (this._options.cert_file) {
-                this._options.ssl_options.cert = fs.readFileSync(this._options.cert_file);
-                has_ssl = true
+            if (this._options.ssl.cert_file) {
+                this._options.ssl.cert = fs.readFileSync(this._options.ssl.cert_file);
             }
 
-            /**
-             * Adapt the secured flag and the protocol, if some ssl settings are present
-             */
-            if (has_ssl) {
-                this.secured = true;
-                this._judge_url.protocol = 'https:'
-            }
         }
+        */
 
+        this.httpServer = new Server({
+            protocol: 'http',
+            ip: this._options.ip,
+            port: this._options.http_port,
+            fn: this.judge.bind(this)
+        }, this)
 
+        this.httpsServer = new Server({
+            protocol: 'https',
+            ip: this._options.ip,
+            port: this._options.https_port,
+            fn: this.judge.bind(this),
+            key: this._options.ssl.key,
+            key_file: this._options.ssl.key_file,
+            cert: this._options.ssl.cert,
+            cert_file: this._options.ssl.cert_file,
+            //strictSSL: true
+        }, this)
     }
+
+
+    beforeStart(server: Server): Promise<any> {
+        this.debug('beforeStart ' + server.isSecured)
+        if (server.isSecured) {
+            server.server.on('secureConnection', this.onSecureConnection.bind(this))
+        } else {
+            server.server.on('connection', this.onServerConnection.bind(this))
+        }
+        return null
+    }
+
 
     get ip(): string {
-        return this._remote_url.hostname
+        return this._options.ip
     }
 
+
+    get remote_ip(): string {
+        return this._options.remote_ip
+    }
+
+    get options(): IJudgeOptions {
+        return this._options;
+    }
+
+    /*
     get isSecured(): boolean {
         return this.secured;
     }
@@ -100,31 +142,59 @@ export class Judge {
         return this._options;
     }
 
+
     get remote_url(): mUrl.Url {
         return this._remote_url;
     }
+*/
 
-    get remote_url_f(): string {
-        return mUrl.format(this.remote_url)
+    url(protocol: string = 'http'): string {
+        switch (protocol) {
+            case 'http':
+                return this.httpServer.url()
+            case 'https':
+                return this.httpsServer.url()
+            default:
+                throw new TodoException('protocol not found');
+        }
+
     }
 
+    remote_url(protocol: string = 'http'): string {
+        switch (protocol) {
+            case 'http':
+                return protocol + '://' + this.remote_ip + ':' + this._options.http_port;
+            case 'https':
+                return protocol + '://' + this.remote_ip + ':' + this._options.https_port;
+            default:
+                throw new TodoException('protocol not found');
+        }
+
+    }
+
+    /*
     get judge_url(): mUrl.Url {
         return this._judge_url
     }
 
-    get judge_url_f(): string {
+    get judge_url(protocol:string = 'http'): string {
         return mUrl.format(this.judge_url)
     }
+*/
 
     async bootstrap(): Promise<boolean> {
-        let infos :any = {
-            ip:this.remote_url_f
+        let infos: any = {
+            http: this.remote_url('http'),
+            https: this.remote_url('https')
         }
 
         try {
+
             if (this._options.remote_lookup) {
-                this._remote_url = await this.get_remote_accessible_ip();
-                infos.ip = this.remote_url_f
+                this._options.remote_ip = await this.getRemoteAccessibleIp();
+
+                infos.http = this.remote_url('http');
+                infos.https = this.remote_url('https');
             }
 
             if (this._options.selftest) {
@@ -135,12 +205,12 @@ export class Judge {
                 this.runnable = true;
             }
 
-            Runtime.$().setConfig('judge', {judge_url: this.judge_url_f, remote_url: this.remote_url_f});
-
+            Runtime.$().setConfig('judge', this._options);
+            infos.ip = this._options.remote_ip;
             infos.runnable = this.runnable;
             infos.selftest = this._options.selftest;
 
-            Log.info(Messages.get(MESSAGE.JDG02.k,infos));
+            Log.info(Messages.get(MESSAGE.JDG02.k, infos));
 
             return Promise.resolve(this.runnable);
         } catch (err) {
@@ -149,18 +219,44 @@ export class Judge {
         }
     }
 
-    private async get_remote_accessible_ip(): Promise<any> {
+    private async getRemoteAccessibleIp(): Promise<any> {
         // If IP is fixed, it should be configurable ...
         try {
             let response_data = await _request.get(IPCHECK_URL);
             let json = JSON.parse(response_data);
-            let remote_url = mUrl.parse(this._judge_url.protocol + '//' + json.ip + ':' + this._judge_url.port);
-            return remote_url
+            this._options.remote_ip = json.ip
+            this.httpServer._options.ip = '0.0.0.0'
+            this.httpsServer._options.ip = '0.0.0.0'
+            return json.ip
         } catch (err) {
             Log.error(err);
             throw err
         }
     }
+
+
+    private async selftestByProtocol(protocol: string = 'http'): Promise<any> {
+        let ping_url = this.remote_url(protocol) + '/ping';
+        let start = new Date();
+        let res = await _request.get(ping_url);
+        let s = JSON.parse(res);
+
+        let stop = new Date();
+        let c_s = s.time - start.getTime();
+        let s_c = stop.getTime() - s.time;
+        let full = stop.getTime() - start.getTime();
+
+        return {
+            url: ping_url,
+            // client 2 server
+            c2s: c_s,
+            // server 2 client
+            s2c: s_c,
+            full: full
+        }
+
+    }
+
 
     /**
      *  Check if Judge
@@ -168,26 +264,22 @@ export class Judge {
     private async selftest(): Promise<boolean> {
         // Startup
         this.runnable = false;
-        let ping_url = this.remote_url_f + 'ping';
-        let start = new Date();
+
         try {
-            let options: any = {};
-            if (this.isSecured) {
-                options.ca = this.options.ssl_options.cert
-            }
+            let results = await Promise.all([
+                this.selftestByProtocol('http'),
+                this.selftestByProtocol('https'),
+            ])
 
-            let res = await _request.get(ping_url, options);
-            let s = JSON.parse(res);
+            this.info('Selftest results:\n' + JSON.stringify(results, null, 2));
 
-            let stop = new Date();
-            let c_s = s.time - start.getTime();
-            let s_c = stop.getTime() - s.time;
-            let full = stop.getTime() - start.getTime();
-
-            this.info('Selftest results for request to '+ping_url+'\n' +
+            /*
+            this.info('Selftest results for request to ' + ping_url + '\n' +
                 ' - duration from client to judge service: ' + c_s + 'ms\n' +
                 ' - duration from judge service to client: ' + s_c + 'ms\n' +
                 ' - summarized: ' + full + 'ms');
+            return true
+            */
             return true
         } catch (err) {
             return this.throwedError(err, false)
@@ -195,22 +287,26 @@ export class Judge {
     }
 
 
-    createRequest(proxy_url: string, options: { local_ip?: string, socket_timeout?: number, connection_timeout?: number } = {}): JudgeRequest {
-        let judge_url = this.remote_url_f;
+    createRequest(protocol: string, proxy_url: string, options: { local_ip?: string, socket_timeout?: number, connection_timeout?: number } = {}): JudgeRequest {
         let inc = this.inc++;
+
+        let judge_url = this.remote_url(protocol);
         let req_id = CryptUtils.shorthash(judge_url + '-' + proxy_url + '-' + (new Date().getTime()) + '-' + inc);
-        judge_url += 'judge/' + req_id;
-        this.debug('judge: create request ' + req_id + ' over ' + proxy_url + ' (cached: '+this.cache_sum+')');
-        let req_options = Object.assign(this.options.request, options);
+        judge_url += '/judge/' + req_id;
+        this.debug('judge: create request ' + req_id + ' to ' + judge_url + ' over ' + proxy_url + ' (cached: ' + this.cache_sum + ')');
+
+        let req_options = Object.assign(this._options.request, options);
         let judgeReq = new JudgeRequest(this, req_id, judge_url, proxy_url, req_options);
         return this.addToCache(judgeReq);
     }
+
 
     private addToCache(req: JudgeRequest): JudgeRequest {
         this.cache_sum++;
         this.cache[req.id] = req;
         return this.cache[req.id]
     }
+
 
     private removeFromCache(id: string) {
         if (this.cache[id]) {
@@ -235,9 +331,10 @@ export class Judge {
         let cached_req: JudgeRequest = null;
 
         if (first_path === 'judge' && paths.length == 1) {
+
             let self = this;
             let req_id = paths.shift();
-
+            this.debug('judge call ' + req_id)
             if (this.cache[req_id]) {
                 cached_req = this.cache[req_id];
                 req.socket.once('end', function () {
@@ -251,7 +348,7 @@ export class Judge {
                 let json = JSON.stringify({time: (new Date()).getTime(), headers: req.headers});
                 res.end(json);
             } else {
-                Log.error('judge: no cache id for incoming request with ' + req_id + ' from '+req.url)
+                Log.error('judge: no cache id for incoming request with ' + req_id + ' from ' + req.url)
                 res.writeHead(400, {"Content-Type": "application/json"});
                 let json = JSON.stringify({'error': '400'});
                 res.end(json);
@@ -262,70 +359,45 @@ export class Judge {
             let json = JSON.stringify({time: (new Date()).getTime(), ping: true});
             res.end(json);
         } else {
-            Log.error('judge: unknown request from '+req.url);
+            Log.error('judge: unknown request from ' + req.url);
             res.writeHead(404, {"Content-Type": "application/json"});
             let json = JSON.stringify({'error': '404'});
             res.end(json);
         }
-
     }
+
 
     isEnabled() {
         return this.enabled;
     }
 
-    private enable() {
-        this.server.on('connection', this.onServerConnection.bind(this));
-        this.enabled = true;
-        this.info('Judge service startup on ' + this.judge_url_f + ' (SSL: ' + this.isSecured + ')');
 
+    private enable() {
+        this.enabled = true;
+        this.info('Judge services started up:\n\t- ' + this.httpServer.url() + '\n\t- ' + this.httpsServer.url());
     }
+
 
     private disable() {
-        this.server = null;
         this.enabled = false;
-        this.info('Judge service shutting down on ' + this.judge_url_f);
-
+        this.info('Judge services shutting down on:\n\t- ' + this.httpServer.url() + '\n\t- ' + this.httpsServer.url());
     }
 
-    private setupTLS(server: net.Server) {
-        /*
-        server.on('newSession', this.onTLSNewSession.bind(this));
-        server.on('OCSPRequest', this.onTLSOCSPRequest.bind(this));
-        server.on('resumeSession', this.onTLSResumeSession.bind(this));
-        server.on('secureConnection', this.onTLSSecureConnection.bind(this));
-        server.on('tlsClientError', this.onTLSClientError.bind(this))
-        */
+
+    async handleRequest(ip: string, port: number, from: ProtocolType, to: ProtocolType): Promise<JudgeResult> {
+        let proto_from = (from === ProtocolType.HTTP ? 'http' : 'https')
+        let proto_to = (to === ProtocolType.HTTP ? 'http' : 'https')
+        let url = proto_from + '://' + ip + ':' + port;
+        let http_request = this.createRequest(proto_to, url);
+        await http_request.performRequest();
+        let result = http_request.result(from, to);
+        this.removeFromCache(http_request.id);
+        this.debug('judge: finished request (' + proto_from + '=>' + proto_to + ') ' + http_request.id +
+            ' from ' + url + ' t=' + result.duration +
+            ' error=' + result.hasError() + ' (cached: ' + this.cache_sum + ')');
+        return result
     }
 
-    /*
-    private onTLSNewSession(sessionId: any, sessionData: any, callback: Function) {
-        this.debug('onTLSNewSession');
-        callback()
-    }
-
-    private onTLSOCSPRequest(certificate: Buffer, issuer: Buffer, callback: Function) {
-        this.debug('onTLSOCSPRequest');
-        callback(null, null)
-    }
-
-    private onTLSResumeSession(sessionId: any, callback: Function) {
-        this.debug('onTLSResumeSession');
-        callback()
-    }
-
-    private onTLSSecureConnection(tlsSocket: tls.TLSSocket) {
-        this.debug('onTLSSecureConnection ' + (tlsSocket.authorized ? 'authorized' : 'unauthorized') + ' '
-            + (tlsSocket.encrypted ? 'encrypted' : 'unencrypted'))
-
-        //tlsSocket.resume()
-
-    }
-
-    private onTLSClientError(exception: Error, tlsSocket: tls.TLSSocket) {
-        this.debug('onTLSClientError')
-    }
-*/
 
     async validate(ip: string, port: number, enable: { http: boolean, https: boolean } = {
         http: true,
@@ -358,31 +430,53 @@ export class Judge {
             Log.error(e)
         }
 
+        let promises = []
+
         if (enable.http) {
-            let url = 'http://' + ip + ':' + port;
-            let http_request: JudgeRequest = this.createRequest(url);
-            await http_request.performRequest();
-            results.http = http_request.result(ProtocolType.HTTP);
-            this.removeFromCache(http_request.id);
-            this.debug('judge: finished request ' + http_request.id + ' from ' + url + ' t='+results.http.duration+' error='+results.http.hasError()+' (cached: '+this.cache_sum+')');
+            // HTTP => HTTP
+            promises.push(this.handleRequest(ip, port, ProtocolType.HTTP, ProtocolType.HTTP).then(result => {
+                results.variants.push(result);
+            }));
+
+            // HTTP => HTTPS
+            promises.push(this.handleRequest(ip, port, ProtocolType.HTTP, ProtocolType.HTTPS).then(result => {
+                results.variants.push(result);
+            }));
         }
 
         if (enable.https) {
-            let url = 'https://' + ip + ':' + port;
-            let https_request: JudgeRequest = this.createRequest(url);
-            await https_request.performRequest();
-            results.https = https_request.result(ProtocolType.HTTPS);
-            this.removeFromCache(https_request.id);
-            this.debug('judge: finished request ' + https_request.id + ' from ' + url + ' t='+results.https.duration+' error='+results.https.hasError()+' (cached: '+this.cache_sum+')');
+            // HTTPS => HTTP
+            promises.push(this.handleRequest(ip, port, ProtocolType.HTTPS, ProtocolType.HTTP).then(result => {
+                results.variants.push(result);
+            }));
+
+            // HTTPS => HTTPS
+            promises.push(this.handleRequest(ip, port, ProtocolType.HTTPS, ProtocolType.HTTPS).then(result => {
+                results.variants.push(result);
+            }));
+
         }
 
-        return Promise.resolve(results)
+        return Promise.all(promises).then(_res => {
+            return results;
+        })
+    }
+
+    private onSecureConnection(socket: tls.TLSSocket) {
+        this.onServerConnection(socket);
     }
 
     private onServerConnection(socket: net.Socket) {
         let self = this;
+        this.debug('Judge->onServerConnection')
 
         function onData(data: Buffer) {
+            if (data[0] == 0x16 || data[0] == 0x80 || data[0] == 0x00) {
+                this.debug('Judge->TLS detected ' + data.length)
+                return;
+            }
+
+
             let tmp: Buffer = Buffer.allocUnsafe(data.length);
             data.copy(tmp);
 
@@ -417,13 +511,6 @@ export class Judge {
         }
 
         socket.once('data', onData);
-
-        // register connection
-        let key = socket.remoteAddress + ':' + socket.remotePort;
-        this.$connections[key] = socket;
-        socket.once('close', function () {
-            delete self.$connections[key];
-        })
     }
 
     async progressing(): Promise<any> {
@@ -441,39 +528,55 @@ export class Judge {
             return Promise.resolve(true)
         }
 
-        // TODO check if address and port are bound, on expcetion shutdown connection
-        return new Promise<boolean>(function (resolve, reject) {
-            try {
-                if (self.runnable || (!self.runnable && force)) {
-                    self.$connections = {};
-                    if (self.isSecured) {
-                        self.server = https.createServer(self.options.ssl_options, self.judge.bind(self));
-                        self.setupTLS(self.server)
+
+        return Promise.all([
+            self.httpServer.start(),
+            self.httpsServer.start()
+        ])
+            .then(_x => {
+                self.enable();
+                return true
+            })
+
+
+            // TODO check if address and port are bound, on expcetion shutdown connection
+            /*
+            return new Promise<boolean>(function (resolve, reject) {
+                try {
+                    if (self.runnable || (!self.runnable && force)) {
+                        self.$connections = {};
+
+                        self.httpsServer = https.createServer(self.options.ssl, self.judge.bind(self));
+                        self.setupTLS(self.httpsServer)
+
+                        self.httpServer = http.createServer(self.judge.bind(self))
+                        self.httpServer.on('error', (err) => {
+                            let nErr = Exceptions.handle(err);
+                            if (nErr.code === Exceptions.EADDRINUSE) {
+                                reject(err)
+                            } else {
+                                Log.error('Judge server error:', err)
+                            }
+                        });
+
+                        self.httpServer.listen(parseInt(self._judge_url.port), self._judge_url.hostname, function () {
+                            self.enable();
+                            resolve(true)
+                        })
                     } else {
-                        self.server = http.createServer(self.judge.bind(self))
+                        throw new Error('This will not work!')
                     }
-                    self.server.on('error', (err) => {
-                        let nErr = Exceptions.handle(err);
-                        if (nErr.code === Exceptions.EADDRINUSE) {
-                            reject(err)
-                        } else {
-                            Log.error('Judge server error:', err)
-                        }
-                    });
-                    self.server.listen(parseInt(self._judge_url.port), self._judge_url.hostname, function () {
-                        self.enable();
-                        resolve(true)
-                    })
-                } else {
-                    throw new Error('This will not work!')
+                } catch (e) {
+                    reject(e)
                 }
-            } catch (e) {
-                reject(e)
-            }
-        })
+            })*/
             .then(async r => {
                 await self.progress.ready();
                 return r
+            })
+            .catch(err => {
+                Log.error(err)
+                throw err
             })
     }
 
@@ -488,41 +591,57 @@ export class Judge {
             return Promise.resolve(true)
         }
 
+        return Promise.all([
+            self.httpServer.stop(),
+            self.httpsServer.stop()
+        ])
+            .then(x => {
+                self.disable();
+                return true
+            })
 
-        return new Promise(async function (resolve, reject) {
-            try {
-                if (self.server) {
-                    self.server.removeAllListeners();
+            /*
+                    return new Promise(async function (resolve, reject) {
+                        try {
+                            if (self.httpServer) {
+                                self.httpServer.removeAllListeners();
 
-                    for (let conn in self.$connections) {
-                        self.$connections[conn].destroy()
-                    }
+                                for (let conn in self.$connections) {
+                                    self.$connections[conn].destroy()
+                                }
 
-                    self.server.close(function () {
-                        self.disable();
-                        resolve(true)
-                    });
-                } else {
-                    resolve(false)
-                }
-            } catch (e) {
-                reject(e)
-            }
-        }).then(async r => {
-            await self.progress.ready();
-            return r
-        })
-
+                                self.httpServer.close(function () {
+                                    self.disable();
+                                    resolve(true)
+                                });
+                            } else {
+                                resolve(false)
+                            }
+                        } catch (e) {
+                            reject(e)
+                        }
+                    })
+                    */
+            .then(async r => {
+                await self.progress.ready();
+                return r
+            })
+            .catch(err => {
+                throw err
+            })
     }
+
 
     private info(...msg: any[]) {
         Log.info.apply(Log, msg)
     }
 
+
     private throwedError(err: Error, ret?: any): any {
         Log.error(err);
         return ret;
     }
+
 
     private debug(...msg: any[]) {
         Log.debug.apply(Log, msg)
