@@ -17,8 +17,9 @@ import {IProxyValidatiorOptions, K_VALIDATOR} from "./proxy/IProxyValidatiorOpti
 import {DEFAULT_PROXY_SERVER_OPTIONS, IProxyServerOptions, K_PROXYSERVER} from "./server/IProxyServerOptions";
 import {IProviderOptions, K_PROVIDER} from "./provider/IProviderOptions";
 import {ILoggerOptions, K_LOGGING} from "./lib/logging/ILoggerOptions";
-import {Container} from "typedi";
+
 import {Statistics} from "./storage/Statistics";
+import {Container} from "typedi";
 
 const DEFAULT_CONFIG_LOAD_ORDER = [
     {type: 'file', file: '${argv.configfile}'},
