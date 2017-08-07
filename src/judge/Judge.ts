@@ -51,7 +51,7 @@ export class Judge implements IServerApi {
 
 
     constructor(options: IJudgeOptions = {}) {
-        this._options = _.defaults(options, DEFAULT_JUDGE_OPTIONS);
+        this._options = _.defaultsDeep(options, DEFAULT_JUDGE_OPTIONS);
 
         this.httpServer = new Server({
             protocol: 'http',
@@ -161,6 +161,7 @@ export class Judge implements IServerApi {
         }
     }
 
+
     private async getRemoteAccessibleIp(): Promise<any> {
         // If IP is fixed, it should be configurable ...
         try {
@@ -177,6 +178,7 @@ export class Judge implements IServerApi {
 
     private async selftestByProtocol(protocol: string = 'http'): Promise<any> {
         let ping_url = this.remote_url(protocol) + '/ping';
+        this.debug('ping url '+ping_url)
         let start = new Date();
         let res = await _request.get(ping_url);
         let s = JSON.parse(res);
@@ -194,7 +196,6 @@ export class Judge implements IServerApi {
             s2c: s_c,
             full: full
         }
-
     }
 
 
@@ -220,6 +221,7 @@ export class Judge implements IServerApi {
                 ' - summarized: ' + full + 'ms');
             return true
             */
+
             return true
         } catch (err) {
             return this.throwedError(err, false)

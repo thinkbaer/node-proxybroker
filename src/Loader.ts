@@ -57,6 +57,11 @@ export class Loader {
 
 
     async boot() {
+        process.on('unhandledRejection', this.throwedUnhandledRejection.bind(this))
+        process.on('uncaughtException', this.throwedUncaughtException.bind(this))
+        process.on('warning', Log.warn.bind(Log))
+
+
         let o_logging: ILoggerOptions = Config.get(K_LOGGING, {})
         Log.options(o_logging);
 
@@ -75,7 +80,12 @@ export class Loader {
         let o_validator: IProxyValidatiorOptions = Config.get(K_VALIDATOR, {})
         this.proxyValidator = new ProxyValidator(o_validator, this.storage)
         EventBus.register(this.proxyValidator)
-        await this.proxyValidator.prepare()
+        let validatorPrepared = await this.proxyValidator.prepare()
+
+        if(!validatorPrepared){
+            Log.error('Can\'t startup. Selftest failed.')
+            process.exit(1)
+        }
 
         let o_provider: IProviderOptions = Config.get(K_PROVIDER, {})
         this.providerManager = new ProviderManager(o_provider, this.storage)
@@ -100,9 +110,6 @@ export class Loader {
         await this.server.start()
         Log.info('start app server on ' + this.server.url());
 
-        process.on('unhandledRejection', this.throwedUnhandledRejection.bind(this))
-        process.on('uncaughtException', this.throwedUncaughtException.bind(this))
-        process.on('warning', Log.warn.bind(Log))
         // Support exit throw Ctrl+C
         // process.on('exit', this.shutdown.bind(this))
         // process.on('SIGINT', this.shutdown.bind(this))

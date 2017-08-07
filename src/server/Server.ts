@@ -9,7 +9,7 @@ import Exceptions from "../exceptions/Exceptions";
 import {Utils} from "../utils/Utils";
 import TodoException from "../exceptions/TodoException";
 import Timer = NodeJS.Timer;
-
+import * as _ from 'lodash'
 
 export interface IServerApi {
 
@@ -44,7 +44,7 @@ export class Server {
 
 
     constructor(options: IServerOptions, wrapper: IServerApi = null) {
-        this._options = Utils.merge(DEFAULT_SERVER_OPTIONS, options);
+        this._options = _.defaultsDeep(options,DEFAULT_SERVER_OPTIONS);
         this._secured = /^https/.test(this._options.protocol);
 
         if (this._options.cert_file) {

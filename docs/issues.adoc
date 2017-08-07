@@ -302,8 +302,23 @@ Impl. socks4 and socks5 support.
 
 @TASK:{counter:task} 20170804 +
 Why all HTTPS proxies seam to fail?
+=> Not failing
 
 @TASK:{counter:task} 20170804 +
 Bug: in fetch command if no config options a specified
 and the -v options is passed then the logger logs to std.out
 and not to std.err
+
+@TASK:{counter:task} 20170807 +
+Recheck skip if next schedule is in the past:
+```
+[2017.08.07 19:25:37.248] [INFO]   Validator scheduled for Mon Aug 07 2017 18:00:00 GMT+0000 (UTC)
+[2017.08.07 19:25:37.307] [INFO]   Validator scheduled for Mon Aug 07 2017 18:10:00 GMT+0000 (UTC)
+[2017.08.07 19:25:37.309] [INFO]   Validator recheck proxies: 0
+[2017.08.07 19:25:37.310] [INFO]   Validator scheduled for Mon Aug 07 2017 18:20:00 GMT+0000 (UTC)
+[2017.08.07 19:25:37.312] [INFO]   Validator scheduled for Mon Aug 07 2017 18:30:00 GMT+0000 (UTC)
+[2017.08.07 19:25:37.313] [INFO]   Validator recheck proxies: 0
+[2017.08.07 19:25:37.319] [INFO]   Validator scheduled for Mon Aug 07 2017 18:40:00 GMT+0000 (UTC)
+[2017.08.07 19:25:37.321] [INFO]   Validator scheduled for Mon Aug 07 2017 18:50:00 GMT+0000 (UTC)
+[2017.08.07 19:25:37.323] [INFO]   Validator recheck proxies: 0
+```

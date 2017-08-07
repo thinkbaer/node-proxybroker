@@ -230,7 +230,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     }
 
     onSocketClose(had_error: boolean) {
-       this.debug('RRM->onSocketClose with error: ' + had_error);
+       //this.debug('RRM->onSocketClose with error: ' + had_error);
         this.finished()
     }
 
@@ -314,7 +314,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     */
 
     onSocketEnd() {
-        this.debug('RRM->onSocketEnd');
+      //  this.debug('RRM->onSocketEnd');
         this.addClientLog(MESSAGE.OSE01.k)
     }
 
@@ -429,7 +429,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     finished() {
 
         this.stop();
-        this.debug('RRM->finished');
+        // this.debug('RRM->finished');
 
         let last_error = this.lastError();
 

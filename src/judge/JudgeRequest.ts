@@ -18,7 +18,8 @@ import {LevelDetection} from "./LevelDetection";
 import {MESSAGE} from "../lib/Messages";
 import {JudgeResult} from "./JudgeResult";
 import {ProtocolType} from "../lib/ProtocolType";
-import Exceptions from "../exceptions/Exceptions";
+import {clearTimeout, setTimeout} from "timers";
+
 
 
 // interface JudgeConfig
@@ -92,11 +93,14 @@ export class JudgeRequest {
         let opts: _request.RequestPromiseOptions = {
             resolveWithFullResponse: true,
             proxy: this.proxy_url,
-            timeout: this.connect_timeout,
+            timeout: this.socket_timeout,
             forever: false
         };
 
+
         this.request = _request.get(this.url, opts);
+
+        this.timer = setTimeout(this.onConnectTimeout.bind(this),this.connect_timeout)
 
         this.request.on('error', this.onRequestError.bind(this));
         this.request.on('socket', this.onSocket.bind(this));
@@ -114,6 +118,7 @@ export class JudgeRequest {
 
     private onSocket(socket: net.Socket) {
         Log.debug('JudgeRequest->onSocket '+this.id);
+        clearTimeout(this.timer);
         this.socket = socket;
         socket.setKeepAlive(false);
         socket.setTimeout(this.socket_timeout);
@@ -141,6 +146,12 @@ export class JudgeRequest {
         if(!this.judgeConnected){
             this.socket.destroy(new Error('ESOCKETTIMEDOUT'))
         }
+    }
+
+    onConnectTimeout() {
+        this.monitor.stop();
+        Log.error('judge connect timeout ['+this.id+'] after='+this.duration);
+        this.request.abort()
     }
 
     private onRequestError(error: Error) {

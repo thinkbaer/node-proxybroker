@@ -29,7 +29,7 @@ export class ProxyServer extends Server {
     // proxy: HttpProxy = null;
 
     constructor(options: IProxyServerOptions) {
-        super(Object.assign({}, DEFAULT_PROXY_SERVER_OPTIONS, options))
+        super(_.defaultsDeep(options,DEFAULT_PROXY_SERVER_OPTIONS))
         Runtime.$().setConfig(K_PROXYSERVER, this._options)
     }
 

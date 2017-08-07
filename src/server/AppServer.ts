@@ -73,7 +73,7 @@ export class AppServer extends Server {
 
 
     constructor(options: IExpressOptions = DEFAULT_SERVER_OPTIONS) {
-        options = _.defaults(options, DEFAULT_SERVER_OPTIONS);
+        options = _.defaultsDeep(options, DEFAULT_SERVER_OPTIONS);
         super(options)
         options.routes.unshift(FIXED_API_OPTIONS)
         options.routes = _.uniq(options.routes)

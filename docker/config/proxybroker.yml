@@ -5,7 +5,7 @@ logging:
   transports:
   - console: {}
   - file:
-      filename: /data/out-170730.log
+      filename: /data/out.log
 #  events: true
 # transports: - list
 
@@ -25,11 +25,11 @@ validator:
   judge:
     selftest: true
     remote_lookup: true
-    remote_url: http://127.0.0.1:8080
-    judge_url: http://0.0.0.0:8080
+    remote_ip: 127.0.0.1
+    ip: 0.0.0.0
     request:
       socket_timeout: 10000
-      connection_timeout: 10000
+      connection_timeout: 2000
 
 
 proxyserver:

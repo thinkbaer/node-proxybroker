@@ -50,7 +50,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     next: Date = null;
 
     constructor(options: IProxyValidatiorOptions, storage: Storage) {
-        this.options = _.defaults(options, DEFAULT_VALIDATOR_OPTIONS);
+        this.options = _.defaultsDeep(options, DEFAULT_VALIDATOR_OPTIONS);
         this.storage = storage;
         this.queue = new AsyncWorkerQueue<ProxyData>(this, {
             name: PROXY_VALIDATOR,

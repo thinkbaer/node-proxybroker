@@ -11,7 +11,7 @@ import {ProxyUsedEvent} from "./ProxyUsedEvent";
 import subscribe from "../events/decorator/subscribe"
 import {IpRotateLog} from "../model/IpRotateLog";
 import {Log} from "../lib/logging/Log";
-
+import * as _ from 'lodash'
 /**
  * create and keep a fifo queue with proxy references
  *
@@ -34,7 +34,7 @@ export class ProxyRotator  {
 
 
     constructor(opts: IProxyRotatorOptions, storage: Storage) {
-        this.options = Utils.merge(DEFAULT_ROTATOR_OPTIONS, opts);
+        this.options = _.defaultsDeep(opts,DEFAULT_ROTATOR_OPTIONS);
         this.storage = storage;
     }
 
