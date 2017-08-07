@@ -35,15 +35,9 @@ export class Judge implements IServerApi {
 
     private _options: IJudgeOptions = {};
 
-    // private secured: boolean = false;
-
     private httpServer: Server = null;
 
     private httpsServer: Server = null;
-
-    // private _remote_url: mUrl.Url = null;
-
-    // private _judge_url: mUrl.Url = null;
 
     private enabled: boolean = false;
 
@@ -55,38 +49,9 @@ export class Judge implements IServerApi {
 
     private cache: { [key: string]: JudgeRequest } = {};
 
-    // private $connections: { [key: string]: net.Socket } = {};
-
-    // private addr: Array<string> = []
-
 
     constructor(options: IJudgeOptions = {}) {
         this._options = _.defaults(options, DEFAULT_JUDGE_OPTIONS);
-
-
-        //this._judge_url = mUrl.parse(this._options.judge_url);
-        //this._remote_url = mUrl.parse(this._options.remote_url);
-
-        //this.secured = this._judge_url.protocol === 'https:';
-
-        /*
-        if (this._options.ssl.key_file || this._options.ssl.cert_file) {
-            let has_ssl = false;
-
-            if (!this._options.ssl) {
-                this._options.ssl = {}
-            }
-
-            if (this._options.ssl.key_file) {
-                this._options.ssl.key = fs.readFileSync(this._options.ssl.key_file);
-            }
-
-            if (this._options.ssl.cert_file) {
-                this._options.ssl.cert = fs.readFileSync(this._options.ssl.cert_file);
-            }
-
-        }
-        */
 
         this.httpServer = new Server({
             protocol: 'http',
@@ -110,7 +75,6 @@ export class Judge implements IServerApi {
 
 
     beforeStart(server: Server): Promise<any> {
-        this.debug('beforeStart ' + server.isSecured)
         if (server.isSecured) {
             server.server.on('secureConnection', this.onSecureConnection.bind(this))
         } else {
@@ -133,20 +97,6 @@ export class Judge implements IServerApi {
         return this._options;
     }
 
-    /*
-    get isSecured(): boolean {
-        return this.secured;
-    }
-
-    get options(): IJudgeOptions {
-        return this._options;
-    }
-
-
-    get remote_url(): mUrl.Url {
-        return this._remote_url;
-    }
-*/
 
     url(protocol: string = 'http'): string {
         switch (protocol) {
@@ -172,15 +122,6 @@ export class Judge implements IServerApi {
 
     }
 
-    /*
-    get judge_url(): mUrl.Url {
-        return this._judge_url
-    }
-
-    get judge_url(protocol:string = 'http'): string {
-        return mUrl.format(this.judge_url)
-    }
-*/
 
     async bootstrap(): Promise<boolean> {
         let infos: any = {
@@ -206,6 +147,7 @@ export class Judge implements IServerApi {
             }
 
             Runtime.$().setConfig('judge', this._options);
+
             infos.ip = this._options.remote_ip;
             infos.runnable = this.runnable;
             infos.selftest = this._options.selftest;
@@ -225,8 +167,6 @@ export class Judge implements IServerApi {
             let response_data = await _request.get(IPCHECK_URL);
             let json = JSON.parse(response_data);
             this._options.remote_ip = json.ip
-            this.httpServer._options.ip = '0.0.0.0'
-            this.httpsServer._options.ip = '0.0.0.0'
             return json.ip
         } catch (err) {
             Log.error(err);

@@ -15,8 +15,9 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const SSL_PATH = '../_files/ssl';
 
-let initial_remote_ip = 'http://127.0.0.1:8080';
-@suite('judge/Judge - lifecycle operations (no SSL)')
+let initial_remote_ip = 'http://127.0.0.1:8081';
+
+@suite('judge/Judge - lifecycle operations')
 class JudgeTestSuite1 {
 
     

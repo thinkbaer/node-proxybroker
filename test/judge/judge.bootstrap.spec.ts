@@ -3,6 +3,8 @@ import {Judge} from "../../src/judge/Judge";
 import {Log} from "../../src/lib/logging/Log";
 import {expect} from "chai";
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 describe('', () => {
 });
 
@@ -24,26 +26,17 @@ if (!process.env.CI_CONTAINER) {
     @suite('judge/Judge - bootstrap (no SSL)')
     class JudgeTestSuite1 {
 
-        before() {
-            Log.enable = false
+        static before() {
+            Log.options({enable: false, level:'debug'})
         }
 
-        after() {
-            Log.enable = true
-        }
 
         @test
-        'bootstrap'(done: Function) {
+        async 'bootstrap'() {
             let judge = new Judge();
-            judge.bootstrap()
-                .then((erg) => {
-                    expect(erg).to.be.eq(true);
-                    done()
-                })
-                .catch((err) => {
-                    expect(err).to.be.empty;
-                    done(err)
-                })
+
+            let erg = await judge.bootstrap()
+            expect(erg).to.be.eq(true);
         }
     }
 }
