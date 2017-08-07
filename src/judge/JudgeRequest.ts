@@ -86,9 +86,6 @@ export class JudgeRequest {
 
 
     async performRequest(): Promise<RequestResponseMonitor> {
-
-        Log.debug('JudgeRequest->performRequest start detection')
-
         this.level_detector = new LevelDetection(this.proxy_ip, this.local_ip);
         await this.level_detector.prepare();
 
@@ -99,13 +96,6 @@ export class JudgeRequest {
             forever: false
         };
 
-        /*
-        if (this.judge.isSecured && this.judge.options.ssl.cert) {
-            opts.ca = this.judge.options.ssl.cert
-        }
-        */
-
-        Log.debug('JudgeRequest->performRequest ',opts)
         this.request = _request.get(this.url, opts);
 
         this.request.on('error', this.onRequestError.bind(this));
