@@ -55,7 +55,7 @@ class JudgeTestSuite1 {
 
 
 
-    @test.only
+    @test.skip()
     async 'negative selftest'() {
         let judge = new Judge();
 
