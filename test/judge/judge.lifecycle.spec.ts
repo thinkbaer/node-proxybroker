@@ -2,7 +2,7 @@ import {suite, test} from "mocha-typescript";
 import {Judge} from "../../src/judge/Judge";
 import {Log} from "../../src/lib/logging/Log";
 import {expect} from "chai";
-import {DEFAULT_JUDGE_OPTIONS} from "../../src/judge/IJudgeOptions";
+import {DEFAULT_JUDGE_OPTIONS, IJudgeOptions} from "../../src/judge/IJudgeOptions";
 import * as _ from "lodash";
 describe('', () => {});
 
@@ -30,7 +30,7 @@ class JudgeTestSuite1 {
      */
     @test
     async 'positive selftest with modified options'() {
-        let options = _.clone(DEFAULT_JUDGE_OPTIONS);
+        let options:IJudgeOptions = {ssl:{}}
         options.remote_ip = 'judge.local';
         options.ip = 'judge.local';
         options.http_port = 8081
@@ -60,6 +60,7 @@ class JudgeTestSuite1 {
     @test
     async 'positive selftest with default options'() {
 
+
         let judge = new Judge();
 
         try {
@@ -69,7 +70,7 @@ class JudgeTestSuite1 {
             let r_selftest = await judge['selftest']();
             let r_pended = await judge.pending();
 
-            expect(judge.remote_url('http')).to.not.equal(initial_remote_ip);
+            expect(judge.remote_url('http')).to.not.equal('http://127.0.0.1:8080');
             expect(r_wakedup).to.equal(true);
             expect(r_selftest).to.equal(true);
             expect(r_pended).to.equal(true)
