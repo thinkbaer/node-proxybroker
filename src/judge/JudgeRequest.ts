@@ -87,6 +87,8 @@ export class JudgeRequest {
 
     async performRequest(): Promise<RequestResponseMonitor> {
 
+        Log.debug('JudgeRequest->performRequest start detection')
+
         this.level_detector = new LevelDetection(this.proxy_ip, this.local_ip);
         await this.level_detector.prepare();
 
@@ -103,7 +105,9 @@ export class JudgeRequest {
         }
         */
 
+        Log.debug('JudgeRequest->performRequest ',opts)
         this.request = _request.get(this.url, opts);
+
         this.request.on('error', this.onRequestError.bind(this));
         this.request.on('socket', this.onSocket.bind(this));
 

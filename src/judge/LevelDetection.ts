@@ -4,6 +4,7 @@ import * as _ from 'lodash'
 import DomainUtils from "../utils/DomainUtils";
 import {Utils} from "../utils/Utils";
 import {IHeader} from "./IHeader";
+import {Log} from "../lib/logging/Log";
 
 const HTTP_FORWARD_HEADER = [
     'forwarded-for',
@@ -137,13 +138,17 @@ export class LevelDetection {
     }
 
     private static async createAddrRegex(ip: string): Promise<string> {
+
         let l: string[] = [];
         l.push('(' + Utils.escapeRegExp(ip) + '(\\s|$|:))');
         let result = await DomainUtils.domainLookup(ip);
+
+        Log.debug('lookup1',result)
         if (result && result.addr !== ip) {
             l.push('(' + Utils.escapeRegExp(result.addr) + '(\\s|$|:))')
         }
 
+        Log.debug('lookup1',result)
         if (result && result.addr) {
             let hosts = await DomainUtils.reverse(result.addr);
             hosts.forEach(_x => {
@@ -151,17 +156,20 @@ export class LevelDetection {
             })
 
         }
+        Log.debug('lookup4')
         return Promise.resolve(l.join('|'))
 
     }
 
     async prepare(): Promise<void> {
         this.local_regex_str = await LevelDetection.createAddrRegex(this.local_ip);
+        Log.debug('looku========================='+this.proxy_ip)
         this.proxy_regex_str = await LevelDetection.createAddrRegex(this.proxy_ip);
 
+        Log.debug('looku=====')
         this.local_regex = new RegExp(this.local_regex_str, 'gi');
         this.proxy_regex = new RegExp(this.proxy_regex_str, 'gi');
-        return Promise.resolve()
+
     }
 
 

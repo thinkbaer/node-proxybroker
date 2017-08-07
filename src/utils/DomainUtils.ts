@@ -2,6 +2,7 @@ import * as dns from "dns";
 import * as _ from 'lodash'
 
 import {PlatformUtils} from "./PlatformUtils";
+import {Log} from "../lib/logging/Log";
 
 if (dns['getServers'] && dns['getServers']().length < 2) {
     let serversToSet = [
@@ -24,13 +25,21 @@ export default class DomainUtils {
     static domainLookup(domain: string): Promise<{ addr: string, family: number }> {
 
         return new Promise(function (resolve, reject) {
-            dns.lookup(domain, function (err, address, family) {
-                if (err) {
-                    resolve(null)
-                } else {
-                    resolve({addr: address, family: family})
-                }
-            })
+
+            if (DomainUtils.IP_REGEX.test(domain)) {
+                resolve({
+                    addr:domain,
+                    family:4
+                })
+            } else {
+                dns.lookup(domain, function (err, address, family) {
+                    if (err) {
+                        resolve(null)
+                    } else {
+                        resolve({addr: address, family: family})
+                    }
+                })
+            }
         })
     }
 
@@ -38,23 +47,32 @@ export default class DomainUtils {
         if (this.IP_REGEX.test(ip)) {
 
             return new Promise(function (resolve, reject) {
+                let id = setTimeout(() => {resolve(null)},250)
                 dns.reverse(ip, function (err, hostnames) {
+                    clearTimeout(id)
                     if (err) {
-                        resolve([]);//reject(err)
+                        resolve()
                     } else {
                         resolve(hostnames)
                     }
+
+
                 })
-            }).then((hostnames: string[]) => {
-                // TODO reload host if not loaded
-                let hosts = _.filter(DomainUtils.HOSTS, {ip: ip});
-                if (!_.isEmpty(hosts)) {
-                    hosts.forEach(_x => {
-                        hostnames.unshift(_x.host)
-                    })
-                }
-                return _.uniq(hostnames)
+
             })
+                .then((hostnames: string[]) => {
+                    // TODO reload host if not loaded
+                    let hosts = _.filter(DomainUtils.HOSTS, {ip: ip});
+                    if (!_.isEmpty(hosts)) {
+                        hosts.forEach(_x => {
+                            hostnames.unshift(_x.host)
+                        })
+                    }
+                    return _.uniq(hostnames)
+                }).catch(e => {
+                    Log.error(e)
+                    throw e
+                })
         } else {
             return Promise.resolve([])
         }

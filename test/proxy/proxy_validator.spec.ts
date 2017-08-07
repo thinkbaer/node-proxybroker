@@ -39,7 +39,9 @@ const judge_options: IJudgeOptions = {
     ip: 'judge.local',
     remote_ip:'judge.local',
     request:{
-        local_ip:'127.0.0.1'
+        local_ip:'127.0.0.1',
+        socket_timeout:5000,
+        connection_timeout:1000
     }
 };
 
