@@ -24,7 +24,7 @@ class JudgeTestSuite1 {
 
 
     static before() {
-        Log.options({enable: false, level: 'debug'})
+        Log.options({enable: true, level: 'debug'})
     }
 
     /**
@@ -55,8 +55,7 @@ class JudgeTestSuite1 {
 
 
 
-
-    @test
+    @test.only
     async 'negative selftest'() {
         let judge = new Judge();
 
