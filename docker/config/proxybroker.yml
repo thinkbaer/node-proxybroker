@@ -20,7 +20,7 @@ rotator:
 
 
 validator:
-  parallel: 200
+  parallel: 100
   schedule:
     enable: true
   judge:
