@@ -19,6 +19,7 @@ import {MESSAGE} from "../lib/Messages";
 import {JudgeResult} from "./JudgeResult";
 import {ProtocolType} from "../lib/ProtocolType";
 import {clearTimeout, setTimeout} from "timers";
+import Exceptions from "../exceptions/Exceptions";
 
 
 
@@ -144,14 +145,14 @@ export class JudgeRequest {
 
     onSocketTimeout() {
         if(!this.judgeConnected){
-            this.socket.destroy(new Error('ESOCKETTIMEDOUT'))
+            this.socket.destroy(Exceptions.newSocketTimeout())
         }
     }
 
     onConnectTimeout() {
         this.monitor.stop();
         Log.error('judge connect timeout ['+this.id+'] after='+this.duration);
-        this.request.abort()
+        this.request.emit('error',Exceptions.newConnectTimeout(this.connect_timeout, this.duration))
     }
 
     private onRequestError(error: Error) {

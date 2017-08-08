@@ -16,6 +16,8 @@ export default class Exceptions {
             classification = 'SOCKET_TIMEDOUT'
         }else if(/ETIMEDOUT/.test(msg)){
             classification = 'TIMEDOUT'
+        }else if(/ECONNECTTIMEDOUT/.test(msg)){
+            classification = 'CONNECT_TIMEOUT'
         }else if(/ECONNREFUSED/.test(msg)){
             classification = 'CONN_REFUSED'
         }else if(/socket hang up/.test(msg)){
@@ -41,5 +43,9 @@ export default class Exceptions {
 
     static newSocketTimeout(){
         return Exceptions.handle(new Error('ESOCKETTIMEDOUT'))
+    }
+
+    static newConnectTimeout(timeout: number = 0, duration:number = 0){
+        return Exceptions.handle(new Error('ECONNECTTIMEDOUT set='+timeout+' durataion='+duration))
     }
 }

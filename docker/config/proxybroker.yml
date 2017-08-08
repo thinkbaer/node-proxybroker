@@ -30,7 +30,7 @@ validator:
     ip: 0.0.0.0
     request:
       socket_timeout: 10000
-      connection_timeout: 2000
+      connection_timeout: 5000
 
 
 proxyserver:
