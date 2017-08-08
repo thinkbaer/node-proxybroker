@@ -4,10 +4,11 @@ logging:
   level: debug
   transports:
   - console: {}
-  - file:
-      filename: /data/out.log
-#  events: true
-# transports: - list
+  - dailyrotatefile:
+      filename: /data/log/out.log
+      datePattern: yyyy-MM-dd.
+      prepend: true
+      level: debug
 
 storage:
   type: sqlite

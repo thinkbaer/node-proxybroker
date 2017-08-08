@@ -1,17 +1,17 @@
 == Issues
 
-@TASK:{counter:task} 20170518 +
+*@TASK:{counter:task} 20170518* +
 Erweitere JudgeResults um empfangene Header.
 
 
-@TASK:{counter:task} 20170518 +
+*@TASK:{counter:task} 20170518* +
 Untersuche folgende Meldung, die vom Proxy zurückgeliefert werden können:
 
 * HTTP/1.1 407 Proxy Authentication Required
 * HTTP/1.1 502 Bad Gateway
 
 
-@TASK:{counter:task} 20170607 +
+*@TASK:{counter:task} 20170607* +
 Implementiere den Prozess der eine ausgewählte vordefinierte Routine zum Aktualisieren der
 Proxies kontrolliert ausführt
 
@@ -20,16 +20,16 @@ Proxies kontrolliert ausführt
   - gefundene Proxyies sammeln
 
 
-@TASK:{counter:task} 20170620 +minor +
+*@TASK:{counter:task} 20170620* +minor +
 Make the use of other judge server possible and configurable.
 
 
-[.line-through]#@TASK:{counter:task} 20170620# +minor +
+[.line-through]#*@TASK:{counter:task} 20170620*# +minor +
 Extend the cli command 'judge' by the file option, to check all given proxies
 in the text file. The format should be simple 'ip:port\n'
 
 
-[.line-through]#@TASK:{counter:task} 20170621 +minor# +
+[.line-through]#*@TASK:{counter:task} 20170621* +minor# +
 Handle messages from monitor an other components and deliver them immediately
 to the present subscriber. Implement an EventBus which allows registered
 subscribers to receive events by type or namespace.
@@ -53,20 +53,20 @@ m.post()
 
 ```
 
-[.line-through]#@TASK:{counter:task} 20170622# +minor +
+[.line-through]#*@TASK:{counter:task} 20170622*# +minor +
 Redesign the cli output of judge.
 
 
-[.line-through]#@TASK:{counter:task} 20170623 +patch# +
+[.line-through]#*@TASK:{counter:task} 20170623* +patch# +
 Analyse warning on travis:
 ```
 WARNING: executing requirements for [object Object] failed, this types cannot be loaded
 ```
 
-[.line-through]#@TASK:{counter:task} 20170623 +patch# +
+[.line-through]#*@TASK:{counter:task} 20170623* +patch# +
 Extract the validation of proxy lists in JudgeFileCommand to a seperate worker class.
 
-@TASK:{counter:task} 20170623 +
+*@TASK:{counter:task} 20170623* +
 Analyse errors from proxy results and try to simulate them in testcases.
 
 - ETIMEOUT
@@ -76,38 +76,38 @@ Analyse errors from proxy results and try to simulate them in testcases.
 NOTE: implemented Exceptions.handle to wrap errors to NestedException with error code
 
 
-[.line-through]#@TASK:{counter:task} 20170623# +minor +
+[.line-through]#*@TASK:{counter:task} 20170623*# +minor +
 Request over elite proxy cannot be identifiert as proxied. If via or forward
 exists, but the ip isn't listed then it is an anonymus proxy.+
 Write testcase for the different scoring possibilities.
 
 
-@TASK:{counter:task} 20170624 +
+*@TASK:{counter:task} 20170624* +
 UserAgent generator, generate combinations of given agent parameter types.
 
 
-@TASK:{counter:task} 20170626 +
+*@TASK:{counter:task} 20170626* +
 Backlog: Docker test enviroment
 
-@TASK:{counter:task} 20170626 +
+*@TASK:{counter:task} 20170626* +
 Backlog: Internationalization
 
 
-@TASK:{counter:task} 20170626 +
+*@TASK:{counter:task} 20170626* +
 Backlog: Spin-Offs
 
 - EventBus
 - AsyncWorkerQueue
 
 
-@TASK:{counter:task} 20170626 patch per subtask +
+*@TASK:{counter:task} 20170626* patch per subtask +
 Impl. multiple proxy provider
 
 - http://www.proxy-listen.de
 - http://proxydb.net
 
 
-@TASK:{counter:task} 20170626 minor +
+*@TASK:{counter:task} 20170626* minor +
 Bootstrap implementation which should handle:
 
 - default config definition
@@ -116,7 +116,7 @@ Bootstrap implementation which should handle:
 - proxyserver enabling
 
 
-[.line-through]#@TASK:{counter:task} 20170627 minor# +
+[.line-through]#*@TASK:{counter:task} 20170627* minor# +
 Impl. of the processing workflow.
 
 1. fetching proxy ip by provider and transport to the ip filter
@@ -125,7 +125,7 @@ decides if it should be (re)validated or not
 3. the validator checks the quality of the proxy and saves the results
 to the database
 
-@TASK:{counter:task} 20170706 minor +
+*@TASK:{counter:task} 20170706* minor +
 Impl. the server part which will deliver information via rest services
 for a coming ui or other
 
@@ -141,15 +141,15 @@ for a coming ui or other
 ** list proxy queue
 ** search by country, speed, level, etc.
 
-[.line-through]#@TASK:{counter:task} 20170706 minor# +
+[.line-through]#*@TASK:{counter:task} 20170706* minor# +
 Impl. configurable winston logger and define the
 configuration parameter
 
-@TASK:{counter:task} 20170707 minor +
+*@TASK:{counter:task} 20170707* minor +
 Fetcher control in configuration? Define if some fetcher should be
 excluded.
 
-[.line-through]#@TASK:{counter:task} 20170707 minor# +
+[.line-through]#*@TASK:{counter:task} 20170707* minor# +
 Impl. ProviderManager
 
 * schedule fetcher
@@ -157,14 +157,14 @@ Impl. ProviderManager
 * fetcher statistics
 ** count proxies / new / existing
 
-@TASK:{counter:task} 20170708 +
+*@TASK:{counter:task} 20170708* +
 Write documentation for the configuration possible configuration
 settings.
 
-[.line-through]#@TASK:{counter:task} 20170709# +
+[.line-through]#*@TASK:{counter:task} 20170709*# +
 Add docker support
 
-[.line-through]#@TASK:{counter:task} 20170709# +
+[.line-through]#*@TASK:{counter:task} 20170709*# +
 update commons-config
 ```
 // set options and return them
@@ -192,14 +192,14 @@ Config.options({
 ```
 
 
-[.line-through]#@TASK:{counter:task} 20170709# +
+[.line-through]#*@TASK:{counter:task} 20170709*# +
 Exception
 ```
 { Error: SQLITE_CONSTRAINT: UNIQUE constraint failed: npb_ip_loc.ip
     at Error (native) errno: 19, code: 'SQLITE_CONSTRAINT' }
 ```
 
-@TASK:{counter:task} 20170714 +
+*@TASK:{counter:task} 20170714* +
 API
 
 * start / stop
@@ -211,14 +211,14 @@ API
 * force re-validation
 
 
-[.line-through]#@TASK:{counter:task} 20170715# +
+[.line-through]#*@TASK:{counter:task} 20170715*# +
 Rename: +
  ProxyDataSelector => ProxyFilter +
  ProxyValidationController => ProxyValidator +
  ProxyDataValidateEvent => ProxyValidateEvent
 
 
-[.line-through]##@TASK:{counter:task} 20170715 +vminor +
+[.line-through]##*@TASK:{counter:task} 20170715* +vminor +
 ##Automatic re-validation after a time period! in ProxyValidator.
 Needed infos for passed by config
 
@@ -226,11 +226,11 @@ Needed infos for passed by config
 - amount of taken proxies
 
 
-@TASK:{counter:task} 20170715 +
+*@TASK:{counter:task} 20170715* +
 CLI Test
 
 
-[.line-through]#@TASK:{counter:task} 20170715# +
+[.line-through]#*@TASK:{counter:task} 20170715*# +
 Impl. Loader which initialize and handles the lifecycle of
 components (starts up, shutdown, dii) in the app. Or call it
 maybe AppLoader.
@@ -239,7 +239,7 @@ maybe AppLoader.
 * Storage
 
 
-@TASK:{counter:task} 20170715 +
+*@TASK:{counter:task} 20170715* +
 Extend commons-config by
 
 * parse single arguments, impl. seperate handler for this
@@ -248,11 +248,11 @@ Extend commons-config by
 This must be moved to the package task queue.
 
 
-[.line-through]#@TASK:{counter:task} 20170716# +
+[.line-through]#*@TASK:{counter:task} 20170716*# +
 Impl. IProxyValidatorOptions
 
 
-[.line-through]#@TASK:{counter:task} 20170717# +minor +
+[.line-through]#*@TASK:{counter:task} 20170717*# +minor +
 Impl. proxy rotation mechanism for proxy server. On request the fastest in line
 proxy should be used for new connection. The request can also contain multiple
 selection headers.
@@ -267,11 +267,11 @@ When criteria don't match then a bad response is created with
 the appropriate error message, but only when fallback is false.
 
 
-@TASK:{counter:task} 20170718 +
+*@TASK:{counter:task} 20170718* +
 Testing proxies for abilities of websocket, ..., other
 
 
-[.line-through]#@TASK:{counter:task} 20170727# +
+[.line-through]#*@TASK:{counter:task} 20170727*# +
 Remove or correct log message
 
 * Error messages should be thrown on errors
@@ -279,37 +279,38 @@ Remove or correct log message
 * Refactor content of log messages
 
 
-@TASK:{counter:task} 20170727 +
+*@TASK:{counter:task} 20170727* +
 On Ctrl+C kill all running tasks (validator; manager)
 
-@TASK:{counter:task} 20170727 +
+*@TASK:{counter:task} 20170727* +
 Impl. options for proxy filter, currently multiple fields are set
 static.
 
-@TASK:{counter:task} 20170727 +
+*@TASK:{counter:task} 20170727* +
 Impl. timeout for judge selftest on startup. If no response is received
 then the system stucks (blocking firewall!).
 
-@TASK:{counter:task} 20170728 +
+*@TASK:{counter:task} 20170728* +
 Verify that proxies selected by the validator for recheck are ignored
 when a recheck was already ordered. (extend table)
 
-@TASK:{counter:task} 20170728 +
+*@TASK:{counter:task} 20170728* +
 Add bash startup scripts in bin directory.
 
-@TASK:{counter:task} 20170728 +
+*@TASK:{counter:task} 20170728* +
 Impl. socks4 and socks5 support.
 
-@TASK:{counter:task} 20170804 +
-Why all HTTPS proxies seam to fail?
-=> Not failing
+[.line-through]#*@TASK:{counter:task} 20170804*# minor +
+Why all HTTPS proxies seam to fail? +
+=> They not failing they doesn't react, rewrote judge to check all 4 communication variants
+between http and https.
 
-@TASK:{counter:task} 20170804 +
+*@TASK:{counter:task} 20170804* +
 Bug: in fetch command if no config options a specified
 and the -v options is passed then the logger logs to std.out
 and not to std.err
 
-@TASK:{counter:task} 20170807 +
+*@TASK:{counter:task} 20170807* +
 Recheck skip if next schedule is in the past:
 ```
 [2017.08.07 19:25:37.248] [INFO]   Validator scheduled for Mon Aug 07 2017 18:00:00 GMT+0000 (UTC)
@@ -322,3 +323,10 @@ Recheck skip if next schedule is in the past:
 [2017.08.07 19:25:37.321] [INFO]   Validator scheduled for Mon Aug 07 2017 18:50:00 GMT+0000 (UTC)
 [2017.08.07 19:25:37.323] [INFO]   Validator recheck proxies: 0
 ```
+
+*@TASK:{counter:task} 20170808* +
+Cleanup ip_addr_states and other deprected data.
+
+
+*@TASK:{counter:task} 20170808* +
+Load balancing, distribution and clustering.

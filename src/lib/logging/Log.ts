@@ -112,6 +112,7 @@ export class Log {
                     opts.transports.push(new winston.transports.Console(transportOptions))
                     break;
                 case 'dailyrotatefile':
+                    require('winston-daily-rotate-file');
                     opts.transports.push(new winston.transports.DailyRotateFile(transportOptions))
                     break;
                 case 'http':
