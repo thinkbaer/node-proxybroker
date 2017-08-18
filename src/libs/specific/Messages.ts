@@ -1,6 +1,6 @@
-import {Utils} from "../utils/Utils";
+import {Utils} from "../generic/utils/Utils";
 
-import TodoException from "../exceptions/TodoException";
+import TodoException from "../generic/exceptions/TodoException";
 
 export const MESSAGE = {
     ORQ01: {k: 'ORQ01', _: 'Try connect to ${uri} over proxy ${proxy_uri} ...'},

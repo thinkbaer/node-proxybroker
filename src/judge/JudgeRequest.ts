@@ -5,21 +5,21 @@ import * as mUrl from 'url'
 import * as net from 'net'
 
 import * as _request from "request-promise-native";
-import {Log} from "../lib/logging/Log";
+import {Log} from "../libs/generic/logging/Log";
 import {RequestResponseMonitor} from "./RequestResponseMonitor";
 
-import {IHttpHeaders} from "../lib/IHttpHeaders";
+import {IHttpHeaders} from "../libs/generic/IHttpHeaders";
 import {Judge} from "./Judge";
 import {IJudgeRequestOptions} from "./IJudgeRequestOptions";
 
 
 import Timer = NodeJS.Timer;
 import {LevelDetection} from "./LevelDetection";
-import {MESSAGE} from "../lib/Messages";
+import {MESSAGE} from "../libs/specific/Messages";
 import {JudgeResult} from "./JudgeResult";
-import {ProtocolType} from "../lib/ProtocolType";
+import {ProtocolType} from "../libs/specific/ProtocolType";
 import {clearTimeout, setTimeout} from "timers";
-import Exceptions from "../exceptions/Exceptions";
+import Exceptions from "../libs/specific/exceptions/Exceptions";
 
 
 

@@ -1,21 +1,22 @@
 import {suite, test, timeout} from "mocha-typescript";
-import {Storage} from "../../src/storage/Storage";
+import {Storage} from "../../src/libs/generic/storage/Storage";
 import {ProxyServer} from "../../src/server/ProxyServer";
 import * as request from "request-promise-native";
-import {Log} from "../../src/lib/logging/Log";
+import {Log} from "../../src/libs/generic/logging/Log";
 import {expect} from "chai";
-import {IUrlBase} from "../../src/lib/IUrlBase";
+import {IUrlBase} from "../../src/libs/generic/IUrlBase";
 import {SocketHandle} from "../../src/server/SocketHandle";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {IpAddr} from "../../src/model/IpAddr";
 import {IpAddrState} from "../../src/model/IpAddrState";
-import {ProtocolType} from "../../src/lib/ProtocolType";
+import {ProtocolType} from "../../src/libs/specific/ProtocolType";
 import {ProxyRotator} from "../../src/proxy/ProxyRotator";
 import {ProxyUsedEvent} from "../../src/proxy/ProxyUsedEvent";
-import {EventBus} from "../../src/events/EventBus";
+import {EventBus} from "../../src/libs/generic/events/EventBus";
 import {IpRotate} from "../../src/model/IpRotate";
-import {Utils} from "../../src/utils/Utils";
+import {Utils} from "../../src/libs/generic/utils/Utils";
 import {IpRotateLog} from "../../src/model/IpRotateLog";
+import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 
 describe('', () => {
 });
@@ -54,7 +55,7 @@ class ProxyServerTest {
 
     static async before() {
         Log.options({enable: false, level: 'debug'})
-        storage = new Storage(<SqliteConnectionOptions>{
+        storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'proxy_rotator',
             type: 'sqlite',
             database: ':memory:'

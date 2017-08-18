@@ -7,16 +7,16 @@ import * as url from "url";
 import {Server} from "./Server";
 import {DEFAULT_PROXY_SERVER_OPTIONS, IProxyServerOptions, K_PROXYSERVER} from "./IProxyServerOptions";
 
-import {Runtime} from "../lib/Runtime";
-import {IUrlBase} from "../lib/IUrlBase";
+import {Runtime} from "../libs/generic/Runtime";
+import {IUrlBase} from "../libs/generic/IUrlBase";
 import {IpAddr} from "../model/IpAddr";
-import TodoException from "../exceptions/TodoException";
+import TodoException from "../libs/generic/exceptions/TodoException";
 
-import {ProtocolType} from "../lib/ProtocolType";
+import {ProtocolType} from "../libs/specific/ProtocolType";
 import {SocketHandle} from "./SocketHandle";
 import {ProxyUsedEvent} from "../proxy/ProxyUsedEvent";
-import {EventBus} from "../events/EventBus";
-import {Log} from "../lib/logging/Log";
+import {EventBus} from "../libs/generic/events/EventBus";
+import {Log} from "../libs/generic/logging/Log";
 
 
 export class ProxyServer extends Server {

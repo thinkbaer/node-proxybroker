@@ -8,10 +8,10 @@ import {expect} from "chai";
 import {inspect} from 'util'
 
 
-import subscribe from '../../src/events/decorator/subscribe'
-import { EventBus} from "../../src/events/EventBus";
-import EventBusMeta from "../../src/events/EventBusMeta";
-import {EventChannel} from "../../src/events/EventChannel";
+import subscribe from '../../src/libs/generic/events/decorator/subscribe'
+import { EventBus} from "../../src/libs/generic/events/EventBus";
+import EventBusMeta from "../../src/libs/generic/events/EventBusMeta";
+import {EventChannel} from "../../src/libs/generic/events/EventChannel";
 
 
 /**

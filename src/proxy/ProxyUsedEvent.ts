@@ -1,6 +1,6 @@
-import {IUrlBase} from "../lib/IUrlBase";
-import {ProtocolType} from "../lib/ProtocolType";
-import {EventBus} from "../events/EventBus";
+import {IUrlBase} from "../libs/generic/IUrlBase";
+import {ProtocolType} from "../libs/specific/ProtocolType";
+import {EventBus} from "../libs/generic/events/EventBus";
 import {SocketHandle} from "../server/SocketHandle";
 
 export class ProxyUsedEvent {

@@ -4,10 +4,10 @@ import * as https from 'https'
 import * as net from 'net'
 import * as fs from 'fs'
 import {DEFAULT_SERVER_OPTIONS, IServerOptions} from "./IServerOptions";
-import {Log} from "../lib/logging/Log";
-import Exceptions from "../exceptions/Exceptions";
-import {Utils} from "../utils/Utils";
-import TodoException from "../exceptions/TodoException";
+import {Log} from "../libs/generic/logging/Log";
+import Exceptions from "../libs/specific/exceptions/Exceptions";
+import {Utils} from "../libs/generic/utils/Utils";
+import TodoException from "../libs/generic/exceptions/TodoException";
 import Timer = NodeJS.Timer;
 import * as _ from 'lodash'
 

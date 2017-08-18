@@ -1,16 +1,16 @@
 import {DEFAULT_ROTATOR_OPTIONS, IProxyRotatorOptions} from "./IProxyRotatorOptions";
-import {Storage} from "../storage/Storage";
-import {Utils} from "../utils/Utils";
+import {Storage} from "../libs/generic/storage/Storage";
+import {Utils} from "../libs/generic/utils/Utils";
 import {IpAddr} from "../model/IpAddr";
 import {IpLoc} from "../model/IpLoc";
-import {ProtocolType} from "../lib/ProtocolType";
+import {ProtocolType} from "../libs/specific/ProtocolType";
 import {IpAddrState} from "../model/IpAddrState";
 import {IpRotate} from "../model/IpRotate";
 import {ProxyUsedEvent} from "./ProxyUsedEvent";
 
-import subscribe from "../events/decorator/subscribe"
+import subscribe from "../libs/generic/events/decorator/subscribe"
 import {IpRotateLog} from "../model/IpRotateLog";
-import {Log} from "../lib/logging/Log";
+import {Log} from "../libs/generic/logging/Log";
 import * as _ from 'lodash'
 /**
  * create and keep a fifo queue with proxy references

@@ -2,10 +2,10 @@ import {suite, test, timeout} from "mocha-typescript";
 import {expect} from "chai";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
 import {ProxyServer} from "../../src/server/ProxyServer";
-import {Log} from "../../src/lib/logging/Log";
+import {Log} from "../../src/libs/generic/logging/Log";
 import {Config} from "commons-config";
 import {ValidateCommand} from "../../src/commands/ValidateCommand";
-import {ProtocolType} from "../../src/lib/ProtocolType";
+import {ProtocolType} from "../../src/libs/specific/ProtocolType";
 
 describe('', () => {
 });

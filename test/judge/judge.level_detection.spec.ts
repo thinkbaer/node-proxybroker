@@ -1,8 +1,8 @@
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 import {LevelDetection} from "../../src/judge/LevelDetection";
-import DomainUtils from "../../src/utils/DomainUtils";
-import {Log} from "../../src/lib/logging/Log";
+import DomainUtils from "../../src/libs/generic/utils/DomainUtils";
+import {Log} from "../../src/libs/generic/logging/Log";
 
 describe('', () => {
 });

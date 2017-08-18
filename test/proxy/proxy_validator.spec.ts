@@ -9,13 +9,14 @@ import {ProxyServer} from "../../src/server/ProxyServer";
 import {IJudgeOptions} from "../../src/judge/IJudgeOptions";
 import {ProxyDataValidateEvent} from "../../src/proxy/ProxyDataValidateEvent";
 import {ProxyData} from "../../src/proxy/ProxyData";
-import {Storage} from "../../src/storage/Storage";
+import {Storage} from "../../src/libs/generic/storage/Storage";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {IpLoc} from "../../src/model/IpLoc";
 import {IpAddr} from "../../src/model/IpAddr";
 import {IpAddrState} from "../../src/model/IpAddrState";
-import {Log} from "../../src/lib/logging/Log";
-import {ProtocolType} from "../../src/lib/ProtocolType";
+import {Log} from "../../src/libs/generic/logging/Log";
+import {ProtocolType} from "../../src/libs/specific/ProtocolType";
+import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 
 describe('', () => {
 
@@ -55,7 +56,7 @@ class ProxyValidationControllerTest {
     @test
     async 'positiv validation for http proxy'() {
 
-        let storage = new Storage(<SqliteConnectionOptions>{
+        let storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'proxy_validator_controller',
             type: 'sqlite',
             database: ':memory:'
@@ -114,7 +115,7 @@ class ProxyValidationControllerTest {
     @test
     async 'negativ validation'() {
 
-        let storage = new Storage(<SqliteConnectionOptions>{
+        let storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'proxy_validator_controller2',
             type: 'sqlite',
             database: ':memory:'

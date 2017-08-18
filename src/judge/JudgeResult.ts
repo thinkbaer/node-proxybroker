@@ -1,6 +1,6 @@
 import {ReqResEvent} from "./ReqResEvent";
-import {NestedException} from "../exceptions/NestedException";
-import {ProtocolType} from "../lib/ProtocolType";
+import {NestedException} from "../libs/specific/exceptions/NestedException";
+import {ProtocolType} from "../libs/specific/ProtocolType";
 
 
 export class JudgeResult {

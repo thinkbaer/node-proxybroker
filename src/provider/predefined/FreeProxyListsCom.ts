@@ -6,9 +6,9 @@ import {AbstractProvider} from "../AbstractProvider";
 import {IProviderVariant} from "../IProviderVariant";
 import {IProxyData} from "../../proxy/IProxyData";
 import {IProviderWorkerAPI} from "../IProviderWorkerAPI";
-import {ProxyType} from "../../lib/ProxyType";
+import {ProxyType} from "../../libs/specific/ProxyType";
 import * as _ from 'lodash'
-import {Log} from "../../lib/logging/Log";
+import {Log} from "../../libs/generic/logging/Log";
 
 const NAME = 'freeproxylists';
 const BASE_URL = 'http://www.freeproxylists.com';

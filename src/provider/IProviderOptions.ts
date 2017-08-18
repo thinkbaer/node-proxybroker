@@ -1,6 +1,6 @@
 
 
-import {StringOrFunction} from "../types";
+import {StringOrFunction} from "../libs/generic/types";
 import {FreeProxyListsCom} from "./predefined/FreeProxyListsCom";
 import {ProxyListenDe} from "./predefined/ProxyListenDe";
 

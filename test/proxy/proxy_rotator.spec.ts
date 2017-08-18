@@ -1,13 +1,14 @@
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
-import {Storage} from "../../src/storage/Storage";
+import {Storage} from "../../src/libs/generic/storage/Storage";
 import {IpAddr} from "../../src/model/IpAddr";
 import {IpAddrState} from "../../src/model/IpAddrState";
-import {ProtocolType} from "../../src/lib/ProtocolType";
+import {ProtocolType} from "../../src/libs/specific/ProtocolType";
 import {ProxyRotator} from "../../src/proxy/ProxyRotator";
 import {ProxyUsedEvent} from "../../src/proxy/ProxyUsedEvent";
-import {Log} from "../../src/lib/logging/Log";
+import {Log} from "../../src/libs/generic/logging/Log";
+import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 
 describe('', () => {
 });
@@ -21,7 +22,7 @@ class ProxyRotatorTest {
 
     async before() {
         Log.options({enable:false,level:'debug'})
-        storage = new Storage(<SqliteConnectionOptions>{
+        storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'proxy_rotator',
             type: 'sqlite',
             database: ':memory:'

@@ -1,6 +1,6 @@
 import {CryptUtils} from "../utils/CryptUtils";
 import {EventEmitter} from "events";
-import * as _ from 'lodash'
+
 
 export class EventChannel extends EventEmitter {
 

@@ -7,39 +7,16 @@ import {IStorageOptions} from "./IStorageOptions";
 import {Config} from "commons-config";
 import {K_WORKDIR} from "../types";
 import {Utils} from "../utils/Utils";
-import {Variable} from "../model/Variable";
-import {IpAddrState} from "../model/IpAddrState";
-import {IpAddr} from "../model/IpAddr";
 import {ConnectionWrapper} from "./ConnectionWrapper";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 
-import {IpLoc} from "../model/IpLoc";
-import {JobState} from "../model/JobState";
-import {Job} from "../model/Job";
-import {Runtime} from "../lib/Runtime";
-import {IpRotate} from "../model/IpRotate";
-import {IpRotateLog} from "../model/IpRotateLog";
+
+import {Runtime} from "../Runtime";
 import {PlatformUtils} from "../utils/PlatformUtils";
 import TodoException from "../exceptions/TodoException";
-import {Log} from "../lib/logging/Log";
+import {Log} from "../logging/Log";
 
 
-export const FIX_STORAGE_OPTIONS = {
-    entities: [
-        Variable,
-        IpAddrState,
-        IpAddr,
-        IpLoc,
-        Job,
-        JobState,
-        IpRotate,
-        IpRotateLog
-    ],
-    migrations: [
-        __dirname + "/migrations/*"
-    ],
-    autoSchemaSync: true
-};
 
 
 export const DEFAULT_STORAGE_OPTIONS: IStorageOptions = <SqliteConnectionOptions>{
@@ -66,7 +43,7 @@ export class Storage {
 
     private static $$: Storage = null;
 
-    constructor(options: IStorageOptions = DEFAULT_STORAGE_OPTIONS) {
+    constructor(options: IStorageOptions = DEFAULT_STORAGE_OPTIONS, FIX_STORAGE_OPTIONS: IStorageOptions = {}) {
 
         // check if options are set per config
         /*
@@ -189,9 +166,9 @@ export class Storage {
     }
 
 
-    static async $(options: IStorageOptions = DEFAULT_STORAGE_OPTIONS): Promise<Storage> {
+    static async $(options: IStorageOptions = DEFAULT_STORAGE_OPTIONS, FIX_STORAGE_OPTIONS: IStorageOptions = {}): Promise<Storage> {
         if (!this.$$) {
-            this.$$ = new Storage(options);
+            this.$$ = new Storage(options,FIX_STORAGE_OPTIONS);
             await this.$$.prepare()
         }
         return Promise.resolve(this.$$)

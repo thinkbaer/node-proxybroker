@@ -4,8 +4,8 @@ import {createExpressServer, RoutingControllersOptions, useContainer} from "rout
 import {DataAccessController} from "./api/controllers/DataAccessController";
 import {Server} from "./Server";
 import {IServerOptions} from "./IServerOptions";
-import TodoException from "../exceptions/TodoException";
-import {Runtime} from "../lib/Runtime";
+import TodoException from "../libs/generic/exceptions/TodoException";
+import {Runtime} from "../libs/generic/Runtime";
 import {Container} from "typedi";
 
 export const K_APPSERVER = 'server'

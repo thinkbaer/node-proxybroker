@@ -8,10 +8,11 @@ import {suite, test, slow, timeout, pending} from "mocha-typescript";
 import {expect} from "chai";
 import {inspect} from 'util'
 
-import {Storage} from "../../src/storage/Storage";
+import {Storage} from "../../src/libs/generic/storage/Storage";
 
 import {IpAddr} from "../../src/model/IpAddr";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
+import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 
 
 const DEFAULT_STORAGE_OPTIONS: SqliteConnectionOptions = {
@@ -29,7 +30,7 @@ class StorageTest {
 
     @test
     async 'init'() {
-        let storage = new Storage(<SqliteConnectionOptions>{
+        let storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'storage_test',
             type: "sqlite",
             database: ":memory:"
@@ -58,11 +59,12 @@ class StorageTest {
     @test
     async 'static'() {
         Storage['$$'] = null;
-        let storage = await Storage.$(<SqliteConnectionOptions>{
+        let storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'storage_test',
             type: "sqlite",
             database: ":memory:"
         });
+        await storage.prepare();
         expect(storage.size()).to.be.eq(1);
 
         Storage['$$'] = null;

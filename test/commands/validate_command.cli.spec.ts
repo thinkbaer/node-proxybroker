@@ -4,7 +4,7 @@ import {expect} from "chai";
 import SpawnCLI from "./SpawnCLI";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
 import {ProxyServer} from "../../src/server/ProxyServer";
-import {Log} from "../../src/lib/logging/Log";
+import {Log} from "../../src/libs/generic/logging/Log";
 
 describe('', () => {
 });

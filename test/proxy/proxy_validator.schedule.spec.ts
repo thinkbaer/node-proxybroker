@@ -4,15 +4,16 @@ import {ProxyValidator} from "../../src/proxy/ProxyValidator";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
 import {ProxyServer} from "../../src/server/ProxyServer";
 import {IJudgeOptions} from "../../src/judge/IJudgeOptions";
-import {Storage} from "../../src/storage/Storage";
+import {Storage} from "../../src/libs/generic/storage/Storage";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {IpAddr} from "../../src/model/IpAddr";
 import {IpAddrState} from "../../src/model/IpAddrState";
-import {Log} from "../../src/lib/logging/Log";
-import {EventBus} from "../../src/events/EventBus";
+import {Log} from "../../src/libs/generic/logging/Log";
+import {EventBus} from "../../src/libs/generic/events/EventBus";
 import {DateUtils} from "typeorm/util/DateUtils";
 import moment = require("moment");
-import {Utils} from "../../src/utils/Utils";
+import {Utils} from "../../src/libs/generic/utils/Utils";
+import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 describe('', () => {
 });
 
@@ -43,7 +44,7 @@ class ProxyValidationControllerTest {
     @test
     async 'records selection query'() {
 
-        let storage = new Storage(<SqliteConnectionOptions>{
+        let storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'proxy_validator_schedule',
             type: 'sqlite',
             database: ':memory:'
@@ -99,7 +100,7 @@ class ProxyValidationControllerTest {
         // Log.options({enable:true})
         let now = new Date()
 
-        let storage = new Storage(<SqliteConnectionOptions>{
+        let storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'proxy_validator_schedule2',
             type: 'sqlite',
             database: ':memory:'

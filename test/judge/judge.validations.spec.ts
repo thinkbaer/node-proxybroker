@@ -6,12 +6,12 @@ import {suite, test, timeout} from "mocha-typescript";
 import {expect} from "chai";
 import {Judge} from "../../src/judge/Judge";
 import {ProxyServer} from "../../src/server/ProxyServer";
-import {Log} from "../../src/lib/logging/Log";
+import {Log} from "../../src/libs/generic/logging/Log";
 import {RequestResponseMonitor} from "../../src/judge/RequestResponseMonitor";
 import {JudgeResults} from "../../src/judge/JudgeResults";
 import {IProxyServerOptions} from "../../src/server/IProxyServerOptions";
-import {NestedException} from "../../src/exceptions/NestedException";
-import {ProtocolType} from "../../src/lib/ProtocolType";
+import {NestedException} from "../../src/libs/specific/exceptions/NestedException";
+import {ProtocolType} from "../../src/libs/specific/ProtocolType";
 
 describe('', () => {
 });

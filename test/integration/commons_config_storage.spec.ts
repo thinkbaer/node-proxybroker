@@ -10,11 +10,12 @@ import {inspect} from 'util'
 
 
 import {Config} from "commons-config";
-import {DEFAULT_STORAGE_OPTIONS, Storage} from "../../src/storage/Storage";
-import {IStorageOptions} from "../../src/storage/IStorageOptions";
+import {DEFAULT_STORAGE_OPTIONS, Storage} from "../../src/libs/generic/storage/Storage";
+import {IStorageOptions} from "../../src/libs/generic/storage/IStorageOptions";
 
 import * as fs from 'fs';
-import {PlatformUtils} from "../../src/utils/PlatformUtils";
+import {PlatformUtils} from "../../src/libs/generic/utils/PlatformUtils";
+import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 /**
  * TODO
  */
@@ -31,7 +32,7 @@ class ConfigTests {
 
         let storageOptions = Config.get('storage');
         expect(storageOptions).not.to.be.null;
-        let storage = new Storage(storageOptions);
+        let storage = new InternStorage(storageOptions);
         let options : IStorageOptions = storage['options'];
         expect(options.type).to.eq("sqlite")
     }
@@ -45,7 +46,7 @@ class ConfigTests {
         expect(Config.get('workdir')).to.eq( __dirname );
         let storageOptions = Config.get('storage');
         expect(storageOptions).not.to.be.null;
-        let storage = new Storage(storageOptions);
+        let storage = new InternStorage(storageOptions);
 
         let options : IStorageOptions = storage['options'];
         expect(options.type).to.eq("sqlite");

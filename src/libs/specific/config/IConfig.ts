@@ -1,9 +1,9 @@
 
 
-import {IStorageOptions} from "../../storage/IStorageOptions";
-import {IProviderOptions} from "../../provider/IProviderOptions";
-import {IUrlBase} from "../IUrlBase";
-import {ILoggerOptions} from "../logging/ILoggerOptions";
+import {IStorageOptions} from "../../generic/storage/IStorageOptions";
+import {IProviderOptions} from "../../../provider/IProviderOptions";
+import {IUrlBase} from "../../generic/IUrlBase";
+import {ILoggerOptions} from "../../generic/logging/ILoggerOptions";
 
 
 export interface IServiceOptions extends IUrlBase {

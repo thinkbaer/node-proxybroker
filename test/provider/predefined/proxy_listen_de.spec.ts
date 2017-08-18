@@ -1,5 +1,5 @@
 import {suite, test, timeout} from "mocha-typescript";
-import {Log} from "../../../src/lib/logging/Log";
+import {Log} from "../../../src/libs/generic/logging/Log";
 import {ProxyListenDe} from "../../../src/provider/predefined/ProxyListenDe";
 import {expect} from "chai";
 

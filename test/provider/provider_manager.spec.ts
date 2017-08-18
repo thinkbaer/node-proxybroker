@@ -8,21 +8,22 @@ import {expect} from "chai";
 import {inspect} from 'util'
 import * as _ from 'lodash'
 
-import subscribe from '../../src/events/decorator/subscribe'
+import subscribe from '../../src/libs/generic/events/decorator/subscribe'
 import {ProviderManager} from "../../src/provider/ProviderManager";
 import {IProviderOptions} from "../../src/provider/IProviderOptions";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
-import {Storage} from "../../src/storage/Storage";
+import {Storage} from "../../src/libs/generic/storage/Storage";
 import {Job} from "../../src/model/Job";
 import {ProxyFilter} from "../../src/proxy/ProxyFilter";
-import {EventBus} from "../../src/events/EventBus";
-import {Utils} from "../../src/utils/Utils";
+import {EventBus} from "../../src/libs/generic/events/EventBus";
+import {Utils} from "../../src/libs/generic/utils/Utils";
 import {ProviderRunEvent} from "../../src/provider/ProviderRunEvent";
 import {JobState} from "../../src/model/JobState";
 import {IpAddr} from "../../src/model/IpAddr";
 import {MockedProxies01} from "./predefined_01/MockedProxies01";
 import {ProxyDataFetchedEvent} from "../../src/proxy/ProxyDataFetchedEvent";
-import {Log} from "../../src/lib/logging/Log";
+import {Log} from "../../src/libs/generic/logging/Log";
+import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 
 class X {
     test: Function;
@@ -92,7 +93,7 @@ class ProviderManagerTest {
 
     @test
     async 'initialize with storage'() {
-        let storage = new Storage(<SqliteConnectionOptions>{
+        let storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'proxy_manager',
             type: 'sqlite',
             database: ':memory:'
@@ -157,7 +158,7 @@ class ProviderManagerTest {
 
     @test
     async 'run a job'() {
-        let storage = new Storage(<SqliteConnectionOptions>{
+        let storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'proxy_manager',
             type: 'sqlite',
             database: ':memory:'
@@ -190,7 +191,7 @@ class ProviderManagerTest {
 
     @test
     async 'run by job event'() {
-        let storage = new Storage(<SqliteConnectionOptions>{
+        let storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'proxy_manager',
             type: 'sqlite',
             database: ':memory:'
@@ -231,7 +232,7 @@ class ProviderManagerTest {
     async 'schedule'() {
         let now = Utils.now();
 
-        let storage = new Storage(<SqliteConnectionOptions>{
+        let storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'proxy_manager',
             type: 'sqlite',
             database: ':memory:'

@@ -1,8 +1,8 @@
 import {suite, test, timeout} from "mocha-typescript";
-import {Storage} from "../../src/storage/Storage";
+import {Storage} from "../../src/libs/generic/storage/Storage";
 import {ProxyServer} from "../../src/server/ProxyServer";
 import * as request from "request-promise-native";
-import {Log} from "../../src/lib/logging/Log";
+import {Log} from "../../src/libs/generic/logging/Log";
 import {expect} from "chai";
 
 describe('', () => {

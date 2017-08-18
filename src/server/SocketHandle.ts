@@ -1,8 +1,8 @@
 import * as _ from 'lodash'
 import * as tls from 'tls'
 import * as net from 'net'
-import {Log} from "../lib/logging/Log";
-import Exceptions from "../exceptions/Exceptions";
+import {Log} from "../libs/generic/logging/Log";
+import Exceptions from "../libs/specific/exceptions/Exceptions";
 import Timer = NodeJS.Timer;
 
 

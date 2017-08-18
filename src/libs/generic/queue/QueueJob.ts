@@ -1,8 +1,8 @@
 import {IQueueWorkload} from "./IQueueWorkload";
-import {shorthash} from "../lib/crypt";
-import {inspect} from "util"
 import {IQueue} from "./IQueue";
 import Timer = NodeJS.Timer;
+
+import {CryptUtils} from "../utils/CryptUtils";
 
 
 export class QueueJob<T extends IQueueWorkload> {
@@ -27,7 +27,7 @@ export class QueueJob<T extends IQueueWorkload> {
     constructor(queue: IQueue, workload: T) {
         this._workload = workload;
         this._queue = queue;
-        this._id = shorthash((new Date()).getTime() + '' + (QueueJob._INC++));
+        this._id = CryptUtils.shorthash((new Date()).getTime() + '' + (QueueJob._INC++));
         /*
          this._queue.once('job '+this._id+' start',this.onStart.bind(this));
          this._queue.once('job '+this._id+' start',this.onStart.bind(this));

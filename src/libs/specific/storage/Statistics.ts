@@ -1,9 +1,9 @@
 
 
-import {Storage} from "./Storage";
-import {IpAddr} from "../model/IpAddr";
-import {IpLoc} from "../model/IpLoc";
-import {IpAddrState} from "../model/IpAddrState";
+import {Storage} from "../../generic/storage/Storage";
+import {IpAddr} from "../../../model/IpAddr";
+import {IpLoc} from "../../../model/IpLoc";
+import {IpAddrState} from "../../../model/IpAddrState";
 
 export class Statistics {
 

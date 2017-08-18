@@ -1,6 +1,6 @@
 import {suite, test} from "mocha-typescript";
 import {Judge} from "../../src/judge/Judge";
-import {Log} from "../../src/lib/logging/Log";
+import {Log} from "../../src/libs/generic/logging/Log";
 import {expect} from "chai";
 import {DEFAULT_JUDGE_OPTIONS, IJudgeOptions} from "../../src/judge/IJudgeOptions";
 import * as _ from "lodash";

@@ -2,7 +2,7 @@ import * as dns from "dns";
 import * as _ from 'lodash'
 
 import {PlatformUtils} from "./PlatformUtils";
-import {Log} from "../lib/logging/Log";
+import {Log} from "../logging/Log";
 
 if (dns['getServers'] && dns['getServers']().length < 2) {
     let serversToSet = [

@@ -2,7 +2,7 @@ import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 import {inspect} from "util";
 
-import {ClassLoader} from "../../src/utils/ClassLoader";
+import {ClassLoader} from "../../src/libs/generic/utils/ClassLoader";
 describe('', () => {
 });
 

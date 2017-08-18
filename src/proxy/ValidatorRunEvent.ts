@@ -1,4 +1,4 @@
-import {EventBus} from "../events/EventBus";
+import {EventBus} from "../libs/generic/events/EventBus";
 
 
 

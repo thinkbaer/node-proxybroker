@@ -6,14 +6,14 @@ import * as mUrl from 'url'
 import * as tls from 'tls'
 import * as events from 'events'
 import * as _ from 'lodash'
-import {IHttpHeaders} from "../lib/IHttpHeaders";
+import {IHttpHeaders} from "../libs/generic/IHttpHeaders";
 import {Url} from "url";
 import {ReqResEvent} from "./ReqResEvent";
-import {Log} from "../lib/logging/Log";
-import Exceptions from "../exceptions/Exceptions";
-import {NestedException} from "../exceptions/NestedException";
-import {Utils} from "../utils/Utils";
-import {MESSAGE} from "../lib/Messages";
+import {Log} from "../libs/generic/logging/Log";
+import Exceptions from "../libs/specific/exceptions/Exceptions";
+import {NestedException} from "../libs/specific/exceptions/NestedException";
+import {Utils} from "../libs/generic/utils/Utils";
+import {MESSAGE} from "../libs/specific/Messages";
 
 
 

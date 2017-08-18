@@ -7,8 +7,8 @@ import {suite, test, slow, timeout, pending} from "mocha-typescript";
 import {expect} from "chai";
 import {inspect} from 'util'
 
-import {ClassLoader} from "../../src/utils/ClassLoader";
-import DomainUtils from "../../src/utils/DomainUtils";
+import {ClassLoader} from "../../src/libs/generic/utils/ClassLoader";
+import DomainUtils from "../../src/libs/generic/utils/DomainUtils";
 
 @suite('utils/DomainUtils')
 class DomainUtilsTest {

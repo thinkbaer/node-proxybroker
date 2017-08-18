@@ -2,14 +2,15 @@ import "reflect-metadata";
 import {useContainer} from "routing-controllers";
 import {Container} from "typedi";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
-import {Storage} from "../../src/storage/Storage";
+import {Storage} from "../../src/libs/generic/storage/Storage";
 import {ProviderManager} from "../../src/provider/ProviderManager";
 import {AppServer} from "../../src/server/AppServer";
-import {Log} from "../../src/lib/logging/Log";
+import {Log} from "../../src/libs/generic/logging/Log";
 import {Config} from "commons-config";
 import {ProxyFilter} from "../../src/proxy/ProxyFilter";
-import {EventBus} from "../../src/events/EventBus";
+import {EventBus} from "../../src/libs/generic/events/EventBus";
 import {ProxyValidator} from "../../src/proxy/ProxyValidator";
+import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 
 process.on('unhandledRejection', (reason: any, p: any) => {
     console.error(reason)
@@ -36,7 +37,7 @@ let boot = async function (): Promise<void> {
 
     Log.enable = Log.console = true
 
-    let storage = new Storage(<SqliteConnectionOptions>{
+    let storage = new InternStorage(<SqliteConnectionOptions>{
         name: 'test_express_app',
         type: 'sqlite',
         database: __dirname + '/tmp/sqlite.app.db'

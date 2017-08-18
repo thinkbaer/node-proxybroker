@@ -1,5 +1,5 @@
 import * as _ from 'lodash'
-import {EventBus} from "../events/EventBus";
+import {EventBus} from "../libs/generic/events/EventBus";
 
 import {ProxyDataFetched} from "./ProxyDataFetched";
 

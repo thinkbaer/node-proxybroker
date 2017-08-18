@@ -1,4 +1,4 @@
-import {IKeyValuePair} from "../lib/IKeyValuePair";
+import {IKeyValuePair} from "../libs/generic/IKeyValuePair";
 export interface IHeader extends IKeyValuePair<string> {
     hasLocalIp: boolean
     hasProxyIp: boolean

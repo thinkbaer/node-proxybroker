@@ -1,6 +1,6 @@
-import {IQueueWorkload} from "../queue/IQueueWorkload";
+import {IQueueWorkload} from "../libs/generic/queue/IQueueWorkload";
 import {JudgeResults} from "../judge/JudgeResults";
-import Todo from "../exceptions/TodoException";
+import Todo from "../libs/generic/exceptions/TodoException";
 import * as _ from 'lodash'
 import {IProxyData} from "./IProxyData";
 import {IpAddr} from "../model/IpAddr";

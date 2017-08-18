@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import {Config, IOptions} from "commons-config";
-import {PlatformUtils} from "./utils/PlatformUtils";
-import {Log} from "./lib/logging/Log";
+import {PlatformUtils} from "./libs/generic/utils/PlatformUtils";
+import {Log} from "./libs/generic/logging/Log";
 import {ProxyFilter} from "./proxy/ProxyFilter";
 import {ProxyValidator} from "./proxy/ProxyValidator";
 import {ProviderManager} from "./provider/ProviderManager";
@@ -9,17 +9,19 @@ import {ProxyServer} from "./server/ProxyServer";
 import {AppServer, IExpressOptions, K_APPSERVER} from "./server/AppServer";
 import {ProxyRotator} from "./proxy/ProxyRotator";
 
-import {IStorageOptions, K_STORAGE} from "./storage/IStorageOptions";
-import {Storage} from "./storage/Storage";
-import {EventBus} from "./events/EventBus";
+import {IStorageOptions, K_STORAGE} from "./libs/generic/storage/IStorageOptions";
+import {Storage} from "./libs/generic/storage/Storage";
+import {EventBus} from "./libs/generic/events/EventBus";
 import {IProxyRotatorOptions, K_ROTATOR} from "./proxy/IProxyRotatorOptions";
 import {IProxyValidatiorOptions, K_VALIDATOR} from "./proxy/IProxyValidatiorOptions";
 import {DEFAULT_PROXY_SERVER_OPTIONS, IProxyServerOptions, K_PROXYSERVER} from "./server/IProxyServerOptions";
 import {IProviderOptions, K_PROVIDER} from "./provider/IProviderOptions";
-import {ILoggerOptions, K_LOGGING} from "./lib/logging/ILoggerOptions";
+import {ILoggerOptions, K_LOGGING} from "./libs/generic/logging/ILoggerOptions";
 
-import {Statistics} from "./storage/Statistics";
+import {Statistics} from "./libs/specific/storage/Statistics";
 import {Container} from "typedi";
+import {FIX_STORAGE_OPTIONS} from "./libs/specific/storage/FixStorageOptions";
+import {InternStorage} from "./libs/specific/storage/InternStorage";
 
 const DEFAULT_CONFIG_LOAD_ORDER = [
     {type: 'file', file: '${argv.configfile}'},
@@ -66,7 +68,7 @@ export class Loader {
         Log.options(o_logging);
 
         let o_storage: IStorageOptions = Config.get(K_STORAGE, {})
-        this.storage = new Storage(o_storage);
+        this.storage = new InternStorage(o_storage);
         await this.storage.prepare()
         Container.set(Storage, this.storage)
 

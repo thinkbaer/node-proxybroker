@@ -1,6 +1,6 @@
 import {DEFAULT_SERVER_OPTIONS, IServerOptions} from "./IServerOptions";
 import {IpAddr} from "../model/IpAddr";
-import {IUrlBase} from "../lib/IUrlBase";
+import {IUrlBase} from "../libs/generic/IUrlBase";
 import {SocketHandle} from "./SocketHandle";
 
 export const K_PROXYSERVER = 'proxyserver'

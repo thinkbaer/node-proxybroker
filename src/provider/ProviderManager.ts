@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import subscribe from "../events/decorator/subscribe";
+import subscribe from "../libs/generic/events/decorator/subscribe";
 import {DEFAULT_PROVIDER_OPTIONS, IProviderOptions} from "./IProviderOptions";
 import {IProviderDef} from "./IProviderDef";
 
@@ -7,25 +7,25 @@ import {IProvider} from "./IProvider";
 
 import {ProviderWorker} from "./ProviderWorker";
 
-import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
-import {IQueueProcessor} from "../queue/IQueueProcessor";
-import {ClassLoader} from "../utils/ClassLoader";
+import {AsyncWorkerQueue} from "../libs/generic/queue/AsyncWorkerQueue";
+import {IQueueProcessor} from "../libs/generic/queue/IQueueProcessor";
+import {ClassLoader} from "../libs/generic/utils/ClassLoader";
 import {IProxyData} from "../proxy/IProxyData";
-import {Utils} from "../utils/Utils";
-import {Storage} from "../storage/Storage";
+import {Utils} from "../libs/generic/utils/Utils";
+import {Storage} from "../libs/generic/storage/Storage";
 import {Job} from "../model/Job";
-import {ConnectionWrapper} from "../storage/ConnectionWrapper";
+import {ConnectionWrapper} from "../libs/generic/storage/ConnectionWrapper";
 
 import {JobState} from "../model/JobState";
 import {ProxyDataFetchedEvent} from "../proxy/ProxyDataFetchedEvent";
-import {Log} from "../lib/logging/Log";
-import Exceptions from "../exceptions/Exceptions";
+import {Log} from "../libs/generic/logging/Log";
+import Exceptions from "../libs/specific/exceptions/Exceptions";
 import {IProviderVariantId} from "./IProviderVariantId";
 import {ProviderRunEvent} from "./ProviderRunEvent";
 
 import {clearTimeout, setTimeout} from "timers";
 import Timer = NodeJS.Timer;
-import {Runtime} from "../lib/Runtime";
+import {Runtime} from "../libs/generic/Runtime";
 
 
 const __ALL__ = '_all_';

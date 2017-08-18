@@ -1,7 +1,7 @@
 import * as http from "http";
 import * as https from "https";
 import * as _request from "request-promise-native";
-import {Log} from "../lib/logging/Log";
+import {Log} from "../libs/generic/logging/Log";
 import * as tls from 'tls'
 import * as mUrl from 'url'
 import * as net from 'net'
@@ -12,16 +12,16 @@ import {JudgeRequest} from "./JudgeRequest";
 import {DEFAULT_JUDGE_OPTIONS, IJudgeOptions} from "./IJudgeOptions";
 
 import {JudgeResults} from "./JudgeResults";
-import DomainUtils from "../utils/DomainUtils";
-import {Utils} from "../utils/Utils";
-import {MESSAGE, Messages} from "../lib/Messages";
-import {ProtocolType} from "../lib/ProtocolType";
-import {Progress} from "../lib/Progress";
+import DomainUtils from "../libs/generic/utils/DomainUtils";
+import {Utils} from "../libs/generic/utils/Utils";
+import {MESSAGE, Messages} from "../libs/specific/Messages";
+import {ProtocolType} from "../libs/specific/ProtocolType";
+import {Progress} from "../libs/generic/Progress";
 
-import {Runtime} from "../lib/Runtime";
-import {CryptUtils} from "../utils/CryptUtils";
+import {Runtime} from "../libs/generic/Runtime";
+import {CryptUtils} from "../libs/generic/utils/CryptUtils";
 import {IServerApi, Server} from "../server/Server";
-import TodoException from "../exceptions/TodoException";
+import TodoException from "../libs/generic/exceptions/TodoException";
 import {JudgeResult} from "./JudgeResult";
 
 

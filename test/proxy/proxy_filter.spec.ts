@@ -1,16 +1,17 @@
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
-import {Storage} from "../../src/storage/Storage";
+import {Storage} from "../../src/libs/generic/storage/Storage";
 import {ProxyFilter} from "../../src/proxy/ProxyFilter";
 import {ProxyDataFetchedEvent} from "../../src/proxy/ProxyDataFetchedEvent";
 import {IpAddr} from "../../src/model/IpAddr";
-import subscribe from "../../src/events/decorator/subscribe";
+import subscribe from "../../src/libs/generic/events/decorator/subscribe";
 import {ProxyDataValidateEvent} from "../../src/proxy/ProxyDataValidateEvent";
-import {EventBus} from "../../src/events/EventBus";
+import {EventBus} from "../../src/libs/generic/events/EventBus";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
-import {Utils} from "../../src/utils/Utils";
+import {Utils} from "../../src/libs/generic/utils/Utils";
 import {ProxyDataFetched} from "../../src/proxy/ProxyDataFetched";
-import {Log} from "../../src/lib/logging/Log";
+import {Log} from "../../src/libs/generic/logging/Log";
+import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 describe('', () => {
 });
 
@@ -24,7 +25,7 @@ class ProxyDataSelectorTest {
     }
 
     async before(){
-        storage = await Storage.$(<SqliteConnectionOptions>{
+        storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'proxy_data_validator',
             type: 'sqlite',
             database: ':memory:'

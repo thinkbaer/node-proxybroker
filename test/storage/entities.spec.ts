@@ -7,11 +7,11 @@ import {suite, test, slow, timeout, pending} from "mocha-typescript";
 import {expect} from "chai";
 import {inspect} from 'util'
 
-import {Storage} from "../../src/storage/Storage";
+import {Storage} from "../../src/libs/generic/storage/Storage";
 import {Variable} from "../../src/model/Variable";
 
 
-import {ProtocolType} from "../../src/lib/ProtocolType";
+import {ProtocolType} from "../../src/libs/specific/ProtocolType";
 import {IpAddrState} from "../../src/model/IpAddrState";
 import {IpAddr} from "../../src/model/IpAddr";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
@@ -20,6 +20,7 @@ import {IpRotateLog} from "../../src/model/IpRotateLog";
 import {IpLoc} from "../../src/model/IpLoc";
 import {JobState} from "../../src/model/JobState";
 import {Job} from "../../src/model/Job";
+import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 
 let storage: Storage = null;
 
@@ -27,7 +28,7 @@ let storage: Storage = null;
 class EntitiesTest {
 
     static async before() {
-        storage = new Storage(<SqliteConnectionOptions>{
+        storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'entity_test',
             type: 'sqlite',
             database: ':memory:'

@@ -2,7 +2,7 @@ import {suite, test} from "mocha-typescript";
 import {Judge} from "../../src/judge/Judge";
 
 import * as _ from "lodash";
-import {Log} from "../../src/lib/logging/Log";
+import {Log} from "../../src/libs/generic/logging/Log";
 import {DEFAULT_JUDGE_OPTIONS} from "../../src/judge/IJudgeOptions";
 import {expect} from "chai";
 

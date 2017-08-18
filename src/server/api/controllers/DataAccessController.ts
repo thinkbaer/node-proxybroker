@@ -3,12 +3,12 @@ import {Get, JsonController, Param} from "routing-controllers";
 import {Inject} from "typedi";
 import {ProviderManager} from "../../../provider/ProviderManager";
 import {IProviderVariant} from "../../../provider/IProviderVariant";
-import {Utils} from "../../../utils/Utils";
+import {Utils} from "../../../libs/generic/utils/Utils";
 import {Config, IConfigData} from "commons-config";
-import {Runtime} from "../../../lib/Runtime";
+import {Runtime} from "../../../libs/generic/Runtime";
 import {ProviderRunEvent} from "../../../provider/ProviderRunEvent";
-import {Statistics} from "../../../storage/Statistics";
-import {Storage} from "../../../storage/Storage";
+import {Statistics} from "../../../libs/specific/storage/Statistics";
+import {Storage} from "../../../libs/generic/storage/Storage";
 import {Loader} from "../../../Loader";
 
 

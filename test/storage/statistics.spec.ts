@@ -2,10 +2,11 @@ import * as fs from 'fs';
 
 import {suite, test} from "mocha-typescript";
 
-import {Storage} from "../../src/storage/Storage";
+import {Storage} from "../../src/libs/generic/storage/Storage";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
-import {Statistics} from "../../src/storage/Statistics";
-import {Log} from "../../src/lib/logging/Log";
+import {Statistics} from "../../src/libs/specific/storage/Statistics";
+import {Log} from "../../src/libs/generic/logging/Log";
+import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 
 describe('', () => {
 });
@@ -19,7 +20,7 @@ class EntitiesTest {
 
     static async before() {
         Log.options({enable:false})
-        storage = new Storage(<SqliteConnectionOptions>{
+        storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'stats_test',
             type: 'sqlite',
             database: dbFile

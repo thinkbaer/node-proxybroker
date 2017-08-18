@@ -1,5 +1,5 @@
 import * as child_process from 'child_process';
-import {PlatformUtils} from "../../src/utils/PlatformUtils";
+import {PlatformUtils} from "../../src/libs/generic/utils/PlatformUtils";
 import Timer = NodeJS.Timer;
 
 export default class SpawnCLI {

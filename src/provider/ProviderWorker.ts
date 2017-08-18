@@ -2,13 +2,14 @@ import {IProviderDef} from "./IProviderDef";
 import {ProviderManager} from "./ProviderManager";
 
 
-import {shorthash} from "../lib/crypt";
+
 import {inspect} from "util"
-import {IQueueWorkload} from "../queue/IQueueWorkload";
-import {ClassLoader} from "../utils/ClassLoader";
+import {IQueueWorkload} from "../libs/generic/queue/IQueueWorkload";
+import {ClassLoader} from "../libs/generic/utils/ClassLoader";
 import {IProxyData} from "../proxy/IProxyData";
 import {AbstractProvider} from "./AbstractProvider";
-import {Log} from "../lib/logging/Log";
+import {Log} from "../libs/generic/logging/Log";
+import {CryptUtils} from "../libs/generic/utils/CryptUtils";
 
 
 export class ProviderWorker implements IQueueWorkload {
@@ -24,7 +25,7 @@ export class ProviderWorker implements IQueueWorkload {
     private _status: number = 0;
 
     constructor(manager: ProviderManager, provider: IProviderDef) {
-        this.id = shorthash(inspect(provider));
+        this.id = CryptUtils.shorthash(inspect(provider));
         this._provider = provider;
         this._manager = manager;
         this._localInstance = ClassLoader.createObjectByType<AbstractProvider>(provider.clazz);

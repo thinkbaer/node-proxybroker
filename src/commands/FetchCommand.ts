@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
-import TodoException from "../exceptions/TodoException";
+import TodoException from "../libs/generic/exceptions/TodoException";
 import {ProviderManager} from "../provider/ProviderManager";
-import {Utils} from "../utils/Utils";
+import {Utils} from "../libs/generic/utils/Utils";
 import {IProxyData} from "../proxy/IProxyData";
 
 

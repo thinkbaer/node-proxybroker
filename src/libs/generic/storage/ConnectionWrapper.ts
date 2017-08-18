@@ -1,6 +1,6 @@
 import {Connection, EntityManager, getConnectionManager} from "typeorm";
 import {Storage} from "./Storage";
-import {Log} from "../lib/logging/Log";
+import {Log} from "../logging/Log";
 
 export class ConnectionWrapper {
 

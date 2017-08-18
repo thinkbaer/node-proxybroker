@@ -1,6 +1,6 @@
 import {BeforeInsert, BeforeUpdate, Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
 
-import {ProtocolType} from "../lib/ProtocolType";
+import {ProtocolType} from "../libs/specific/ProtocolType";
 import {Entity} from "typeorm/decorator/entity/Entity";
 
 @Entity()

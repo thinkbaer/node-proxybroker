@@ -1,16 +1,16 @@
 import * as _ from 'lodash'
 
-import subscribe from "../events/decorator/subscribe"
+import subscribe from "../libs/generic/events/decorator/subscribe"
 import {ProxyDataFetchedEvent} from "./ProxyDataFetchedEvent";
-import {Storage} from "../storage/Storage";
+import {Storage} from "../libs/generic/storage/Storage";
 
-import {IQueueProcessor} from "../queue/IQueueProcessor";
+import {IQueueProcessor} from "../libs/generic/queue/IQueueProcessor";
 
-import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
+import {AsyncWorkerQueue} from "../libs/generic/queue/AsyncWorkerQueue";
 import {IpAddr} from "../model/IpAddr";
 import {ProxyData} from "./ProxyData";
 
-import DomainUtils from "../utils/DomainUtils";
+import DomainUtils from "../libs/generic/utils/DomainUtils";
 import {ProxyDataValidateEvent} from "./ProxyDataValidateEvent";
 import {ProxyDataFetched} from "./ProxyDataFetched";
 

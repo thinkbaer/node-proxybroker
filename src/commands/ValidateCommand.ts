@@ -1,11 +1,11 @@
 import {Judge} from "../judge/Judge";
 
-import StdConsole from "../lib/logging/StdConsole";
-import {Log} from "../lib/logging/Log";
-import Todo from "../exceptions/TodoException";
-import {EventBus} from "../events/EventBus";
+import StdConsole from "../libs/specific/logging/StdConsole";
+import {Log} from "../libs/generic/logging/Log";
+import Todo from "../libs/generic/exceptions/TodoException";
+import {EventBus} from "../libs/generic/events/EventBus";
 import {Config} from "commons-config";
-import {PlatformUtils} from "../utils/PlatformUtils";
+import {PlatformUtils} from "../libs/generic/utils/PlatformUtils";
 import * as fs from 'fs'
 import * as url from 'url'
 import {JudgeResults} from "../judge/JudgeResults";

@@ -8,7 +8,7 @@ import * as _ from 'lodash'
 import {AbstractProvider} from "../AbstractProvider";
 import {IProviderVariant} from "../IProviderVariant";
 import {IProxyData} from "../../proxy/IProxyData";
-import {Log} from "../../lib/logging/Log";
+import {Log} from "../../libs/generic/logging/Log";
 
 
 const NAME = 'proxylistende';

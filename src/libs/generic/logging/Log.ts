@@ -2,10 +2,10 @@ import LogEvent from "./LogEvent";
 import * as winston from "winston";
 import * as _ from 'lodash'
 import {ILoggerOptions} from "./ILoggerOptions";
-import TodoException from "../../exceptions/TodoException";
+import TodoException from "../exceptions/TodoException";
 import {LoggerOptions, TransportInstance, TransportOptions} from "winston";
 import * as moment from "moment";
-import {Utils} from "../../utils/Utils";
+import {Utils} from "../utils/Utils";
 
 const DEFAULT_TRANSPORT_OPTIONS: TransportOptions = {
     timestamp: true,

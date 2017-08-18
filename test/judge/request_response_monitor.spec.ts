@@ -4,7 +4,7 @@ import {expect} from "chai";
 import {RequestResponseMonitor} from "../../src/judge/RequestResponseMonitor";
 import * as _request from "request-promise-native";
 import {Server} from "../../src/server/Server";
-import {Log} from "../../src/lib/logging/Log";
+import {Log} from "../../src/libs/generic/logging/Log";
 
 describe('', () => {
 });

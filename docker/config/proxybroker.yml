@@ -18,7 +18,6 @@ storage:
 rotator:
 
 
-
 validator:
   parallel: 100
   schedule:

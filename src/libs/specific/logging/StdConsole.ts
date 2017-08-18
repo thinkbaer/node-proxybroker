@@ -1,7 +1,7 @@
 
-import {ReqResEvent} from "../../judge/ReqResEvent";
-import LogEvent from "./LogEvent";
-import subscribe from "../../events/decorator/subscribe"
+import {ReqResEvent} from "../../../judge/ReqResEvent";
+import LogEvent from "../../generic/logging/LogEvent";
+import subscribe from "../../generic/events/decorator/subscribe"
 
 export default class StdConsole {
 

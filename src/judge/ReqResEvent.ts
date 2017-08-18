@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
-import {EventBus} from "../events/EventBus";
+import {EventBus} from "../libs/generic/events/EventBus";
 import * as moment from "moment";
-import {Messages} from "../lib/Messages";
+import {Messages} from "../libs/specific/Messages";
 
 export class ReqResEvent {
 

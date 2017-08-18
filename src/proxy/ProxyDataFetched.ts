@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
 import {IProxyData} from "./IProxyData";
-import TodoException from "../exceptions/TodoException";
+import TodoException from "../libs/generic/exceptions/TodoException";
 import {JobState} from "../model/JobState";
 
 

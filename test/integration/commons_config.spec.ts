@@ -9,9 +9,9 @@ import {inspect} from 'util'
 
 
 import {Config} from "commons-config";
-import {DEFAULT_STORAGE_OPTIONS} from "../../src/storage/Storage";
+import {DEFAULT_STORAGE_OPTIONS} from "../../src/libs/generic/storage/Storage";
 
-import {K_WORKDIR} from "../../src/types";
+import {K_WORKDIR} from "../../src/libs/generic/types";
 import {IProviderOptions} from "../../src/provider/IProviderOptions";
 
 

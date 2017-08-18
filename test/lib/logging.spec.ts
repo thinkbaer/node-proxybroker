@@ -5,7 +5,7 @@ describe('', () => {
 
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
-import {Log} from "../../src/lib/logging/Log";
+import {Log} from "../../src/libs/generic/logging/Log";
 
 
 let stdMocks = require('std-mocks');
@@ -13,7 +13,7 @@ let stdMocks = require('std-mocks');
 /**
  * TODO
  */
-@suite('lib/logging/Log')
+@suite('libs/logging/Log')
 class LogTests {
 
     before(){

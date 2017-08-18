@@ -1,27 +1,27 @@
-import subscribe from "../events/decorator/subscribe"
+import subscribe from "../libs/generic/events/decorator/subscribe"
 
 import {clearTimeout, setTimeout} from "timers";
 
 import {Judge} from "../judge/Judge";
-import {AsyncWorkerQueue} from "../queue/AsyncWorkerQueue";
+import {AsyncWorkerQueue} from "../libs/generic/queue/AsyncWorkerQueue";
 import {ProxyData} from "./ProxyData";
 import * as _ from 'lodash'
-import {IQueueProcessor} from "../queue/IQueueProcessor";
-import {QueueJob} from "../queue/QueueJob";
+import {IQueueProcessor} from "../libs/generic/queue/IQueueProcessor";
+import {QueueJob} from "../libs/generic/queue/QueueJob";
 import {ProxyDataValidateEvent} from "./ProxyDataValidateEvent";
-import TodoException from "../exceptions/TodoException";
-import {Storage} from "../storage/Storage";
+import TodoException from "../libs/generic/exceptions/TodoException";
+import {Storage} from "../libs/generic/storage/Storage";
 import {IpLoc} from "../model/IpLoc";
 import {IpAddrState} from "../model/IpAddrState";
 import {IpAddr} from "../model/IpAddr";
 import {JudgeResult} from "../judge/JudgeResult";
 
-import {Utils} from "../utils/Utils";
-import {Log} from "../lib/logging/Log";
+import {Utils} from "../libs/generic/utils/Utils";
+import {Log} from "../libs/generic/logging/Log";
 import {DEFAULT_VALIDATOR_OPTIONS, IProxyValidatiorOptions} from "./IProxyValidatiorOptions";
 
 
-import {Runtime} from "../lib/Runtime";
+import {Runtime} from "../libs/generic/Runtime";
 import {ValidatorRunEvent} from "./ValidatorRunEvent";
 import {DateUtils} from "typeorm/util/DateUtils";
 import Timer = NodeJS.Timer;

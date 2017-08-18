@@ -3,10 +3,10 @@
 
 import {suite, test, slow, timeout, pending} from "mocha-typescript";
 import {expect} from "chai";
-import {AsyncWorkerQueue} from "../../src/queue/AsyncWorkerQueue";
-import {IQueueProcessor} from "../../src/queue/IQueueProcessor";
-import {IQueueWorkload} from "../../src/queue/IQueueWorkload";
-import {QueueJob} from "../../src/queue/QueueJob";
+import {AsyncWorkerQueue} from "../../src/libs/generic/queue/AsyncWorkerQueue";
+import {IQueueProcessor} from "../../src/libs/generic/queue/IQueueProcessor";
+import {IQueueWorkload} from "../../src/libs/generic/queue/IQueueWorkload";
+import {QueueJob} from "../../src/libs/generic/queue/QueueJob";
 
 // describe('',() => {})
 

@@ -1,10 +1,10 @@
 import * as _ from 'lodash'
 
 
-import DomainUtils from "../utils/DomainUtils";
-import {Utils} from "../utils/Utils";
+import DomainUtils from "../libs/generic/utils/DomainUtils";
+import {Utils} from "../libs/generic/utils/Utils";
 import {IHeader} from "./IHeader";
-import {Log} from "../lib/logging/Log";
+import {Log} from "../libs/generic/logging/Log";
 
 const HTTP_FORWARD_HEADER = [
     'forwarded-for',

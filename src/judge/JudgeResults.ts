@@ -1,5 +1,5 @@
 import {JudgeResult} from "./JudgeResult";
-import {ProtocolType} from "../lib/ProtocolType";
+import {ProtocolType} from "../libs/specific/ProtocolType";
 import * as _ from 'lodash'
 
 

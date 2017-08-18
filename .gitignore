@@ -55,8 +55,12 @@ build/
 # Typings
 typings/
 
-
+# Docker
 docker/local
 
 # Hidden
 *.hidden.*
+
+# R
+.RData
+.Rhistory
