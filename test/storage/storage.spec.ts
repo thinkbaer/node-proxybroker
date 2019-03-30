@@ -10,7 +10,7 @@ import {inspect} from 'util'
 
 import {Storage} from "../../src/libs/generic/storage/Storage";
 
-import {IpAddr} from "../../src/model/IpAddr";
+import {IpAddr} from "../../src/entities/IpAddr";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 

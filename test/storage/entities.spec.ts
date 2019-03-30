@@ -8,18 +8,18 @@ import {expect} from "chai";
 import {inspect} from 'util'
 
 import {Storage} from "../../src/libs/generic/storage/Storage";
-import {Variable} from "../../src/model/Variable";
+import {Variable} from "../../src/entities/Variable";
 
 
 import {ProtocolType} from "../../src/libs/specific/ProtocolType";
-import {IpAddrState} from "../../src/model/IpAddrState";
-import {IpAddr} from "../../src/model/IpAddr";
+import {IpAddrState} from "../../src/entities/IpAddrState";
+import {IpAddr} from "../../src/entities/IpAddr";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
-import {IpRotate} from "../../src/model/IpRotate";
-import {IpRotateLog} from "../../src/model/IpRotateLog";
-import {IpLoc} from "../../src/model/IpLoc";
-import {JobState} from "../../src/model/JobState";
-import {Job} from "../../src/model/Job";
+import {IpRotate} from "../../src/entities/IpRotate";
+import {IpRotateLog} from "../../src/entities/IpRotateLog";
+import {IpLoc} from "../../src/entities/IpLoc";
+import {JobState} from "../../src/entities/JobState";
+import {Job} from "../../src/entities/Job";
 import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 
 let storage: Storage = null;

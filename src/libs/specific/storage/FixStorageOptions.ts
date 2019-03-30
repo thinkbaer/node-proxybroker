@@ -1,14 +1,14 @@
 
 
 
-import {Variable} from "../../../model/Variable";
-import {IpAddrState} from "../../../model/IpAddrState";
-import {IpAddr} from "../../../model/IpAddr";
-import {IpLoc} from "../../../model/IpLoc";
-import {JobState} from "../../../model/JobState";
-import {Job} from "../../../model/Job";
-import {IpRotate} from "../../../model/IpRotate";
-import {IpRotateLog} from "../../../model/IpRotateLog";
+import {Variable} from "../../../entities/Variable";
+import {IpAddrState} from "../../../entities/IpAddrState";
+import {IpAddr} from "../../../entities/IpAddr";
+import {IpLoc} from "../../../entities/IpLoc";
+import {JobState} from "../../../entities/JobState";
+import {Job} from "../../../entities/Job";
+import {IpRotate} from "../../../entities/IpRotate";
+import {IpRotateLog} from "../../../entities/IpRotateLog";
 
 export const FIX_STORAGE_OPTIONS = {
     entities: [

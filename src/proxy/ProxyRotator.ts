@@ -1,15 +1,15 @@
 import {DEFAULT_ROTATOR_OPTIONS, IProxyRotatorOptions} from "./IProxyRotatorOptions";
 import {Storage} from "../libs/generic/storage/Storage";
 import {Utils} from "../libs/generic/utils/Utils";
-import {IpAddr} from "../model/IpAddr";
-import {IpLoc} from "../model/IpLoc";
+import {IpAddr} from "../entities/IpAddr";
+import {IpLoc} from "../entities/IpLoc";
 import {ProtocolType} from "../libs/specific/ProtocolType";
-import {IpAddrState} from "../model/IpAddrState";
-import {IpRotate} from "../model/IpRotate";
+import {IpAddrState} from "../entities/IpAddrState";
+import {IpRotate} from "../entities/IpRotate";
 import {ProxyUsedEvent} from "./ProxyUsedEvent";
 
 import subscribe from "../libs/generic/events/decorator/subscribe"
-import {IpRotateLog} from "../model/IpRotateLog";
+import {IpRotateLog} from "../entities/IpRotateLog";
 import {Log} from "../libs/generic/logging/Log";
 import * as _ from 'lodash'
 /**

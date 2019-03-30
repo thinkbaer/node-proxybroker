@@ -1,5 +1,5 @@
 import {DEFAULT_SERVER_OPTIONS, IServerOptions} from "./IServerOptions";
-import {IpAddr} from "../model/IpAddr";
+import {IpAddr} from "../entities/IpAddr";
 import {IUrlBase} from "../libs/generic/IUrlBase";
 import {SocketHandle} from "./SocketHandle";
 

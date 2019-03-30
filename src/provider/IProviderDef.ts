@@ -1,7 +1,7 @@
 
 
 import {IProviderVariant} from "./IProviderVariant";
-import {Job} from "../model/Job";
+import {Job} from "../entities/Job";
 
 export interface IProviderDef extends IProviderVariant {
 

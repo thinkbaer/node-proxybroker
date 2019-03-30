@@ -7,15 +7,15 @@ import {expect} from "chai";
 import {IUrlBase} from "../../src/libs/generic/IUrlBase";
 import {SocketHandle} from "../../src/server/SocketHandle";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
-import {IpAddr} from "../../src/model/IpAddr";
-import {IpAddrState} from "../../src/model/IpAddrState";
+import {IpAddr} from "../../src/entities/IpAddr";
+import {IpAddrState} from "../../src/entities/IpAddrState";
 import {ProtocolType} from "../../src/libs/specific/ProtocolType";
 import {ProxyRotator} from "../../src/proxy/ProxyRotator";
 import {ProxyUsedEvent} from "../../src/proxy/ProxyUsedEvent";
 import {EventBus} from "../../src/libs/generic/events/EventBus";
-import {IpRotate} from "../../src/model/IpRotate";
+import {IpRotate} from "../../src/entities/IpRotate";
 import {Utils} from "../../src/libs/generic/utils/Utils";
-import {IpRotateLog} from "../../src/model/IpRotateLog";
+import {IpRotateLog} from "../../src/entities/IpRotateLog";
 import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 
 describe('', () => {

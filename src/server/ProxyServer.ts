@@ -4,19 +4,21 @@ import * as http from 'http'
 import * as net from 'net'
 import * as url from "url";
 
-import {Server} from "./Server";
+
 import {DEFAULT_PROXY_SERVER_OPTIONS, IProxyServerOptions, K_PROXYSERVER} from "./IProxyServerOptions";
 
 import {Runtime} from "../libs/generic/Runtime";
 import {IUrlBase} from "../libs/generic/IUrlBase";
-import {IpAddr} from "../model/IpAddr";
+import {IpAddr} from "../entities/IpAddr";
 import TodoException from "../libs/generic/exceptions/TodoException";
 
 import {ProtocolType} from "../libs/specific/ProtocolType";
 import {SocketHandle} from "./SocketHandle";
 import {ProxyUsedEvent} from "../proxy/ProxyUsedEvent";
-import {EventBus} from "../libs/generic/events/EventBus";
+
 import {Log} from "../libs/generic/logging/Log";
+import {EventBus} from "commons-eventbus";
+import {Server} from "@typexs/server";
 
 
 export class ProxyServer extends Server {
@@ -24,7 +26,7 @@ export class ProxyServer extends Server {
 
     _options: IProxyServerOptions;
 
-    handles: SocketHandle[] = []
+    handles: SocketHandle[] = [];
 
     // proxy: HttpProxy = null;
 
@@ -32,7 +34,6 @@ export class ProxyServer extends Server {
         super(_.defaultsDeep(options,DEFAULT_PROXY_SERVER_OPTIONS))
         Runtime.$().setConfig(K_PROXYSERVER, this._options)
     }
-
 
 
     get level(): number {

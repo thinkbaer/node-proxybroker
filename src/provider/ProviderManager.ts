@@ -13,10 +13,10 @@ import {ClassLoader} from "../libs/generic/utils/ClassLoader";
 import {IProxyData} from "../proxy/IProxyData";
 import {Utils} from "../libs/generic/utils/Utils";
 import {Storage} from "../libs/generic/storage/Storage";
-import {Job} from "../model/Job";
+import {Job} from "../entities/Job";
 import {ConnectionWrapper} from "../libs/generic/storage/ConnectionWrapper";
 
-import {JobState} from "../model/JobState";
+import {JobState} from "../entities/JobState";
 import {ProxyDataFetchedEvent} from "../proxy/ProxyDataFetchedEvent";
 import {Log} from "../libs/generic/logging/Log";
 import Exceptions from "../libs/specific/exceptions/Exceptions";

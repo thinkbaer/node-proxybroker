@@ -1,7 +1,4 @@
-import {
-    Column,  PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
-     BeforeInsert, BeforeUpdate
-} from "typeorm";
+import {BeforeInsert, BeforeUpdate, Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
 
 import {Utils} from "../libs/generic/utils/Utils";
 import {Index} from "typeorm/decorator/Index";

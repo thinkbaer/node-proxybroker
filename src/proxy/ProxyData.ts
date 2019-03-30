@@ -3,7 +3,7 @@ import {JudgeResults} from "../judge/JudgeResults";
 import Todo from "../libs/generic/exceptions/TodoException";
 import * as _ from 'lodash'
 import {IProxyData} from "./IProxyData";
-import {IpAddr} from "../model/IpAddr";
+import {IpAddr} from "../entities/IpAddr";
 
 export class ProxyData implements IQueueWorkload, IProxyData {
 

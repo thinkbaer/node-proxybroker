@@ -11,9 +11,9 @@ import {QueueJob} from "../libs/generic/queue/QueueJob";
 import {ProxyDataValidateEvent} from "./ProxyDataValidateEvent";
 import TodoException from "../libs/generic/exceptions/TodoException";
 import {Storage} from "../libs/generic/storage/Storage";
-import {IpLoc} from "../model/IpLoc";
-import {IpAddrState} from "../model/IpAddrState";
-import {IpAddr} from "../model/IpAddr";
+import {IpLoc} from "../entities/IpLoc";
+import {IpAddrState} from "../entities/IpAddrState";
+import {IpAddr} from "../entities/IpAddr";
 import {JudgeResult} from "../judge/JudgeResult";
 
 import {Utils} from "../libs/generic/utils/Utils";

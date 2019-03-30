@@ -3,7 +3,7 @@ import {expect} from "chai";
 import {Storage} from "../../src/libs/generic/storage/Storage";
 import {ProxyFilter} from "../../src/proxy/ProxyFilter";
 import {ProxyDataFetchedEvent} from "../../src/proxy/ProxyDataFetchedEvent";
-import {IpAddr} from "../../src/model/IpAddr";
+import {IpAddr} from "../../src/entities/IpAddr";
 import subscribe from "../../src/libs/generic/events/decorator/subscribe";
 import {ProxyDataValidateEvent} from "../../src/proxy/ProxyDataValidateEvent";
 import {EventBus} from "../../src/libs/generic/events/EventBus";

@@ -1,6 +1,6 @@
 import {EventBus} from "../libs/generic/events/EventBus";
 import {ProxyData} from "./ProxyData";
-import {JobState} from "../model/JobState";
+import {JobState} from "../entities/JobState";
 
 export class ProxyDataValidateEvent {
 
