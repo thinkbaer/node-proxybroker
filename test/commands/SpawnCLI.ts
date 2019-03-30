@@ -4,7 +4,6 @@ import Timer = NodeJS.Timer;
 
 export default class SpawnCLI {
 
-
     static timeout: number = 10000;
     args: string[];
     stderr: string = '';
