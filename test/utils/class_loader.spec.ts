@@ -2,10 +2,7 @@ import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 import {inspect} from "util";
 
-import {ClassLoader} from "../../src/libs/generic/utils/ClassLoader";
-describe('', () => {
-});
-
+import {ClassLoader} from "@typexs/base";
 
 interface ITest {
     somename?: string;
@@ -31,7 +28,7 @@ class ClassLoaderTest {
         let paths = [__dirname + '/testcase/dir_with_classes/*'];
         let loaded = ClassLoader.importClassesFromDirectories(paths);
         let cls = loaded.shift();
-        let obj: ITest = ClassLoader.createObjectByType<ITest>(cls);
+        let obj: ITest = Reflect.construct(cls,[]);
 
         let str = "Cls01 {\n  somename: \'initialized\',\n  othername: \'othername\',\n  someothername: \'someothername\' }";
 

@@ -1,6 +1,4 @@
 import * as mocha from 'mocha';
-describe('', () => {
-});
 
 
 import {suite, test, slow, timeout, pending} from "mocha-typescript";
@@ -9,10 +7,10 @@ import {inspect} from 'util'
 
 
 import {Config} from "commons-config";
-import {DEFAULT_STORAGE_OPTIONS} from "../../src/libs/generic/storage/Storage";
 
 import {K_WORKDIR} from "../../src/libs/generic/types";
-import {IProviderOptions} from "../../src/provider/IProviderOptions";
+import {IProviderOptions} from "../../src/libs/provider/IProviderOptions";
+import {DEFAULT_STORAGE_OPTIONS} from "@typexs/base";
 
 
 /**

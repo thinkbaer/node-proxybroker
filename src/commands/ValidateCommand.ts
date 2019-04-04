@@ -1,16 +1,10 @@
-import {Judge} from "../judge/Judge";
-
-import StdConsole from "../libs/specific/logging/StdConsole";
-import {Log} from "../libs/generic/logging/Log";
-import Todo from "../libs/generic/exceptions/TodoException";
-import {EventBus} from "../libs/generic/events/EventBus";
+import {Log, PlatformUtils, TodoException} from "@typexs/base";
 import {Config} from "commons-config";
-import {PlatformUtils} from "../libs/generic/utils/PlatformUtils";
 import * as fs from 'fs'
-import * as url from 'url'
-import {JudgeResults} from "../judge/JudgeResults";
-import {ProxyData} from "../proxy/ProxyData";
-import {ProxyValidator} from "../proxy/ProxyValidator";
+import {ProxyData} from "../libs/proxy/ProxyData";
+import {ProxyValidator} from "../libs/proxy/ProxyValidator";
+import {JudgeResults} from "../libs/judge/JudgeResults";
+import {Judge} from "../libs/judge/Judge";
 
 
 const REGEX = /^((http|https):\/\/)?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):?(\d{1,5})?$/
@@ -32,7 +26,6 @@ export class ValidateCommand {
     }
 
     async handler(argv: any) {
-        EventBus.register(new StdConsole());
         let list: ProxyData[] = [];
 
         if (PlatformUtils.fileExist(argv.host_or_file)) {
@@ -101,7 +94,7 @@ export class ValidateCommand {
                     await validator.shutdown();
 
                 } else {
-                    throw new Todo()
+                    throw new TodoException()
                 }
 
 
@@ -166,7 +159,7 @@ export class ValidateCommand {
                     await judge.pending()
                 }
             } else {
-                throw new Todo()
+                throw new TodoException()
             }
         }
 

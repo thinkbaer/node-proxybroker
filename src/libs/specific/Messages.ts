@@ -1,6 +1,4 @@
-import {Utils} from "../generic/utils/Utils";
-
-import TodoException from "../generic/exceptions/TodoException";
+import {InterpolationSupport} from "commons-config";
 
 export const MESSAGE = {
     ORQ01: {k: 'ORQ01', _: 'Try connect to ${uri} over proxy ${proxy_uri} ...'},
@@ -60,7 +58,7 @@ export class Messages {
 
             if (parameter) {
 
-                str = Utils.interpolate(MESSAGE[msgId]._, parameter)
+                str = InterpolationSupport.exec(MESSAGE[msgId]._, parameter)
 
             } else {
                 str = MESSAGE[msgId]._

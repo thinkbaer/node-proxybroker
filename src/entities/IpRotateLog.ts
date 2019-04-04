@@ -1,12 +1,4 @@
-
-
-import {
-    Column,  PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
-    BeforeInsert, BeforeUpdate
-} from "typeorm";
-
-import {Utils} from "../libs/generic/utils/Utils";
-import {Index} from "typeorm/decorator/Index";
+import {Column, CreateDateColumn, PrimaryGeneratedColumn} from "typeorm";
 import {ProtocolType} from "../libs/specific/ProtocolType";
 
 import {Entity} from "typeorm/decorator/entity/Entity";
@@ -16,50 +8,39 @@ import {Entity} from "typeorm/decorator/entity/Entity";
 //@Index("unique_addr_proto", (ipaddr: IpRotate) => [ipaddr.protocol, ipaddr.addr_id], { unique: true })
 export class IpRotateLog {
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({nullable:false})
-    protocol: ProtocolType;
+  @Column({nullable: false})
+  protocol: ProtocolType;
 
-    @Column({nullable:false})
-    protocol_dest: ProtocolType;
+  @Column({nullable: false})
+  protocol_dest: ProtocolType;
 
-    @Column({nullable:false})
-    addr_id: number;
+  @Column({nullable: false})
+  addr_id: number;
 
-    @Column({type:'boolean', nullable:false})
-    success:boolean = true
+  @Column({type: 'boolean', nullable: false})
+  success: boolean = true
 
-    @Column({type:'datetime',nullable:true})
-    start: Date = null;
+  @Column({type: 'datetime', nullable: true})
+  start: Date = null;
 
-    @Column({type:'datetime',nullable:true})
-    stop: Date = null;
-
-
-    @Column({nullable:false})
-    duration:number = 0
-
-    @Column({nullable:true})
-    error:string
-
-    @Column({nullable:true})
-    statusCode:number
-
-    @CreateDateColumn()
-    created_at: Date;
+  @Column({type: 'datetime', nullable: true})
+  stop: Date = null;
 
 
-    constructor(){}
+  @Column({nullable: false})
+  duration: number = 0
 
+  @Column({nullable: true})
+  error: string
 
-    flattenDates(){
-        if(this.created_at){
-            this.created_at = Utils.flattenDate(this.created_at)
-        }
+  @Column({nullable: true})
+  statusCode: number
 
-    }
+  @CreateDateColumn()
+  created_at: Date;
 
 
 }
