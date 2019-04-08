@@ -1,14 +1,9 @@
 import * as mocha from 'mocha';
-describe('', () => {
-});
 
 
 import {suite, test, slow, timeout, pending} from "mocha-typescript";
 import {expect} from "chai";
 import {inspect} from 'util'
-
-import {Storage} from "../../src/libs/generic/storage/Storage";
-import {Variable} from "../../src/entities/Variable";
 
 
 import {ProtocolType} from "../../src/libs/specific/ProtocolType";
@@ -18,9 +13,6 @@ import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOpt
 import {IpRotate} from "../../src/entities/IpRotate";
 import {IpRotateLog} from "../../src/entities/IpRotateLog";
 import {IpLoc} from "../../src/entities/IpLoc";
-import {JobState} from "../../src/entities/JobState";
-import {Job} from "../../src/entities/Job";
-import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 
 let storage: Storage = null;
 

@@ -1,5 +1,4 @@
 import {suite, test} from "mocha-typescript";
-import {Judge} from "../../src/judge/Judge";
 import {expect} from "chai";
 
 describe('', () => {

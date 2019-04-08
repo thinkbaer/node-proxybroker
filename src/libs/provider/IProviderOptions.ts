@@ -1,4 +1,4 @@
-
+import {StringOrFunction} from "@typexs/base/browser";
 
 
 
@@ -22,16 +22,17 @@ export interface IProviderOptions {
     parallel?:number
 }
 
+/*
 const DEFAULT_PROVIDER: StringOrFunction[] = [
     FreeProxyListsCom, ProxyListenDe
 ];
-
+*/
 
 export const DEFAULT_PROVIDER_OPTIONS: IProviderOptions = {
     schedule: {
         enable: true,
         pattern: `${(new Date()).getMinutes() + 1} ${(new Date()).getHours()} * * *`
     },
-    providers: DEFAULT_PROVIDER
+    //providers: DEFAULT_PROVIDER
 };
 

@@ -1,64 +1,66 @@
-import {IUrlBase} from "../libs/generic/IUrlBase";
-import {ProtocolType} from "../libs/specific/ProtocolType";
-import {EventBus} from "../libs/generic/events/EventBus";
 import {SocketHandle} from "../server/SocketHandle";
+import {ProtocolType} from "../specific/ProtocolType";
+import {IUrlBase} from "@typexs/base";
 
 export class ProxyUsedEvent {
 
-    protocol: ProtocolType;
+  protocol: ProtocolType;
 
-    protocol_dest: ProtocolType;
+  protocol_dest: ProtocolType;
 
-    hostname: string;
+  hostname: string;
 
-    port: number;
+  port: number;
 
-    duration: number = 0;
+  duration: number = 0;
 
-    success: boolean = false;
+  success: boolean = false;
 
-    error: Error = null
+  error: Error = null
 
-    fired: boolean = false
+  fired: boolean = false
 
-    start: Date;
+  start: Date;
 
-    stop: Date;
+  stop: Date;
 
-    statusCode: number;
+  statusCode: number;
 
 
-    constructor(options?: IUrlBase, handle?: SocketHandle) {
-        if (options) {
-            this.assignFrom(options)
-        }
-
-        if (handle) {
-            this.assignFrom(handle)
-        }
-
-        // _.assign(this, options)
+  constructor(options?: IUrlBase, handle?: SocketHandle) {
+    if (options) {
+      this.assignFrom(options)
     }
 
-    assignFrom(options: IUrlBase | SocketHandle){
-        if(options instanceof SocketHandle){
-            this.duration = options.duration
-            this.start = options.start
-            this.stop = options.stop
-            this.statusCode = options.statusCode
-            this.error = options.error
-            this.success = !options.hasError()
-            this.protocol_dest = options.ssl ? ProtocolType.HTTPS : ProtocolType.HTTP
-        }else{
-            this.protocol = options.protocol === 'https' ? ProtocolType.HTTPS : ProtocolType.HTTP
-            this.hostname = options.hostname
-            this.port = options.port
-        }
+    if (handle) {
+      this.assignFrom(handle)
     }
 
-    fire() {
-        this.fired = true;
-        EventBus.post(this)
+    // _.assign(this, options)
+  }
+
+  assignFrom(options: IUrlBase | SocketHandle) {
+    if (options instanceof SocketHandle) {
+      this.duration = options.duration
+      this.start = options.start
+      this.stop = options.stop
+      this.statusCode = options.statusCode
+      this.error = options.error
+      this.success = !options.hasError()
+      this.protocol_dest = options.ssl ? ProtocolType.HTTPS : ProtocolType.HTTP
+    } else {
+      this.protocol = options.protocol === 'https' ? ProtocolType.HTTPS : ProtocolType.HTTP
+      this.hostname = options.hostname
+      this.port = options.port
     }
+  }
+
+  /*
+  fire() {
+      this.fired = true;
+      EventBus.post(this)
+  }
+
+   */
 
 }

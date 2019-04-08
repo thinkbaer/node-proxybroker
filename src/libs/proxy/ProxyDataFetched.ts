@@ -1,7 +1,5 @@
 import * as _ from 'lodash'
 import {IProxyData} from "./IProxyData";
-import TodoException from "../libs/generic/exceptions/TodoException";
-import {JobState} from "../entities/JobState";
 
 
 export class ProxyDataFetched {

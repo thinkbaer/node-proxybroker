@@ -1,9 +1,8 @@
-import {IQueueWorkload} from "../libs/generic/queue/IQueueWorkload";
 import {JudgeResults} from "../judge/JudgeResults";
-import Todo from "../libs/generic/exceptions/TodoException";
 import * as _ from 'lodash'
 import {IProxyData} from "./IProxyData";
-import {IpAddr} from "../entities/IpAddr";
+import {IQueueWorkload,TodoException} from "@typexs/base";
+import {IpAddr} from "../../entities/IpAddr";
 
 export class ProxyData implements IQueueWorkload, IProxyData {
 
@@ -32,7 +31,7 @@ export class ProxyData implements IQueueWorkload, IProxyData {
             }
         } else {
             // TODO test string with :
-            throw new Todo()
+            throw new TodoException()
         }
 
     }

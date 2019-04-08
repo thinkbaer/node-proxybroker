@@ -1,11 +1,8 @@
 import * as mocha from 'mocha';
-describe('', () => {
-});
-
 
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
-import {Log} from "../../src/libs/generic/logging/Log";
+import {Log} from "@typexs/base";
 
 
 let stdMocks = require('std-mocks');
@@ -18,7 +15,7 @@ class LogTests {
 
     before(){
         // reset log
-        Log['self'] = null
+        Log.reset();
     }
 
     @test.skip()

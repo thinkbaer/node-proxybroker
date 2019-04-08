@@ -1,19 +1,14 @@
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
-import {Storage} from "../../src/libs/generic/storage/Storage";
-import {ProxyFilter} from "../../src/proxy/ProxyFilter";
-import {ProxyDataFetchedEvent} from "../../src/proxy/ProxyDataFetchedEvent";
 import {IpAddr} from "../../src/entities/IpAddr";
-import subscribe from "../../src/libs/generic/events/decorator/subscribe";
-import {ProxyDataValidateEvent} from "../../src/proxy/ProxyDataValidateEvent";
-import {EventBus} from "../../src/libs/generic/events/EventBus";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
-import {Utils} from "../../src/libs/generic/utils/Utils";
-import {ProxyDataFetched} from "../../src/proxy/ProxyDataFetched";
-import {Log} from "../../src/libs/generic/logging/Log";
-import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
-describe('', () => {
-});
+import {ProxyFilter} from "../../src/libs/proxy/ProxyFilter";
+import {ProxyDataFetched} from "../../src/libs/proxy/ProxyDataFetched";
+import {Log} from "@typexs/base";
+import {EventBus} from "commons-eventbus";
+import {ProxyDataValidateEvent} from "../../src/libs/proxy/ProxyDataValidateEvent";
+import {ProxyDataFetchedEvent} from "../../src/libs/proxy/ProxyDataFetchedEvent";
+import subscribe from "commons-eventbus/decorator/subscribe";
 
 let storage:Storage = null
 
@@ -54,7 +49,7 @@ class ProxyDataSelectorTest {
         let p = new IpAddr();
         p.ip = '192.0.0.1';
         p.port = 3129;
-        p.last_checked_at = Utils.now();
+        p.last_checked_at = new Date();
         await c.save(p);
 
         let events = await proxy_data_selector.do(new ProxyDataFetched([

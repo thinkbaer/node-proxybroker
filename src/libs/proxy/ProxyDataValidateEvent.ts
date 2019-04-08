@@ -1,36 +1,39 @@
-import {EventBus} from "../libs/generic/events/EventBus";
 import {ProxyData} from "./ProxyData";
-import {JobState} from "../entities/JobState";
 
 export class ProxyDataValidateEvent {
 
-    data: ProxyData;
+  data: ProxyData;
 
-    // isNew: boolean = true;
+  // isNew: boolean = true;
 
-    // record: IpAddr = null;
+  // record: IpAddr = null;
 
-    fired: boolean = false;
+  fired: boolean = false;
 
-    jobState:JobState = null;
+  //jobState: JobState = null;
 
 
-    constructor(data: ProxyData, jobState?:JobState){
-        this.jobState = jobState;
-        if(!this.jobState){
-            this.jobState = new JobState()
-        }
-        // this.isNew = false;
-        this.data = data
+  constructor(data: ProxyData/*, jobState?: JobState*/) {
+    /*
+    this.jobState = jobState;
+    if (!this.jobState) {
+      this.jobState = new JobState()
     }
 
-    fire() {
-        this.fired = true;
-        /*
-        if(!this.record){
-            this.isNew = true
-        }*/
+     */
+    // this.isNew = false;
+    this.data = data
+  }
 
-        EventBus.post(this)
-    }
+  /*
+  fire() {
+    this.fired = true;
+    /*
+    if(!this.record){
+        this.isNew = true
+    }* /
+
+    EventBus.post(this)
+  }
+  */
 }

@@ -266,7 +266,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
 
   private newProviderFromObject(obj: Function): IProvider {
-    return ClassLoader.createObjectByType<IProvider>(obj);
+    return Reflect.construct(obj,[]);
   }
 
 

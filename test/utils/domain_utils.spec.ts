@@ -3,10 +3,7 @@ import * as mocha from 'mocha';
 
 import {suite, test, slow, timeout, pending} from "mocha-typescript";
 import {expect} from "chai";
-import {inspect} from 'util'
-
-import {ClassLoader} from "../../src/libs/generic/utils/ClassLoader";
-import DomainUtils from "../../src/libs/generic/utils/DomainUtils";
+import {DomainUtils} from "@typexs/base";
 
 @suite('utils/DomainUtils')
 class DomainUtilsTest {

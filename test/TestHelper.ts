@@ -1,8 +1,5 @@
 import * as _ from 'lodash';
-import {PlatformTools} from "typeorm/platform/PlatformTools";
 import {getMetadataArgsStorage} from "typeorm";
-import {SystemNodeInfo} from "../../src/entities/SystemNodeInfo";
-import {TaskLog} from "../../src/entities/TaskLog";
 
 export class TestHelper {
 

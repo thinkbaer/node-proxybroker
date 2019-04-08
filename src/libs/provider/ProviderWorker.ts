@@ -25,7 +25,7 @@ export class ProviderWorker implements IQueueWorkload {
         this.id = CryptUtils.shorthash(inspect(provider));
         this._provider = provider;
         this._manager = manager;
-        this._localInstance = ClassLoader.createObjectByType<AbstractProvider>(provider.clazz);
+        this._localInstance = Reflect.construct(provider.clazz,[]);
         this._localInstance.selectVariant(provider);
     }
 

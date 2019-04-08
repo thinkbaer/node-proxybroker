@@ -8,11 +8,9 @@ import {suite, test, slow, timeout, pending} from "mocha-typescript";
 import {expect} from "chai";
 import {inspect} from 'util'
 
-import {Storage} from "../../src/libs/generic/storage/Storage";
 
 import {IpAddr} from "../../src/entities/IpAddr";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
-import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
 
 
 const DEFAULT_STORAGE_OPTIONS: SqliteConnectionOptions = {
@@ -21,7 +19,7 @@ const DEFAULT_STORAGE_OPTIONS: SqliteConnectionOptions = {
 
     entities: [],
     migrations: [],
-    autoSchemaSync: true,
+    synchronize: true,
 };
 
 

@@ -8,22 +8,15 @@ import {expect} from "chai";
 import {inspect} from 'util'
 import * as _ from 'lodash'
 
-import subscribe from '../../src/libs/generic/events/decorator/subscribe'
-import {ProviderManager} from "../../src/provider/ProviderManager";
-import {IProviderOptions} from "../../src/provider/IProviderOptions";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
-import {Storage} from "../../src/libs/generic/storage/Storage";
-import {Job} from "../../src/entities/Job";
-import {ProxyFilter} from "../../src/proxy/ProxyFilter";
-import {EventBus} from "../../src/libs/generic/events/EventBus";
-import {Utils} from "../../src/libs/generic/utils/Utils";
-import {ProviderRunEvent} from "../../src/provider/ProviderRunEvent";
-import {JobState} from "../../src/entities/JobState";
-import {IpAddr} from "../../src/entities/IpAddr";
-import {MockedProxies01} from "./predefined_01/MockedProxies01";
-import {ProxyDataFetchedEvent} from "../../src/proxy/ProxyDataFetchedEvent";
-import {Log} from "../../src/libs/generic/logging/Log";
-import {InternStorage} from "../../src/libs/specific/storage/InternStorage";
+import subscribe from "commons-eventbus/decorator/subscribe";
+import {ProxyDataFetchedEvent} from "../../src/libs/proxy/ProxyDataFetchedEvent";
+import {IProviderOptions} from "../../src/libs/provider/IProviderOptions";
+import {Log} from "@typexs/base";
+import {ProviderManager} from "../../src/libs/provider/ProviderManager";
+import {ProxyFilter} from "../../src/libs/proxy/ProxyFilter";
+import {EventBus} from "commons-eventbus";
+import {ProviderRunEvent} from "../../src/libs/provider/ProviderRunEvent";
 
 class X {
     test: Function;
@@ -171,7 +164,7 @@ class ProviderManagerTest {
         await pm.prepare();
 
         let jobState = await pm.do({name: "mockproxy01", type: "anonym"});
-        let jobState2 = Utils.clone(jobState);
+        let jobState2 = _.clone(jobState);
         expect(jobState2.id).to.eq(1);
         expect(jobState2.count).to.eq(2);
         expect(jobState2.selected).to.eq(2);
@@ -230,7 +223,7 @@ class ProviderManagerTest {
      */
     @test
     async 'schedule'() {
-        let now = Utils.now();
+        let now = Date.now();
 
         let storage = new InternStorage(<SqliteConnectionOptions>{
             name: 'proxy_manager',
@@ -238,7 +231,7 @@ class ProviderManagerTest {
             database: ':memory:'
         });
         await storage.prepare();
-        let sec = new Date(now.getTime() + 2000);
+        let sec = new Date(now + 2000);
         let options: IProviderOptions = {
             providers: [__dirname + '/predefined_01/MockedProxies01.*'],
             schedule: {

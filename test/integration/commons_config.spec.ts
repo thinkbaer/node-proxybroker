@@ -8,7 +8,7 @@ import {inspect} from 'util'
 
 import {Config} from "commons-config";
 
-import {K_WORKDIR} from "../../src/libs/generic/types";
+
 import {IProviderOptions} from "../../src/libs/provider/IProviderOptions";
 import {DEFAULT_STORAGE_OPTIONS} from "@typexs/base";
 
