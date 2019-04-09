@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
 import {IProxyData} from "../libs/proxy/IProxyData";
 import {ProviderManager} from "../libs/provider/ProviderManager";
-import {TodoException} from "@typexs/base";
+import {Inject, StorageRef, TodoException} from "@typexs/base";
 
 
 export class FetchCommand {
@@ -10,6 +10,9 @@ export class FetchCommand {
   aliases = "f";
   describe = "Retrieve proxies from a <provider> and optional [variant].";
 
+
+  @Inject('storage.default')
+  storageRef: StorageRef;
 
   builder(yargs: any) {
     return yargs
@@ -22,9 +25,8 @@ export class FetchCommand {
   }
 
   async handler(argv: any) {
-
-    let manager = new ProviderManager({schedule: {enable: false}});
-    await manager.prepare();
+    let manager = new ProviderManager();
+    await manager.prepare(this.storageRef, {schedule: {enable: false}});
     let provider = null;
     let variant = null;
     let variant_found = null;

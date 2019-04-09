@@ -1,7 +1,7 @@
 import {suite, test, timeout} from "mocha-typescript";
 import {expect} from "chai";
-import {FreeProxyListsCom} from "../../../src/provider/predefined/FreeProxyListsCom";
-import {Log} from "../../../src/libs/generic/logging/Log";
+import {Log} from "@typexs/base";
+import {FreeProxyListsCom} from "../../../src/providers/proxy/FreeProxyListsCom";
 
 describe('', () => {
 });

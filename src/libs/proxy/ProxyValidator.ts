@@ -10,7 +10,7 @@ import {DEFAULT_VALIDATOR_OPTIONS, IProxyValidatiorOptions} from "./IProxyValida
 
 import {ValidatorRunEvent} from "./ValidatorRunEvent";
 import {DateUtils} from "typeorm/util/DateUtils";
-import {AsyncWorkerQueue, IQueueProcessor, Log, QueueJob, TodoException} from "@typexs/base";
+import {AsyncWorkerQueue, IQueueProcessor, Log, QueueJob, StorageRef, TodoException} from "@typexs/base";
 import subscribe from "commons-eventbus/decorator/subscribe";
 import {IpAddr} from "../../entities/IpAddr";
 import {EventBus} from "commons-eventbus";
@@ -25,7 +25,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
   options: IProxyValidatiorOptions
 
-  storage: Storage;
+  storage: StorageRef;
 
   //wakeuped: boolean = false;
 
@@ -41,7 +41,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
   next: Date = null;
 
-  constructor(options: IProxyValidatiorOptions, storage: Storage) {
+  constructor(options: IProxyValidatiorOptions, storage: StorageRef) {
     this.options = _.defaultsDeep(options, DEFAULT_VALIDATOR_OPTIONS);
     this.storage = storage;
     this.queue = new AsyncWorkerQueue<ProxyData>(this, {
@@ -181,7 +181,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     let storage = this.storage;
     // results are present
     let conn = await storage.connect();
-    let now = Date.now();
+    let now = new Date();
 
     let ip_addr = await conn.manager.findOne(IpAddr, {ip: proxyData.ip, port: proxyData.port});
 

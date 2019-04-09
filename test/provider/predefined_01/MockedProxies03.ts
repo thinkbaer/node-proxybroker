@@ -1,8 +1,6 @@
-
-
-import {IProviderVariant} from "../../../src/provider/IProviderVariant";
-import {AbstractProvider} from "../../../src/provider/AbstractProvider";
-import {IProxyData} from "../../../src/proxy/IProxyData";
+import {AbstractProvider} from "../../../src/libs/provider/AbstractProvider";
+import {IProviderVariant} from "../../../src/libs/provider/IProviderVariant";
+import {IProxyData} from "../../../src/libs/proxy/IProxyData";
 
 
 export class MockedProxies03  extends AbstractProvider {

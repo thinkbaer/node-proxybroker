@@ -2,7 +2,15 @@ import * as _ from "lodash";
 
 import {clearTimeout, setTimeout} from "timers";
 import Timer = NodeJS.Timer;
-import {ClassLoader, AsyncWorkerQueue, IQueueProcessor, Log, Runtime} from "@typexs/base";
+import {
+  ClassLoader,
+  AsyncWorkerQueue,
+  IQueueProcessor,
+  Log,
+  Inject,
+  StorageRef,
+  ConnectionWrapper
+} from "@typexs/base";
 import {IProviderVariantId} from "./IProviderVariantId";
 import {DEFAULT_PROVIDER_OPTIONS, IProviderOptions} from "./IProviderOptions";
 import {IProviderDef} from "./IProviderDef";
@@ -11,6 +19,11 @@ import subscribe from "commons-eventbus/decorator/subscribe";
 import {IProxyData} from "../proxy/IProxyData";
 import {IProvider} from "./IProvider";
 import {ProviderWorker} from "./ProviderWorker";
+import Exceptions from "@typexs/server/libs/server/Exceptions";
+import {EventBus} from "commons-eventbus";
+import {Job} from "../../entities/Job";
+import {JobState} from "../../entities/JobState";
+import {ProxyDataFetchedEvent} from "../proxy/ProxyDataFetchedEvent";
 
 
 const __ALL__ = '_all_';
@@ -19,7 +32,8 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
   options: IProviderOptions = {};
 
-  storage: Storage;
+  //@Inject("storage.default")
+  storage: StorageRef;
 
   queue: AsyncWorkerQueue<IProviderVariantId>;
 
@@ -36,13 +50,14 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
   next: Date = null;
 
 
-  constructor(options: IProviderOptions = {}, storage: Storage = null, override: boolean = false) {
+  async prepare(storageRef: StorageRef, options: IProviderOptions = {}, override: boolean = false): Promise<void> {
+    this.storage = storageRef;
     if (override) {
       this.options = _.clone(options)
     } else {
       this.options = _.merge(DEFAULT_PROVIDER_OPTIONS, options)
     }
-    this.storage = storage;
+
     this.options.parallel = this.options.parallel || 5;
     this.queue = new AsyncWorkerQueue<IProviderVariantId>(this, {
       name: 'provider_manager',
@@ -53,10 +68,6 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
       this.cron = require('cron-parser').parseExpression(this.options.schedule.pattern)
     }
 
-    Runtime.$().setConfig('provider', this.options)
-  }
-
-  async prepare(): Promise<void> {
     let clazzes = ClassLoader.importClassesFromAny(this.options.providers);
 
     let self = this;
@@ -100,7 +111,6 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
       // set all jobs inactive
       await conn.manager.createQueryBuilder<Job>(Job, "job").update({active: false}).execute();
       jobs = await conn.manager.find(Job)
-
     }
 
 
@@ -115,7 +125,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         job.enabled = true
       }
       job.active = true;
-      job.data = Utils.clone(provider);
+      job.data = _.clone(provider);
       this.jobs.push(job)
     }
 
@@ -218,7 +228,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
     if (addrs && addrs.length > 0) {
       let event = new ProxyDataFetchedEvent(addrs, jobState);
-      event.fire();
+      EventBus.post(event);
     }
 
     return Promise.resolve(jobState)
@@ -230,8 +240,8 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
       q.type = __ALL__;
     }
 
-    let variant = _.find(this.providers, q);
-    let job = _.find(this.jobs, q);
+    let variant = <IProviderDef>_.find(this.providers, q);
+    let job = <Job>_.find(this.jobs, q);
 
     return {job: job, variant: variant};
   }
@@ -259,14 +269,14 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
 
   private runScheduled() {
-    (new ProviderRunEvent([])).fire();
+    EventBus.post(new ProviderRunEvent([]));
     clearTimeout(this.timer);
     this.checkSchedule();
   }
 
 
   private newProviderFromObject(obj: Function): IProvider {
-    return Reflect.construct(obj,[]);
+    return Reflect.construct(obj, []);
   }
 
 
@@ -288,7 +298,6 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         ret.push(value);
       }
     }
-    ;
     return ret;
   }
 

@@ -6,7 +6,7 @@ import {ProxyData} from "./ProxyData";
 
 import {ProxyDataValidateEvent} from "./ProxyDataValidateEvent";
 import {ProxyDataFetched} from "./ProxyDataFetched";
-import {AsyncWorkerQueue, DomainUtils, IQueueProcessor} from "@typexs/base";
+import {AsyncWorkerQueue, DomainUtils, IQueueProcessor, StorageRef} from "@typexs/base";
 import subscribe from "commons-eventbus/decorator/subscribe";
 import {IpAddr} from "../../entities/IpAddr";
 import {EventBus} from "commons-eventbus";
@@ -23,12 +23,12 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
   // TODO Idea: make config annotation in commons-config @config('path.to.value',fallback value)
   recheck_after: number = 24 * 60 * 60 * 1000;
 
-  storage: Storage;
+  storage: StorageRef;
 
   queue: AsyncWorkerQueue<ProxyDataFetched>;
 
 
-  constructor(storage: Storage) {
+  constructor(storage: StorageRef) {
     let parallel = 200;
     this.storage = storage;
     this.queue = new AsyncWorkerQueue<ProxyDataFetched>(this, {name: PROXY_FILTER_NAME, concurrent: parallel})

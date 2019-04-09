@@ -1,10 +1,7 @@
 import {suite, test, timeout} from "mocha-typescript";
-import {Log} from "../../../src/libs/generic/logging/Log";
-import {ProxyListenDe} from "../../../src/provider/predefined/ProxyListenDe";
 import {expect} from "chai";
-
-describe('', () => {
-});
+import {Log} from "@typexs/base";
+import {ProxyListenDe} from "../../../src/providers/proxy/ProxyListenDe";
 
 
 @suite('provider/predefined/ProxyListenDe') @timeout(10000)
