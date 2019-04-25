@@ -2,7 +2,7 @@ import {StringOrFunction} from "@typexs/base/browser";
 
 
 
-export const K_PROVIDER = 'provider'
+export const K_PROVIDER = 'provider';
 
 export interface IProviderOptions {
 

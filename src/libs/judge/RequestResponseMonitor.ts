@@ -182,7 +182,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
    */
   onError(error: Error) {
     //this.debug('onError');
-    this.handleError(error)
+    this.handleError(error);
     this.finished()
   }
 
@@ -263,12 +263,12 @@ export class RequestResponseMonitor extends events.EventEmitter {
   onSocketData(data: Buffer) {
     // this.debug('onSocketData', data.length);
 
-    this.socket.removeListener('timeout', this.onSocketTimeout.bind(this))
+    this.socket.removeListener('timeout', this.onSocketTimeout.bind(this));
 
-    this.length += data.length
+    this.length += data.length;
 
     if (data[0] == 0x16 || data[0] == 0x80 || data[0] == 0x00) {
-      this.debug('TLS detected ' + data.length)
+      this.debug('TLS detected ' + data.length);
       return;
     }
 
@@ -295,7 +295,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
         if (http_heads.length === 3) {
           if (/^\d{3}$/.test(http_heads[1])) {
-            let code = parseInt(http_heads[1])
+            let code = parseInt(http_heads[1]);
             if (!(200 <= code && code < 300)) {
               this.socket.destroy(new Error(http_head))
             }
@@ -455,7 +455,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
       this.addLog(MESSAGE.CNE01.k)
     }
 
-    this._finished = true
+    this._finished = true;
     this.emit('finished', last_error)
   }
 
@@ -512,7 +512,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     });
 
     this.log_arr.push(rre);
-    EventBus.post(rre);
+    Log.debug(rre.logMsg());
   }
 
 }

@@ -27,7 +27,7 @@ const DEFAULT_SSL_KEY = "-----BEGIN RSA PRIVATE KEY-----\n" +
     "epS8SQKBgQCoyEPLWKvH1wVJoTWlWdi/0hcJ7kJLuyCeyvHnbSQE9MZxIIXm+HQQ\n" +
     "LRrj9+uRfvzuiG+paDsZKEZxOn3Ai4D3cvgPn3dk29xuH3Lu78nAMA+Ek0E96ZPa\n" +
     "wHczKK/ymfji7DttFqSUG6Ptj2V5YRPvR1ktgjVzvXdnFH4r/Lqt8g==\n" +
-    "-----END RSA PRIVATE KEY-----\n"
+    "-----END RSA PRIVATE KEY-----\n";
 
 
 
@@ -49,7 +49,7 @@ const DEFAULT_SSL_CERT = "-----BEGIN CERTIFICATE-----\n" +
     "iHnbyGGPesGGaJeAYmeMY4VslEdQZcIvqHMXlWeH6TqFxjnP+a4PC8tJxargP7Zp\n" +
     "IarYioKsL5JH68w8RVjh2P6Td9L0l9c1lQANfpArB6cMDbtDCl0lzny9E4DxHajp\n" +
     "K0zecaQARf3FLmr1f/6/PyY+jDql4KHNAsAKb7tFeP+LwwmV7lWNHrC3I/QP4qqe\n" +
-    "-----END CERTIFICATE-----\n"
+    "-----END CERTIFICATE-----\n";
 
 
 
@@ -95,7 +95,7 @@ export const DEFAULT_JUDGE_OPTIONS: IJudgeOptions = {
     },
 
     request: DEFAULT_JUDGE_REQUEST_OPTIONS
-}
+};
 
 
 

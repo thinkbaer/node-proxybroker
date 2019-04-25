@@ -20,24 +20,24 @@ export class IpRotateLog {
   @Column({nullable: false})
   addr_id: number;
 
-  @Column({type: 'boolean', nullable: false})
-  success: boolean = true
+  @Column({nullable: false})
+  success: boolean = true;
 
-  @Column({type: 'datetime', nullable: true})
+  @Column({nullable: true})
   start: Date = null;
 
-  @Column({type: 'datetime', nullable: true})
+  @Column({nullable: true})
   stop: Date = null;
 
 
   @Column({nullable: false})
-  duration: number = 0
+  duration: number = 0;
 
   @Column({nullable: true})
-  error: string
+  error: string;
 
   @Column({nullable: true})
-  statusCode: number
+  statusCode: number;
 
   @CreateDateColumn()
   created_at: Date;

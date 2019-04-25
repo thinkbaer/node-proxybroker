@@ -57,7 +57,7 @@ export class JudgeResults {
             } else {
                 return a.protocol_to < b.protocol_to ? -1 : (a.protocol_to > b.protocol_to ? 1 : 0)
             }
-        })
+        });
 
         return this.variants
     }

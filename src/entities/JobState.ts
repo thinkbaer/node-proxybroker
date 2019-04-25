@@ -11,10 +11,10 @@ export class JobState {
   @Column()
   job_id: number;
 
-  @Column({type: 'datetime', nullable: true})
+  @Column({nullable: true})
   start: Date;
 
-  @Column({type: 'datetime', nullable: true})
+  @Column({nullable: true})
   stop: Date;
 
   @Column()

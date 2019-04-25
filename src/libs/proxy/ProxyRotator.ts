@@ -111,19 +111,19 @@ export class ProxyRotator {
   }
 
   async next(select?: any): Promise<IpAddr> {
-    Log.debug('ProxyRotator->next ', select)
-    select = this.parseProxyHeader(select)
+    Log.debug('ProxyRotator->next ', select);
+    select = this.parseProxyHeader(select);
     let c = await this.storageRef.connect();
     let q = c.manager.createQueryBuilder(IpAddr, 'ip');
 
-    q = q.innerJoinAndMapOne('ip.state', IpAddrState, 'state', 'state.validation_id = ip.validation_id and state.addr_id = ip.id')
-    q = q.leftJoinAndMapOne('ip.rotate', IpRotate, 'rotate', 'rotate.addr_id = ip.id and rotate.protocol_src = state.protocol_src')
+    q = q.innerJoinAndMapOne('ip.state', IpAddrState, 'state', 'state.validation_id = ip.validation_id and state.addr_id = ip.id');
+    q = q.leftJoinAndMapOne('ip.rotate', IpRotate, 'rotate', 'rotate.addr_id = ip.id and rotate.protocol_src = state.protocol_src');
     q = q.orderBy('rotate.used', 'ASC');
     q = q.addOrderBy('state.duration', 'ASC');
-    q = q.limit(1)
+    q = q.limit(1);
 
-    q = q.where('state.enabled = :enable', {enable: true})
-    q = q.andWhere('state.level > :level', {level: 0})
+    q = q.where('state.enabled = :enable', {enable: true});
+    q = q.andWhere('state.level > :level', {level: 0});
 
     if (select) {
 
@@ -131,7 +131,7 @@ export class ProxyRotator {
         q = q.andWhere('state.level = :level', {level: select.level})
       }
       if (select.country) {
-        q = q.innerJoinAndMapOne('ip.location', IpLoc, 'country', 'country.ip = ip.ip and country.port = ip.port')
+        q = q.innerJoinAndMapOne('ip.location', IpLoc, 'country', 'country.ip = ip.ip and country.port = ip.port');
         q = q.andWhere('country.country_code = :country_code', {country_code: select.country})
       }
       if (select['speed-limit'] && select['speed-limit'] > 0) {
@@ -142,16 +142,16 @@ export class ProxyRotator {
       }
     }
 
-    let ipaddr: IpAddr = null
-    let list = await q.getMany()
+    let ipaddr: IpAddr = null;
+    let list = await q.getMany();
     if (list.length > 0) {
-      ipaddr = list.shift()
-      let iprotate: IpRotate = null
+      ipaddr = list.shift();
+      let iprotate: IpRotate = null;
       if (ipaddr['rotate']) {
         iprotate = ipaddr['rotate']
       } else {
-        iprotate = new IpRotate()
-        iprotate.addr_id = ipaddr.id
+        iprotate = new IpRotate();
+        iprotate.addr_id = ipaddr.id;
         iprotate.protocol_src = ipaddr['state'].protocol_src
       }
 
@@ -164,7 +164,7 @@ export class ProxyRotator {
 
       ipaddr['rotate'] = await c.save(iprotate)
     }
-    await c.close()
+    await c.close();
     return ipaddr
 
   }

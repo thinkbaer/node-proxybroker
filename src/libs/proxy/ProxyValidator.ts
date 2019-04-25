@@ -19,11 +19,11 @@ import {IpLoc} from "../../entities/IpLoc";
 import Timer = NodeJS.Timer;
 
 
-const PROXY_VALIDATOR = 'proxy_validator'
+const PROXY_VALIDATOR = 'proxy_validator';
 
 export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
-  options: IProxyValidatiorOptions
+  options: IProxyValidatiorOptions;
 
   storage: StorageRef;
 
@@ -47,7 +47,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     this.queue = new AsyncWorkerQueue<ProxyData>(this, {
       name: PROXY_VALIDATOR,
       concurrent: this.options.parallel || 200
-    })
+    });
 
     if (this.options.schedule && this.options.schedule.enable) {
       this.cron = require('cron-parser').parseExpression(this.options.schedule.pattern)
@@ -57,9 +57,10 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
 
   async prepare(): Promise<boolean> {
+    await EventBus.register(this);
     this.judge = new Judge(this.options.judge);
-    let booted = await this.judge.bootstrap();
-    this.checkSchedule()
+    let booted = await this.judge.prepare();
+    this.checkSchedule();
     return Promise.resolve(booted);
   }
 
@@ -88,7 +89,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
 
   private runScheduled() {
-    EventBus.post(new ValidatorRunEvent());
+    EventBus.postAndForget(new ValidatorRunEvent());
     //(new ValidatorRunEvent()).fire();
     clearTimeout(this.timer);
     this.checkSchedule();
@@ -97,10 +98,10 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
   @subscribe(ValidatorRunEvent)
   async run(e: ValidatorRunEvent) {
-    let c = await this.storage.connect()
-    let q = c.manager.getRepository(IpAddr).createQueryBuilder('ip')
+    let c = await this.storage.connect();
+    let q = c.manager.getRepository(IpAddr).createQueryBuilder('ip');
 
-    let td = Date.now() - this.options.schedule.time_distance * 1000
+    let td = Date.now() - this.options.schedule.time_distance * 1000;
     q
       .where('ip.blocked = :blocked and ip.to_delete = :to_delete and ' +
         '(ip.last_checked_at is null OR ip.last_checked_at < :date) ', {
@@ -108,15 +109,16 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         to_delete: false,
         date: DateUtils.mixedDateToDatetimeString(new Date(td))
       })
-      .limit(this.options.schedule.limit)
+      .limit(this.options.schedule.limit);
 
     try {
 
-      let ips: IpAddr[] = await q.getMany()
-      Log.info('Validator recheck proxies: ' + ips.length)
+      let ips: IpAddr[] = await q.getMany();
+      Log.info('Validator recheck proxies: ' + ips.length);
       if (ips.length > 0) {
+
         for (let ip of ips) {
-          EventBus.post(new ProxyDataValidateEvent(new ProxyData(ip)));
+          EventBus.postAndForget(new ProxyDataValidateEvent(new ProxyData(ip))).catch(e => {});
         }
       }
     } catch (e) {
@@ -130,7 +132,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     state.addr_id = addr.id;
     state.validation_id = addr.validation_id;
     state.level = result.level;
-    state.protocol_src = result.protocol_from
+    state.protocol_src = result.protocol_from;
     state.protocol_dest = result.protocol_to;
 
     if (result.hasError()) {
@@ -145,13 +147,13 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
       }
     }
 
-    state.log = result.log;
+    state.log = <any>result.log;
     state.duration = result.duration;
     state.start = result.start;
     state.stop = result.stop;
 
     if (state.enabled) {
-      addr.addSourceProtocol(result.protocol_from)
+      addr.addSourceProtocol(result.protocol_from);
       addr.addProtocol(result.protocol_to)
 
       // if (!addr.supportsProtocol(result.protocol_to) || !addr.supportsSourceProtocol(result.protocol_from)) {}
@@ -175,7 +177,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
   async validate(event: ProxyDataValidateEvent): Promise<any> {
 
     let queueJob = await this.push(event.data);
-    queueJob = await queueJob.done();
+    await queueJob.done();
     let proxyData = queueJob.workload();
 
     let storage = this.storage;
@@ -233,23 +235,23 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
       //         add
 
 
-      let enabled = false
+      let enabled = false;
 
-      let promises = []
+      let promises = [];
       for (let res of proxyData.results.getVariants()) {
         //let _http = proxyData.results.http;
         http_state = ProxyValidator.buildState(ip_addr, res);
-        enabled = enabled || http_state.enabled
+        enabled = enabled || http_state.enabled;
         promises.push(conn.save(http_state))
       }
 
-      await Promise.all(promises)
+      await Promise.all(promises);
 
       if (enabled) {
         //event.jobState.validated++;
         ip_addr.count_success++;
         ip_addr.count_errors = 0;
-        ip_addr.errors_since_at = null
+        ip_addr.errors_since_at = null;
 
         if (!ip_addr.success_since_at) {
           ip_addr.success_since_at = now
@@ -259,7 +261,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         ip_addr.count_success = 0;
         ip_addr.count_errors++;
 
-        ip_addr.success_since_at = null
+        ip_addr.success_since_at = null;
         if (!ip_addr.errors_since_at) {
           ip_addr.errors_since_at = now
         }
@@ -314,7 +316,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
       }
     }
 
-    Log.debug('ProxyValidator->do ' + workLoad.ip + ':' + workLoad.port)
+    Log.debug('ProxyValidator->do ' + workLoad.ip + ':' + workLoad.port);
     let results = await this.judge.validate(workLoad.ip, workLoad.port);
     workLoad.results = results;
     return Promise.resolve(results)

@@ -38,7 +38,7 @@ export class Judge implements IServerApi {
 
   private runnable: boolean = false;
 
-  private cache_sum: number = 0
+  private cache_sum: number = 0;
 
   private cache: { [key: string]: JudgeRequest } = {};
 
@@ -69,60 +69,11 @@ export class Judge implements IServerApi {
   }
 
 
-  beforeStart(server: Server): Promise<any> {
-    if (server.isSecured) {
-      server.server.on('secureConnection', this.onSecureConnection.bind(this))
-    } else {
-      server.server.on('connection', this.onServerConnection.bind(this))
-    }
-    return null
-  }
-
-
-  get ip(): string {
-    return this._options.ip
-  }
-
-
-  get remote_ip(): string {
-    return this._options.remote_ip
-  }
-
-  get options(): IJudgeOptions {
-    return this._options;
-  }
-
-
-  url(protocol: string = 'http'): string {
-    switch (protocol) {
-      case 'http':
-        return this.httpServer.url()
-      case 'https':
-        return this.httpsServer.url()
-      default:
-        throw new TodoException('protocol not found');
-    }
-
-  }
-
-  remote_url(protocol: string = 'http'): string {
-    switch (protocol) {
-      case 'http':
-        return protocol + '://' + this.remote_ip + ':' + this._options.http_port;
-      case 'https':
-        return protocol + '://' + this.remote_ip + ':' + this._options.https_port;
-      default:
-        throw new TodoException('protocol not found');
-    }
-
-  }
-
-
-  async bootstrap(): Promise<boolean> {
+  async prepare(): Promise<boolean> {
     let infos: any = {
       http: this.remote_url('http'),
       https: this.remote_url('https')
-    }
+    };
 
     try {
 
@@ -155,12 +106,63 @@ export class Judge implements IServerApi {
   }
 
 
+  beforeStart(server: Server): Promise<any> {
+    if (server.isSecured) {
+      server.server.on('secureConnection', this.onSecureConnection.bind(this))
+    } else {
+      server.server.on('connection', this.onServerConnection.bind(this))
+    }
+    return null
+  }
+
+
+  get ip(): string {
+    return this._options.ip
+  }
+
+
+  get remote_ip(): string {
+    return this._options.remote_ip
+  }
+
+  get options(): IJudgeOptions {
+    return this._options;
+  }
+
+
+  url(protocol: string = 'http'): string {
+    switch (protocol) {
+      case 'http':
+        return this.httpServer.url();
+      case 'https':
+        return this.httpsServer.url();
+      default:
+        throw new TodoException('protocol not found');
+    }
+
+  }
+
+  remote_url(protocol: string = 'http'): string {
+    switch (protocol) {
+      case 'http':
+        return protocol + '://' + this.remote_ip + ':' + this._options.http_port;
+      case 'https':
+        return protocol + '://' + this.remote_ip + ':' + this._options.https_port;
+      default:
+        throw new TodoException('protocol not found');
+    }
+
+  }
+
+
+
+
   private async getRemoteAccessibleIp(): Promise<any> {
     // If IP is fixed, it should be configurable ...
     try {
       let response_data = await _request.get(IPCHECK_URL);
       let json = JSON.parse(response_data);
-      this._options.remote_ip = json.ip
+      this._options.remote_ip = json.ip;
       return json.ip
     } catch (err) {
       Log.error(err);
@@ -171,7 +173,7 @@ export class Judge implements IServerApi {
 
   private async selftestByProtocol(protocol: string = 'http'): Promise<any> {
     let ping_url = this.remote_url(protocol) + '/ping';
-    this.debug('ping url ' + ping_url)
+    this.debug('ping url ' + ping_url);
     let start = new Date();
     let res = await _request.get(ping_url);
     let s = JSON.parse(res);
@@ -203,7 +205,7 @@ export class Judge implements IServerApi {
       let results = await Promise.all([
         this.selftestByProtocol('http'),
         this.selftestByProtocol('https'),
-      ])
+      ]);
 
       this.info('Selftest results:\n' + JSON.stringify(results, null, 2));
 
@@ -258,7 +260,7 @@ export class Judge implements IServerApi {
    * @param res
    */
   public async judge(req: http.IncomingMessage, res: http.ServerResponse) {
-    let _url: mUrl.Url = mUrl.parse(req.url)
+    let _url: mUrl.Url = mUrl.parse(req.url);
     let paths = _url.path.split('/').filter((x) => {
       return x || x.length != 0;
     });
@@ -269,7 +271,7 @@ export class Judge implements IServerApi {
 
       let self = this;
       let req_id = paths.shift();
-      this.debug('judge call ' + req_id)
+      this.debug('judge call ' + req_id);
       if (this.cache[req_id]) {
         cached_req = this.cache[req_id];
         req.socket.once('end', function () {
@@ -283,7 +285,7 @@ export class Judge implements IServerApi {
         let json = JSON.stringify({time: (new Date()).getTime(), headers: req.headers});
         res.end(json);
       } else {
-        Log.error('judge: no cache id for incoming request with ' + req_id + ' from ' + req.url)
+        Log.error('judge: no cache id for incoming request with ' + req_id + ' from ' + req.url);
         res.writeHead(400, {"Content-Type": "application/json"});
         let json = JSON.stringify({'error': '400'});
         res.end(json);
@@ -320,8 +322,8 @@ export class Judge implements IServerApi {
 
 
   async handleRequest(ip: string, port: number, from: ProtocolType, to: ProtocolType): Promise<JudgeResult> {
-    let proto_from = (from === ProtocolType.HTTP ? 'http' : 'https')
-    let proto_to = (to === ProtocolType.HTTP ? 'http' : 'https')
+    let proto_from = (from === ProtocolType.HTTP ? 'http' : 'https');
+    let proto_to = (to === ProtocolType.HTTP ? 'http' : 'https');
     let url = proto_from + '://' + ip + ':' + port;
     let http_request = this.createRequest(proto_to, url);
     await http_request.performRequest();
@@ -365,7 +367,7 @@ export class Judge implements IServerApi {
       Log.error(e)
     }
 
-    let promises = []
+    let promises = [];
 
     if (enable.http) {
       // HTTP => HTTP
@@ -403,11 +405,11 @@ export class Judge implements IServerApi {
 
   private onServerConnection(socket: net.Socket) {
     let self = this;
-    this.debug('Judge->onServerConnection')
+    this.debug('Judge->onServerConnection');
 
     function onData(data: Buffer) {
       if (data[0] == 0x16 || data[0] == 0x80 || data[0] == 0x00) {
-        this.debug('Judge->TLS detected ' + data.length)
+        this.debug('Judge->TLS detected ' + data.length);
         return;
       }
 
@@ -510,7 +512,7 @@ export class Judge implements IServerApi {
         return r
       })
       .catch(err => {
-        Log.error(err)
+        Log.error(err);
         throw err
       })
   }

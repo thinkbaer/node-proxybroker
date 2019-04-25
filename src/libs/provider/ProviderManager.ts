@@ -125,7 +125,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         job.enabled = true
       }
       job.active = true;
-      job.data = _.clone(provider);
+      job.data = <any>_.clone(provider);
       this.jobs.push(job)
     }
 
@@ -142,12 +142,12 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     if (c.runAll()) {
 
       for (let v of this.providers) {
-        Log.info(`provider manager: recheck provider ${v.name}:${v.type}`)
+        Log.info(`provider manager: recheck provider ${v.name}:${v.type}`);
         this.queue.push({name: v.name, type: v.type})
       }
     } else {
       for (let v of c.variants) {
-        Log.info(`provider manager: recheck provider ${v.name}:${v.type}`)
+        Log.info(`provider manager: recheck provider ${v.name}:${v.type}`);
         this.queue.push({name: v.name, type: v.type});
       }
     }

@@ -16,9 +16,9 @@ export class ProxyUsedEvent {
 
   success: boolean = false;
 
-  error: Error = null
+  error: Error = null;
 
-  fired: boolean = false
+  fired: boolean = false;
 
   start: Date;
 
@@ -41,16 +41,16 @@ export class ProxyUsedEvent {
 
   assignFrom(options: IUrlBase | SocketHandle) {
     if (options instanceof SocketHandle) {
-      this.duration = options.duration
-      this.start = options.start
-      this.stop = options.stop
-      this.statusCode = options.statusCode
-      this.error = options.error
-      this.success = !options.hasError()
+      this.duration = options.duration;
+      this.start = options.start;
+      this.stop = options.stop;
+      this.statusCode = options.statusCode;
+      this.error = options.error;
+      this.success = !options.hasError();
       this.protocol_dest = options.ssl ? ProtocolType.HTTPS : ProtocolType.HTTP
     } else {
-      this.protocol = options.protocol === 'https' ? ProtocolType.HTTPS : ProtocolType.HTTP
-      this.hostname = options.hostname
+      this.protocol = options.protocol === 'https' ? ProtocolType.HTTPS : ProtocolType.HTTP;
+      this.hostname = options.hostname;
       this.port = options.port
     }
   }

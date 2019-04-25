@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
 import {IProxyData} from "../libs/proxy/IProxyData";
 import {ProviderManager} from "../libs/provider/ProviderManager";
-import {Inject, StorageRef, TodoException} from "@typexs/base";
+import {C_STORAGE_DEFAULT, Inject, StorageRef, TodoException} from "@typexs/base";
 
 
 export class FetchCommand {
@@ -11,7 +11,7 @@ export class FetchCommand {
   describe = "Retrieve proxies from a <provider> and optional [variant].";
 
 
-  @Inject('storage.default')
+  @Inject(C_STORAGE_DEFAULT)
   storageRef: StorageRef;
 
   builder(yargs: any) {
@@ -30,7 +30,7 @@ export class FetchCommand {
     let provider = null;
     let variant = null;
     let variant_found = null;
-    let p: IProxyData[] = null
+    let p: IProxyData[] = null;
 
     if (argv.provider) {
       let variants = manager.findAll({name: argv.provider});
@@ -107,9 +107,5 @@ export class FetchCommand {
       throw new TodoException()
     }
 
-    if (argv._resolve) {
-      return Promise.resolve(p)
-    }
-    return process.exit(0)
   }
 }

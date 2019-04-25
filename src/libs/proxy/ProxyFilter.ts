@@ -12,7 +12,7 @@ import {IpAddr} from "../../entities/IpAddr";
 import {EventBus} from "commons-eventbus";
 
 
-const PROXY_FILTER_NAME = 'proxy_filter'
+const PROXY_FILTER_NAME = 'proxy_filter';
 
 export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
 
@@ -63,7 +63,6 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
 
 
   async do(workLoad: ProxyDataFetched): Promise<any> {
-    let self = this;
 
     // get existing entries
     let now = new Date();
@@ -71,7 +70,7 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
     let qb = conn.connection.getRepository(IpAddr);
     let cqb = qb.createQueryBuilder('addr');
     cqb = cqb.select();
-    let i = 0;
+
     workLoad.list.forEach(_proxy_ip => {
       cqb = cqb.orWhere(`(addr.ip = "${_proxy_ip.ip}" and addr.port = ${_proxy_ip.port})`)
     });
@@ -84,11 +83,11 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
 
       let recordExists: any = _.find(entries, _x);
       let proxyData = new ProxyData(_x);
-      let proxyDataValidateEvent = new ProxyDataValidateEvent(proxyData/*, workLoad.jobState*/);
+      let proxyDataValidateEvent = new ProxyDataValidateEvent(proxyData, workLoad.jobState);
 
       if (recordExists) {
 
-        // if manuell blocked then skip this entry
+        // if manuel blocked then skip this entry
         if (recordExists.blocked || recordExists.to_delete) {
           workLoad.jobState.blocked++;
           continue;
@@ -96,9 +95,10 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
 
         // proxyDataValidateEvent.record = recordExists;
 
-        if (!recordExists.last_checked_at || ((now.getTime() - self.recheck_after) > recordExists.last_checked_at.getTime())) {
+        if (!recordExists.last_checked_at || ((now.getTime() - this.recheck_after) > recordExists.last_checked_at.getTime())) {
           // last check is longer then the recheck offset, so revalidate
           EventBus.post(proxyDataValidateEvent);//.fire();
+          proxyDataValidateEvent.markFired();
           workLoad.jobState.updated++
         } else {
           // last check was within recheck offset, so ignore validation
@@ -109,16 +109,17 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
         // new record entry must be checked
         workLoad.jobState.added++;
         EventBus.post(proxyDataValidateEvent);
+        proxyDataValidateEvent.markFired();
         //proxyDataValidateEvent.fire()
       }
 
-      if (proxyDataValidateEvent.fired) {
+      if (proxyDataValidateEvent.isFired()) {
         events.push(proxyDataValidateEvent)
       }
     }
 
     await conn.close();
-    return Promise.resolve(events)
+    return Promise.resolve(events);
   }
 
 }

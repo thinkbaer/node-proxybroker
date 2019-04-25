@@ -5,7 +5,7 @@ import {Column, CreateDateColumn, PrimaryColumn, UpdateDateColumn} from "typeorm
 @Entity()
 export class IpLoc {
 
-  @PrimaryColumn({type: "varchar", length: 15})
+  @PrimaryColumn({ length: 15})
   ip: string;
 
   @Column({nullable: true})

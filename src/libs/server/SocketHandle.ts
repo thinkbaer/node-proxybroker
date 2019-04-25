@@ -14,7 +14,7 @@ export class SocketHandle {
 
     readonly start: Date;
 
-    meta : any = {}
+    meta : any = {};
 
     // repeat: number = 0;
 
@@ -78,8 +78,8 @@ export class SocketHandle {
         }
 
         if (this.ssl || data[0] == 0x16 || data[0] == 0x80 || data[0] == 0x00) {
-            this.debug('TLS detected ' + data.length)
-            this.ssl = true
+            this.debug('TLS detected ' + data.length);
+            this.ssl = true;
             return;
         }
 
@@ -96,17 +96,17 @@ export class SocketHandle {
 
 
             if (headerEnd < headersEnd && headersEnd > 0) {
-                this.query = Buffer.allocUnsafe(headerEnd)
-                this.headers = Buffer.allocUnsafe(headersEnd - headerEnd - 2)
-                this.body = Buffer.allocUnsafe(data.length - headersEnd - 4)
+                this.query = Buffer.allocUnsafe(headerEnd);
+                this.headers = Buffer.allocUnsafe(headersEnd - headerEnd - 2);
+                this.body = Buffer.allocUnsafe(data.length - headersEnd - 4);
 
-                data.copy(this.query, 0, 0, headerEnd)
-                data.copy(this.headers, 0, headerEnd + 2, headersEnd)
-                data.copy(this.body, 0, headersEnd + 4)
+                data.copy(this.query, 0, 0, headerEnd);
+                data.copy(this.headers, 0, headerEnd + 2, headersEnd);
+                data.copy(this.body, 0, headersEnd + 4);
 
 
                 for (let _x of this.headers.toString().split('\r\n')) {
-                    let split = _x.split(':', 2)
+                    let split = _x.split(':', 2);
                     this.headersList.push({
                         key: split[0].trim().toLocaleLowerCase(),
                         orgKey: split[0].trim(),
@@ -132,13 +132,13 @@ export class SocketHandle {
     }
 
     removeHeader(key: string) {
-        key = key.toLocaleLowerCase()
+        key = key.toLocaleLowerCase();
         _.remove(this.headersList, {key: key})
     }
 
     setHeader(orgKey: string, value: string) {
-        this.removeHeader(orgKey)
-        let key = orgKey.toLocaleLowerCase()
+        this.removeHeader(orgKey);
+        let key = orgKey.toLocaleLowerCase();
         this.headersList.push({key: key, orgKey: orgKey, value: value})
     }
 
@@ -151,10 +151,10 @@ export class SocketHandle {
             }
         }
 
-        const buf = Buffer.allocUnsafe(2)
-        buf.write('\r\n')
+        const buf = Buffer.allocUnsafe(2);
+        buf.write('\r\n');
 
-        let entries = []
+        let entries = [];
         for (let _x of this.headersList) {
             entries.push(_x.orgKey + ': ' + _x.value);
         }
@@ -163,7 +163,7 @@ export class SocketHandle {
         this.headers = Buffer.allocUnsafe(strEntries.length);
         this.headers.write(strEntries);
 
-        let list: Buffer[] = [this.query, buf, this.headers, buf, buf, this.body]
+        let list: Buffer[] = [this.query, buf, this.headers, buf, buf, this.body];
         return Buffer.concat(list);
     }
 
@@ -177,7 +177,7 @@ export class SocketHandle {
 
     onError(err: Error) {
         this.debug('ERROR', err);
-        this.socketError = true
+        this.socketError = true;
         this.error = Exceptions.handle(err);
     }
 

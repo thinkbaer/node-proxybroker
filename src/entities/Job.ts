@@ -1,6 +1,7 @@
+import * as _ from "lodash";
 import {Entity} from "typeorm/decorator/entity/Entity";
 import {
-  AfterLoad,
+  AfterLoad,AfterUpdate,AfterInsert,
   BeforeInsert, BeforeUpdate, Column, CreateDateColumn, PrimaryColumn, PrimaryGeneratedColumn,
   UpdateDateColumn
 } from "typeorm";
@@ -23,8 +24,8 @@ export class Job {
   @Column({nullable: true})
   type: string;
 
-  @Column({type: 'json', nullable: true})
-  data: any;
+  @Column({ nullable: true})
+  data: string;
 
   @Column({type: "boolean"})
   active: boolean;
@@ -42,22 +43,50 @@ export class Job {
   updated_at: Date;
 
 
+
+
   @BeforeInsert()
-  @BeforeUpdate()
-  _prepare() {
+  bi() {
     if (!this.key) {
       this.key = [this.name, this.type].join(':')
+    }
+    if (this.data) {
+      this.data = JSON.stringify(this.data);
+    }
+  }
+
+
+  @BeforeUpdate()
+  bu() {
+    if (!this.key) {
+      this.key = [this.name, this.type].join(':')
+    }
+    if (this.data) {
+      this.data = JSON.stringify(this.data);
+    }
+  }
+
+
+  @AfterInsert()
+  ai() {
+    if (_.isString(this.data)) {
+      this.data = JSON.parse(this.data);
+    }
+  }
+
+
+  @AfterUpdate()
+  au() {
+    if (_.isString(this.data)) {
+      this.data = JSON.parse(this.data);
     }
   }
 
 
   @AfterLoad()
-  _load() {
-    /*
-    this.active = this['active']   === 1
-    this.enabled = this['enabled'] === 1
-     console.log(this.active,this.enabled)
-    */
-
+  al() {
+    if (_.isString(this.data)) {
+      this.data = JSON.parse(this.data);
+    }
   }
 }

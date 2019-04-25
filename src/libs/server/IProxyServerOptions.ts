@@ -2,7 +2,7 @@ import {IUrlBase} from "@typexs/base";
 import {IpAddr} from "../../entities/IpAddr";
 import {IServerInstanceOptions, IServerOptions} from "@typexs/server";
 
-export const K_PROXYSERVER = 'proxyserver'
+export const K_PROXYSERVER = 'proxyserver';
 
 export const DEFAULT_SERVER_OPTIONS: IServerOptions = {
 

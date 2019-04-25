@@ -26,7 +26,7 @@ export class JudgeResult {
   logStr: string;
 
   constructor(from: ProtocolType, to: ProtocolType) {
-    this.protocol_from = from
+    this.protocol_from = from;
     this.protocol_to = to
   }
 

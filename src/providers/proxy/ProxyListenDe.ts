@@ -44,7 +44,7 @@ export class ProxyListenDe extends AbstractProvider {
 
     Log.info('ProxyListenDe: (' + this.url + ') selected variant is ' + this.variant.type);
 
-    let cookies = request.jar()
+    let cookies = request.jar();
 
     let form_data = {
       filter_port: '',
@@ -57,7 +57,7 @@ export class ProxyListenDe extends AbstractProvider {
       proxies: '300',
       type: this.variant.type,
       submit: 'Anzeigen',
-    }
+    };
 
 
     let c1 = request.cookie('cookieconsent_dismissed=yes');
@@ -65,23 +65,23 @@ export class ProxyListenDe extends AbstractProvider {
     let c2 = request.cookie('_gat=1');
     cookies.setCookie(c2, BASE_URL);
 
-    let html = await request.get(PROXY_LIST_DE, {jar: cookies})
+    let html = await request.get(PROXY_LIST_DE, {jar: cookies});
 
-    let matched = html.match(/(<input[^>]+type=("|')hidden("|')[^>]*>)/g)
-    let hidden_input = matched.shift()
-    let name = hidden_input.match(/name=("|')([^("|')]+)("|')/)[2]
-    let value = hidden_input.match(/value=("|')([^("|')]+)("|')/)[2]
+    let matched = html.match(/(<input[^>]+type=("|')hidden("|')[^>]*>)/g);
+    let hidden_input = matched.shift();
+    let name = hidden_input.match(/name=("|')([^("|')]+)("|')/)[2];
+    let value = hidden_input.match(/value=("|')([^("|')]+)("|')/)[2];
     form_data[name] = value;
 
-    let inc = 0
-    let skip = false
+    let inc = 0;
+    let skip = false;
     while (inc < 5 && !skip) {
 
-      let size_before = self.proxies.length
+      let size_before = self.proxies.length;
       let _form_data = _.clone(form_data);
 
       if (inc > 0) {
-        delete _form_data['submit']
+        delete _form_data['submit'];
         _form_data['next'] = 'nächste Seite'
       }
 
@@ -92,7 +92,7 @@ export class ProxyListenDe extends AbstractProvider {
       inc++;
 
 
-      let matcher = null
+      let matcher = null;
       while ((matcher = MATCH_IP_PORT_REGEX.exec(html)) !== null) {
         let proxyData: IProxyData = {
           ip: matcher[1],

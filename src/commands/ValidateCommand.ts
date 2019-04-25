@@ -7,7 +7,7 @@ import {JudgeResults} from "../libs/judge/JudgeResults";
 import {Judge} from "../libs/judge/Judge";
 
 
-const REGEX = /^((http|https):\/\/)?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):?(\d{1,5})?$/
+const REGEX = /^((http|https):\/\/)?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):?(\d{1,5})?$/;
 
 export class ValidateCommand {
 
@@ -31,27 +31,27 @@ export class ValidateCommand {
         if (PlatformUtils.fileExist(argv.host_or_file)) {
 
 
-            let filename = argv.host_or_file
+            let filename = argv.host_or_file;
             let buffer = fs.readFileSync(filename);
             let data = buffer.toString('utf-8').trim();
 
 
             data.split(/\n/).forEach((value, index, array) => {
 //                let d = value.trim().split(/:|;/);
-                let matched = value.trim().match(REGEX)
+                let matched = value.trim().match(REGEX);
 
 
                 if(matched){
-                    let schema:string = null
-                    let ip:string = null
-                    let port:number = 3128
+                    let schema:string = null;
+                    let ip:string = null;
+                    let port:number = 3128;
 
                     if(matched[1] && matched[2]){
                         // http or https exists
                         schema = matched[2]
                     }
 
-                    ip = matched[3]
+                    ip = matched[3];
 
                     if(matched[4]){
                         // port
@@ -68,7 +68,7 @@ export class ValidateCommand {
 
 
             if (list.length) {
-                let validatorCustomOptions = Config.get('validator', {})
+                let validatorCustomOptions = Config.get('validator', {});
                 let validator = new ProxyValidator(validatorCustomOptions, null);
                 let booted = false;
                 try {
@@ -80,12 +80,12 @@ export class ValidateCommand {
 
                 if (booted) {
                     try {
-                        let inc = 0
+                        let inc = 0;
                         for (let _q of list) {
-                            inc++
+                            inc++;
                             validator.push(_q)
                         }
-                        Log.info('Added ' + inc + ' proxies to check')
+                        Log.info('Added ' + inc + ' proxies to check');
                         await validator.await()
                     } catch (err) {
                         Log.error(err)
@@ -105,10 +105,10 @@ export class ValidateCommand {
 
         } else {
 
-            let matched = argv.host_or_file.match(REGEX)
-            let schema:string = 'http'
-            let ip:string = '127.0.0.1'
-            let port:number = 3128
+            let matched = argv.host_or_file.match(REGEX);
+            let schema:string = 'http';
+            let ip:string = '127.0.0.1';
+            let port:number = 3128;
 
             if(matched){
                 if(matched[1] && matched[2]){
@@ -118,7 +118,7 @@ export class ValidateCommand {
 
                 }
 
-                ip = matched[3]
+                ip = matched[3];
 
                 if(matched[4]){
                     // port
@@ -142,13 +142,13 @@ export class ValidateCommand {
             }
 */
 
-            let judgeCustomOptions = Config.get('validator.judge', {})
+            let judgeCustomOptions = Config.get('validator.judge', {});
             let judge = new Judge(judgeCustomOptions);
-            let booted = await judge.bootstrap();
+            let booted = await judge.prepare();
 
             if (booted) {
                 try {
-                    let proxy = new ProxyData(ip, port)
+                    let proxy = new ProxyData(ip, port);
                     await judge.wakeup();
                     proxy.results = await judge.validate(proxy.ip, proxy.port);
                     await judge.pending();
@@ -170,7 +170,7 @@ export class ValidateCommand {
                 list.forEach(_x => {
                     if (_x.results) {
                         for(let res of _x.results.getVariants()){
-                            res.logStr = res.logToString()
+                            res.logStr = res.logToString();
                             delete res.log
                         }
                         data.push(_x.results)
@@ -225,7 +225,7 @@ export class ValidateCommand {
             results.city,
             results.latitude,
             results.longitude
-        ]
+        ];
 
         for(let res of results.getVariants()){
             data.push(

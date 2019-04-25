@@ -33,25 +33,25 @@ export class IpAddr {
   @Column()
   protocols_dest: number = 0;
 
-  @Column({type: 'boolean'})
+  @Column()
   blocked: boolean = false;
 
   @Column({type: 'boolean'})
   to_delete: boolean = false;
 
-  @Column({type: 'datetime', nullable: true})
+  @Column({nullable: true})
   last_checked_at: Date;
 
   @Column()
   count_errors: number = 0;
 
-  @Column({type: 'datetime', nullable: true})
+  @Column({nullable: true})
   errors_since_at: Date = null;
 
   @Column()
   count_success: number = 0;
 
-  @Column({type: 'datetime', nullable: true})
+  @Column({nullable: true})
   success_since_at: Date = null;
 
 

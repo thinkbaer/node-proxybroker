@@ -1,3 +1,4 @@
+
 import * as _ from 'lodash'
 
 
@@ -187,7 +188,7 @@ export class LevelDetection {
         header.isVia = true
       }
 
-      Object.keys(header).forEach(_k => {
+      _.keys(header).forEach(_k => {
         if (header[_k] === true) {
           self.stats[_k]++
         }

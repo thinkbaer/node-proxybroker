@@ -1,4 +1,5 @@
-import {Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
+import * as _ from  'lodash';
+import {Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn,BeforeInsert,BeforeUpdate,AfterInsert,AfterUpdate,AfterLoad} from "typeorm";
 
 import {ProtocolType} from "../libs/specific/ProtocolType";
 import {Entity} from "typeorm/decorator/entity/Entity";
@@ -32,10 +33,10 @@ export class IpAddrState {
   @Column()
   level: number = -2;
 
-  @Column({type: "datetime", nullable: true})
+  @Column({nullable: true})
   start: Date;
 
-  @Column({type: "datetime", nullable: true})
+  @Column({nullable: true})
   stop: Date;
 
   @Column({nullable: true})
@@ -47,8 +48,8 @@ export class IpAddrState {
   @Column({nullable: true})
   error_message: string;
 
-  @Column({type: "json", nullable: true})
-  log: any;
+  @Column({nullable: true})
+  log: string;
 
   @CreateDateColumn()
   created_at: Date;
@@ -57,4 +58,42 @@ export class IpAddrState {
   updated_at: Date;
 
 
+  @BeforeInsert()
+  bi() {
+    if (this.log) {
+      this.log = JSON.stringify(this.log);
+    }
+  }
+
+
+  @BeforeUpdate()
+  bu() {
+    if (this.log) {
+      this.log = JSON.stringify(this.log);
+    }
+  }
+
+
+  @AfterInsert()
+  ai() {
+    if (_.isString(this.log)) {
+      this.log = JSON.parse(this.log);
+    }
+  }
+
+
+  @AfterUpdate()
+  au() {
+    if (_.isString(this.log)) {
+      this.log = JSON.parse(this.log);
+    }
+  }
+
+
+  @AfterLoad()
+  al() {
+    if (_.isString(this.log)) {
+      this.log = JSON.parse(this.log);
+    }
+  }
 }

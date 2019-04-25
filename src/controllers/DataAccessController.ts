@@ -8,7 +8,7 @@ import {ProviderManager} from "../libs/provider/ProviderManager";
 export class DataAccessController {
 
   @Inject()
-  private providerManager: ProviderManager
+  private providerManager: ProviderManager;
 
 
   @Get("/providers")

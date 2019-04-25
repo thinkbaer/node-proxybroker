@@ -22,22 +22,22 @@ export class IpRotate {
   addr_id: number;
 
   @Column({nullable: false})
-  successes: number = 0
+  successes: number = 0;
 
   @Column({nullable: false})
-  errors: number = 0
+  errors: number = 0;
 
   @Column({nullable: false})
-  duration: number = 0
+  duration: number = 0;
 
   @Column({nullable: false})
-  duration_average: number = 0
+  duration_average: number = 0;
 
   @Column({nullable: false})
-  inc: number = 0
+  inc: number = 0;
 
   @Column({nullable: false})
-  used: number = 0
+  used: number = 0;
 
   @CreateDateColumn()
   created_at: Date;

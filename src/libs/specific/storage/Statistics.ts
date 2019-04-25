@@ -19,28 +19,28 @@ export class Statistics {
       protocol: {},
       level: {},
       country: {}
-    }
+    };
 
-    let c = await this.storage.connect()
-    let q = c.manager.createQueryBuilder(IpAddr, 'ip')
-    q.innerJoin(IpAddrState, 'state', `state.addr_id = ip.id and state.validation_id = ip.validation_id`)
-    q.leftJoin(IpLoc, 'loc', `loc.ip = ip.ip`)
-    q.select(`state.protocol`)
-    q.addSelect(`state.enabled`)
-    q.addSelect(`state.level`)
-    q.addSelect(`loc.country_code`)
-    q.addSelect(`count(*)`, `count_all`)
-    q.groupBy(`state.protocol`)
-    q.addGroupBy(`state.enabled`)
-    q.addGroupBy(`state.level`)
-    q.addGroupBy(`loc.country_code`)
+    let c = await this.storage.connect();
+    let q = c.manager.createQueryBuilder(IpAddr, 'ip');
+    q.innerJoin(IpAddrState, 'state', `state.addr_id = ip.id and state.validation_id = ip.validation_id`);
+    q.leftJoin(IpLoc, 'loc', `loc.ip = ip.ip`);
+    q.select(`state.protocol`);
+    q.addSelect(`state.enabled`);
+    q.addSelect(`state.level`);
+    q.addSelect(`loc.country_code`);
+    q.addSelect(`count(*)`, `count_all`);
+    q.groupBy(`state.protocol`);
+    q.addGroupBy(`state.enabled`);
+    q.addGroupBy(`state.level`);
+    q.addGroupBy(`loc.country_code`);
 
-    let query = q.getSql()
-    let list = await c.manager.query(query)
+    let query = q.getSql();
+    let list = await c.manager.query(query);
 
     for (let x of list) {
-      let c = parseInt(x.count_all)
-      stats.all += c
+      let c = parseInt(x.count_all);
+      stats.all += c;
 
       if (x.state_enabled) {
 
@@ -70,7 +70,7 @@ export class Statistics {
 
     }
 
-    await c.close()
+    await c.close();
 
     return stats
   }

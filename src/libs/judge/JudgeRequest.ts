@@ -95,12 +95,9 @@ export class JudgeRequest {
       timeout: this.socket_timeout,
       forever: false
     };
-
-
     this.request = _request.get(this.url, opts);
 
-    this.timer = setTimeout(this.onConnectTimeout.bind(this), this.connect_timeout)
-
+    this.timer = setTimeout(this.onConnectTimeout.bind(this), this.connect_timeout);
     this.request.on('error', this.onRequestError.bind(this));
     this.request.on('socket', this.onSocket.bind(this));
 
@@ -121,15 +118,15 @@ export class JudgeRequest {
     this.socket = socket;
     socket.setKeepAlive(false);
     socket.setTimeout(this.socket_timeout);
-    socket.on('error', this.onSocketError.bind(this))
-    socket.on('timeout', this.onSocketTimeout.bind(this))
-    socket.on('lookup', this.onSocketLookup.bind(this))
+    socket.on('error', this.onSocketError.bind(this));
+    socket.on('timeout', this.onSocketTimeout.bind(this));
+    socket.on('lookup', this.onSocketLookup.bind(this));
     socket.on('data', this.onSocketData.bind(this))
   }
 
 
   onSocketData(data: Buffer) {
-    Log.debug('JudgeRequest->onSocketData ' + this.id)
+    Log.debug('JudgeRequest->onSocketData ' + this.id);
     this.socket.setTimeout(0)
   }
 

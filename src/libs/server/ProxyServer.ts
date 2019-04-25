@@ -391,9 +391,8 @@ export class ProxyServer extends Server implements IServer {
 
 
   async onProxyToProxy(base: IUrlBase, handle: SocketHandle): Promise<any> {
-
     let e = new ProxyUsedEvent(base, handle);
-    return EventBus.post(e);
+    return EventBus.postAndForget(e).catch(e => {});
   }
 
 
