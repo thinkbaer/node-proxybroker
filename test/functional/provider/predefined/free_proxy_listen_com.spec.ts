@@ -1,10 +1,7 @@
 import {suite, test, timeout} from "mocha-typescript";
 import {expect} from "chai";
 import {Log} from "@typexs/base";
-import {FreeProxyListsCom} from "../../../src/providers/proxy/FreeProxyListsCom";
-
-describe('', () => {
-});
+import {FreeProxyListsCom} from "../../../../src/providers/proxy/FreeProxyListsCom";
 
 
 @suite('provider/predefined/FreeProxyListenCom') @timeout(10000)

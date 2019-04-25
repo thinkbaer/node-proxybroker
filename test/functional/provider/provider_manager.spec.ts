@@ -2,17 +2,16 @@ import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 import * as _ from 'lodash'
 import subscribe from "commons-eventbus/decorator/subscribe";
-import {ProxyDataFetchedEvent} from "../../src/libs/proxy/ProxyDataFetchedEvent";
-import {IProviderOptions} from "../../src/libs/provider/IProviderOptions";
 import {Container, Invoker, Log, StorageRef} from "@typexs/base";
-import {ProviderManager} from "../../src/libs/provider/ProviderManager";
-import {ProxyFilter} from "../../src/libs/proxy/ProxyFilter";
 import {EventBus} from "commons-eventbus";
-import {ProviderRunEvent} from "../../src/libs/provider/ProviderRunEvent";
-
-import {Job} from "../../src/entities/Job";
-import {JobState} from "../../src/entities/JobState";
-import {TEST_STORAGE_OPTIONS} from "../functional/config";
+import {ProxyDataFetchedEvent} from "../../../src/libs/proxy/ProxyDataFetchedEvent";
+import {IProviderOptions} from "../../../src/libs/provider/IProviderOptions";
+import {ProviderManager} from "../../../src/libs/provider/ProviderManager";
+import {TestHelper} from "../TestHelper";
+import {Job} from "../../../src/entities/Job";
+import {ProxyFilter} from "../../../src/libs/proxy/ProxyFilter";
+import {ProviderRunEvent} from "../../../src/libs/provider/ProviderRunEvent";
+import {JobState} from "../../../src/entities/JobState";
 
 class X {
   test: Function;
@@ -82,10 +81,8 @@ class ProviderManagerTest {
 
   @test
   async 'initialize with storage'() {
-    let invoker = new Invoker();
-    Container.set(Invoker.NAME, invoker);
-    let storage = new StorageRef(TEST_STORAGE_OPTIONS);
-    await storage.prepare();
+
+    let storage = await TestHelper.getDefaultStorageRef()
 
     let pm = new ProviderManager();
     await pm.prepare(storage, this.options, true);
@@ -145,10 +142,8 @@ class ProviderManagerTest {
 
   @test
   async 'run a job'() {
-    let invoker = new Invoker();
-    Container.set(Invoker.NAME, invoker);
-    let storage = new StorageRef(TEST_STORAGE_OPTIONS);
-    await storage.prepare();
+
+    let storage = await TestHelper.getDefaultStorageRef();
 
     let pm = new ProviderManager();
     let pds = new ProxyFilter(storage);
@@ -176,10 +171,8 @@ class ProviderManagerTest {
 
   @test
   async 'run by job event'() {
-    let invoker = new Invoker();
-    Container.set(Invoker.NAME, invoker);
-    let storage = new StorageRef(TEST_STORAGE_OPTIONS);
-    await storage.prepare();
+
+    let storage = await TestHelper.getDefaultStorageRef();
 
     let pm = new ProviderManager();
     await EventBus.register(pm);
@@ -216,10 +209,7 @@ class ProviderManagerTest {
   async 'schedule'() {
     let now = Date.now();
 
-    let invoker = new Invoker();
-    Container.set(Invoker.NAME, invoker);
-    let storage = new StorageRef(TEST_STORAGE_OPTIONS);
-    await storage.prepare();
+    let storage = await TestHelper.getDefaultStorageRef();
 
     let sec = new Date(now + 2000);
     let options: IProviderOptions = {
