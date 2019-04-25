@@ -1,16 +1,14 @@
 import {suite, test, timeout} from "mocha-typescript";
 import {expect} from "chai";
-import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
-import {IpAddr} from "../../src/entities/IpAddr";
 import {DateUtils} from "typeorm/util/DateUtils";
-import {Container, Invoker, Log, StorageRef} from "@typexs/base";
-import {TEST_STORAGE_OPTIONS} from "../config";
-import {IJudgeOptions} from "../../src/libs/judge/IJudgeOptions";
-import {IProxyServerOptions} from "../../src/libs/server/IProxyServerOptions";
+import {Log} from "@typexs/base";
 import {EventBus} from "commons-eventbus";
+import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
+import {IJudgeOptions} from "../../../src/libs/judge/IJudgeOptions";
 import {TestHelper} from "../TestHelper";
-import {ProxyServer} from "../../src/libs/server/ProxyServer";
-import {ProxyValidator} from "../../src/libs/proxy/ProxyValidator";
+import {IpAddr} from "../../../src/entities/IpAddr";
+import {ProxyServer} from "../../../src/libs/server/ProxyServer";
+import {ProxyValidator} from "../../../src/libs/proxy/ProxyValidator";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
@@ -21,7 +19,7 @@ const proxy_options: IProxyServerOptions = <IProxyServerOptions>{
   protocol: 'http',
   level: 3,
   toProxy: false
-}
+};
 
 const judge_options: IJudgeOptions = {
   remote_lookup: false,
@@ -38,10 +36,7 @@ class ProxyValidationControllerTest {
 
   @test
   async 'records selection query'() {
-    let invoker = new Invoker();
-    Container.set(Invoker.NAME, invoker);
-    let storage = new StorageRef(TEST_STORAGE_OPTIONS);
-    await storage.prepare();
+    let storage =await TestHelper.getDefaultStorageRef();
 
     let ip = new IpAddr();
     ip.ip = '127.0.0.1';
@@ -56,7 +51,7 @@ class ProxyValidationControllerTest {
       blocked: false,
       to_delete: false,
       date: DateUtils.mixedDateToDatetimeString(new Date(Date.now() - 6 * 60 * 60 * 1000))
-    })
+    });
 
     let _ips: IpAddr[] = await q.getMany();
     expect(_ips).to.have.length(1);
@@ -89,12 +84,10 @@ class ProxyValidationControllerTest {
   @test
   async 'test scheduled task'() {
 
-    // Log.options({enable:true})
+     //Log.options({enable:true,level:'debug'})
     let now = new Date();
-    let invoker = new Invoker();
-    Container.set(Invoker.NAME, invoker);
-    let storage = new StorageRef(TEST_STORAGE_OPTIONS);
-    await storage.prepare();
+
+    let storage =await TestHelper.getDefaultStorageRef();
 
     let ip = new IpAddr();
     ip.ip = '127.0.0.1';
@@ -113,7 +106,7 @@ class ProxyValidationControllerTest {
       judge: judge_options
     }, storage);
 
-    await EventBus.register(proxyValidationController);
+
     await proxyValidationController.prepare();
     await TestHelper.wait(2000);
 

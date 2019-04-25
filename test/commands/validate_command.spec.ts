@@ -37,8 +37,8 @@ class ValidateCommandTest {
 
   @test
   async 'judge file with file'() {
-    Config.clear()
-    Config.jar().merge(cfg)
+    Config.clear();
+    Config.jar().merge(cfg);
 
     let proxy_options: IProxyServerOptions = <IProxyServerOptions>{
       ip: '127.0.0.11',
@@ -61,16 +61,16 @@ class ValidateCommandTest {
       // config: cfg, // config can be ignored handler work on cli.ts level, so we previously defined settings directly
       format: 'json'
     });
-    stdMocks.restore()
-    let output = stdMocks.flush()
+    stdMocks.restore();
+    let output = stdMocks.flush();
     await http_proxy_server.stop();
 
 
-    expect(output).to.have.keys('stdout', 'stderr')
-    expect(output.stdout).has.length(1)
-    expect(list).has.length(1)
-    let stdData = JSON.parse(output.stdout[0])
-    expect(stdData[0]).to.deep.eq(JSON.parse(JSON.stringify(list[0].results)))
+    expect(output).to.have.keys('stdout', 'stderr');
+    expect(output.stdout).has.length(1);
+    expect(list).has.length(1);
+    let stdData = JSON.parse(output.stdout[0]);
+    expect(stdData[0]).to.deep.eq(JSON.parse(JSON.stringify(list[0].results)));
 
     let data = list.shift();
     expect(data.ip).to.eq('127.0.0.11');

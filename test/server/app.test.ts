@@ -4,11 +4,13 @@ import {Container} from "typedi";
 import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {Config} from "commons-config";
 import {Invoker, Log, StorageRef} from "@typexs/base";
-import {TEST_STORAGE_OPTIONS} from "../config";
+
 import {EventBus} from "commons-eventbus";
 import {ProxyFilter} from "../../src/libs/proxy/ProxyFilter";
 import {ProxyValidator} from "../../src/libs/proxy/ProxyValidator";
 import {ProviderManager} from "../../src/libs/provider/ProviderManager";
+import {TEST_STORAGE_OPTIONS} from "../functional/config";
+import {TestHelper} from "../functional/TestHelper";
 
 process.on('unhandledRejection', (reason: any, p: any) => {
   console.error(reason)
@@ -36,11 +38,7 @@ let boot = async function (): Promise<void> {
 
   Log.enable = true;
 
-  let invoker = new Invoker();
-  Container.set(Invoker.NAME, invoker);
-  storage = new StorageRef(TEST_STORAGE_OPTIONS);
-  await storage.prepare();
-  Container.set(Storage, storage)
+  storage = await TestHelper.getDefaultStorageRef();
 
   let selector = new ProxyFilter(storage);
   await EventBus.register(selector);
@@ -60,13 +58,13 @@ let boot = async function (): Promise<void> {
         connection_timeout: 5000
       }
     }
-  }, storage)
+  }, storage);
   await EventBus.register(validator);
   await validator.prepare();
   Container.set(ProxyValidator, validator);
 
   let provider = new ProviderManager();
-  await EventBus.register(provider)
+  await EventBus.register(provider);
   await provider.prepare(storage,{
     schedule: {
       enable: false
@@ -74,7 +72,7 @@ let boot = async function (): Promise<void> {
   });
 
 
-  Container.set(ProviderManager, provider)
+  Container.set(ProviderManager, provider);
   useContainer(Container)
 
   /*

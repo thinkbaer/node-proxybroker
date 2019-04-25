@@ -9,9 +9,10 @@ import {ProviderManager} from "../../src/libs/provider/ProviderManager";
 import {ProxyFilter} from "../../src/libs/proxy/ProxyFilter";
 import {EventBus} from "commons-eventbus";
 import {ProviderRunEvent} from "../../src/libs/provider/ProviderRunEvent";
-import {TEST_STORAGE_OPTIONS} from "../config";
+
 import {Job} from "../../src/entities/Job";
 import {JobState} from "../../src/entities/JobState";
+import {TEST_STORAGE_OPTIONS} from "../functional/config";
 
 class X {
   test: Function;

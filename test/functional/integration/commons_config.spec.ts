@@ -5,16 +5,16 @@ import {expect} from "chai";
 import {Config} from "commons-config";
 
 
-import {IProviderOptions} from "../../src/libs/provider/IProviderOptions";
 import {DEFAULT_STORAGE_OPTIONS} from "@typexs/base";
+import {IProviderOptions} from "../../../src/libs/provider/IProviderOptions";
 
 const K_WORKDIR = 'workdir';
 
 /**
  * TODO
  */
-@suite('commons-config integration tests')
-class ConfigTests {
+@suite('functional/integration/'+__filename)
+class Commons_configSpec {
 
 
   @test
@@ -91,7 +91,7 @@ class ConfigTests {
       ]
     });
 
-    expect(options.configs).to.deep.include({type: 'file', file: './files/config_non.json', state: false})
+    expect(options.configs).to.deep.include({type: 'file', file: './files/config_non.json', state: false});
     expect(options.configs).to.deep.include({type: 'file', file: './some/file/name.json', state: false})
   }
 

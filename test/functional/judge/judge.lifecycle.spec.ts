@@ -1,8 +1,8 @@
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 import {Log} from "@typexs/base";
-import {IJudgeOptions} from "../../src/libs/judge/IJudgeOptions";
-import {Judge} from "../../src/libs/judge/Judge";
+import {IJudgeOptions} from "../../../src/libs/judge/IJudgeOptions";
+import {Judge} from "../../../src/libs/judge/Judge";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 /**
@@ -28,11 +28,11 @@ class JudgeTestSuite1 {
    */
   @test
   async 'positive selftest with modified options'() {
-    let options: IJudgeOptions = {ssl: {}}
+    let options: IJudgeOptions = {ssl: {}};
     options.remote_ip = 'judge.local';
     options.ip = 'judge.local';
-    options.http_port = 8081
-    options.https_port = 8082
+    options.http_port = 8081;
+    options.https_port = 8082;
     options.ssl.key_file = __dirname + '/' + SSL_PATH + '/judge/server-key.pem';
     options.ssl.cert_file = __dirname + '/' + SSL_PATH + '/judge/server-cert.pem';
     options.remote_lookup = false;

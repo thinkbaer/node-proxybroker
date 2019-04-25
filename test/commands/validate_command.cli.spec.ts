@@ -38,7 +38,7 @@ class CLIValidateCommandTest {
       level: 3,
       toProxy: false,
 
-    }
+    };
 
     let http_proxy_server = new ProxyServer();
     http_proxy_server.initialize(proxy_options);
@@ -52,10 +52,10 @@ class CLIValidateCommandTest {
     expect(data.ip).to.eq('127.0.0.11');
     expect(data.port).to.eq(3128);
 
-    let http_http = data.variants.shift()
-    let http_https = data.variants.shift()
-    let https_http = data.variants.shift()
-    let https_https = data.variants.shift()
+    let http_http = data.variants.shift();
+    let http_https = data.variants.shift();
+    let https_http = data.variants.shift();
+    let https_https = data.variants.shift();
 
 
     expect(http_http.error).to.be.null;
@@ -64,7 +64,7 @@ class CLIValidateCommandTest {
     expect(http_https.error).to.be.null;
     expect(http_https.level).to.eq(1);
 
-    expect(https_http).to.not.be.null
+    expect(https_http).to.not.be.null;
     expect(https_https).to.not.be.null
   }
 

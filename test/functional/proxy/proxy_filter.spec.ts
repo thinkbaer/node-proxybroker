@@ -1,16 +1,17 @@
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
-import {IpAddr} from "../../src/entities/IpAddr";
-import {ProxyFilter} from "../../src/libs/proxy/ProxyFilter";
-import {ProxyDataFetched} from "../../src/libs/proxy/ProxyDataFetched";
-import {Container, Invoker, Log, StorageRef} from "@typexs/base";
+import {Log, StorageRef} from "@typexs/base";
 import {EventBus} from "commons-eventbus";
-import {ProxyDataValidateEvent} from "../../src/libs/proxy/ProxyDataValidateEvent";
-import {ProxyDataFetchedEvent} from "../../src/libs/proxy/ProxyDataFetchedEvent";
 import subscribe from "commons-eventbus/decorator/subscribe";
-import {TEST_STORAGE_OPTIONS} from "../config";
+import {TestHelper} from "../TestHelper";
+import {ProxyFilter} from "../../../src/libs/proxy/ProxyFilter";
+import {IpAddr} from "../../../src/entities/IpAddr";
+import {ProxyDataFetched} from "../../../src/libs/proxy/ProxyDataFetched";
+import {ProxyDataValidateEvent} from "../../../src/libs/proxy/ProxyDataValidateEvent";
+import {ProxyDataFetchedEvent} from "../../../src/libs/proxy/ProxyDataFetchedEvent";
 
-let storage: StorageRef = null
+
+let storage: StorageRef = null;
 
 @suite('proxy/ProxyFilter')
 class ProxyDataSelectorTest {
@@ -20,10 +21,8 @@ class ProxyDataSelectorTest {
   }
 
   async before() {
-    let invoker = new Invoker();
-    Container.set(Invoker.NAME, invoker);
-    storage = new StorageRef(TEST_STORAGE_OPTIONS);
-    await storage.prepare();
+
+    storage = await TestHelper.getDefaultStorageRef()
   }
 
   async after() {

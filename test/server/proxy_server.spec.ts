@@ -24,10 +24,10 @@ opts['proxyHeaderExclusiveList'] = [
   'proxy-select-fallback'
 ];
 
-let http_url = 'http://php.net/support.php'
-let http_string = 'A good place to start is by skimming'
-let https_url = 'https://nodejs.org/en/about/'
-let https_string = 'As an asynchronous event driven JavaScript runtime'
+let http_url = 'http://php.net/support.php';
+let http_string = 'A good place to start is by skimming';
+let https_url = 'https://nodejs.org/en/about/';
+let https_string = 'As an asynchronous event driven JavaScript runtime';
 
 @suite('server/ProxyServer') @timeout(20000)
 class ProxyServerTest {
@@ -84,22 +84,22 @@ class ProxyServerTest {
   @test
   async 'http failing'() {
     // Http request
-    let resp1 = null
-    let err = null
+    let resp1 = null;
+    let err = null;
     try {
       resp1 = await request.get('http://asd-test-site.org/html', opts);
       expect(true).to.be.false
     } catch (_err) {
-      err = _err
-      expect(err).to.exist
+      err = _err;
+      expect(err).to.exist;
       expect(err.message).to.not.contain('expected true to be false');
       resp1 = err.response
 
     }
 
-    let json = JSON.parse(resp1.headers['proxy-broker-error'])
+    let json = JSON.parse(resp1.headers['proxy-broker-error']);
 
-    expect(resp1.statusCode).to.be.eq(504)
+    expect(resp1.statusCode).to.be.eq(504);
     expect(json.error).to.deep.include({
       _code: 'ADDR_NOT_FOUND', _error: {
         code: 'ENOTFOUND', "errno": "ENOTFOUND",

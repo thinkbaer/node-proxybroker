@@ -4,15 +4,15 @@ import {expect} from "chai";
 import * as _request from "request-promise-native";
 import {Log} from "@typexs/base";
 import {Server} from "@typexs/server";
-import {RequestResponseMonitor} from "../../src/libs/judge/RequestResponseMonitor";
-
+import {RequestResponseMonitor} from "../../../src/libs/judge/RequestResponseMonitor";
+import {TestHelper} from "../TestHelper";
 
 //process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 //https.globalAgent.options.rejectUnauthorized = false;
 const PROXY_LOCAL_HOST: string = 'proxy.local';
-const SSL_PATH = '../_files/ssl';
-const DEBUG = false;
+//const SSL_PATH = '../_files/ssl';
+const DEBUG = true;
 
 // Log.options({enable:true,level:'debug'})
 
@@ -20,7 +20,7 @@ const DEBUG = false;
 class ReqResMonitorTest {
 
   static before() {
-    Log.options({enable: false})
+    Log.options({enable: DEBUG, level: 'debug'})
   }
 
   /**
@@ -37,7 +37,7 @@ class ReqResMonitorTest {
 
     server.stall = 1000;
 
-    setTimeout(function () {
+    setTimeout(() => {
       server.shutdown()
     }, 100);
 
@@ -188,8 +188,8 @@ class ReqResMonitorTest {
     let server: Server = new Server();
     server.initialize({
       ip: PROXY_LOCAL_HOST, port: 8000, protocol: 'https',
-      key_file: __dirname + '/' + SSL_PATH + '/proxy/server-key.pem',
-      cert_file: __dirname + '/' + SSL_PATH + '/proxy/server-cert.pem',
+      key_file: TestHelper.sslPath('proxy/server-key.pem'),
+      cert_file: TestHelper.sslPath('proxy/server-cert.pem'),
     });
 
     await server.start();

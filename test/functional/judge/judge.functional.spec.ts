@@ -1,9 +1,6 @@
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
-import {Judge} from "../../src/libs/judge/Judge";
-
-describe('', () => {
-});
+import {Judge} from "../../../src/libs/judge/Judge";
 
 /**
  * Testing internal functionality and remote access to judge server

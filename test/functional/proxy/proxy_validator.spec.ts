@@ -1,18 +1,17 @@
 import {suite, test, timeout} from "mocha-typescript";
 import {expect} from "chai";
-import {IpLoc} from "../../src/entities/IpLoc";
-import {IpAddr} from "../../src/entities/IpAddr";
-import {IpAddrState} from "../../src/entities/IpAddrState";
-import {ProtocolType} from "../../src/libs/specific/ProtocolType";
-import {IProxyServerOptions} from "../../src/libs/server/IProxyServerOptions";
-import {IJudgeOptions} from "../../src/libs/judge/IJudgeOptions";
-import {Container, Invoker, Log, StorageRef} from "@typexs/base";
-import {TEST_STORAGE_OPTIONS} from "../config";
-import {ProxyServer} from "../../src/libs/server/ProxyServer";
-import {ProxyValidator} from "../../src/libs/proxy/ProxyValidator";
-import {ProxyDataValidateEvent} from "../../src/libs/proxy/ProxyDataValidateEvent";
-import {ProxyData} from "../../src/libs/proxy/ProxyData";
-
+import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
+import {IJudgeOptions} from "../../../src/libs/judge/IJudgeOptions";
+import {TestHelper} from "../TestHelper";
+import {Log} from "@typexs/base";
+import {ProxyServer} from "../../../src/libs/server/ProxyServer";
+import {ProxyValidator} from "../../../src/libs/proxy/ProxyValidator";
+import {ProxyDataValidateEvent} from "../../../src/libs/proxy/ProxyDataValidateEvent";
+import {ProxyData} from "../../../src/libs/proxy/ProxyData";
+import {IpLoc} from "../../../src/entities/IpLoc";
+import {IpAddr} from "../../../src/entities/IpAddr";
+import {IpAddrState} from "../../../src/entities/IpAddrState";
+import {ProtocolType} from "../../../src/libs/specific/ProtocolType";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
@@ -23,7 +22,7 @@ const http_proxy_options: IProxyServerOptions = <IProxyServerOptions>{
   port: 3128,
   level: 3,
   toProxy: false
-}
+};
 
 const judge_options: IJudgeOptions = {
   remote_lookup: false,
@@ -46,10 +45,7 @@ class ProxyValidationControllerTest {
 
   @test
   async 'positiv validation for http proxy'() {
-    let invoker = new Invoker();
-    Container.set(Invoker.NAME, invoker);
-    let storage = new StorageRef(TEST_STORAGE_OPTIONS);
-    await storage.prepare();
+    let storage =await TestHelper.getDefaultStorageRef();
 
     let http_proxy_server = new ProxyServer();
     http_proxy_server.initialize(http_proxy_options);
@@ -102,10 +98,7 @@ class ProxyValidationControllerTest {
 
   @test
   async 'negativ validation'() {
-    let invoker = new Invoker();
-    Container.set(Invoker.NAME, invoker);
-    let storage = new StorageRef(TEST_STORAGE_OPTIONS);
-    await storage.prepare();
+    let storage =await TestHelper.getDefaultStorageRef();
     let proxyValidationController = new ProxyValidator({schedule: {enable: false}, judge: judge_options}, storage);
     await proxyValidationController.prepare();
 

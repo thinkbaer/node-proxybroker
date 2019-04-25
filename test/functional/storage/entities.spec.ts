@@ -1,32 +1,38 @@
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 
-
-import {ProtocolType} from "../../src/libs/specific/ProtocolType";
-import {IpAddrState} from "../../src/entities/IpAddrState";
-import {IpAddr} from "../../src/entities/IpAddr";
-import {IpRotate} from "../../src/entities/IpRotate";
-import {IpRotateLog} from "../../src/entities/IpRotateLog";
-import {IpLoc} from "../../src/entities/IpLoc";
 import {Container, Invoker, StorageRef} from "@typexs/base";
 import {TEST_STORAGE_OPTIONS} from "../config";
+import {IpLoc} from "../../../src/entities/IpLoc";
+import {IpRotate} from "../../../src/entities/IpRotate";
+import {IpRotateLog} from "../../../src/entities/IpRotateLog";
+import {IpAddrState} from "../../../src/entities/IpAddrState";
+import {IpAddr} from "../../../src/entities/IpAddr";
+import {ProtocolType} from "../../../src/libs/specific/ProtocolType";
+import * as _ from "lodash";
 
 let storage: StorageRef = null;
 
-@suite('storage/entity/*')
+@suite('storage/entity/'+__filename)
 class EntitiesTest {
 
   static async before() {
     let invoker = new Invoker();
     Container.set(Invoker.NAME, invoker);
-
-    storage = new StorageRef(TEST_STORAGE_OPTIONS);
+    let opts = _.clone(TEST_STORAGE_OPTIONS);
+    (<any>opts).entities = [
+      IpAddr
+    ];
+    storage = new StorageRef(opts);
     await storage.prepare();
   }
 
   static async after() {
-    await storage.shutdown();
-    storage = Storage['$$'] = null
+    if(storage){
+      await storage.shutdown();
+    }
+
+
   }
 
   @test.skip()

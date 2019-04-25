@@ -4,4 +4,5 @@
 --recursive
 --timeout 5000
 
-test/**/*.spec.ts
+test/functional/**/*.spec.ts
+test/functional/**/**/*.spec.ts

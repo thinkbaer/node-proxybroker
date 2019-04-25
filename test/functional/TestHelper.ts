@@ -1,5 +1,15 @@
 import * as _ from 'lodash';
 import {getMetadataArgsStorage} from "typeorm";
+import {Invoker,Container, PlatformUtils, StorageRef} from '@typexs/base';
+import {TEST_STORAGE_OPTIONS} from "./config";
+import {IpAddr} from "../../src/entities/IpAddr";
+import {IpLoc} from "../../src/entities/IpLoc";
+import {IpAddrState} from "../../src/entities/IpAddrState";
+import {IpRotateLog} from "../../src/entities/IpRotateLog";
+import {IpRotate} from "../../src/entities/IpRotate";
+import {Job} from "../../src/entities/Job";
+import {JobState} from "../../src/entities/JobState";
+
 
 export class TestHelper {
 
@@ -13,6 +23,23 @@ export class TestHelper {
     return process.env.CI_RUN ? false : _.isBoolean(set) ? set : true;
   }
 
+
+  static sslPath(dir: string) {
+    return PlatformUtils.join(__dirname, '_files/ssl', dir)
+  }
+
+
+  static async getDefaultStorageRef(){
+    let invoker = new Invoker();
+    Container.set(Invoker.NAME, invoker);
+    let opts = _.clone(TEST_STORAGE_OPTIONS);
+    (<any>opts).entities = [
+      IpAddr, IpLoc, IpAddrState, IpRotateLog, IpRotate, Job, JobState
+    ];
+    let storage = new StorageRef(opts);
+    await storage.prepare();
+    return  storage;
+  }
 
   static typeOrmRestore() {
     require('../../src/entities/SystemNodeInfo');

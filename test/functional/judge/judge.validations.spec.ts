@@ -1,18 +1,15 @@
-// Reference mocha-typescript's global definitions:
-/// <reference path="../../node_modules/mocha-typescript/globals.d.ts" />
-
 import * as net from 'net'
 import {suite, test, timeout} from "mocha-typescript";
 import {expect} from "chai";
-import {ProtocolType} from "../../src/libs/specific/ProtocolType";
-import {ProxyServer} from "../../src/libs/server/ProxyServer";
-import {Judge} from "../../src/libs/judge/Judge";
 import {Log, NestedException} from "@typexs/base";
-import {IProxyServerOptions} from "../../src/libs/server/IProxyServerOptions";
-import {RequestResponseMonitor} from "../../src/libs/judge/RequestResponseMonitor";
-import {JudgeResults} from "../../src/libs/judge/JudgeResults";
+import {ProxyServer} from "../../../src/libs/server/ProxyServer";
+import {Judge} from "../../../src/libs/judge/Judge";
+import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
+import {TestHelper} from "../TestHelper";
+import {ProtocolType} from "../../../src/libs/specific/ProtocolType";
+import {RequestResponseMonitor} from "../../../src/libs/judge/RequestResponseMonitor";
+import {JudgeResults} from "../../../src/libs/judge/JudgeResults";
 
-const SSL_PATH = '../_files/ssl';
 const JUDGE_LOCAL_HOST: string = 'judge.local';
 const PROXY_LOCAL_HOST: string = 'proxy.local';
 
@@ -56,8 +53,8 @@ class JV {
       ip: JV.https_proxy_ip,
       port: JV.https_proxy_port,
       level: 3,
-      key_file: __dirname + '/' + SSL_PATH + '/proxy/server-key.pem',
-      cert_file: __dirname + '/' + SSL_PATH + '/proxy/server-cert.pem',
+      key_file: TestHelper.sslPath('proxy/server-key.pem'),
+      cert_file: TestHelper.sslPath('proxy/server-cert.pem'),
       toProxy: false
     };
     JV.https_proxy_server = new ProxyServer();
@@ -80,7 +77,7 @@ class JV {
 
     JV.http_judge = new Judge(opts);
 
-    let erg = await JV.http_judge.bootstrap();
+    let erg = await JV.http_judge.prepare();
     expect(erg).to.equal(true);
 
     erg = await JV.http_judge.wakeup();
@@ -131,7 +128,7 @@ class JV {
 
   @test
   async 'tunnel https through http proxy (use handle)'() {
-    let judgeReq = await JV.http_judge.handleRequest(JV.http_proxy_ip, JV.http_proxy_port, ProtocolType.HTTP, ProtocolType.HTTPS)
+    let judgeReq = await JV.http_judge.handleRequest(JV.http_proxy_ip, JV.http_proxy_port, ProtocolType.HTTP, ProtocolType.HTTPS);
     expect(judgeReq.hasError()).to.be.false
   }
 
@@ -190,7 +187,7 @@ class JV {
     // Log.options({enable:true,level:'debug'})
     let results: JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST, JV.https_proxy_port/*,{http:true,https:true}*/);
 
-    results.getVariants()
+    results.getVariants();
 
     let http_http = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTP);
     let http_https = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTPS);
@@ -211,7 +208,7 @@ class JV {
     let results: JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST, JV.proxy_wrapper_port);
     // console.log(results)
 
-    results.getVariants()
+    results.getVariants();
     // console.log(results.variants)
 
     let http_http = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTP);

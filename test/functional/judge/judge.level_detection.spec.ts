@@ -1,7 +1,7 @@
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 import {DomainUtils, Log} from "@typexs/base";
-import {LevelDetection} from "../../src/libs/judge/LevelDetection";
+import {LevelDetection} from "../../../src/libs/judge/LevelDetection";
 
 
 @suite('judge/LevelDetection')

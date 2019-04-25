@@ -2,21 +2,21 @@
 // process.env.NODE_DEBUG = ' request tunnel node '
 // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-import {suite, test, slow, timeout, pending} from "mocha-typescript";
+import * as _ from "lodash";
+import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
-import {inspect} from "util";
 
 import * as http from 'http'
 import * as https from 'https'
-import {Judge} from "../../src/libs/judge/Judge";
-import {ProxyServer} from "../../src/libs/server/ProxyServer";
 import {Log} from "@typexs/base";
-import {IJudgeOptions} from "../../src/libs/judge/IJudgeOptions";
-import {IProxyServerOptions} from "../../src/libs/server/IProxyServerOptions";
+import {TestHelper} from "../TestHelper";
+import {Judge} from "../../../src/libs/judge/Judge";
+import {ProxyServer} from "../../../src/libs/server/ProxyServer";
+import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
+import {IJudgeOptions} from "../../../src/libs/judge/IJudgeOptions";
 
 // https://www.proxynova.com/proxy-articles/proxy-anonymity-levels-explained
 
-const SSL_PATH = '../_files/ssl';
 const JUDGE_LOCAL_HOST: string = 'judge.local';
 const PROXY_LOCAL_HOST: string = 'proxy.local';
 
@@ -38,7 +38,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
  */
 
 
-let debug = false;
+let debug = false;//true;
 
 interface Variation {
   title: string
@@ -73,8 +73,8 @@ suite('Judge proxy variations', () => {
       title: 'Client <-> HTTPS Proxy L1 <-> HTTP(S) Judge',
       proxy_options: {
         level: 1,
-        key_file: __dirname + '/' + SSL_PATH + '/proxy/server-key.pem',
-        cert_file: __dirname + '/' + SSL_PATH + '/proxy/server-cert.pem',
+        key_file: TestHelper.sslPath('proxy/server-key.pem'),
+        cert_file: TestHelper.sslPath('proxy/server-cert.pem'),
       },
       debug: debug
     },
@@ -82,8 +82,8 @@ suite('Judge proxy variations', () => {
       title: 'Client <-> HTTPS Proxy L3 <-> HTTP(S) Judge',
       proxy_options: {
         level: 3,
-        key_file: __dirname + '/' + SSL_PATH + '/proxy/server-key.pem',
-        cert_file: __dirname + '/' + SSL_PATH + '/proxy/server-cert.pem',
+        key_file: TestHelper.sslPath('proxy/server-key.pem'),
+        cert_file: TestHelper.sslPath('proxy/server-cert.pem'),
       },
       debug: debug
     },
@@ -91,8 +91,8 @@ suite('Judge proxy variations', () => {
       title: 'Client <-> HTTPS Proxy L2 <-> HTTP(S) Judge',
       proxy_options: {
         level: 2,
-        key_file: __dirname + '/' + SSL_PATH + '/proxy/server-key.pem',
-        cert_file: __dirname + '/' + SSL_PATH + '/proxy/server-cert.pem',
+        key_file: TestHelper.sslPath('proxy/server-key.pem'),
+        cert_file: TestHelper.sslPath('proxy/server-cert.pem'),
       },
       debug: debug
     },
@@ -100,8 +100,8 @@ suite('Judge proxy variations', () => {
       title: 'Client <-> HTTPS Proxy L1 <-> HTTP(S) Judge',
       proxy_options: {
         level: 1,
-        key_file: __dirname + '/' + SSL_PATH + '/proxy/server-key.pem',
-        cert_file: __dirname + '/' + SSL_PATH + '/proxy/server-cert.pem',
+        key_file: TestHelper.sslPath('proxy/server-key.pem'),
+        cert_file: TestHelper.sslPath('proxy/server-cert.pem'),
       },
       debug: debug
     }
@@ -124,13 +124,13 @@ suite('Judge proxy variations', () => {
         Log.options({enable: data.debug, level: 'debug'});
 
 
-        let proxy_options = <IProxyServerOptions>{
+        let proxy_options:IProxyServerOptions = <IProxyServerOptions>_.assign({},{
           //url: this.proxy_protocol + '://' + this.proxy_ip + ':' + this.proxy_port,
           port: this.proxy_port,
           protocol: this.proxy_protocol,
           ip: this.proxy_ip,
           toProxy: false
-        };
+        }, data.proxy_options);
         this.proxy_server = new ProxyServer();
         this.proxy_server.initialize(proxy_options);
 
@@ -149,7 +149,7 @@ suite('Judge proxy variations', () => {
 
         this.judge = new Judge(opts);
 
-        let erg = await this.judge.bootstrap();
+        let erg = await this.judge.prepare();
         expect(erg).to.equal(true);
 
         erg = await this.judge.wakeup();
@@ -211,6 +211,7 @@ suite('Judge proxy variations', () => {
             console.log('<--------')
           }
 
+          // everything is level 1
           expect(judgeReq.level).to.be.equal(1);
           expect(log).to.match(/Judge connected/);
           expect(log).to.match(new RegExp('Proxy is L1'))

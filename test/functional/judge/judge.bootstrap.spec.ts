@@ -1,7 +1,7 @@
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 import {Log} from "@typexs/base";
-import {Judge} from "../../src/libs/judge/Judge";
+import {Judge} from "../../../src/libs/judge/Judge";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
@@ -17,10 +17,11 @@ let initial_remote_ip = 'http://127.0.0.1:8080';
 
 
 if (!process.env.CI_CONTAINER) {
+
   /**
    * This test doesn't work in a extern test container like travis
    */
-  @suite('judge/Judge - bootstrap (no SSL)')
+  @suite('judge/Judge - prepare (no SSL)')
   class JudgeTestSuite1 {
 
     static before() {
@@ -32,13 +33,9 @@ if (!process.env.CI_CONTAINER) {
     async 'bootstrap'() {
       let judge = new Judge();
 
-      let erg = await judge.bootstrap()
+      let erg = await judge.prepare();
       expect(erg).to.be.eq(true);
     }
   }
 }
 
-
-process.on('uncaughtException', function (err: Error) {
-  console.log(err);
-});

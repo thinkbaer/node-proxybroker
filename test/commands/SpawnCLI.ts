@@ -22,7 +22,7 @@ export default class SpawnCLI {
 
 
   exec(): Promise<SpawnCLI> {
-    let timer: Timer
+    let timer: Timer;
     let self = this;
     let cp: child_process.ChildProcess = null;
     return new Promise((resolve, reject) => {
@@ -54,7 +54,7 @@ export default class SpawnCLI {
 
       }, SpawnCLI.timeout);
     }).then(() => {
-      clearTimeout(timer)
+      clearTimeout(timer);
       try {
         cp.kill();
         cp = null;

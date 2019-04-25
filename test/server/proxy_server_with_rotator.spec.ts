@@ -1,7 +1,6 @@
 import {suite, test, timeout} from "mocha-typescript";
 import * as request from "request-promise-native";
 import {expect} from "chai";
-import {SqliteConnectionOptions} from "typeorm/driver/sqlite/SqliteConnectionOptions";
 import {IpAddr} from "../../src/entities/IpAddr";
 import {IpAddrState} from "../../src/entities/IpAddrState";
 import {ProtocolType} from "../../src/libs/specific/ProtocolType";
@@ -10,10 +9,10 @@ import {IpRotateLog} from "../../src/entities/IpRotateLog";
 import {ProxyServer} from "../../src/libs/server/ProxyServer";
 import {ProxyRotator} from "../../src/libs/proxy/ProxyRotator";
 import {EventBus} from "commons-eventbus";
-import {TestHelper} from "../TestHelper";
-import {Invoker, Log, Container, StorageRef} from "@typexs/base";
-import {TEST_STORAGE_OPTIONS} from "../config";
+import {Log, StorageRef} from "@typexs/base";
+
 import {IProxyServerOptions} from "../../src/libs/server/IProxyServerOptions";
+import {TestHelper} from "../functional/TestHelper";
 
 
 let storage: StorageRef = null;
@@ -35,13 +34,13 @@ opts['proxyHeaderExclusiveList'] = [
   'proxy-select-fallback'
 ];
 
-let http_url = 'http://php.net/support.php'
-let http_string = 'A good place to start is by skimming'
-let https_url = 'https://nodejs.org/en/about/'
-let https_string = 'As an asynchronous event driven JavaScript runtime'
+let http_url = 'http://php.net/support.php';
+let http_string = 'A good place to start is by skimming';
+let https_url = 'https://nodejs.org/en/about/';
+let https_string = 'As an asynchronous event driven JavaScript runtime';
 
 
-let rotator: ProxyRotator = null
+let rotator: ProxyRotator = null;
 
 
 @suite('server/ProxyServer with integrated proxy/ProxyRotator') @timeout(20000)
@@ -50,10 +49,8 @@ class ProxyServerTest {
 
   static async before() {
     Log.options({enable: false, level: 'debug'});
-    let invoker = new Invoker();
-    Container.set(Invoker.NAME, invoker);
-    storage = new StorageRef(TEST_STORAGE_OPTIONS);
-    await storage.prepare();
+
+    storage = await TestHelper.getDefaultStorageRef();
 
     let c = await storage.connect();
 
@@ -149,8 +146,8 @@ class ProxyServerTest {
       addr_id: 1,
     });
 
-    expect(data2).to.has.length(1)
-    expect(data2[0].duration).to.be.greaterThan(0)
+    expect(data2).to.has.length(1);
+    expect(data2[0].duration).to.be.greaterThan(0);
     expect(data2[0]).to.deep.include({
       id: 1,
       protocol: 1,
@@ -158,19 +155,19 @@ class ProxyServerTest {
       error: null,
       statusCode: 200,
       success: true
-    })
+    });
 
     await request.get(https_url, opts);
 
 
-    await TestHelper.wait(wait)
+    await TestHelper.wait(wait);
     c = await storage.connect();
-    data1 = await c.manager.find(IpRotate)
-    data2 = await c.manager.find(IpRotateLog)
-    await c.close()
+    data1 = await c.manager.find(IpRotate);
+    data2 = await c.manager.find(IpRotateLog);
+    await c.close();
 
 
-    expect(data1).to.has.length(1)
+    expect(data1).to.has.length(1);
     expect(data1[0]).to.deep.include({
       successes: 2,
       errors: 0,
@@ -179,9 +176,9 @@ class ProxyServerTest {
       id: 1,
       protocol_src: 1,
       addr_id: 1,
-    })
-    expect(data2).to.has.length(2)
-    expect(data2[1].duration).to.be.greaterThan(0)
+    });
+    expect(data2).to.has.length(2);
+    expect(data2[1].duration).to.be.greaterThan(0);
     expect(data2[1]).to.deep.include({
       id: 2,
       protocol: 1,
@@ -189,7 +186,7 @@ class ProxyServerTest {
       error: null,
       statusCode: 200,
       success: true
-    })
+    });
 
     try {
       resp1 = await request.get('http://asd-test-site.org/html', opts);
@@ -198,14 +195,14 @@ class ProxyServerTest {
 
     }
 
-    await TestHelper.wait(wait)
+    await TestHelper.wait(wait);
     c = await storage.connect();
-    data1 = await c.manager.find(IpRotate)
-    data2 = await c.manager.find(IpRotateLog)
-    await c.close()
+    data1 = await c.manager.find(IpRotate);
+    data2 = await c.manager.find(IpRotateLog);
+    await c.close();
 
 
-    expect(data1).to.has.length(1)
+    expect(data1).to.has.length(1);
     expect(data1[0]).to.deep.include({
       successes: 2,
       errors: 1,
@@ -214,16 +211,16 @@ class ProxyServerTest {
       id: 1,
       protocol_src: 1,
       addr_id: 1,
-    })
-    expect(data2).to.has.length(3)
-    expect(data2[2].duration).to.be.greaterThan(0)
+    });
+    expect(data2).to.has.length(3);
+    expect(data2[2].duration).to.be.greaterThan(0);
     expect(data2[2]).to.deep.include({
       id: 3,
       protocol: 1,
       addr_id: 1,
       statusCode: 504,
       success: false
-    })
+    });
 
 
     try {
@@ -233,14 +230,14 @@ class ProxyServerTest {
 
     }
 
-    await TestHelper.wait(wait)
+    await TestHelper.wait(wait);
     c = await storage.connect();
-    data1 = await c.manager.find(IpRotate)
-    data2 = await c.manager.find(IpRotateLog)
-    await c.close()
+    data1 = await c.manager.find(IpRotate);
+    data2 = await c.manager.find(IpRotateLog);
+    await c.close();
 
 
-    expect(data1).to.has.length(1)
+    expect(data1).to.has.length(1);
     expect(data1[0]).to.deep.include({
       successes: 2,
       errors: 2,
@@ -249,9 +246,9 @@ class ProxyServerTest {
       id: 1,
       protocol_src: 1,
       addr_id: 1,
-    })
-    expect(data2).to.has.length(4)
-    expect(data2[3].duration).to.be.greaterThan(0)
+    });
+    expect(data2).to.has.length(4);
+    expect(data2[3].duration).to.be.greaterThan(0);
     expect(data2[3]).to.deep.include({
       id: 4,
       protocol: 1,
