@@ -1,7 +1,7 @@
 // http://www.freeproxylists.com
 
 import * as request from "request-promise-native";
-import * as _ from 'lodash'
+
 import {Log} from "@typexs/base";
 import {AbstractProvider} from "../../libs/provider/AbstractProvider";
 import {IProviderVariant} from "../../libs/provider/IProviderVariant";

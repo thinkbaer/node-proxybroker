@@ -2,7 +2,9 @@
  * http://www.proxy-listen.de/Proxy/Proxyliste.html
  */
 
-import * as request from "request-promise-native";
+// import * as request from "request-promise-native";
+import * as got from "got";
+import * as cookie from "tough-cookie";
 import * as _ from 'lodash'
 import {AbstractProvider} from "../../libs/provider/AbstractProvider";
 import {IProviderVariant} from "../../libs/provider/IProviderVariant";
@@ -10,9 +12,9 @@ import {IProxyData} from "../../libs/proxy/IProxyData";
 import {Log} from "@typexs/base";
 
 const NAME = 'proxylistende';
-const BASE_URL = 'http://www.proxy-listen.de';
+const BASE_URL = 'https://www.proxy-listen.de';
 const PROXY_LIST_DE = BASE_URL + '/Proxy/Proxyliste.html';
-const ip_regex = /&gt;(\d+\.\d+\.\d+\.\d+)&lt;\/td&gt;&lt;td&gt;(\d+)&lt;/g;
+//const ip_regex = /&gt;(\d+\.\d+\.\d+\.\d+)&lt;\/td&gt;&lt;td&gt;(\d+)&lt;/g;
 
 const MATCH_IP_PORT_REGEX = />(\d+\.\d+\.\d+\.\d+)[^\d]+(\d+)/g;
 
@@ -44,9 +46,11 @@ export class ProxyListenDe extends AbstractProvider {
 
     Log.info('ProxyListenDe: (' + this.url + ') selected variant is ' + this.variant.type);
 
-    let cookies = request.jar();
 
-    let form_data = {
+    let cookies = new cookie.CookieJar();
+    //let form_data = new FormData();
+
+    let data = {
       filter_port: '',
       filter_http_gateway: '',
       filter_http_anon: '',
@@ -58,39 +62,65 @@ export class ProxyListenDe extends AbstractProvider {
       type: this.variant.type,
       submit: 'Anzeigen',
     };
+    /*
+        _.keys(data).map(k => {
+          form_data.append(k, data[k]);
+        })
+    */
+    //let c1 = request.cookie('cookieconsent_dismissed=yes');
+    await new Promise((resolve, reject) => {
+      cookies.setCookie(cookie.Cookie.parse('cookieconsent_dismissed=yes'), BASE_URL, (err, cookie1) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(cookie1);
+        }
+      });
+    })
 
+    //let c2 = request.cookie('_gat=1');
+    await new Promise((resolve, reject) => {
+      cookies.setCookie(cookie.Cookie.parse('_gat=1'), BASE_URL, (err, cookie1) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(cookie1);
+        }
+      });
+    })
 
-    let c1 = request.cookie('cookieconsent_dismissed=yes');
-    cookies.setCookie(c1, BASE_URL);
-    let c2 = request.cookie('_gat=1');
-    cookies.setCookie(c2, BASE_URL);
+    let resp = await got.get(PROXY_LIST_DE, {cookieJar: cookies, rejectUnauthorized: false});
 
-    let html = await request.get(PROXY_LIST_DE, {jar: cookies});
+    let html = resp.body;
 
     let matched = html.match(/(<input[^>]+type=("|')hidden("|')[^>]*>)/g);
     let hidden_input = matched.shift();
     let name = hidden_input.match(/name=("|')([^("|')]+)("|')/)[2];
     let value = hidden_input.match(/value=("|')([^("|')]+)("|')/)[2];
-    form_data[name] = value;
+    //form_data.append(name, value);
+    data[name] = value;
 
     let inc = 0;
     let skip = false;
     while (inc < 5 && !skip) {
 
       let size_before = self.proxies.length;
-      let _form_data = _.clone(form_data);
+      let _form_data = _.clone(data);
 
       if (inc > 0) {
         delete _form_data['submit'];
         _form_data['next'] = 'nächste Seite'
       }
 
-      let html = await request.post(PROXY_LIST_DE, {
-        form: _form_data,
-        jar: cookies
+      resp = await got.post(PROXY_LIST_DE, {
+        body: _form_data,
+        form: true,
+        cookieJar: cookies,
+        rejectUnauthorized: false
       });
       inc++;
 
+      html = resp.body;
 
       let matcher = null;
       while ((matcher = MATCH_IP_PORT_REGEX.exec(html)) !== null) {

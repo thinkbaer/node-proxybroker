@@ -1,18 +1,18 @@
 import * as mRequest from "request-promise-native";
+
 import * as net from 'net'
 import * as http from 'http'
 
 import * as mUrl from 'url'
+import {Url} from 'url'
 import * as tls from 'tls'
 import * as events from 'events'
 import * as _ from 'lodash'
-import {Url} from "url";
 import {ReqResEvent} from "./ReqResEvent";
 
 import {IHttpHeaders, Log, NestedException} from "@typexs/base";
 import {MESSAGE} from "../specific/Messages";
 import Exceptions from "@typexs/server/libs/server/Exceptions";
-import {EventBus} from "commons-eventbus";
 
 
 export class RequestResponseMonitor extends events.EventEmitter {
