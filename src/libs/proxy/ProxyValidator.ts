@@ -301,6 +301,9 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     if (this.judge.isEnabled()) {
       await this.judge.pending()
     }
+    clearTimeout(this.timer);
+    this.queue.removeAllListeners();
+    await EventBus.unregister(this);
   }
 
   async do(workLoad: ProxyData): Promise<any> {

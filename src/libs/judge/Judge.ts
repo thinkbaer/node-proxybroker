@@ -1,5 +1,6 @@
 import * as http from "http";
 import * as https from "https";
+
 import * as _request from "request-promise-native";
 import * as tls from 'tls'
 import * as mUrl from 'url'
@@ -18,7 +19,7 @@ import {MESSAGE, Messages} from "../specific/Messages";
 import {ProtocolType} from "../specific/ProtocolType";
 
 
-const FREEGEOIP: string = 'http://freegeoip.net/json/';
+const FREEGEOIP: string = 'http://ip-api.com/json/';
 const IPCHECK_URL = 'https://api.ipify.org?format=json';
 
 
@@ -155,8 +156,6 @@ export class Judge implements IServerApi {
   }
 
 
-
-
   private async getRemoteAccessibleIp(): Promise<any> {
     // If IP is fixed, it should be configurable ...
     try {
@@ -272,9 +271,13 @@ export class Judge implements IServerApi {
       let self = this;
       let req_id = paths.shift();
       this.debug('judge call ' + req_id);
+
       if (this.cache[req_id]) {
         cached_req = this.cache[req_id];
-        req.socket.once('end', function () {
+        req.socket.once('end', () => {
+          self.removeFromCache(req_id);
+        })
+        req.socket.once('error',  () => {
           self.removeFromCache(req_id);
         })
       }
@@ -329,6 +332,8 @@ export class Judge implements IServerApi {
     await http_request.performRequest();
     let result = http_request.result(from, to);
     this.removeFromCache(http_request.id);
+    http_request.clear();
+
     this.debug('judge: finished request (' + proto_from + '=>' + proto_to + ') ' + http_request.id +
       ' from ' + url + ' t=' + result.duration +
       ' error=' + result.hasError() + ' (cached: ' + this.cache_sum + ')');
@@ -357,7 +362,7 @@ export class Judge implements IServerApi {
       if (geodata) {
         results.geo = true;
         let geojson: { [k: string]: string } = JSON.parse(geodata);
-        Object.keys(geojson).filter((k) => {
+        _.keys(geojson).filter((k) => {
           return ['ip'].indexOf(k) == -1
         }).forEach(k => {
           results[k] = geojson[k]
@@ -367,7 +372,7 @@ export class Judge implements IServerApi {
       Log.error(e)
     }
 
-    let promises = [];
+    let promises: Promise<any>[] = [];
 
     if (enable.http) {
       // HTTP => HTTP
@@ -376,18 +381,22 @@ export class Judge implements IServerApi {
       }));
 
       // HTTP => HTTPS
+
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTP, ProtocolType.HTTPS).then(result => {
         results.variants.push(result);
       }));
+
+
     }
 
-    if (enable.https) {
+    if (enable.https ) {
       // HTTPS => HTTP
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTPS, ProtocolType.HTTP).then(result => {
         results.variants.push(result);
       }));
 
       // HTTPS => HTTPS
+
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTPS, ProtocolType.HTTPS).then(result => {
         results.variants.push(result);
       }));

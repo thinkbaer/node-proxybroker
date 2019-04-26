@@ -57,6 +57,18 @@ export class RequestResponseMonitor extends events.EventEmitter {
     this.request = request
   }
 
+
+  clear(){
+    this.removeAllListeners();
+    if(this.request){
+      this.request.removeAllListeners();
+    }
+    if(this.socket){
+      this.socket.removeAllListeners();
+    }
+
+  }
+
   get uri(): Url {
     return this.request['uri']
   }

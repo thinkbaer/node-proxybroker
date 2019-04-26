@@ -1,5 +1,4 @@
 import * as http from "http";
-
 import * as mUrl from 'url'
 import * as net from 'net'
 
@@ -59,7 +58,9 @@ export class JudgeRequest {
   private level_detector: LevelDetection = null;
 
   response: any = null;
+
   request: _request.RequestPromise = null;
+
   monitor: RequestResponseMonitor = null;
 
   judgeConnected: boolean = false;
@@ -95,6 +96,8 @@ export class JudgeRequest {
       timeout: this.socket_timeout,
       forever: false
     };
+
+
     this.request = _request.get(this.url, opts);
 
     this.timer = setTimeout(this.onConnectTimeout.bind(this), this.connect_timeout);
@@ -105,10 +108,11 @@ export class JudgeRequest {
     try {
       this.response = await this.request.promise()
     } catch (e) {
+      //Log.error(e);
       // Log.error(this.id,e)
       // Will be also in ReqResMonitor
     }
-    return this.monitor.promise()
+    return this.monitor.promise();
   }
 
 
@@ -122,17 +126,29 @@ export class JudgeRequest {
     socket.on('timeout', this.onSocketTimeout.bind(this));
     socket.on('lookup', this.onSocketLookup.bind(this));
     socket.on('data', this.onSocketData.bind(this))
+    socket.on('end', this.onSocketEnd.bind(this));
+    socket.on('close', this.onSocketClose.bind(this));
   }
 
+  onSocketEnd() {
+    Log.debug('JudgeRequest->onSocketEnd ' + this.id + ' ' + this.handleId());
+  }
+
+  onSocketClose() {
+    Log.debug('JudgeRequest->onSocketClose ' + this.id + ' ' + this.handleId());
+  }
 
   onSocketData(data: Buffer) {
-    Log.debug('JudgeRequest->onSocketData ' + this.id);
-    this.socket.setTimeout(0)
+    Log.debug('JudgeRequest->onSocketData ' + this.id + ' ' + this.handleId());
+    this.socket.setTimeout(0);
   }
 
+  handleId() {
+    return this.socket['handle_id'];
+  }
 
   onSocketLookup(error: Error | null, address: string, family: string | null, host: string) {
-    Log.debug('JudgeRequest->onSocketLookup ' + this.id);
+    Log.debug('JudgeRequest->onSocketLookup ' + this.id + ' ' + this.handleId());
     if (error) {
       this.handleError('lookup error', error)
     }
@@ -162,13 +178,24 @@ export class JudgeRequest {
     Log.error('judge request [' + this.id + '] type=' + type, error);
     if (this.socket && !this.socket.destroyed) {
       if (error) {
-        this.socket.destroy(error)
+        this.socket.destroy(error);
       } else {
-        this.socket.destroy()
+        this.socket.destroy();
       }
     }
   }
 
+  clear() {
+    clearTimeout(this.timer);
+    if (this.socket) {
+      this.socket.removeAllListeners();
+
+    }
+    if (this.monitor) {
+      this.monitor.clear();
+    }
+
+  }
 
   get duration() {
     return this.monitor.duration
@@ -176,6 +203,7 @@ export class JudgeRequest {
 
 
   async onJudge(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    Log.debug('onJudge ' + this.id);
     this.judgeConnected = true;
     this.judgeDate = new Date();
     //this.monitor.has_connected = true

@@ -155,13 +155,16 @@ export class ProxyServer extends Server implements IServer {
             if (err) {
               reqHandle.debug(err);
             }
-            upstream.destroy()
+            if (!upstream.destroyed) {
+              upstream.destroy();
+            }
           });
       }
 
     } else {
       if (upstream && !upstream.destroyed) {
-        upstream.destroy()
+        //upstream.end();
+        upstream.destroy();
       }
     }
   }
@@ -189,7 +192,7 @@ export class ProxyServer extends Server implements IServer {
       }
     } else {
       if (res && !res.finished) {
-        res.end();
+        res.destroy();
       }
     }
   }
@@ -211,9 +214,17 @@ export class ProxyServer extends Server implements IServer {
             'CONNECT ' + req.url + ' HTTP/' + req.httpVersion + '\r\n' +
             'Host: ' + req.url + '\r\n' +
             '\r\n';
-          downstream.write(conn_string);
+          downstream.write(conn_string, err => {
+            if (err) {
+              Log.error(err)
+            }
+          });
           if (head) {
-            downstream.write(head);
+            downstream.write(head, err => {
+              if (err) {
+                Log.error(err)
+              }
+            });
           }
 
           downstream.pipe(upstream);
@@ -221,7 +232,11 @@ export class ProxyServer extends Server implements IServer {
         });
       } else {
         downstream = net.connect(proxy_url.port, proxy_url.hostname, function () {
-          downstream.write(reqHandle.build());
+          downstream.write(reqHandle.build(), err => {
+            if (err) {
+              Log.error(err)
+            }
+          });
           downstream.pipe(req.socket);
           req.socket.pipe(downstream)
         })
@@ -229,20 +244,18 @@ export class ProxyServer extends Server implements IServer {
       }
 
       let handle = self.createSocketHandle(downstream, {timeout: 10000});
-      handle.onFinish()
-        .then(async handle => {
-          let p = null;
-          if (ssl) {
-            p = self.handleUpstreamAfterFinishedRequest(reqHandle, handle, req, upstream, head)
-          } else {
-            p = self.handleResponseAfterFinishedRequest(reqHandle, handle, req, res)
 
-          }
-          await self.onProxyToProxy(proxy_url, handle);
-          return p
-        })
-        .catch(err => Log.error.bind(Log))
-
+      await handle.onFinish()
+      try {
+        if (ssl) {
+          await self.handleUpstreamAfterFinishedRequest(reqHandle, handle, req, upstream, head)
+        } else {
+          await self.handleResponseAfterFinishedRequest(reqHandle, handle, req, res)
+        }
+        await this.onProxyToProxy(proxy_url, handle);
+      } catch (err) {
+        Log.error(err)
+      }
     } else {
       throw new TodoException('What should happen if no url is given? Define a fallback')
     }
@@ -272,10 +285,18 @@ export class ProxyServer extends Server implements IServer {
         upstream.write(
           'HTTP/' + req.httpVersion + ' 200 Connection Established\r\n' +
           'Proxy-agent: Proxybroker\r\n' +
-          '\r\n');
+          '\r\n', err => {
+            if (err) {
+              Log.error(err)
+            }
+          });
 
         if (head) {
-          downstream.write(head);
+          downstream.write(head, err => {
+            if (err) {
+              Log.error(err)
+            }
+          });
         }
         upstream.pipe(downstream);
         downstream.pipe(upstream);
@@ -287,7 +308,7 @@ export class ProxyServer extends Server implements IServer {
         .then(handle => {
           return self.handleUpstreamAfterFinishedRequest(req_handle, handle, req, upstream, head);
         })
-        .catch(err => Log.error.bind(Log))
+        .catch(err => Log.error(err))
     }
   }
 
@@ -296,7 +317,7 @@ export class ProxyServer extends Server implements IServer {
     let self = this;
 
     let req_handle = this.getSocketHandle(req.socket);
-    this.debug('proxyResponse ' + this.url() + ' RH:' + (req_handle ? req_handle.id : 'none'));
+    this.debug('proxyResponse ' + this.url() + ' RequestHandleId:' + (req_handle ? req_handle.id : 'none'));
 
     // TODO request handle must be present
     this.onProxyRequest(req_handle, req);
@@ -319,11 +340,14 @@ export class ProxyServer extends Server implements IServer {
 
       this.debug('proxing url ' + this.url() + ' url=' + req.url + ' ssl=' + req_handle.options.ssl);
 
-
-      let downstream = net.connect(parseInt(_url.port), _url.hostname, function () {
+      let downstream = net.connect(parseInt(_url.port), _url.hostname, () => {
         let req_buf = req_handle.build();
         if (req_buf) {
-          downstream.write(req_buf)
+          downstream.write(req_buf, err => {
+            if (err) {
+              Log.error(err)
+            }
+          })
         }
 
         downstream.pipe(req.socket);
@@ -331,31 +355,19 @@ export class ProxyServer extends Server implements IServer {
       });
 
       let handle = this.createSocketHandle(downstream);
-      handle.onFinish().then(handle => {
-        return self.handleResponseAfterFinishedRequest(req_handle, handle, req, res);
-      }).catch(err => Log.error.bind(Log))
+      handle.onFinish()
+        .then(handle => {
+          return self.handleResponseAfterFinishedRequest(req_handle, handle, req, res);
+        })
+        .catch(err => Log.error(err))
     }
   }
 
-  /*
-  onServerClientError(exception: Error, socket: net.Socket): void {
-      super.onServerClientError(exception,socket)
-  }
-  */
 
-
-  async onSecureConnection(socket: tls.TLSSocket): Promise<void> {
-    super.onSecureConnection(socket);
-    this.debug('ProxyServer->onSecureConnection ' + this.url());
-    this.createSocketHandle(socket, {ssl: true, timeout: 30000});
-    return Promise.resolve()
-  }
-
-
-  async onServerConnection(socket: net.Socket): Promise<void> {
+  async onServerConnection(socket: net.Socket | tls.TLSSocket, secured: boolean = false): Promise<void> {
     super.onServerConnection(socket);
-    this.debug('ProxyServer->onServerConnection ' + this.url());
-    this.createSocketHandle(socket, {ssl: false, timeout: 30000});
+    this.debug('ProxyServer->onServerConnection(' + secured + ') ' + this.url());
+    this.createSocketHandle(socket, {ssl: secured, timeout: 30000});
     return Promise.resolve()
   }
 
@@ -369,7 +381,7 @@ export class ProxyServer extends Server implements IServer {
     handle.meta.repeat = 0;
 
     this.handles.push(handle);
-    this.debug('createSocketHandle ' + handle.id);
+    this.debug('ProxyServer->createSocketHandle ' + handle.id);
     let self = this;
     handle.onFinish().then(handle => {
       _.remove(self.handles, (x: SocketHandle) => {
@@ -390,9 +402,12 @@ export class ProxyServer extends Server implements IServer {
   }
 
 
-  async onProxyToProxy(base: IUrlBase, handle: SocketHandle): Promise<any> {
+  onProxyToProxy(base: IUrlBase, handle: SocketHandle): Promise<any> {
+    this.debug('ProxyServer->onProxyToProxy ' + base.protocol + '://' + base.hostname + ':' + base.port);
     let e = new ProxyUsedEvent(base, handle);
-    return EventBus.postAndForget(e).catch(e => {});
+    return EventBus.postAndForget(e).catch(e => {
+      Log.error(e);
+    });
   }
 
 
