@@ -87,11 +87,14 @@ class JV {
     JV.server_wrapper = net.createServer(function (conn: net.Socket) {
       conn.once('data', function (buf: Buffer) {
         // A TLS handshake record starts with byte 22.
-        var address: number = (buf[0] === 22) ? JV.https_proxy_port : JV.http_proxy_port;
-        var proxy = net.createConnection(address, PROXY_LOCAL_HOST, function () {
+        let address: number = (buf[0] === 22) ? JV.https_proxy_port : JV.http_proxy_port;
+        let proxy = net.createConnection(address, PROXY_LOCAL_HOST, function () {
           proxy.write(buf);
           conn.pipe(proxy).pipe(conn);
         });
+
+        conn.on('error', err => Log.error('conn', err));
+        proxy.on('error', err => Log.error('proxy', err));
       });
     }).listen(JV.proxy_wrapper_port);
 
@@ -101,14 +104,20 @@ class JV {
 
 
   static async after() {
+
     await JV.http_proxy_server.stop();
     await JV.https_proxy_server.stop();
-    await JV.http_judge.pending();
-    await new Promise<void>(function (resolve) {
-      JV.server_wrapper.close(function () {
-        resolve()
-      })
-    });
+
+    try {
+      await JV.http_judge.pending();
+      await new Promise<void>(function (resolve) {
+        JV.server_wrapper.close(function () {
+          resolve()
+        })
+      });
+    } catch (e) {
+      Log.error(e);
+    }
     JV.http_proxy_server = null;
     JV.https_proxy_server = null;
     JV.http_judge = null
@@ -205,11 +214,13 @@ class JV {
 
   @test
   async validateSuccessOnHttpAndHttps() {
-    let results: JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST, JV.proxy_wrapper_port);
-    // console.log(results)
 
-    results.getVariants();
-    // console.log(results.variants)
+    let results: JudgeResults;
+    try {
+      results = await JV.http_judge.validate(PROXY_LOCAL_HOST, JV.proxy_wrapper_port);
+    } catch (e) {
+      Log.error(e)
+    }
 
     let http_http = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTP);
     let http_https = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTPS);
@@ -227,7 +238,6 @@ class JV {
 
     expect(https_https.hasError()).to.be.false;
     expect(https_https.level).to.eq(1);
-
   }
 
 }

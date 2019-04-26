@@ -14,7 +14,6 @@ import {IpRotate} from "../../../src/entities/IpRotate";
 import {IpRotateLog} from "../../../src/entities/IpRotateLog";
 
 
-
 let storage: StorageRef = null;
 let server_dest: ProxyServer = null;
 let server_distrib: ProxyServer = null;
@@ -43,7 +42,7 @@ let https_url = 'https://example.com';
 let rotator: ProxyRotator = null;
 
 
-@suite('server/ProxyServer with integrated proxy/ProxyRotator') @timeout(20000)
+@suite('functional/server/' + __filename.replace(__dirname+'/','')) @timeout(20000)
 class ProxyServerTest {
 
 
@@ -86,11 +85,8 @@ class ProxyServerTest {
     rotator = new ProxyRotator({}, storage);
     await EventBus.register(rotator);
 
-
-    // Log.options({enable: true, level: 'debug'})
     server_dest = new ProxyServer();
     server_dest.initialize(<IProxyServerOptions>{
-      // url: 'http://localhost:3128',
       protocol: 'http',
       ip: 'localhost',
       port: 3128,
@@ -101,7 +97,6 @@ class ProxyServerTest {
 
     server_distrib = new ProxyServer();
     server_distrib.initialize(<IProxyServerOptions>{
-//            url: 'http://localhost:3180',
       protocol: 'http',
       ip: 'localhost',
       port: 3180,

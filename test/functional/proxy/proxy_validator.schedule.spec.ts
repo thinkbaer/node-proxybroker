@@ -95,6 +95,8 @@ class ProxyValidationControllerTest {
 
     let c = await storage.connect();
     await c.manager.save(ip);
+
+
     let http_proxy_server = new ProxyServer();
     http_proxy_server.initialize(proxy_options);
     await http_proxy_server.start();
@@ -108,13 +110,14 @@ class ProxyValidationControllerTest {
 
 
     await proxyValidationController.prepare();
-    await TestHelper.wait(2000);
+    await TestHelper.wait(1000);
 
     await proxyValidationController.await();
-    await TestHelper.wait(2000);
+    await TestHelper.wait(1000);
 
     await proxyValidationController.shutdown();
     await http_proxy_server.stop();
+    await http_proxy_server.shutdown();
 
     await c.close();
 
