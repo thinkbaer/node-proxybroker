@@ -46,6 +46,10 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
 
   @subscribe(ProxyDataFetchedEvent)
   async filter(fetched: ProxyDataFetchedEvent): Promise<void> {
+    if(!fetched.list){
+      Log.warn('proxy filter got empty fetch list, skipping.');
+      return ;
+    }
     Log.debug('proxy filter check for ' + fetched.list.length+' proxies ...');
     // - verify if the address and port are correct
     let proxy = [];
