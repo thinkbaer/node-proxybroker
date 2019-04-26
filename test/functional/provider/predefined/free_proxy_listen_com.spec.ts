@@ -8,7 +8,7 @@ import {FreeProxyListsCom} from "../../../../src/providers/proxy/FreeProxyListsC
 class FreeProxyListsComTest {
 
     static before(){
-        Log.options({enable:false})
+        Log.options({enable:true,level:'debug'})
     }
 
     @test

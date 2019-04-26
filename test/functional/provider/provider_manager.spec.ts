@@ -12,6 +12,7 @@ import {Job} from "../../../src/entities/Job";
 import {ProxyFilter} from "../../../src/libs/proxy/ProxyFilter";
 import {ProviderRunEvent} from "../../../src/libs/provider/ProviderRunEvent";
 import {JobState} from "../../../src/entities/JobState";
+import Test = Mocha.Test;
 
 class X {
   test: Function;
@@ -43,8 +44,10 @@ class ProviderManagerTest {
   @test
   async 'init with directory containing provider classes'() {
 
+    let storage = await TestHelper.getDefaultStorageRef()
+
     let pm = new ProviderManager();
-    await pm.prepare(null, this.options, true);
+    await pm.prepare(storage, this.options, true);
     expect(pm.providers.length).to.eq(4);
     let providers = pm.findAll();
     expect(providers.length).to.eq(4);
@@ -63,20 +66,25 @@ class ProviderManagerTest {
     expect(providers.length).to.eq(1);
     expect(providers[0].name).to.eq('mockproxy03')
 
+    await pm.shutdown();
   }
 
 
   @test
   async 'find explicit provider and instance a worker'() {
+
+    let storage = await TestHelper.getDefaultStorageRef()
+
     let pm = new ProviderManager();
-    await pm.prepare(null, this.options);
+    await pm.prepare(storage, this.options);
 
     let providers = pm.findAll({name: 'mockproxy02'});
     expect(providers.length).to.eq(1);
 
     let provider = providers.shift();
     let worker = await pm.createWorker(provider);
-    expect(worker['id']).to.eq('2ilQsa')
+    expect(worker).to.exist;
+    await pm.shutdown();
   }
 
   @test
@@ -147,7 +155,8 @@ class ProviderManagerTest {
 
     let pm = new ProviderManager();
     let pds = new ProxyFilter(storage);
-    await EventBus.register(pds);
+
+    await pds.prepare();
     await pm.prepare(storage, this.options, true);
 
     let jobState = await pm.do({name: "mockproxy01", type: "anonym"});
@@ -164,8 +173,9 @@ class ProviderManagerTest {
     expect(jobState.added).to.eq(2);
 
     await pm.shutdown();
+    await pds.shutdown();
     await storage.shutdown();
-    EventBus.unregister(pds)
+
   }
 
 
@@ -175,13 +185,13 @@ class ProviderManagerTest {
     let storage = await TestHelper.getDefaultStorageRef();
 
     let pm = new ProviderManager();
-    await EventBus.register(pm);
+
     await pm.prepare(storage, this.options, true);
 
 
     let event = new ProviderRunEvent({name: "mockproxy01", type: "anonym"});
     //event.fire();
-    EventBus.post(event);
+    await EventBus.post(event);
     await pm.await();
 
     let c = await storage.connect();
@@ -198,7 +208,6 @@ class ProviderManagerTest {
     await c.close();
     await pm.shutdown();
     await storage.shutdown();
-    EventBus.unregister(pm)
   }
 
   /**
@@ -230,17 +239,13 @@ class ProviderManagerTest {
     await EventBus.register(_X);
 
     let pm = new ProviderManager();
-    await EventBus.register(pm);
     await pm.prepare(storage, options, true);
 
     let offset = pm.next.getTime() - (new Date()).getTime();
     expect(offset).to.be.lessThan(2000);
 
-    await new Promise((resolve) => {
-      setTimeout(function () {
-        resolve()
-      }, 3000)
-    });
+    await TestHelper.waitFor(() => inc >= 2, 50, 100);
+
     offset = pm.next.getTime() - (new Date()).getTime();
     expect(offset).to.be.greaterThan(23 * 60 * 60 * 1000);
 
@@ -251,7 +256,6 @@ class ProviderManagerTest {
     expect(inc).to.be.eq(2);
 
     await EventBus.unregister(_X);
-    await EventBus.unregister(pm)
   }
 
 }
