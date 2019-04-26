@@ -24,17 +24,17 @@ opts['proxyHeaderExclusiveList'] = [
   'proxy-select-fallback'
 ];
 
-let http_url = 'http://php.net/support.php';
-let http_string = 'A good place to start is by skimming';
-let https_url = 'https://nodejs.org/en/about/';
-let https_string = 'As an asynchronous event driven JavaScript runtime';
+let http_url = 'http://example.com';
+let http_string = 'This domain is established to be used for illustrative examples in documents.';
+let https_url = 'https://example.com';
+let https_string = http_string;
 
 @suite('server/ProxyServer') @timeout(20000)
 class ProxyServerTest {
 
 
   async before() {
-     Log.options({enable: false, level: 'debug'});
+    Log.options({enable: false, level: 'debug'});
     server_dest = new ProxyServer();
     server_dest.initialize(<IProxyServerOptions>{
       protocol: 'http',
@@ -101,10 +101,13 @@ class ProxyServerTest {
 
     expect(resp1.statusCode).to.be.eq(504);
     expect(json.error).to.deep.include({
-      _code: 'ADDR_NOT_FOUND', _error: {
-        code: 'ENOTFOUND', "errno": "ENOTFOUND",
+      _code: 'ADDR_NOT_FOUND',
+      _error: {
+        code: 'ENOTFOUND',
+        "errno": "ENOTFOUND",
         "host": "asd-test-site.org",
         "hostname": "asd-test-site.org",
+        "message": "getaddrinfo ENOTFOUND asd-test-site.org asd-test-site.org:80",
         "port": 80,
         "syscall": "getaddrinfo",
       }

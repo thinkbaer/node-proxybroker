@@ -4,7 +4,7 @@ import {Log} from "@typexs/base";
 import {FreeProxyListsCom} from "../../../../src/providers/proxy/FreeProxyListsCom";
 
 
-@suite('provider/predefined/FreeProxyListenCom') @timeout(10000)
+@suite('provider/predefined/FreeProxyListenCom') @timeout(20000)
 class FreeProxyListsComTest {
 
     static before(){

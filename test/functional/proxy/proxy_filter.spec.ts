@@ -162,13 +162,19 @@ class ProxyDataSelectorTest {
       _q = w;
     });
 
+
+
     let e = new ProxyDataFetchedEvent(addr);
     await proxy_data_selector.filter(e);
+    await TestHelper.waitFor(() => _q != null);
     expect(_q.list).to.deep.eq([addr]);
+    _q = null;
 
     e = new ProxyDataFetchedEvent([addr]);
     await proxy_data_selector.filter(e);
+    await TestHelper.waitFor(() => _q != null);
     expect(_q.list).to.deep.eq([addr]);
+    _q = null;
 
     let _r = false;
     proxy_data_selector = new ProxyDataSelectorFilterTest(storage, (w: ProxyDataFetched) => {
@@ -177,12 +183,14 @@ class ProxyDataSelectorTest {
 
     // should be ignored
     e = new ProxyDataFetchedEvent([{ip: '999.999.999.999', port: 3128}]);
-    await proxy_data_selector.filter(e);
+    proxy_data_selector.filter(e);
+    await proxy_data_selector.queue.await();
     expect(_r).to.be.false;
 
     // should be ignored
     e = new ProxyDataFetchedEvent([{ip: '127.0.0.1', port: 65537}]);
-    await proxy_data_selector.filter(e);
+    proxy_data_selector.filter(e);
+    await proxy_data_selector.queue.await();
     expect(_r).to.be.false;
 
 
@@ -195,7 +203,8 @@ class ProxyDataSelectorTest {
       {ip: '127.0.1.1', port: 65530},
       {ip: '999.999.999.999', port: 3128}
     ]);
-    await proxy_data_selector.filter(e);
+    proxy_data_selector.filter(e);
+    await proxy_data_selector.queue.await();
     expect(_q.list).to.deep.eq([{ip: '127.0.1.1', port: 65530}]);
 
   }

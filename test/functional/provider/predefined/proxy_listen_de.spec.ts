@@ -4,7 +4,7 @@ import {Log} from "@typexs/base";
 import {ProxyListenDe} from "../../../../src/providers/proxy/ProxyListenDe";
 
 
-@suite('provider/predefined/ProxyListenDe') @timeout(10000)
+@suite('provider/predefined/ProxyListenDe') @timeout(20000)
 class Test {
 
   static before() {
