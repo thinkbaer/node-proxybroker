@@ -8,7 +8,7 @@ import {ProxyListenDe} from "../../../../src/providers/proxy/ProxyListenDe";
 class Test {
 
   static before() {
-    Log.options({enable: true,level:'debug'})
+    Log.options({enable: false,level:'debug'})
   }
 
   @test

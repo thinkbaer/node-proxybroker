@@ -12,7 +12,7 @@ import {TestHelper} from "../TestHelper";
 //https.globalAgent.options.rejectUnauthorized = false;
 const PROXY_LOCAL_HOST: string = 'proxy.local';
 //const SSL_PATH = '../_files/ssl';
-const DEBUG = true;
+const DEBUG = false;
 
 // Log.options({enable:true,level:'debug'})
 

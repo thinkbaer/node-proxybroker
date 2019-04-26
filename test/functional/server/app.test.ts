@@ -6,11 +6,10 @@ import {Config} from "commons-config";
 import {Invoker, Log, StorageRef} from "@typexs/base";
 
 import {EventBus} from "commons-eventbus";
-import {ProxyFilter} from "../../src/libs/proxy/ProxyFilter";
-import {ProxyValidator} from "../../src/libs/proxy/ProxyValidator";
-import {ProviderManager} from "../../src/libs/provider/ProviderManager";
-import {TEST_STORAGE_OPTIONS} from "../functional/config";
-import {TestHelper} from "../functional/TestHelper";
+import {TestHelper} from "../TestHelper";
+import {ProxyFilter} from "../../../src/libs/proxy/ProxyFilter";
+import {ProxyValidator} from "../../../src/libs/proxy/ProxyValidator";
+import {ProviderManager} from "../../../src/libs/provider/ProviderManager";
 
 process.on('unhandledRejection', (reason: any, p: any) => {
   console.error(reason)
@@ -41,7 +40,7 @@ let boot = async function (): Promise<void> {
   storage = await TestHelper.getDefaultStorageRef();
 
   let selector = new ProxyFilter(storage);
-  await EventBus.register(selector);
+  await selector.prepare()
 
   let validator = new ProxyValidator({
     schedule: {
@@ -59,12 +58,10 @@ let boot = async function (): Promise<void> {
       }
     }
   }, storage);
-  await EventBus.register(validator);
   await validator.prepare();
   Container.set(ProxyValidator, validator);
 
   let provider = new ProviderManager();
-  await EventBus.register(provider);
   await provider.prepare(storage,{
     schedule: {
       enable: false

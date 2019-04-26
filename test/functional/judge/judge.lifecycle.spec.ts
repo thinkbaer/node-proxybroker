@@ -20,7 +20,7 @@ class JudgeTestSuite1 {
 
 
   static before() {
-    Log.options({enable: true, level: 'debug'})
+    Log.options({enable: false, level: 'debug'})
   }
 
   /**

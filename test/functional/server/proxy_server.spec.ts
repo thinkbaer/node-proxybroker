@@ -2,8 +2,8 @@ import {suite, test, timeout} from "mocha-typescript";
 import * as request from "request-promise-native";
 import {expect} from "chai";
 import {Log, StorageRef} from "@typexs/base";
-import {ProxyServer} from "../../src/libs/server/ProxyServer";
-import {IProxyServerOptions} from "../../src/libs/server/IProxyServerOptions";
+import {ProxyServer} from "../../../src/libs/server/ProxyServer";
+import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
 
 let storage: StorageRef = null;
 let server_dest: ProxyServer = null;
@@ -34,7 +34,7 @@ class ProxyServerTest {
 
 
   async before() {
-    // Log.options({enable: true, level: 'debug'})
+     Log.options({enable: false, level: 'debug'});
     server_dest = new ProxyServer();
     server_dest.initialize(<IProxyServerOptions>{
       protocol: 'http',

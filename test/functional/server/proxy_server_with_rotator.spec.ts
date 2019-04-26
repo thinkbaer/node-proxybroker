@@ -1,18 +1,18 @@
 import {suite, test, timeout} from "mocha-typescript";
 import * as request from "request-promise-native";
 import {expect} from "chai";
-import {IpAddr} from "../../src/entities/IpAddr";
-import {IpAddrState} from "../../src/entities/IpAddrState";
-import {ProtocolType} from "../../src/libs/specific/ProtocolType";
-import {IpRotate} from "../../src/entities/IpRotate";
-import {IpRotateLog} from "../../src/entities/IpRotateLog";
-import {ProxyServer} from "../../src/libs/server/ProxyServer";
-import {ProxyRotator} from "../../src/libs/proxy/ProxyRotator";
 import {EventBus} from "commons-eventbus";
 import {Log, StorageRef} from "@typexs/base";
+import {ProxyServer} from "../../../src/libs/server/ProxyServer";
+import {ProxyRotator} from "../../../src/libs/proxy/ProxyRotator";
+import {TestHelper} from "../TestHelper";
+import {IpAddr} from "../../../src/entities/IpAddr";
+import {IpAddrState} from "../../../src/entities/IpAddrState";
+import {ProtocolType} from "../../../src/libs/specific/ProtocolType";
+import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
+import {IpRotate} from "../../../src/entities/IpRotate";
+import {IpRotateLog} from "../../../src/entities/IpRotateLog";
 
-import {IProxyServerOptions} from "../../src/libs/server/IProxyServerOptions";
-import {TestHelper} from "../functional/TestHelper";
 
 
 let storage: StorageRef = null;
@@ -34,10 +34,10 @@ opts['proxyHeaderExclusiveList'] = [
   'proxy-select-fallback'
 ];
 
-let http_url = 'http://php.net/support.php';
-let http_string = 'A good place to start is by skimming';
-let https_url = 'https://nodejs.org/en/about/';
-let https_string = 'As an asynchronous event driven JavaScript runtime';
+let http_url = 'http://example.com';
+//let http_string = 'A good place to start is by skimming';
+let https_url = 'https://example.com';
+//let https_string = 'As an asynchronous event driven JavaScript runtime';
 
 
 let rotator: ProxyRotator = null;
@@ -119,6 +119,7 @@ class ProxyServerTest {
     await server_distrib.stop();
     await server_dest.stop();
     await storage.shutdown();
+
   }
 
 
@@ -133,9 +134,7 @@ class ProxyServerTest {
     let data2 = await c.manager.find(IpRotateLog);
     await c.close();
 
-
     expect(data1).to.has.length(1);
-    expect(data1[0].duration).to.be.eq(data1[0].duration_average);
     expect(data1[0]).to.deep.include({
       successes: 1,
       errors: 0,
@@ -145,6 +144,7 @@ class ProxyServerTest {
       protocol_src: 1,
       addr_id: 1,
     });
+    expect(data1[0].duration).to.be.eq(data1[0].duration_average);
 
     expect(data2).to.has.length(1);
     expect(data2[0].duration).to.be.greaterThan(0);
