@@ -99,6 +99,7 @@ class ProxyServerTest {
 
     let json = JSON.parse(resp1.headers['proxy-broker-error']);
 
+    delete json.error._error['message'];
     expect(resp1.statusCode).to.be.eq(504);
     expect(json.error).to.deep.include({
       _code: 'ADDR_NOT_FOUND',
@@ -107,7 +108,6 @@ class ProxyServerTest {
         "errno": "ENOTFOUND",
         "host": "asd-test-site.org",
         "hostname": "asd-test-site.org",
-        "message": "getaddrinfo ENOTFOUND asd-test-site.org asd-test-site.org:80",
         "port": 80,
         "syscall": "getaddrinfo",
       }
