@@ -2,9 +2,10 @@ language: node_js
 sudo: required
 
 node_js:
+  - 8
+  - 9
   - 10
   - 11
-  - 12
 
 before_install:
   - sudo /bin/sh -c 'echo "\n127.0.0.10 judge.local\n" >> /etc/hosts'
