@@ -51,6 +51,8 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
 
   async prepare(storageRef: StorageRef, options: IProviderOptions = {}, override: boolean = false): Promise<void> {
+    await EventBus.register(this);
+
     this.storage = storageRef;
     if (override) {
       this.options = _.clone(options)
@@ -65,7 +67,11 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     });
 
     if (this.options.schedule && this.options.schedule.enable) {
-      this.cron = require('cron-parser').parseExpression(this.options.schedule.pattern)
+      try {
+        this.cron = (await import('cron-parser')).parseExpression(this.options.schedule.pattern)
+      } catch (e) {
+        Log.error(e);
+      }
     }
 
     let clazzes = ClassLoader.importClassesFromAny(this.options.providers);
@@ -228,7 +234,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
     if (addrs && addrs.length > 0) {
       let event = new ProxyDataFetchedEvent(addrs, jobState);
-      EventBus.post(event);
+      await EventBus.post(event);
     }
 
     return Promise.resolve(jobState)
@@ -269,7 +275,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
 
   private runScheduled() {
-    EventBus.post(new ProviderRunEvent([]));
+    EventBus.post(new ProviderRunEvent([])).catch(e => {});
     clearTimeout(this.timer);
     this.checkSchedule();
   }
@@ -315,6 +321,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
 
   async shutdown() {
+    await EventBus.unregister(this);
     clearTimeout(this.timer);
     await this.await();
     await this.saveJobs()

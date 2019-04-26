@@ -6,7 +6,7 @@ import {ProxyData} from "./ProxyData";
 
 import {ProxyDataValidateEvent} from "./ProxyDataValidateEvent";
 import {ProxyDataFetched} from "./ProxyDataFetched";
-import {AsyncWorkerQueue, DomainUtils, IQueueProcessor, StorageRef} from "@typexs/base";
+import {AsyncWorkerQueue, DomainUtils, IQueueProcessor, Log, StorageRef} from "@typexs/base";
 import subscribe from "commons-eventbus/decorator/subscribe";
 import {IpAddr} from "../../entities/IpAddr";
 import {EventBus} from "commons-eventbus";
@@ -35,8 +35,18 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
   }
 
 
+  async prepare() {
+    await EventBus.register(this);
+  }
+
+  async shutdown() {
+    await EventBus.unregister(this);
+  }
+
+
   @subscribe(ProxyDataFetchedEvent)
   async filter(fetched: ProxyDataFetchedEvent): Promise<void> {
+    Log.debug('proxy filter check for ' + fetched.list.length+' proxies ...');
     // - verify if the address and port are correct
     let proxy = [];
     for (let addr of fetched.list) {
@@ -97,7 +107,8 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
 
         if (!recordExists.last_checked_at || ((now.getTime() - this.recheck_after) > recordExists.last_checked_at.getTime())) {
           // last check is longer then the recheck offset, so revalidate
-          EventBus.post(proxyDataValidateEvent);//.fire();
+          EventBus.post(proxyDataValidateEvent).catch(e => {
+          });//.fire();
           proxyDataValidateEvent.markFired();
           workLoad.jobState.updated++
         } else {
@@ -108,7 +119,8 @@ export class ProxyFilter implements IQueueProcessor<ProxyDataFetched> {
       } else {
         // new record entry must be checked
         workLoad.jobState.added++;
-        EventBus.post(proxyDataValidateEvent);
+        EventBus.post(proxyDataValidateEvent).catch(e => {
+        });
         proxyDataValidateEvent.markFired();
         //proxyDataValidateEvent.fire()
       }

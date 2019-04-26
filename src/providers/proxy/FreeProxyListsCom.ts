@@ -1,12 +1,13 @@
 // http://www.freeproxylists.com
 
-import * as request from "request-promise-native";
+import * as got from "got";
 
 import {Log} from "@typexs/base";
 import {AbstractProvider} from "../../libs/provider/AbstractProvider";
 import {IProviderVariant} from "../../libs/provider/IProviderVariant";
 import {ProxyType} from "../../libs/specific/ProxyType";
 import {IProxyData} from "../../libs/proxy/IProxyData";
+import * as cookie from "tough-cookie";
 
 const NAME = 'freeproxylists';
 const BASE_URL = 'http://www.freeproxylists.com';
@@ -92,41 +93,36 @@ export class FreeProxyListsCom extends AbstractProvider {
     }
 
     Log.info('FreeProxyListsCom: (' + this.url + ') selected variant is ' + this.variant.type);
-    let cookies = request.jar();
-    let req = await request.get(this.url + '/' + this.variant.path, {jar: cookies, resolveWithFullResponse: false});
+    let cookies = new cookie.CookieJar();
+    //let cookies = request.jar();
+    let resp = await got.get(this.url + '/' + this.variant.path, {cookieJar: cookies, rejectUnauthorized: false});
+    let html = resp.body;
 
     let matched_ids: string[] = [];
     let matcher: any;
-    while ((matcher = this.variant.pattern.exec(req)) !== null) {
+    while ((matcher = this.variant.pattern.exec(html)) !== null) {
       matched_ids.push(matcher[2])
     }
 
-    let promises: Promise<any>[] = [];
-    matched_ids.forEach(id => {
+    for (let id of matched_ids) {
       let url = self.url + '/load_' + self.variant.path_load + '_d' + id + '.html';
-      let r = request.get(url, {jar: cookies})
-        .then((html: string) => {
-          Log.debug('FreeProxyListsCom: (' + this.url + ') fetch url = ' + url);
-          let matcher: any;
+      let r = await got.get(url, {cookieJar: cookies});
+      html = r.body;
+      Log.debug('FreeProxyListsCom: (' + this.url + ') fetch url = ' + url);
+      let matcher: any;
 
-          let inc = 0;
-          while ((matcher = ip_regex.exec(html)) !== null) {
-            let proxyData: IProxyData = {
-              ip: matcher[1],
-              port: parseInt(matcher[2])
-            };
-            inc++;
-            self.push(proxyData)
-          }
-          Log.info('FreeProxyListsCom: (' + url + ') found=' + inc + ' all=' + self.proxies.length)
-        });
-      promises.push(r)
-    });
-
-    return Promise.all(promises).then(() => {
-      Log.info('FreeProxyListsCom: variant=' + this.variant.type + ' finished');
-      return self.proxies
-    })
+      let inc = 0;
+      while ((matcher = ip_regex.exec(html)) !== null) {
+        let proxyData: IProxyData = {
+          ip: matcher[1],
+          port: parseInt(matcher[2])
+        };
+        inc++;
+        self.push(proxyData)
+      }
+      Log.info('FreeProxyListsCom: (' + url + ') found=' + inc + ' all=' + self.proxies.length);
+    }
+    return self.proxies;
   }
 
 }

@@ -19,12 +19,14 @@ export class ProxyDataFetched {
     }
 
 
-    if (_.isArray(list)) {
-      this.list = list
-    } else if (list.ip && list.port) {
-      this.list.push(list)
-    } else {
-      throw new TodoException()
+    if(list){
+      if (_.isArray(list)) {
+        this.list = list
+      } else if (list.ip && list.port) {
+        this.list.push(list)
+      } else {
+        throw new TodoException()
+      }
     }
   }
 

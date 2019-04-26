@@ -10,6 +10,7 @@ import {AbstractProvider} from "../../libs/provider/AbstractProvider";
 import {IProviderVariant} from "../../libs/provider/IProviderVariant";
 import {IProxyData} from "../../libs/proxy/IProxyData";
 import {Log} from "@typexs/base";
+import {RequestHelper} from "../../libs/http/RequestHelper";
 
 const NAME = 'proxylistende';
 const BASE_URL = 'https://www.proxy-listen.de';
@@ -68,26 +69,9 @@ export class ProxyListenDe extends AbstractProvider {
         })
     */
     //let c1 = request.cookie('cookieconsent_dismissed=yes');
-    await new Promise((resolve, reject) => {
-      cookies.setCookie(cookie.Cookie.parse('cookieconsent_dismissed=yes'), BASE_URL, (err, cookie1) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(cookie1);
-        }
-      });
-    })
-
+    await RequestHelper.setCookie(cookies,'cookieconsent_dismissed=yes', BASE_URL);
     //let c2 = request.cookie('_gat=1');
-    await new Promise((resolve, reject) => {
-      cookies.setCookie(cookie.Cookie.parse('_gat=1'), BASE_URL, (err, cookie1) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(cookie1);
-        }
-      });
-    })
+    await RequestHelper.setCookie(cookies,'_gat=1', BASE_URL);
 
     let resp = await got.get(PROXY_LIST_DE, {cookieJar: cookies, rejectUnauthorized: false});
 
