@@ -2,7 +2,7 @@ import * as http from "http";
 import * as mUrl from 'url'
 import * as net from 'net'
 
-import * as _request from "request-promise-native";
+//import * as _request from "request-promise-native";
 import {RequestResponseMonitor} from "./RequestResponseMonitor";
 
 import {Judge} from "./Judge";
@@ -17,6 +17,10 @@ import {IHttpHeaders, Log} from "@typexs/base";
 import Exceptions from "@typexs/server/libs/server/Exceptions";
 import {ProtocolType} from "../specific/ProtocolType";
 import {MESSAGE} from "../specific/Messages";
+import {IHttpGetOptions} from "../http/IHttpGetOptions";
+import {HttpGotAdapter} from "../../adapters/http/got/HttpGotAdapter";
+import {isStream} from "../http/IHttp";
+import {IHttpPromise, IHttpStream} from "../http/IHttpResponse";
 
 
 // interface JudgeConfig
@@ -59,7 +63,10 @@ export class JudgeRequest {
 
   response: any = null;
 
-  request: _request.RequestPromise = null;
+  httpPromise: IHttpPromise<any>;
+
+  //request: _request.RequestPromise = null;
+  request: http.ClientRequest;
 
   monitor: RequestResponseMonitor = null;
 
@@ -90,6 +97,7 @@ export class JudgeRequest {
     this.level_detector = new LevelDetection(this.proxy_ip, this.local_ip);
     await this.level_detector.prepare();
 
+    /*
     let opts: _request.RequestPromiseOptions = {
       resolveWithFullResponse: true,
       proxy: this.proxy_url,
@@ -100,19 +108,40 @@ export class JudgeRequest {
 
     this.request = _request.get(this.url, opts);
 
-    this.timer = setTimeout(this.onConnectTimeout.bind(this), this.connect_timeout);
+
     this.request.on('error', this.onRequestError.bind(this));
     this.request.on('socket', this.onSocket.bind(this));
+*/
+    this.timer = setTimeout(this.onConnectTimeout.bind(this), this.connect_timeout);
+    let opts: IHttpGetOptions = {
+      timeout: this.socket_timeout,
+      proxy: this.proxy_url,
+      retry: 0
+    };
 
-    this.monitor = RequestResponseMonitor.monitor(this.request, this.id/*, {debug: this._debug}*/);
-    try {
-      this.response = await this.request.promise()
-    } catch (e) {
-      //Log.error(e);
-      // Log.error(this.id,e)
-      // Will be also in ReqResMonitor
+    let http = new HttpGotAdapter();
+    let httpPromise = http.get(this.url, opts);
+    if (!isStream(httpPromise)) {
+      this.httpPromise = httpPromise;
+      this.httpPromise.once('request', (request: http.ClientRequest) => {
+        this.request = request;
+        this.request.on('error', this.onRequestError.bind(this));
+        this.request.on('socket', this.onSocket.bind(this));
+      });
+      this.monitor = new RequestResponseMonitor(this.url, opts, httpPromise, this.id/*, {debug: this._debug}*/);
+      try {
+        this.response = await this.httpPromise;
+      } catch (e) {
+        //Log.error(e);
+        // Log.error(this.id,e)
+        // Will be also in ReqResMonitor
+      }
+      return this.monitor.promise();
+
+    } else {
+      throw new Error('not a stream')
     }
-    return this.monitor.promise();
+
   }
 
 

@@ -1,4 +1,4 @@
-import * as mRequest from "request-promise-native";
+//import * as mRequest from "request-promise-native";
 
 import * as net from 'net'
 import * as http from 'http'
@@ -13,6 +13,8 @@ import {ReqResEvent} from "./ReqResEvent";
 import {IHttpHeaders, Log, NestedException} from "@typexs/base";
 import {MESSAGE} from "../specific/Messages";
 import Exceptions from "@typexs/server/libs/server/Exceptions";
+import {IHttpPromise, IHttpStream} from "../http/IHttpResponse";
+import {IHttpOptions} from "../http/IHttpOptions";
 
 
 export class RequestResponseMonitor extends events.EventEmitter {
@@ -26,7 +28,12 @@ export class RequestResponseMonitor extends events.EventEmitter {
   socket: net.Socket = null;
   // static cache:{[key:string]:RequestResponseMonitor} = {}
 
-  request: mRequest.RequestPromise = null;
+  // request: mRequest.RequestPromise = null;
+
+  httpPromise: IHttpPromise<any>;
+
+  request: http.ClientRequest;
+
   start: Date = new Date();
   end: Date = null;
   duration: number = Infinity;
@@ -45,40 +52,49 @@ export class RequestResponseMonitor extends events.EventEmitter {
   headers_request: IHttpHeaders = {};
   headers_response: IHttpHeaders = {};
 
-  private constructor(request: mRequest.RequestPromise, id: string) {
+  url: string;
+  httpOptions: IHttpOptions;
+
+  constructor(url: string, options: IHttpOptions, stream: IHttpPromise<any>, id?: string) {
     super();
+    this.url = url;
+    this.httpOptions = options;
     // this.debug('Enable monitor for '+id);
-    request.on('socket', this.onSocket.bind(this));
-    request.on('error', this.onError.bind(this));
+    //request.on('socket', this.onSocket.bind(this));
+    stream.on('error', this.onError.bind(this));
     //request.on('drain', this.onDrain.bind(this));
-    request.on('request', this.onRequest.bind(this));
+    stream.on('request', this.onRequest.bind(this));
+
 
     this.id = id;
-    this.request = request
+    //  this.request = request
+    this.httpPromise = stream;
+
   }
 
 
-  clear(){
+  clear() {
     this.removeAllListeners();
-    if(this.request){
+    if (this.request) {
       this.request.removeAllListeners();
     }
-    if(this.socket){
+    if (this.socket) {
       this.socket.removeAllListeners();
     }
 
   }
 
   get uri(): Url {
-    return this.request['uri']
+    return new URL(this.url);
   }
 
   get proxy(): string | Url {
-    return this.request['proxy']
+    return this.httpOptions && _.has(this.httpOptions, 'proxy') ? new URL(this.httpOptions.proxy) : null;
   }
 
   get tunnel(): boolean {
-    return <boolean>this.request['tunnel']
+    // TODO detect tunneling
+    return false; //<boolean>this.request['tunnel']
   }
 
 
@@ -96,6 +112,10 @@ export class RequestResponseMonitor extends events.EventEmitter {
    */
   onRequest(request: http.ClientRequest) {
     // this.debug('onRequest');
+    this.request = request;
+    request.setNoDelay(true);
+    this.request.on('socket', this.onSocket.bind(this));
+    this.request.on('error', this.onSocketError.bind(this));
 
     if (this.proxy) {
       this.addLog(MESSAGE.ORQ01.k, {uri: mUrl.format(this.uri), proxy_uri: mUrl.format(this.proxy)});
@@ -107,7 +127,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
     // request.setSocketKeepAlive(false,0)
 
     this.addLog(MESSAGE.ORQ03.k);
-    request.setNoDelay(true);
 
 
     if (this.proxy && this.tunnel) {
@@ -127,65 +146,12 @@ export class RequestResponseMonitor extends events.EventEmitter {
     }
   }
 
-  /*
-      onRequestConnect(response: http.IncomingMessage, socket: net.Socket, head: Buffer) {
-          this.debug('onRequestConnect')
-      }
 
-      onRequestContinue() {
-          this.debug('onRequestContinue')
-      }
-  */
   onRequestResponse(response: http.IncomingMessage) {
-    /*
-    this.debug('onRequestResponse');
-    response.on('aborted', this.onRequestResponseAborted.bind(this));
-    response.on('close', this.onRequestResponseClose.bind(this));
-*/
     for (let k in response.headers) {
       this.headers_response[k] = <string>response.headers[k]
     }
   }
-
-  /*
-      onRequestResponseAborted() {
-          this.debug('onRequestResponseAborted')
-      }
-
-      onRequestResponseClose() {
-          this.debug('onRequestResponseClose')
-      }
-  */
-  /**
-   * Duplicate of onSocket
-
-   onRequestSocket(socket: net.Socket){
-        this.debug('onRequestSocket')
-    }
-   */
-
-  /*
-  onRequestUpgrade(response: http.IncomingMessage, socket: net.Socket, head: Buffer) {
-      this.debug('onRequestUpgrade')
-  }
-  */
-
-  /**
-   * Emitted when the request has been aborted by the client. This event is only emitted on the first call to abort().
-
-   onRequestAbort() {
-        this.debug('onRequestAbort')
-    }
-   */
-
-  /**
-   * Emitted when the request has been aborted by the server and the network socket has closed.
-
-   onRequestAborted() {
-        this.debug('onRequestAborted')
-    }
-   */
-
 
   /**
    * Fired for example if socket can't be estabilshed on tunneling to wrong host
@@ -197,13 +163,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
     this.handleError(error);
     this.finished()
   }
-
-  /*
-  onDrain() {
-      this.debug('onDrain')
-  }
-  */
-
 
   /**
    * Socket established
@@ -219,26 +178,24 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     //  socket.on('drain', this.onSocketDrain.bind(this));
     socket.on('end', this.onSocketEnd.bind(this));
-    //socket.on('agentRemove', this.onSocketAgentRemove.bind(this));
-    //socket.on('agentRemove', this.onSocketAgentRemove.bind(this))
     socket.on('error', this.onSocketError.bind(this));
     socket.on('lookup', this.onSocketLookup.bind(this));
     socket.on('timeout', this.onSocketTimeout.bind(this));
+    socket.on('data', this.onSocketData.bind(this));
 
     if (socket instanceof tls.TLSSocket) {
       // this.debug('IS TLSSocket');
       this.secured = true;
-      //        socket.on('OCSPResponse', this.onTLSSocketOCSPResponse.bind(this));
       socket.on('secureConnect', this.onTLSSocketSecureConnect.bind(this))
     } else {
-      socket.on('data', this.onSocketData.bind(this));
 
-      if (socket['_pendingData']) {
-        this.sendedHead = socket['_pendingData'];
-        this.sendedHead = this.sendedHead.split('\r\n\r\n').shift()
-      }
 
     }
+    if (socket['_pendingData']) {
+      this.sendedHead = socket['_pendingData'];
+      this.sendedHead = this.sendedHead.split('\r\n\r\n').shift()
+    }
+
   }
 
   onSocketClose(had_error: boolean) {
@@ -246,13 +203,9 @@ export class RequestResponseMonitor extends events.EventEmitter {
     this.finished()
   }
 
-  /*
-  onSocketAgentRemove(): void {
-      this.debug('onSocketAgentRemove')
-  }
-  */
 
   onSocketConnect() {
+    this.errors = [];
     // this.debug('onSocketConnect');
     this.connected = true;
 
@@ -266,10 +219,13 @@ export class RequestResponseMonitor extends events.EventEmitter {
       this.addLog(MESSAGE.OSC03.k)
     }
 
-    this.sendedHead.split('\n').map((x: string) => {
-      this.addClientLog(MESSAGE.HED01.k, {header: x ? x : '_UNKNOWN_'})
-    })
+    if(!_.isEmpty(this.sendedHead)){
+      this.sendedHead.split('\n').map((x: string) => {
+        this.addClientLog(MESSAGE.HED01.k, {header: x ? x : '_UNKNOWN_'})
+      })
+    }
   }
+
 
   // TODO use SocketHandle
   onSocketData(data: Buffer) {
@@ -319,11 +275,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
   }
 
-  /*
-  onSocketDrain() {
-      this.debug('onSocketDrain')
-  }
-  */
 
   onSocketEnd() {
     //  this.debug('RRM->onSocketEnd');
@@ -351,7 +302,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
       }
   */
   onTLSSocketSecureConnect() {
-    //      this.debug('onTLSSocketSecureConnect');
+//    this.debug('onTLSSocketSecureConnect');
     this.stop();
     this.addLog(MESSAGE.OTS01.k, {duration: this.duration})
   }
@@ -362,10 +313,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
     this.duration = this.end.getTime() - this.start.getTime()
   }
 
-
-  static monitor(_request: mRequest.RequestPromise, id?: string/*, options?:{debug?:boolean}*/): RequestResponseMonitor {
-    return new RequestResponseMonitor(_request, id);
-  }
 
   get logs() {
     return _.clone(this.log_arr)
@@ -414,7 +361,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
         if (error.message.match(/ECONNREFUSED/)) {
           this.connected = false;
           this.addLog(MESSAGE.ERR03.k, null, '#')
-        } else if (error.message.match(/ESOCKETTIMEDOUT/)) {
+        } else if (error.message.match(/ESOCKETTIMEDOUT/) || error.message.match(/Timeout awaiting/)) {
           this.timeouted = true;
           this.addLog(MESSAGE.ERR04.k, null, '#')
         } else if (error.message.match(/socket hang up/)) {
