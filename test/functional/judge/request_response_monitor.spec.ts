@@ -1,11 +1,13 @@
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 
-import * as _request from "request-promise-native";
+//import * as _request from "request-promise-native";
 import {Log} from "@typexs/base";
 import {Server} from "@typexs/server";
 import {RequestResponseMonitor} from "../../../src/libs/judge/RequestResponseMonitor";
 import {TestHelper} from "../TestHelper";
+import {HttpGotAdapter} from "../../../src/adapters/http/got/HttpGotAdapter";
+import {IHttp, isStream} from "../../../src/libs/http/IHttp";
 
 //process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
@@ -15,12 +17,14 @@ const PROXY_LOCAL_HOST: string = 'proxy.local';
 const DEBUG = false;
 
 // Log.options({enable:true,level:'debug'})
+let http: IHttp = null;
 
 @suite('judge/RequestResponseMonitor')
 class ReqResMonitorTest {
 
   static before() {
-    Log.options({enable: DEBUG, level: 'debug'})
+    Log.options({enable: DEBUG, level: 'debug'});
+    http = new HttpGotAdapter();
   }
 
   /**
@@ -38,16 +42,23 @@ class ReqResMonitorTest {
     server.stall = 1000;
 
     setTimeout(() => {
+      Log.debug('force shutdown server')
       server.shutdown()
     }, 100);
 
     let _url = server.url();
-    let req = _request.get(_url);
-    let rrm = RequestResponseMonitor.monitor(req);
+    //let req = _request.get(_url);
+
+    let req = http.get(_url, {retry: 0});
+    if (isStream(req)) {
+      throw new Error('is stream');
+    }
+
+    let rrm = new RequestResponseMonitor(_url, null, req);
     //rrm._debug = DEBUG;
 
     try {
-      await req.promise()
+      await req;
     } catch (err) {
       expect(err.message).to.match(new RegExp("socket hang up"))
     }
@@ -85,11 +96,18 @@ class ReqResMonitorTest {
     server.stall = 1000;
 
     let _url = server.url();
-    let req = _request.get(_url);
-    let rrm = RequestResponseMonitor.monitor(req);
+
+
+    let req = http.get(_url);
+    if (isStream(req)) {
+      throw new Error('not a stream');
+    }
+
+    //let req = _request.get(_url);
+    let rrm = new RequestResponseMonitor(_url, null, req);
     //rrm._debug = DEBUG;
     try {
-      await req.promise()
+      await req
     } catch (err) {
       //expect(err.message).to.match(new RegExp("socket hang up"))
     }
@@ -121,17 +139,61 @@ class ReqResMonitorTest {
     await server.start();
 
     let _url = server.url();
-    let req = _request.get(_url);
-    let rrm = RequestResponseMonitor.monitor(req);
 
-    await req.promise();
+    let req = http.get(_url);
+    if (isStream(req)) {
+      throw new Error('not a stream');
+    }
+
+    //let req = _request.get(_url);
+    let rrm = new RequestResponseMonitor(_url, null, req, 'test');
+
+    await req;
     await rrm.promise();
 
     let log: string = rrm.logToString();
 
     expect(log).to.contain("Try connect to " + _url);
     expect(log).to.match(new RegExp("set TCP_NODELAY"));
-    expect(log).to.match(new RegExp("Received 285 byte from sender"));
+    expect(log).to.match(new RegExp("Received \\d+ byte from sender"));
+    expect(log).to.match(new RegExp("Connection closed to " + _url + "\\/ \\(\\d+ms\\)"));
+
+    await server.stop()
+  }
+
+  /**
+   * Test simple request to the server
+   */
+  @test
+  async 'https server simple request'() {
+
+    let server: Server = new Server();
+    server.initialize({
+      ip: 'localhost', port: 8084, protocol: 'https',
+      key_file: TestHelper.sslPath('proxy/server-key.pem'),
+      cert_file: TestHelper.sslPath('proxy/server-cert.pem'),
+    });
+
+    await server.start();
+
+    let _url = server.url();
+
+    let req = http.get(_url, {rejectUnauthorized: false});
+    if (isStream(req)) {
+      throw new Error('not a stream');
+    }
+
+    //let req = _request.get(_url);
+    let rrm = new RequestResponseMonitor(_url, null, req, 'test_ssl');
+
+    await req;
+    await rrm.promise();
+
+    let log: string = rrm.logToString();
+
+    expect(log).to.contain("Try connect to " + _url);
+    expect(log).to.match(new RegExp("set TCP_NODELAY"));
+    expect(log).to.match(new RegExp("Received \\d+ byte from sender"));
     expect(log).to.match(new RegExp("Connection closed to " + _url + "\\/ \\(\\d+ms\\)"));
 
     await server.stop()
@@ -153,13 +215,19 @@ class ReqResMonitorTest {
     let rrm = null;
     try {
       server.stall = 500;
-      let req = _request.get(server.url(), {timeout: 100});
-      rrm = RequestResponseMonitor.monitor(req);
-      result = await req.promise();
+      let _url = server.url();
+      let opts = {timeout: 100, retry: 0};
+      let req = http.get(_url, opts);
+      if (isStream(req)) {
+        throw new Error('not a stream');
+      }
+      //let req = _request.get(server.url(), {timeout: 100});
+      rrm = new RequestResponseMonitor(_url, opts, req);
+      result = await req;
       server.stall = 0
     } catch (err) {
-      expect(err.name).to.be.equal('RequestError');
-      expect(err.message).to.be.equal('Error: ESOCKETTIMEDOUT')
+      expect(err.name).to.be.equal('TimeoutError');
+      expect(err.message).to.be.equal('Timeout awaiting \'request\' for 100ms')
     }
 
     await rrm.promise();
@@ -170,8 +238,8 @@ class ReqResMonitorTest {
      console.log(log)
      console.log('<--------')
      */
-    expect(log).to.match(new RegExp("ESOCKETTIMEDOUT"));
-    expect(log).to.match(new RegExp("Socket timed out after \\d+ms"));
+    expect(log).to.match(new RegExp("Timeout awaiting 'request' for 100ms"));
+    //expect(log).to.match(new RegExp('Timeout awaiting \'request\' for 100ms'));
     await server.stop()
 
   }
@@ -199,11 +267,18 @@ class ReqResMonitorTest {
     // let suuid = shorthash('https://127.0.0.1:8000/judge' + (new Date().getTime()))
 
     //_request.debug = true
-    let req = _request.get(server.url() + '/judge/DUMMY', options);
+    let _url = server.url();
+    let opts = {timeout: 100, ca: server._options.cert}
+    let req = http.get(_url, opts);
+    if (isStream(req)) {
+      throw new Error('not a stream');
+    }
+
+//    let req = _request.get(server.url() + '/judge/DUMMY', options);
     //let req = _request.get('https://www.google.de?')
-    let rrm = RequestResponseMonitor.monitor(req);
+    let rrm = new RequestResponseMonitor(_url, opts, req);
     // rrm._debug = true
-    let result = await req.promise();
+    let result = await req;
 
     await rrm.promise();
     let log: string = rrm.logToString();
@@ -228,12 +303,18 @@ class ReqResMonitorTest {
     let result = null;
     let rrm = null;
     try {
-      let req = _request.get('http://127.0.0.1:12345', {timeout: 1000});
-      rrm = RequestResponseMonitor.monitor(req);
+      let _url = 'http://127.0.0.1:12345';
+      let opts = {timeout: 1000, retry: 0};
+      let req = http.get(_url, opts);
+      if (isStream(req)) {
+        throw new Error('not a stream');
+      }
+//      let req = _request.get('http://127.0.0.1:12345', {timeout: 1000});
+      rrm = new RequestResponseMonitor(_url, opts, req);
       // rrm._debug = true
-      result = await req.promise();
+      result = await req;
     } catch (err) {
-      expect(err.message).to.match(new RegExp("Error: connect ECONNREFUSED 127.0.0.1:12345"))
+      expect(err.message).to.match(new RegExp("connect ECONNREFUSED 127.0.0.1:12345"))
     }
 
     await rrm.promise();
@@ -260,12 +341,18 @@ class ReqResMonitorTest {
     let result = null;
     let rrm = null;
     try {
-      let req = _request.get('https://127.0.0.1:12345', {timeout: 1000});
-      rrm = RequestResponseMonitor.monitor(req);
+      let _url = 'http://127.0.0.1:12345';
+      let opts = {timeout: 1000, retry: 0};
+      let req = http.get(_url, opts);
+      if (isStream(req)) {
+        throw new Error('not a stream');
+      }
+//      let req = _request.get('https://127.0.0.1:12345', {timeout: 1000});
+      rrm = new RequestResponseMonitor(_url, opts, req);
       //              rrm._debug = true
-      result = await req.promise()
+      result = await req;
     } catch (err) {
-      expect(err.message).to.match(new RegExp("Error: connect ECONNREFUSED 127.0.0.1:12345"))
+      expect(err.message).to.match(new RegExp("connect ECONNREFUSED 127.0.0.1:12345"))
     }
 
     await rrm.promise();
@@ -285,6 +372,3 @@ class ReqResMonitorTest {
 
 }
 
-process.on('uncaughtException', function (err: Error) {
-  console.log(err);
-});
