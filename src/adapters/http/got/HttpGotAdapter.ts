@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import * as got from "got";
-import * as tunnel from "tunnel";
+
 import {IHttp} from "../../../libs/http/IHttp";
 import {IHttpGetOptions} from "../../../libs/http/IHttpGetOptions";
 import {IHttpDeleteOptions} from "../../../libs/http/IHttpDeleteOptions";
@@ -12,6 +12,7 @@ import {IHttpGotPromise} from "./IHttpGotPromise";
 import {IHttpStream} from "../../../libs/http/IHttpResponse";
 import {IHttpOptions} from "../../../libs/http/IHttpOptions";
 import {GotEmitter} from "got";
+import {httpOverHttp, httpOverHttps, httpsOverHttp, httpsOverHttps} from "./Tunnel";
 
 
 export class HttpGotAdapter implements IHttp {
@@ -26,27 +27,33 @@ export class HttpGotAdapter implements IHttp {
 
 
       if (proxyProtocol == 'http' && targetProtocol == 'http') {
-        options.agent = tunnel.httpOverHttp({proxy: {host: proxyUrl.host, port: parseInt(proxyUrl.port), headers: {}}});
-      } else if (proxyProtocol == 'http' && targetProtocol == 'https') {
-        options.agent = tunnel.httpOverHttps({
+        options.agent = httpOverHttp({
           proxy: {
-            host: proxyUrl.host,
+            host: proxyUrl.hostname,
+            port: parseInt(proxyUrl.port),
+            headers: {}
+          }
+        });
+      } else if (proxyProtocol == 'http' && targetProtocol == 'https') {
+        options.agent = httpsOverHttp({
+          proxy: {
+            host: proxyUrl.hostname,
             port: parseInt(proxyUrl.port),
             headers: {}
           }
         });
       } else if (proxyProtocol == 'https' && targetProtocol == 'http') {
-        options.agent = tunnel.httpsOverHttp({
+        options.agent = httpOverHttps({
           proxy: {
-            host: proxyUrl.host,
+            host: proxyUrl.hostname,
             port: parseInt(proxyUrl.port),
             headers: {}
           }
         });
       } else if (proxyProtocol == 'https' && targetProtocol == 'https') {
-        options.agent = tunnel.httpsOverHttps({
+        options.agent = httpsOverHttps({
           proxy: {
-            host: proxyUrl.host,
+            host: proxyUrl.hostname,
             port: parseInt(proxyUrl.port),
             headers: {}
           }
@@ -55,7 +62,7 @@ export class HttpGotAdapter implements IHttp {
     }
 
     if (_.has(options, 'stream') && options.stream) {
-      let stream:GotEmitter = <any>got(url, options);
+      let stream: GotEmitter = <any>got(url, options);
       let _stream = (<IHttpStream<any>>stream);
       _stream.asPromise = (): IHttpGotPromise<any> => {
         return <IHttpGotPromise<any>>new Promise<any>((resolve, reject) => {
@@ -65,9 +72,9 @@ export class HttpGotAdapter implements IHttp {
       };
       return _stream;
     }
-    if(options){
+    if (options) {
       return got[method](url, options)
-    }else{
+    } else {
       return got[method](url)
     }
 
