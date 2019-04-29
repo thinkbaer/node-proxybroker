@@ -115,7 +115,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     this.request = request;
     request.setNoDelay(true);
     this.request.on('socket', this.onSocket.bind(this));
-    this.request.on('error', this.onSocketError.bind(this));
+    this.request.on('error', this.onError.bind(this));
 
     if (this.proxy) {
       this.addLog(MESSAGE.ORQ01.k, {uri: mUrl.format(this.uri), proxy_uri: mUrl.format(this.proxy)});

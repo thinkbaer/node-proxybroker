@@ -3,7 +3,7 @@ import * as tls from 'tls'
 import * as http from 'http'
 import * as net from 'net'
 import * as url from "url";
-
+import {Transform} from "stream";
 
 import {DEFAULT_PROXY_SERVER_OPTIONS, IProxyServerOptions} from "./IProxyServerOptions";
 
@@ -16,6 +16,8 @@ import {IRoute, IServer, Server} from "@typexs/server";
 import {IUrlBase, Log, TodoException} from "@typexs/base";
 import {ProtocolType} from "../specific/ProtocolType";
 import {IpAddr} from "../../entities/IpAddr";
+import {RequestHelper} from "../http/RequestHelper";
+import {HttpHeaderTransform} from "./HttpHeaderTransform";
 
 
 export class ProxyServer extends Server implements IServer {
@@ -44,6 +46,7 @@ export class ProxyServer extends Server implements IServer {
     return this._options.repeatLimit
   }
 
+
   options(): IProxyServerOptions {
     return <IProxyServerOptions>this._options;
   }
@@ -65,7 +68,7 @@ export class ProxyServer extends Server implements IServer {
 
 
   onProxyRequest(handle: SocketHandle, req: http.IncomingMessage): void {
-    this.debug('onProxyRequest ' + this.url() + ' for ' + req.url);
+    this.debug('onProxyRequest ' + handle.id + ' ' + this.url() + ' for ' + req.url + ' (Level: ' + this.level + ')');
 
     handle.removeHeader('Proxy-Select-Level');
     handle.removeHeader('Proxy-Select-Speed-Limit');
@@ -125,6 +128,7 @@ export class ProxyServer extends Server implements IServer {
     return Promise.resolve(_url)
   }
 
+
   private hasFallbackHeader(reqHandle: SocketHandle): boolean {
     let res = _.find(reqHandle.headersList, {key: 'proxy-select-fallback'});
     if (res && res.value) {
@@ -155,16 +159,18 @@ export class ProxyServer extends Server implements IServer {
             if (err) {
               reqHandle.debug(err);
             }
+            upstream.end();
+            /*
             if (!upstream.destroyed) {
               upstream.destroy();
-            }
+            }*/
           });
       }
 
     } else {
       if (upstream && !upstream.destroyed) {
-        //upstream.end();
-        upstream.destroy();
+        upstream.end();
+        //upstream.destroy();
       }
     }
   }
@@ -245,7 +251,7 @@ export class ProxyServer extends Server implements IServer {
 
       let handle = self.createSocketHandle(downstream, {timeout: 10000});
 
-      await handle.onFinish()
+      await handle.onFinish();
       try {
         if (ssl) {
           await self.handleUpstreamAfterFinishedRequest(reqHandle, handle, req, upstream, head)
@@ -261,27 +267,33 @@ export class ProxyServer extends Server implements IServer {
     }
   }
 
+  url() {
+    return super.url();
+  }
 
   async onServerConnect(req: http.IncomingMessage, upstream: net.Socket, head: Buffer, disable_proxy_to_proxy: boolean = false) {
     let self = this;
-    let rurl: url.Url = url.parse(`https://${req.url}`);
-    let proxy_url: IUrlBase = null;
+
+    // let rurl: url.Url = url.parse(`http://${req.url}`);
     let req_handle = this.getSocketHandle(req.socket);
     this.onProxyRequest(req_handle, req);
-    this.debug('ProxyServer->onServerConnect ' + this.url() + ' url=' + rurl.href + ' handle=' + (req_handle ? req_handle.id : 'none'));
+    this.debug('ProxyServer->onServerConnect [' + (req_handle ? req_handle.id : 'none') + '] ' + this.url() + ' url=' + req.url + ' handle=' + (req_handle ? req_handle.id : 'none'));
 
     if (this._options.toProxy && this._options.target && !disable_proxy_to_proxy) {
       await this.connectToExternProxy(true, req_handle, req, null, upstream, head);
     } else {
 
-      proxy_url = {
-        protocol: 'https',
+      let rurl: url.Url = url.parse(`http://${req.url}`);
+
+      let proxy_url: any = {
+        //protocol: 'https', //
         hostname: rurl.hostname,
         port: parseInt(rurl.port)
       };
 
+      let upTransform = new HttpHeaderTransform({headers:req_handle.getHeaders()});
       let downstream = net.connect(proxy_url.port, proxy_url.hostname, function () {
-        self.debug('ProxyServer->onServerConnect: downstream connected to ' + req.url);
+        self.debug('ProxyServer->onServerConnect [' + req_handle.id + ']: downstream connected to ' + req.url);
         upstream.write(
           'HTTP/' + req.httpVersion + ' 200 Connection Established\r\n' +
           'Proxy-agent: Proxybroker\r\n' +
@@ -291,25 +303,27 @@ export class ProxyServer extends Server implements IServer {
             }
           });
 
-        if (head) {
-          downstream.write(head, err => {
-            if (err) {
-              Log.error(err)
-            }
-          });
-        }
-        upstream.pipe(downstream);
-        downstream.pipe(upstream);
+        upstream.pipe(upTransform).pipe(downstream);
+        downstream.pipe(new Transform({
+          transform(chunk: any, encoding: string, callback: (error?: (Error | null), data?: any) => void): void {
+            console.log(chunk)
+            callback(null,chunk);
+          }
+        })).pipe(upstream);
 
       });
 
-      let handle = this.createSocketHandle(downstream, {ssl: true});
+      let handle = this.createSocketHandle(downstream);
       handle.onFinish()
         .then(handle => {
           return self.handleUpstreamAfterFinishedRequest(req_handle, handle, req, upstream, head);
         })
         .catch(err => Log.error(err))
     }
+  }
+
+  onServerClientError(exception: Error, socket: net.Socket): void {
+    super.onServerClientError(exception, socket);
   }
 
 
@@ -364,11 +378,10 @@ export class ProxyServer extends Server implements IServer {
   }
 
 
-  async onServerConnection(socket: net.Socket | tls.TLSSocket, secured: boolean = false): Promise<void> {
+  onServerConnection(socket: net.Socket | tls.TLSSocket, secured: boolean = false) {
     super.onServerConnection(socket);
     this.debug('ProxyServer->onServerConnection(' + secured + ') ' + this.url());
     this.createSocketHandle(socket, {ssl: secured, timeout: 30000});
-    return Promise.resolve()
   }
 
 

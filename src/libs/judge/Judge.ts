@@ -1,7 +1,7 @@
 import * as http from "http";
 import * as https from "https";
 
-import * as _request from "request-promise-native";
+//import * as _request from "request-promise-native";
 import * as tls from 'tls'
 import * as mUrl from 'url'
 import * as net from 'net'
@@ -17,6 +17,9 @@ import {IServerApi, Server} from "@typexs/server";
 import {CryptUtils, DomainUtils, Log, Progress, TodoException} from "@typexs/base";
 import {MESSAGE, Messages} from "../specific/Messages";
 import {ProtocolType} from "../specific/ProtocolType";
+import {IHttp, isStream} from "../http/IHttp";
+import {HttpGotAdapter} from "../../adapters/http/got/HttpGotAdapter";
+import {IHttpPromise, IHttpResponse} from "../http/IHttpResponse";
 
 
 const FREEGEOIP: string = 'http://ip-api.com/json/';
@@ -43,10 +46,12 @@ export class Judge implements IServerApi {
 
   private cache: { [key: string]: JudgeRequest } = {};
 
+  private http: IHttp;
 
   constructor(options: IJudgeOptions = {}) {
     this._options = _.defaultsDeep(options, DEFAULT_JUDGE_OPTIONS);
 
+    this.http = new HttpGotAdapter();
     this.httpServer = new Server();
     this.httpServer.initialize({
       protocol: 'http',
@@ -159,8 +164,8 @@ export class Judge implements IServerApi {
   private async getRemoteAccessibleIp(): Promise<any> {
     // If IP is fixed, it should be configurable ...
     try {
-      let response_data = await _request.get(IPCHECK_URL);
-      let json = JSON.parse(response_data);
+      let response_data: IHttpResponse<any> = <IHttpResponse<any>>(await this.http.get(IPCHECK_URL));
+      let json = JSON.parse(response_data.body);
       this._options.remote_ip = json.ip;
       return json.ip
     } catch (err) {
@@ -174,8 +179,9 @@ export class Judge implements IServerApi {
     let ping_url = this.remote_url(protocol) + '/ping';
     this.debug('ping url ' + ping_url);
     let start = new Date();
-    let res = await _request.get(ping_url);
-    let s = JSON.parse(res);
+    let response: IHttpResponse<any> = <IHttpResponse<any>>(await this.http.get(ping_url));
+    //let res = await _request.get(ping_url);
+    let s = JSON.parse(response.body);
 
     let stop = new Date();
     let c_s = s.time - start.getTime();
@@ -231,7 +237,7 @@ export class Judge implements IServerApi {
     judge_url += '/judge/' + req_id;
     this.debug('judge: create request ' + req_id + ' to ' + judge_url + ' over ' + proxy_url + ' (cached: ' + this.cache_sum + ')');
 
-    let req_options = Object.assign(this._options.request, options);
+    let req_options = _.assign(this._options.request, options);
     let judgeReq = new JudgeRequest(this, req_id, judge_url, proxy_url, req_options);
     return this.addToCache(judgeReq);
   }
@@ -277,7 +283,7 @@ export class Judge implements IServerApi {
         req.socket.once('end', () => {
           self.removeFromCache(req_id);
         })
-        req.socket.once('error',  () => {
+        req.socket.once('error', () => {
           self.removeFromCache(req_id);
         })
       }
@@ -358,10 +364,12 @@ export class Judge implements IServerApi {
     results.geo = false;
     let geo_url = FREEGEOIP + ip;
     try {
-      let geodata: string = await _request.get(geo_url);
-      if (geodata) {
+      let response: IHttpResponse<any> = <IHttpResponse<any>>(await this.http.get(geo_url));
+      //let geodata: string = await _request.get(geo_url);
+      if (response.body) {
         results.geo = true;
-        let geojson: { [k: string]: string } = JSON.parse(geodata);
+        // TODO use specific geo ip handler
+        let geojson: { [k: string]: string } = JSON.parse(response.body);
         _.keys(geojson).filter((k) => {
           return ['ip'].indexOf(k) == -1
         }).forEach(k => {
@@ -389,7 +397,7 @@ export class Judge implements IServerApi {
 
     }
 
-    if (enable.https ) {
+    if (enable.https) {
       // HTTPS => HTTP
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTPS, ProtocolType.HTTP).then(result => {
         results.variants.push(result);

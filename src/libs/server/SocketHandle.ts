@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
 import * as net from 'net'
 import Exceptions from "@typexs/server/libs/server/Exceptions";
-import {Log} from "@typexs/base";
+import {IHttpHeaders, Log} from "@typexs/base";
 import Timer = NodeJS.Timer;
 
 
@@ -139,6 +139,12 @@ export class SocketHandle {
     this.removeHeader(orgKey);
     let key = orgKey.toLocaleLowerCase();
     this.headersList.push({key: key, orgKey: orgKey, value: value})
+  }
+
+  getHeaders(): IHttpHeaders {
+    let h = {};
+    this.headersList.map(v => h[v.orgKey] = v.value);
+    return h;
   }
 
   build(): Buffer {

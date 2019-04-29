@@ -123,7 +123,7 @@ export class JudgeRequest {
     let httpPromise = http.get(this.url, opts);
     if (!isStream(httpPromise)) {
       this.httpPromise = httpPromise;
-      this.httpPromise.once('request', (request: http.ClientRequest) => {
+      this.httpPromise.on('request', (request: http.ClientRequest) => {
         this.request = request;
         this.request.on('error', this.onRequestError.bind(this));
         this.request.on('socket', this.onSocket.bind(this));
@@ -212,6 +212,10 @@ export class JudgeRequest {
         this.socket.destroy();
       }
     }
+    if(this.httpPromise['cancel']){
+      this.httpPromise['cancel']();
+    }
+
   }
 
   clear() {
