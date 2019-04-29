@@ -3,6 +3,7 @@ import {expect} from "chai";
 import {Log} from "@typexs/base";
 import {IJudgeOptions} from "../../../src/libs/judge/IJudgeOptions";
 import {Judge} from "../../../src/libs/judge/Judge";
+import {TestHelper} from "../TestHelper";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 /**
@@ -11,7 +12,6 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
  * Note: for remote access the used ip will be used, for this the firewall must allow access to the port 8080
  */
 
-const SSL_PATH = '../_files/ssl';
 
 let initial_remote_ip = 'http://127.0.0.1:8081';
 
@@ -33,8 +33,8 @@ class JudgeTestSuite1 {
     options.ip = 'judge.local';
     options.http_port = 8081;
     options.https_port = 8082;
-    options.ssl.key_file = __dirname + '/' + SSL_PATH + '/judge/server-key.pem';
-    options.ssl.cert_file = __dirname + '/' + SSL_PATH + '/judge/server-cert.pem';
+    options.ssl.key_file = TestHelper.sslPath('judge/server-key.pem');
+    options.ssl.cert_file = TestHelper.sslPath('judge/server-cert.pem');
     options.remote_lookup = false;
 
     let judge = new Judge(options);

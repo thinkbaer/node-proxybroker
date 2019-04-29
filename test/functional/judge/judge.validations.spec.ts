@@ -15,7 +15,7 @@ const PROXY_LOCAL_HOST: string = 'proxy.local';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-@suite("judge/Judge - judge over proxy http and https protocol validations") @timeout(10000)
+@suite("judge/validations") @timeout(10000)
 class JV {
 
   static server_wrapper: net.Server = null;
@@ -30,7 +30,7 @@ class JV {
   static https_proxy_ip: string = PROXY_LOCAL_HOST;
   static https_proxy_server: ProxyServer = null;
 
-  static http_judge: Judge = null;
+  static judge: Judge = null;
 
   static async before() {
 
@@ -75,12 +75,12 @@ class JV {
       }
     };
 
-    JV.http_judge = new Judge(opts);
+    JV.judge = new Judge(opts);
 
-    let erg = await JV.http_judge.prepare();
+    let erg = await JV.judge.prepare();
     expect(erg).to.equal(true);
 
-    erg = await JV.http_judge.wakeup();
+    erg = await JV.judge.wakeup();
     expect(erg).to.equal(true);
 
     // Wraps between HTTP and HTTPS proxy
@@ -109,7 +109,7 @@ class JV {
     await JV.https_proxy_server.stop();
 
     try {
-      await JV.http_judge.pending();
+      await JV.judge.pending();
       await new Promise<void>(function (resolve) {
         JV.server_wrapper.close(function () {
           resolve()
@@ -120,7 +120,7 @@ class JV {
     }
     JV.http_proxy_server = null;
     JV.https_proxy_server = null;
-    JV.http_judge = null
+    JV.judge = null
   }
 
 
@@ -128,7 +128,7 @@ class JV {
   async 'tunnel https through http proxy'() {
     let proxy_url_http = 'http://' + JV.http_proxy_ip + ':' + JV.http_proxy_port;
 
-    let judgeReq = JV.http_judge.createRequest('https', proxy_url_http); //, {local_ip: '127.0.0.1'}
+    let judgeReq = JV.judge.createRequest('https', proxy_url_http); //, {local_ip: '127.0.0.1'}
     let rrm = await judgeReq.performRequest();
     let log = rrm.logToString();
     expect(log).to.match(/Judge connected/)
@@ -137,10 +137,27 @@ class JV {
 
   @test
   async 'tunnel https through http proxy (use handle)'() {
-    let judgeReq = await JV.http_judge.handleRequest(JV.http_proxy_ip, JV.http_proxy_port, ProtocolType.HTTP, ProtocolType.HTTPS);
+    let judgeReq = await JV.judge.handleRequest(JV.http_proxy_ip, JV.http_proxy_port, ProtocolType.HTTP, ProtocolType.HTTPS);
     expect(judgeReq.hasError()).to.be.false
   }
 
+  @test
+  async 'tunnel http through http proxy (use handle)'() {
+    let judgeReq = await JV.judge.handleRequest(JV.http_proxy_ip, JV.http_proxy_port, ProtocolType.HTTP, ProtocolType.HTTP);
+    expect(judgeReq.hasError()).to.be.false
+  }
+
+  @test
+  async 'tunnel http through https proxy (use handle)'() {
+    let judgeReq = await JV.judge.handleRequest(JV.https_proxy_ip, JV.https_proxy_port, ProtocolType.HTTPS, ProtocolType.HTTP);
+    expect(judgeReq.hasError()).to.be.false
+  }
+
+  @test
+  async 'tunnel https through https proxy (use handle)'() {
+    let judgeReq = await JV.judge.handleRequest(JV.https_proxy_ip, JV.https_proxy_port, ProtocolType.HTTPS, ProtocolType.HTTPS);
+    expect(judgeReq.hasError()).to.be.false
+  }
 
   @test.skip()
   async 'TODO: socket timeout on https judge request'() {
@@ -150,7 +167,7 @@ class JV {
     EventBus.register(new StdConsole())
     */
     let proxy_url_https = 'https://' + JV.http_proxy_ip + ':' + JV.http_proxy_port;
-    let judgeReq = JV.http_judge.createRequest(proxy_url_https, '', {
+    let judgeReq = JV.judge.createRequest(proxy_url_https, '', {
       local_ip: '127.0.0.1',
       socket_timeout: 500,
       connection_timeout: 500
@@ -165,7 +182,7 @@ class JV {
 
   @test
   async validateFailedOnHttpAndHttps() {
-    let results: JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST, 3130);
+    let results: JudgeResults = await JV.judge.validate(PROXY_LOCAL_HOST, 3130);
 
     for (let res of results.getVariants()) {
       expect(res.hasError()).to.be.true;
@@ -175,7 +192,7 @@ class JV {
 
   @test
   async validateSuccessOnHttpAndFailedOnHttps() {
-    let results: JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST, JV.http_proxy_port);
+    let results: JudgeResults = await JV.judge.validate(PROXY_LOCAL_HOST, JV.http_proxy_port);
 
     let http_http = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTP);
     let http_https = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTPS);
@@ -183,18 +200,19 @@ class JV {
     let https_https = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
 
     expect(http_http.hasError()).to.be.false;
-    expect(http_http.level).to.eq(3);
     expect(http_https.hasError()).to.be.false;
-    expect(http_https.level).to.eq(1);
     expect(https_http.hasError()).to.be.true;
-    expect(https_https.hasError()).to.be.true
+    expect(https_https.hasError()).to.be.true;
+
+    expect(http_http.level).to.eq(3);
+    expect(http_https.level).to.eq(1);
   }
 
 
   @test
   async validateFailedOnHttpAndSuccessOnHttps() {
     // Log.options({enable:true,level:'debug'})
-    let results: JudgeResults = await JV.http_judge.validate(PROXY_LOCAL_HOST, JV.https_proxy_port/*,{http:true,https:true}*/);
+    let results: JudgeResults = await JV.judge.validate(PROXY_LOCAL_HOST, JV.https_proxy_port/*,{http:true,https:true}*/);
 
     results.getVariants();
 
@@ -206,8 +224,9 @@ class JV {
     expect(http_http.hasError()).to.be.true;
     expect(http_https.hasError()).to.be.true;
     expect(https_http.hasError()).to.be.false;
-    expect(https_http.level).to.eq(3);
     expect(https_https.hasError()).to.be.false;
+
+    expect(https_http.level).to.eq(3);
     expect(https_https.level).to.eq(1);
   }
 
@@ -217,7 +236,7 @@ class JV {
 
     let results: JudgeResults;
     try {
-      results = await JV.http_judge.validate(PROXY_LOCAL_HOST, JV.proxy_wrapper_port);
+      results = await JV.judge.validate(PROXY_LOCAL_HOST, JV.proxy_wrapper_port);
     } catch (e) {
       Log.error(e)
     }
@@ -228,15 +247,13 @@ class JV {
     let https_https = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
 
     expect(http_http.hasError()).to.be.false;
-    expect(http_http.level).to.eq(3);
-
     expect(http_https.hasError()).to.be.false;
-    expect(http_https.level).to.eq(1);
-
     expect(https_http.hasError()).to.be.false;
-    expect(https_http.level).to.eq(3);
-
     expect(https_https.hasError()).to.be.false;
+
+    expect(http_http.level).to.eq(3);
+    expect(http_https.level).to.eq(1);
+    expect(https_http.level).to.eq(3);
     expect(https_https.level).to.eq(1);
   }
 

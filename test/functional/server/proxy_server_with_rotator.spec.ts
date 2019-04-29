@@ -1,5 +1,5 @@
 import {suite, test, timeout} from "mocha-typescript";
-import * as request from "request-promise-native";
+
 import {expect} from "chai";
 import {EventBus} from "commons-eventbus";
 import {Log, StorageRef} from "@typexs/base";
@@ -12,13 +12,16 @@ import {ProtocolType} from "../../../src/libs/specific/ProtocolType";
 import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
 import {IpRotate} from "../../../src/entities/IpRotate";
 import {IpRotateLog} from "../../../src/entities/IpRotateLog";
+import {IHttpGetOptions} from "../../../src/libs/http/IHttpGetOptions";
+import {IHttp} from "../../../src/libs/http/IHttp";
+import {HttpGotAdapter} from "../../../src/adapters/http/got/HttpGotAdapter";
 
 
 let storage: StorageRef = null;
 let server_dest: ProxyServer = null;
 let server_distrib: ProxyServer = null;
-let opts: request.RequestPromiseOptions = {
-  resolveWithFullResponse: true,
+let opts: IHttpGetOptions = {
+  retry: 0,
   proxy: 'http://localhost:3180',
   headers: {
     'Proxy-Select-Level': 1
@@ -41,12 +44,14 @@ let https_url = 'https://example.com';
 
 let rotator: ProxyRotator = null;
 
+let http: IHttp = null;
 
-@suite('functional/server/' + __filename.replace(__dirname+'/','')) @timeout(20000)
+@suite('functional/server/' + __filename.replace(__dirname + '/', '')) @timeout(20000)
 class ProxyServerTest {
 
 
   static async before() {
+    http = new HttpGotAdapter();
     Log.options({enable: false, level: 'debug'});
 
     storage = await TestHelper.getDefaultStorageRef();
@@ -121,7 +126,7 @@ class ProxyServerTest {
   @test
   async 'rotate and log'() {
     let wait = 400;
-    let resp1 = await request.get(http_url, opts);
+    let resp1 = await http.get(http_url, opts);
 
     await TestHelper.wait(wait);
     let c = await storage.connect();
@@ -152,7 +157,7 @@ class ProxyServerTest {
       success: true
     });
 
-    await request.get(https_url, opts);
+    await http.get(https_url, opts);
 
 
     await TestHelper.wait(wait);
@@ -184,7 +189,7 @@ class ProxyServerTest {
     });
 
     try {
-      resp1 = await request.get('http://asd-test-site.org/html', opts);
+      resp1 = await http.get('http://asd-test-site.org/html', opts);
 
     } catch (_err) {
 
@@ -219,7 +224,7 @@ class ProxyServerTest {
 
 
     try {
-      resp1 = await request.get('https://asd-test-site.org/html', opts);
+      resp1 = await http.get('https://asd-test-site.org/html', opts);
 
     } catch (_err) {
 

@@ -8,8 +8,6 @@ import {Judge} from "../../../src/libs/judge/Judge";
  * Note: for remote access the used ip will be used, for this the firewall must allow access to the port 8080
  */
 
-const SSL_PATH = '../_files/ssl';
-
 let initial_remote_ip = '127.0.0.1';
 
 @suite('judge/Judge - functional')
