@@ -60,17 +60,20 @@ class Http_got_adapterSpec {
       req = _req;
     });
 
+    /*
     (<any>respPromise).on('response', (req: any) => {
       //console.log(req);
 
       req.on('finish', () => {
-        console.log('a')
+
       });
       req.on('end', () => {
-        console.log('b');
-        console.log(req.body)
+        //console.log('b');
+        //console.log(req.body)
       })
     });
+    */
+     
     if (isStream(respPromise)) {
       return;
     }

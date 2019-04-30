@@ -540,13 +540,18 @@ export class Judge implements IServerApi {
       return Promise.resolve(true)
     }
 
-    await Promise.all([
-      self.httpServer.stop(),
-      self.httpsServer.stop()
-    ])
-    self.disable();
-    await self.progress.ready();
-    this.progress.removeAllListeners();
+    try{
+      await Promise.all([
+        self.httpServer.stop(),
+        self.httpsServer.stop()
+      ])
+      self.disable();
+      await self.progress.ready();
+      this.progress.removeAllListeners();
+    }catch (e) {
+      return false;
+    }
+    return true;
 
   }
 

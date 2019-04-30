@@ -116,8 +116,6 @@ class ProxyValidationControllerTest {
     await proxyValidationController.shutdown();
 
 
-    await storage.shutdown();
-
     let conn = await storage.connect();
 //    let ip_loc = await conn.manager.findAndCount(IpLoc);
     let ip_addr = await conn.manager.findAndCount(IpAddr);
