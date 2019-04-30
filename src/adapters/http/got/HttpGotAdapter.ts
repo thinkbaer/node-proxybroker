@@ -1,5 +1,6 @@
 import * as _ from "lodash";
 import * as got from "got";
+import {URL} from "url";
 
 import {IHttp} from "../../../libs/http/IHttp";
 import {IHttpGetOptions} from "../../../libs/http/IHttpGetOptions";
