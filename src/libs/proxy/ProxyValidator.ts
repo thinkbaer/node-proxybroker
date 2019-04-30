@@ -283,8 +283,6 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
       Log.debug('proxy_validator: validated '+ip_addr.ip);
       await conn.save(ip_addr)
 
-    } else {
-      throw new TodoException()
     }
 
     /*

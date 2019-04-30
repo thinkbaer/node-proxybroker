@@ -26,6 +26,7 @@ import * as tls from "tls";
 import * as _ from "lodash";
 import {EventEmitter} from "events";
 import {Agent} from "http";
+import {TLSSocket} from "tls";
 
 
 export class TunnelingAgent extends EventEmitter {
@@ -218,6 +219,10 @@ export class TunnelingAgent extends EventEmitter {
 
     function onError(cause: Error) {
       connectReq.removeAllListeners();
+      /*
+      if(connectReq.connection instanceof TLSSocket){
+        //connectReq.connection.removeAllListeners();
+      }*/
       let error = new Error('tunneling socket could not be established, ' +
         'cause=' + cause.message);
       (<any>error).code = 'ECONNRESET';
