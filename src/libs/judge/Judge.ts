@@ -17,9 +17,7 @@ import {IServerApi, Server} from "@typexs/server";
 import {CryptUtils, DomainUtils, Log, Progress, TodoException} from "@typexs/base";
 import {MESSAGE, Messages} from "../specific/Messages";
 import {ProtocolType} from "../specific/ProtocolType";
-import {IHttp, isStream} from "../http/IHttp";
-import {HttpGotAdapter} from "../../adapters/http/got/HttpGotAdapter";
-import {IHttpPromise, IHttpResponse} from "../http/IHttpResponse";
+import {IHttp, HttpGotAdapter, IHttpResponse} from "commons-http";
 
 
 const FREEGEOIP: string = 'http://ip-api.com/json/';
@@ -540,7 +538,7 @@ export class Judge implements IServerApi {
       return Promise.resolve(true)
     }
 
-    try{
+    try {
       await Promise.all([
         self.httpServer.stop(),
         self.httpsServer.stop()
@@ -548,7 +546,7 @@ export class Judge implements IServerApi {
       self.disable();
       await self.progress.ready();
       this.progress.removeAllListeners();
-    }catch (e) {
+    } catch (e) {
       return false;
     }
     return true;

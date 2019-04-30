@@ -13,9 +13,7 @@ import {ReqResEvent} from "./ReqResEvent";
 import {IHttpHeaders, Log, NestedException} from "@typexs/base";
 import {MESSAGE} from "../specific/Messages";
 import Exceptions from "@typexs/server/libs/server/Exceptions";
-import {IHttpPromise, IHttpStream} from "../http/IHttpResponse";
-import {IHttpOptions} from "../http/IHttpOptions";
-
+import {IHttp, HttpGotAdapter,IHttpOptions, IHttpResponse, IHttpGetOptions, IHttpPromise} from "commons-http";
 
 export class RequestResponseMonitor extends events.EventEmitter {
 

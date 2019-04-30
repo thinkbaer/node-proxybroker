@@ -17,10 +17,7 @@ import {IHttpHeaders, Log} from "@typexs/base";
 import Exceptions from "@typexs/server/libs/server/Exceptions";
 import {ProtocolType} from "../specific/ProtocolType";
 import {MESSAGE} from "../specific/Messages";
-import {IHttpGetOptions} from "../http/IHttpGetOptions";
-import {HttpGotAdapter} from "../../adapters/http/got/HttpGotAdapter";
-import {isStream} from "../http/IHttp";
-import {IHttpPromise, IHttpStream} from "../http/IHttpResponse";
+import {IHttp, HttpGotAdapter, IHttpResponse, IHttpGetOptions, IHttpPromise} from "commons-http";
 
 
 // interface JudgeConfig
@@ -121,26 +118,21 @@ export class JudgeRequest {
 
     let http = new HttpGotAdapter();
     let httpPromise = http.get(this.url, opts);
-    if (!isStream(httpPromise)) {
-      this.httpPromise = httpPromise;
-      this.httpPromise.on('request', (request: http.ClientRequest) => {
-        this.request = request;
-        this.request.on('error', this.onRequestError.bind(this));
-        this.request.on('socket', this.onSocket.bind(this));
-      });
-      this.monitor = new RequestResponseMonitor(this.url, opts, httpPromise, this.id/*, {debug: this._debug}*/);
-      try {
-        this.response = await this.httpPromise;
-      } catch (e) {
-        //Log.error(e);
-        // Log.error(this.id,e)
-        // Will be also in ReqResMonitor
-      }
-      return this.monitor.promise();
-
-    } else {
-      throw new Error('not a stream')
+    this.httpPromise = httpPromise;
+    this.httpPromise.on('request', (request: http.ClientRequest) => {
+      this.request = request;
+      this.request.on('error', this.onRequestError.bind(this));
+      this.request.on('socket', this.onSocket.bind(this));
+    });
+    this.monitor = new RequestResponseMonitor(this.url, opts, httpPromise, this.id/*, {debug: this._debug}*/);
+    try {
+      this.response = await this.httpPromise;
+    } catch (e) {
+      //Log.error(e);
+      // Log.error(this.id,e)
+      // Will be also in ReqResMonitor
     }
+    return this.monitor.promise();
 
   }
 
@@ -215,7 +207,7 @@ export class JudgeRequest {
 
 
     }
-    if(this.httpPromise['cancel']){
+    if (this.httpPromise['cancel']) {
       this.httpPromise['cancel']();
     }
 
