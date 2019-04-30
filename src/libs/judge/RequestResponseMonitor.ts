@@ -4,7 +4,7 @@ import * as net from 'net'
 import * as http from 'http'
 
 import * as mUrl from 'url'
-import {Url} from 'url'
+import {Url, URL} from 'url'
 import * as tls from 'tls'
 import * as events from 'events'
 import * as _ from 'lodash'
@@ -219,7 +219,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
       this.addLog(MESSAGE.OSC03.k)
     }
 
-    if(!_.isEmpty(this.sendedHead)){
+    if (!_.isEmpty(this.sendedHead)) {
       this.sendedHead.split('\n').map((x: string) => {
         this.addClientLog(MESSAGE.HED01.k, {header: x ? x : '_UNKNOWN_'})
       })

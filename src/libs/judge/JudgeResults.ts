@@ -38,6 +38,7 @@ export class JudgeResults {
 
     variants: JudgeResult[] = [];
 
+    geoData:any = null;
 
     detectProtocol(){
 

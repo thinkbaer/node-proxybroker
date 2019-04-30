@@ -8,7 +8,6 @@ import {ProxyServer} from "../../../src/libs/server/ProxyServer";
 import {ProxyValidator} from "../../../src/libs/proxy/ProxyValidator";
 import {ProxyDataValidateEvent} from "../../../src/libs/proxy/ProxyDataValidateEvent";
 import {ProxyData} from "../../../src/libs/proxy/ProxyData";
-import {IpLoc} from "../../../src/entities/IpLoc";
 import {IpAddr} from "../../../src/entities/IpAddr";
 import {IpAddrState} from "../../../src/entities/IpAddrState";
 import {ProtocolType} from "../../../src/libs/specific/ProtocolType";
@@ -40,12 +39,12 @@ const judge_options: IJudgeOptions = {
 class ProxyValidationControllerTest {
 
   static before() {
-    Log.options({enable: false, level: 'debug'})
+    Log.options({enable: true, level: 'debug'})
   }
 
   @test
   async 'positiv validation for http proxy'() {
-    let storage =await TestHelper.getDefaultStorageRef();
+    let storage = await TestHelper.getDefaultStorageRef();
 
     let http_proxy_server = new ProxyServer();
     http_proxy_server.initialize(http_proxy_options);
@@ -66,14 +65,14 @@ class ProxyValidationControllerTest {
 
 
     let conn = await storage.connect();
-    let ip_loc = await conn.manager.findAndCount(IpLoc);
+    //let ip_loc = await conn.manager.findAndCount(IpLoc);
     let ip_addr = await conn.manager.findAndCount(IpAddr);
     let ip_addr_state = await conn.manager.findAndCount(IpAddrState);
 
     await conn.close();
     await storage.shutdown();
 
-    expect(ip_loc[1]).to.eq(1);
+    //expect(ip_loc[1]).to.eq(1);
     expect(ip_addr[1]).to.eq(1);
     expect(ip_addr_state[1]).to.eq(4);
 
@@ -98,7 +97,8 @@ class ProxyValidationControllerTest {
 
   @test
   async 'negativ validation'() {
-    let storage =await TestHelper.getDefaultStorageRef();
+    let storage = await TestHelper.getDefaultStorageRef();
+
     let proxyValidationController = new ProxyValidator({schedule: {enable: false}, judge: judge_options}, storage);
     await proxyValidationController.prepare();
 
@@ -106,7 +106,9 @@ class ProxyValidationControllerTest {
     let e = new ProxyDataValidateEvent(proxyData);
     let event = null;
     try {
-      event = await proxyValidationController.validate(e)
+
+      event = await proxyValidationController.validate(e);
+
     } catch (err) {
       throw err
     }
@@ -114,15 +116,17 @@ class ProxyValidationControllerTest {
     await proxyValidationController.shutdown();
 
 
+    await storage.shutdown();
+
     let conn = await storage.connect();
-    let ip_loc = await conn.manager.findAndCount(IpLoc);
+//    let ip_loc = await conn.manager.findAndCount(IpLoc);
     let ip_addr = await conn.manager.findAndCount(IpAddr);
     let ip_addr_state = await conn.manager.findAndCount(IpAddrState);
 
     await conn.close();
     await storage.shutdown();
 
-    expect(ip_loc[1]).to.eq(1);
+    //  expect(ip_loc[1]).to.eq(1);
     expect(ip_addr[1]).to.eq(1);
     expect(ip_addr_state[1]).to.eq(4);
 
@@ -131,5 +135,6 @@ class ProxyValidationControllerTest {
 
     expect(ip_addr_state[0][0].enabled).to.be.false;
     expect(ip_addr_state[0][1].enabled).to.be.false
+
   }
 }

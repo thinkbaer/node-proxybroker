@@ -118,7 +118,8 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
       if (ips.length > 0) {
 
         for (let ip of ips) {
-          EventBus.postAndForget(new ProxyDataValidateEvent(new ProxyData(ip))).catch(e => {});
+          EventBus.postAndForget(new ProxyDataValidateEvent(new ProxyData(ip))).catch(e => {
+          });
         }
       }
     } catch (e) {
@@ -207,24 +208,36 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
       // check if IpLoc exists then update it else create a new entry
       let ip_loc = await conn.manager.findOne(IpLoc, {where: {ip: proxyData.ip}});
 
+
       if (!ip_loc) {
         ip_loc = new IpLoc();
       }
 
-      let props = [
-        'ip', 'country_code', 'country_name',
-        'region_code', 'region_name', 'city', 'zip_code',
-        'time_zone', 'metro_code', 'latitude', 'longitude'
-      ];
+      if (proxyData.results.geo) {
+        let geo = proxyData.results.geoData;
+        if (geo.lat && geo.lon) {
+          ip_loc.ip = proxyData.ip;
 
-      for (let k of props) {
-        ip_loc[k] = proxyData.results[k];
-      }
+          ip_loc.city = geo.city;
+          ip_loc.longitude = geo.lon;
+          ip_loc.latitude = geo.lat;
+          ip_loc.country_code = geo.countryCode;
+          ip_loc.country_name = geo.country;
+          ip_loc.region_code = geo.region;
+          ip_loc.region_name = geo.regionName;
+          ip_loc.zip_code = geo.zip;
+          ip_loc.time_zone = geo.timezone;
 
-      try {
-        await conn.save(ip_loc);
-      } catch (err) {
-        Log.error(err)
+          try {
+            await conn.save(ip_loc);
+          } catch (err) {
+            Log.error(err)
+          }
+        } else {
+          Log.warn('proxy_validator: no geodata found')
+        }
+
+
       }
       // if we have no positive results for http and https then
       //     if record already exists then
@@ -267,6 +280,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         }
       }
 
+      Log.debug('proxy_validator: validated '+ip_addr.ip);
       await conn.save(ip_addr)
 
     } else {
@@ -297,19 +311,21 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     }
   }
 
+
   async shutdown() {
     if (this.judge.isEnabled()) {
-      await this.judge.pending()
+      await this.judge.pending();
     }
     clearTimeout(this.timer);
     this.queue.removeAllListeners();
     await EventBus.unregister(this);
+    Log.debug('proxy_validator:  shutdown')
   }
+
 
   async do(workLoad: ProxyData): Promise<any> {
     // If starting or stopping judge server then wait
     await this.judge.progressing();
-
     if (!this.judge.isEnabled()) {
       try {
         await this.judge.wakeup()
@@ -328,7 +344,6 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
   async onEmpty(): Promise<void> {
     Log.info('queue[' + this.queue.options.name + '] is empty stop judge');
-
     await this.judge.pending();
     return Promise.resolve();
   }

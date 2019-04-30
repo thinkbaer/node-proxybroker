@@ -369,12 +369,7 @@ export class Judge implements IServerApi {
       if (response.body) {
         results.geo = true;
         // TODO use specific geo ip handler
-        let geojson: { [k: string]: string } = JSON.parse(response.body);
-        _.keys(geojson).filter((k) => {
-          return ['ip'].indexOf(k) == -1
-        }).forEach(k => {
-          results[k] = geojson[k]
-        })
+        results.geoData = JSON.parse(response.body);
       }
     } catch (e) {
       Log.error(e)
@@ -545,44 +540,14 @@ export class Judge implements IServerApi {
       return Promise.resolve(true)
     }
 
-    return Promise.all([
+    await Promise.all([
       self.httpServer.stop(),
       self.httpsServer.stop()
     ])
-      .then(x => {
-        self.disable();
-        return true
-      })
+    self.disable();
+    await self.progress.ready();
+    this.progress.removeAllListeners();
 
-      /*
-              return new Promise(async function (resolve, reject) {
-                  try {
-                      if (self.httpServer) {
-                          self.httpServer.removeAllListeners();
-
-                          for (let conn in self.$connections) {
-                              self.$connections[conn].destroy()
-                          }
-
-                          self.httpServer.close(function () {
-                              self.disable();
-                              resolve(true)
-                          });
-                      } else {
-                          resolve(false)
-                      }
-                  } catch (e) {
-                      reject(e)
-                  }
-              })
-              */
-      .then(async r => {
-        await self.progress.ready();
-        return r
-      })
-      .catch(err => {
-        throw err
-      })
   }
 
 

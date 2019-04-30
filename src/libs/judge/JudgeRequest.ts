@@ -205,12 +205,15 @@ export class JudgeRequest {
 
   private handleError(type: string, error: Error) {
     Log.error('judge request [' + this.id + '] type=' + type, error);
+
     if (this.socket && !this.socket.destroyed) {
       if (error) {
         this.socket.destroy(error);
       } else {
         this.socket.destroy();
       }
+
+
     }
     if(this.httpPromise['cancel']){
       this.httpPromise['cancel']();

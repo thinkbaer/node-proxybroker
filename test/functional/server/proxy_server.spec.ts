@@ -40,7 +40,7 @@ class ProxyServerTest {
 
   async before() {
     http = new HttpGotAdapter();
-    Log.options({enable: true, level: 'debug'});
+    Log.options({enable: false, level: 'debug'});
     server_dest = new ProxyServer();
     server_dest.initialize(<IProxyServerOptions>{
       protocol: 'http',

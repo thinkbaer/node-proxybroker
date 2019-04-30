@@ -304,12 +304,7 @@ export class ProxyServer extends Server implements IServer {
           });
 
         upstream.pipe(upTransform).pipe(downstream);
-        downstream.pipe(new Transform({
-          transform(chunk: any, encoding: string, callback: (error?: (Error | null), data?: any) => void): void {
-            console.log(chunk)
-            callback(null,chunk);
-          }
-        })).pipe(upstream);
+        downstream.pipe(upstream);
 
       });
 
