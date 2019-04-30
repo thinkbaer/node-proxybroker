@@ -12,9 +12,7 @@ import {ProtocolType} from "../../../src/libs/specific/ProtocolType";
 import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
 import {IpRotate} from "../../../src/entities/IpRotate";
 import {IpRotateLog} from "../../../src/entities/IpRotateLog";
-import {IHttpGetOptions} from "../../../src/libs/http/IHttpGetOptions";
-import {IHttp} from "../../../src/libs/http/IHttp";
-import {HttpGotAdapter} from "../../../src/adapters/http/got/HttpGotAdapter";
+import {IHttp, HttpGotAdapter,IHttpOptions, isStream,IHttpResponse, IHttpGetOptions, IHttpPromise} from "commons-http";
 
 
 let storage: StorageRef = null;

@@ -6,9 +6,7 @@ import {Log} from "@typexs/base";
 import {Server} from "@typexs/server";
 import {RequestResponseMonitor} from "../../../src/libs/judge/RequestResponseMonitor";
 import {TestHelper} from "../TestHelper";
-import {HttpGotAdapter} from "../../../src/adapters/http/got/HttpGotAdapter";
-import {IHttp, isStream} from "../../../src/libs/http/IHttp";
-
+import {IHttp, HttpGotAdapter,IHttpOptions, isStream,IHttpResponse, IHttpGetOptions, IHttpPromise} from "commons-http";
 //process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 //https.globalAgent.options.rejectUnauthorized = false;

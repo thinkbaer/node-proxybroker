@@ -4,10 +4,8 @@ import {expect} from "chai";
 import {Log, StorageRef} from "@typexs/base";
 import {ProxyServer} from "../../../src/libs/server/ProxyServer";
 import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
-import {IHttpGetOptions} from "../../../src/libs/http/IHttpGetOptions";
-import {IHttp} from "../../../src/libs/http/IHttp";
-import {HttpGotAdapter} from "../../../src/adapters/http/got/HttpGotAdapter";
-import {IHttpResponse} from "../../../src/libs/http/IHttpResponse";
+
+import {IHttp, HttpGotAdapter,IHttpOptions, isStream,IHttpResponse, IHttpGetOptions, IHttpPromise} from "commons-http";
 
 let storage: StorageRef = null;
 let server_dest: ProxyServer = null;

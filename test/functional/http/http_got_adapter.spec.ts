@@ -1,10 +1,8 @@
 import {suite, test} from "mocha-typescript";
 import {expect} from "chai";
 import * as http from "http";
-import {HttpGotAdapter} from "../../../src/adapters/http/got/HttpGotAdapter";
-import {isStream} from "../../../src/libs/http/IHttp";
 import {TestHelper} from "../TestHelper";
-import {IHttpPromise, IHttpResponse} from "../../../src/libs/http/IHttpResponse";
+import {IHttp, HttpGotAdapter,IHttpOptions, isStream,IHttpResponse, IHttpGetOptions, IHttpPromise} from "commons-http";
 
 const K_WORKDIR = 'workdir';
 
