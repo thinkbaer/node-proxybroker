@@ -13,6 +13,9 @@ import {ProxyFilter} from "../../../src/libs/proxy/ProxyFilter";
 import {ProviderRunEvent} from "../../../src/libs/provider/ProviderRunEvent";
 import {JobState} from "../../../src/entities/JobState";
 import Test = Mocha.Test;
+import {MockedProxies01} from "./predefined_01/MockedProxies01";
+import {MockedProxies02} from "./predefined_01/MockedProxies02";
+import {MockedProxies03} from "./predefined_01/MockedProxies03";
 
 class X {
   test: Function;
@@ -33,7 +36,6 @@ class ProviderManagerTest {
 
   options: IProviderOptions = {
     //enable: true,
-    providers: [__dirname + '/predefined_01/*'],
     schedule: {enable: false}
   };
 
@@ -47,6 +49,9 @@ class ProviderManagerTest {
     let storage = await TestHelper.getDefaultStorageRef()
 
     let pm = new ProviderManager();
+    pm.addProviderClass(MockedProxies01);
+    pm.addProviderClass(MockedProxies02);
+    pm.addProviderClass(MockedProxies03);
     await pm.prepare(storage, this.options, true);
     expect(pm.providers.length).to.eq(4);
     let providers = pm.findAll();
@@ -76,6 +81,9 @@ class ProviderManagerTest {
     let storage = await TestHelper.getDefaultStorageRef()
 
     let pm = new ProviderManager();
+    pm.addProviderClass(MockedProxies01);
+    pm.addProviderClass(MockedProxies02);
+    pm.addProviderClass(MockedProxies03);
     await pm.prepare(storage, this.options);
 
     let providers = pm.findAll({name: 'mockproxy02'});
@@ -93,6 +101,9 @@ class ProviderManagerTest {
     let storage = await TestHelper.getDefaultStorageRef()
 
     let pm = new ProviderManager();
+    pm.addProviderClass(MockedProxies01);
+    pm.addProviderClass(MockedProxies02);
+    pm.addProviderClass(MockedProxies03);
     await pm.prepare(storage, this.options, true);
     await pm.shutdown();
     expect(pm.jobs.length).to.eq(4);
@@ -154,8 +165,11 @@ class ProviderManagerTest {
     let storage = await TestHelper.getDefaultStorageRef();
 
     let pm = new ProviderManager();
-    let pds = new ProxyFilter(storage);
+    pm.addProviderClass(MockedProxies01);
+    pm.addProviderClass(MockedProxies02);
+    pm.addProviderClass(MockedProxies03);
 
+    let pds = new ProxyFilter(storage);
     await pds.prepare();
     await pm.prepare(storage, this.options, true);
 
@@ -222,7 +236,7 @@ class ProviderManagerTest {
 
     let sec = new Date(now + 2000);
     let options: IProviderOptions = {
-      providers: [__dirname + '/predefined_01/MockedProxies01.*'],
+      //providers: [__dirname + '/predefined_01/MockedProxies01.*'],
       schedule: {
         enable: true,
         pattern: `${sec.getSeconds()} ${sec.getMinutes()} ${sec.getHours()} * * *`
@@ -239,6 +253,9 @@ class ProviderManagerTest {
     await EventBus.register(_X);
 
     let pm = new ProviderManager();
+    pm.addProviderClass(MockedProxies01);
+    pm.addProviderClass(MockedProxies02);
+    pm.addProviderClass(MockedProxies03);
     await pm.prepare(storage, options, true);
 
     let offset = pm.next.getTime() - (new Date()).getTime();

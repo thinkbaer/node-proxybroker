@@ -1,11 +1,12 @@
 import {suite, test, timeout} from "mocha-typescript";
 import {expect} from "chai";
 import {Config} from "commons-config";
-import {ValidateCommand} from "../../src/commands/ValidateCommand";
+
 import {ProtocolType} from "../../src/libs/specific/ProtocolType";
 import {Log} from "@typexs/base";
 import {IProxyServerOptions} from "../../src/libs/server/IProxyServerOptions";
 import {ProxyServer} from "../../src/libs/server/ProxyServer";
+import {ProxyValidateCommand} from '../../src/commands/ProxyValidateCommand';
 
 describe('', () => {
 });
@@ -53,7 +54,7 @@ class ValidateCommandTest {
     await http_proxy_server.start();
 
     stdMocks.use();
-    let jfc = new ValidateCommand();
+    let jfc = new ProxyValidateCommand();
     let list = await jfc.handler({
       _resolve: true,
       host_or_file: __dirname + '/../_files/proxylists/list01.csv',

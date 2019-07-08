@@ -103,7 +103,7 @@ class Commons_configSpec {
   'Test the parameter for provider options'() {
 
     let pOptions: IProviderOptions = {
-      providers: ['/some/dir', '/some/other/dir'],
+      //providers: ['/some/dir', '/some/other/dir'],
       schedule: {
         enable: true
       }
