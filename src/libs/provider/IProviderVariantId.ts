@@ -1,6 +1,4 @@
-
-
 export interface IProviderVariantId {
-    name?:string
-    type?:string
+  name?: string
+  type?: string
 }

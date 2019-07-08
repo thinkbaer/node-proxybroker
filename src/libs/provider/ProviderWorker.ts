@@ -17,12 +17,13 @@ export class ProviderWorker implements IQueueWorkload {
 
   private _status: number = 0;
 
+
   constructor(manager: ProviderManager, provider: IProviderDef) {
     this.id = CryptUtils.shorthash(JSON.stringify(provider));
     this._provider = provider;
     this._manager = manager;
 
-// todo create a proxy provider factory
+    // todo create a proxy provider factory
     this._localInstance = Reflect.construct(provider.clazz, []);
     this._localInstance.selectVariant(provider);
   }
@@ -41,8 +42,10 @@ export class ProviderWorker implements IQueueWorkload {
   }
 
 
-  async fetch(): Promise<IProxyData[]> {
-    return await this._localInstance.get()
+  fetch(): Promise<IProxyData[]> {
+    return this._localInstance.get()
   }
+
+
 
 }

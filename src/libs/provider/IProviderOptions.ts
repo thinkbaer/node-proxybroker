@@ -1,25 +1,21 @@
-import {StringOrFunction} from "@typexs/base/browser";
-
-
-
 export const K_PROVIDER = 'provider';
 
 export interface IProviderOptions {
 
-    // enable : boolean
+  // enable : boolean
 
-    providers? : StringOrFunction[]
+//    providers? : StringOrFunction[]
 
-    schedule?: {
-        enable?: boolean
-        pattern?:string
-    }
+  schedule?: {
+    enable?: boolean
+    pattern?: string
+  }
 
 
-    /**
-     * Amount of parallel allowed worker jobs
-     */
-    parallel?:number
+  /**
+   * Amount of parallel allowed worker jobs
+   */
+  parallel?: number
 }
 
 /*
@@ -29,10 +25,13 @@ const DEFAULT_PROVIDER: StringOrFunction[] = [
 */
 
 export const DEFAULT_PROVIDER_OPTIONS: IProviderOptions = {
-    schedule: {
-        enable: true,
-        pattern: `${(new Date()).getMinutes() + 1} ${(new Date()).getHours()} * * *`
-    },
-    //providers: DEFAULT_PROVIDER
+
+  schedule: {
+    enable: true,
+    pattern: `${(new Date()).getMinutes() + 1} ${(new Date()).getHours()} * * *`
+  },
+
+
+  //providers: DEFAULT_PROVIDER
 };
 

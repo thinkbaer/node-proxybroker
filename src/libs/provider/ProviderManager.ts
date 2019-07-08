@@ -24,11 +24,16 @@ import {EventBus} from "commons-eventbus";
 import {Job} from "../../entities/Job";
 import {JobState} from "../../entities/JobState";
 import {ProxyDataFetchedEvent} from "../proxy/ProxyDataFetchedEvent";
+import {ClassType} from "commons-http/libs/Constants";
+import {AbstractProvider} from "./AbstractProvider";
+import {Scheduler} from "@typexs/base/libs/schedule/Scheduler";
 
 
 const __ALL__ = '_all_';
 
 export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
+
+  static NAME: string = ProviderManager.name;
 
   options: IProviderOptions = {};
 
@@ -54,10 +59,11 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     await EventBus.register(this);
 
     this.storage = storageRef;
+
     if (override) {
       this.options = _.clone(options)
     } else {
-      this.options = _.merge(DEFAULT_PROVIDER_OPTIONS, options)
+      this.options = _.defaults(options, DEFAULT_PROVIDER_OPTIONS);
     }
 
     this.options.parallel = this.options.parallel || 5;
@@ -74,37 +80,32 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
       }
     }
 
-    let clazzes = ClassLoader.importClassesFromAny(this.options.providers);
-
-    let self = this;
-    let clazzFn = clazzes.map(clazz => {
-      return Promise.resolve(clazz).then(_clazz => {
-        let tmp = self.newProviderFromObject(_clazz);
-        if (tmp.variants) {
-          tmp.variants.forEach(_variant => {
-            let proxyDef: IProviderDef = {
-              name: tmp.name,
-              url: tmp.url,
-              clazz: clazz,
-              ..._variant
-            };
-            self.providers.push(proxyDef)
-          })
-        } else {
-          let proxyDef: IProviderDef = {
-            name: tmp.name,
-            url: tmp.url,
-            type: 'all',
-            clazz: clazz
-          };
-          self.providers.push(proxyDef)
-        }
-      })
-    });
-
-    await Promise.all(clazzFn);
     await this.initJobs();
     this.checkSchedule()
+  }
+
+
+  addProviderClass(clazz: ClassType<AbstractProvider>) {
+    let tmp = this.newProviderFromObject(clazz);
+    if (tmp.variants) {
+      tmp.variants.forEach(_variant => {
+        let proxyDef: IProviderDef = {
+          name: tmp.name,
+          url: tmp.url,
+          clazz: clazz,
+          ..._variant
+        };
+        this.providers.push(proxyDef)
+      })
+    } else {
+      let proxyDef: IProviderDef = {
+        name: tmp.name,
+        url: tmp.url,
+        type: 'all',
+        clazz: clazz
+      };
+      this.providers.push(proxyDef)
+    }
   }
 
 
@@ -146,7 +147,6 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
   @subscribe(ProviderRunEvent)
   run(c: ProviderRunEvent): void {
     if (c.runAll()) {
-
       for (let v of this.providers) {
         Log.info(`provider manager: recheck provider ${v.name}:${v.type}`);
         this.queue.push({name: v.name, type: v.type})
@@ -275,7 +275,8 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
 
   private runScheduled() {
-    EventBus.post(new ProviderRunEvent([])).catch(e => {});
+    EventBus.post(new ProviderRunEvent([])).catch(e => {
+    });
     clearTimeout(this.timer);
     this.checkSchedule();
   }
@@ -291,7 +292,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     for (let value of this.providers) {
       let _value: boolean = true;
 
-      Object.keys(query).forEach(k => {
+      _.keys(query).forEach(k => {
         if (value[k] && query[k] && (value[k].localeCompare(query[k]) == 0 || value[k] === __ALL__)) {
           _value = _value && true;
         } else {
