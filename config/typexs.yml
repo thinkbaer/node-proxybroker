@@ -7,48 +7,45 @@ logging:
   level: debug
   transports:
   - console: {}
-  - dailyrotatefile:
-      filename: /data/log/out.log
-      datePattern: yyyy-MM-dd.
-      prepend: true
-      level: debug
+
 
 storage:
   default:
     type: sqlite
     database: /data/database.db
-    synchronize: tre
+    synchronize: true
 
 
-rotator:
-
-
-validator:
-  parallel: 100
-  schedule:
-    enable: true
-  judge:
-    selftest: true
-    remote_lookup: true
-    remote_ip: 127.0.0.1
-    ip: 0.0.0.0
-    request:
-      socket_timeout: 10000
-      connection_timeout: 5000
 
 server:
   proxyserver:
+    type: proxyserver
     enable: true
     timeout: 120000
     # limit of search repeats if proxy failed
     repeatLimit: 10
 
-provider:
-  parallel: 5
-  schedule:
-    enable: true
+
+proxybroker:
+
+  validator:
+    parallel: 100
+    schedule:
+      enable: true
+    judge:
+      selftest: true
+      remote_lookup: true
+      remote_ip: 127.0.0.1
+      ip: 0.0.0.0
+      request:
+        socket_timeout: 10000
+        connection_timeout: 5000
+
+  provider:
+    startup: true
+    parallel: 5
+    schedule:
+      enable: true
 
 
-server:
-  enable: true
 
