@@ -1,42 +1,43 @@
-import * as net from 'net'
-import {suite, test, timeout} from "mocha-typescript";
-import {expect} from "chai";
-import {Log, NestedException} from "@typexs/base";
-import {ProxyServer} from "../../../src/libs/server/ProxyServer";
-import {Judge} from "../../../src/libs/judge/Judge";
-import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
-import {TestHelper} from "../TestHelper";
-import {ProtocolType} from "../../../src/libs/specific/ProtocolType";
-import {RequestResponseMonitor} from "../../../src/libs/judge/RequestResponseMonitor";
-import {JudgeResults} from "../../../src/libs/judge/JudgeResults";
+import * as net from 'net';
+import {suite, test, timeout} from 'mocha-typescript';
+import {expect} from 'chai';
+import {Log, NestedException} from '@typexs/base';
+import {ProxyServer} from '../../../src/libs/server/ProxyServer';
+import {Judge} from '../../../src/libs/judge/Judge';
+import {IProxyServerOptions} from '../../../src/libs/server/IProxyServerOptions';
+import {TestHelper} from '../TestHelper';
+import {ProtocolType} from '../../../src/libs/specific/ProtocolType';
+import {RequestResponseMonitor} from '../../../src/libs/judge/RequestResponseMonitor';
+import {JudgeResults} from '../../../src/libs/judge/JudgeResults';
+import {HttpFactory} from 'commons-http';
 
-const JUDGE_LOCAL_HOST: string = 'judge.local';
-const PROXY_LOCAL_HOST: string = 'proxy.local';
+const JUDGE_LOCAL_HOST = 'judge.local';
+const PROXY_LOCAL_HOST = 'proxy.local';
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-@suite("judge/validations") @timeout(10000)
+@suite('judge/validations') @timeout(10000)
 class JV {
 
   static server_wrapper: net.Server = null;
 
-  static proxy_wrapper_port: number = 3456;
+  static proxy_wrapper_port = 3456;
 
-  static http_proxy_port: number = 5008;
+  static http_proxy_port = 5008;
   static http_proxy_ip: string = PROXY_LOCAL_HOST;
   static http_proxy_server: ProxyServer = null;
 
-  static https_proxy_port: number = 6009;
+  static https_proxy_port = 6009;
   static https_proxy_ip: string = PROXY_LOCAL_HOST;
   static https_proxy_server: ProxyServer = null;
 
   static judge: Judge = null;
 
   static async before() {
-
-    //Log.options({enable: JV._debug, level:'debug'});
+    await HttpFactory.load();
+    // Log.options({enable: JV._debug, level:'debug'});
     Log.options({enable: false, level: 'debug'});
-    let proxy_options: IProxyServerOptions = <IProxyServerOptions>{
+    const proxy_options: IProxyServerOptions = <IProxyServerOptions>{
       // url: 'http://' + JV.http_proxy_ip + ':' + JV.http_proxy_port,
       protocol: 'http',
       ip: JV.http_proxy_ip,
@@ -47,7 +48,7 @@ class JV {
     JV.http_proxy_server = new ProxyServer();
     JV.http_proxy_server.initialize(proxy_options);
 
-    let proxy_options2: IProxyServerOptions = <IProxyServerOptions>{
+    const proxy_options2: IProxyServerOptions = <IProxyServerOptions>{
 //            url: 'https://' + JV.https_proxy_ip + ':' + JV.https_proxy_port,
       protocol: 'https',
       ip: JV.https_proxy_ip,
@@ -60,15 +61,15 @@ class JV {
     JV.https_proxy_server = new ProxyServer();
     JV.https_proxy_server.initialize(proxy_options2);
 
-    let opts = {
+    const opts = {
       selftest: false,
       remote_lookup: false,
       remote_ip: JUDGE_LOCAL_HOST,
       ip: JUDGE_LOCAL_HOST,
       http_port: 8080,
       https_port: 8181,
-      //remote_url: 'http://' + JUDGE_LOCAL_HOST + ':8080',
-      //judge_url: 'http://' + JUDGE_LOCAL_HOST + ':8080',
+      // remote_url: 'http://' + JUDGE_LOCAL_HOST + ':8080',
+      // judge_url: 'http://' + JUDGE_LOCAL_HOST + ':8080',
       request: {
         socket_timeout: 500,
         local_ip: '127.0.0.1'
@@ -87,8 +88,8 @@ class JV {
     JV.server_wrapper = net.createServer(function (conn: net.Socket) {
       conn.once('data', function (buf: Buffer) {
         // A TLS handshake record starts with byte 22.
-        let address: number = (buf[0] === 22) ? JV.https_proxy_port : JV.http_proxy_port;
-        let proxy = net.createConnection(address, PROXY_LOCAL_HOST, function () {
+        const address: number = (buf[0] === 22) ? JV.https_proxy_port : JV.http_proxy_port;
+        const proxy = net.createConnection(address, PROXY_LOCAL_HOST, function () {
           proxy.write(buf);
           conn.pipe(proxy).pipe(conn);
         });
@@ -99,7 +100,7 @@ class JV {
     }).listen(JV.proxy_wrapper_port);
 
     await JV.http_proxy_server.start();
-    await JV.https_proxy_server.start()
+    await JV.https_proxy_server.start();
   }
 
 
@@ -112,51 +113,51 @@ class JV {
       await JV.judge.pending();
       await new Promise<void>(function (resolve) {
         JV.server_wrapper.close(function () {
-          resolve()
-        })
+          resolve();
+        });
       });
     } catch (e) {
       Log.error(e);
     }
     JV.http_proxy_server = null;
     JV.https_proxy_server = null;
-    JV.judge = null
+    JV.judge = null;
   }
 
 
   @test
   async 'tunnel https through http proxy'() {
-    let proxy_url_http = 'http://' + JV.http_proxy_ip + ':' + JV.http_proxy_port;
+    const proxy_url_http = 'http://' + JV.http_proxy_ip + ':' + JV.http_proxy_port;
 
-    let judgeReq = JV.judge.createRequest('https', proxy_url_http); //, {local_ip: '127.0.0.1'}
-    let rrm = await judgeReq.performRequest();
-    let log = rrm.logToString();
-    expect(log).to.match(/Judge connected/)
+    const judgeReq = JV.judge.createRequest('https', proxy_url_http); // , {local_ip: '127.0.0.1'}
+    const rrm = await judgeReq.performRequest();
+    const log = rrm.logToString();
+    expect(log).to.match(/Judge connected/);
   }
 
 
   @test
   async 'tunnel https through http proxy (use handle)'() {
-    let judgeReq = await JV.judge.handleRequest(JV.http_proxy_ip, JV.http_proxy_port, ProtocolType.HTTP, ProtocolType.HTTPS);
-    expect(judgeReq.hasError()).to.be.false
+    const judgeReq = await JV.judge.handleRequest(JV.http_proxy_ip, JV.http_proxy_port, ProtocolType.HTTP, ProtocolType.HTTPS);
+    expect(judgeReq.hasError()).to.be.false;
   }
 
   @test
   async 'tunnel http through http proxy (use handle)'() {
-    let judgeReq = await JV.judge.handleRequest(JV.http_proxy_ip, JV.http_proxy_port, ProtocolType.HTTP, ProtocolType.HTTP);
-    expect(judgeReq.hasError()).to.be.false
+    const judgeReq = await JV.judge.handleRequest(JV.http_proxy_ip, JV.http_proxy_port, ProtocolType.HTTP, ProtocolType.HTTP);
+    expect(judgeReq.hasError()).to.be.false;
   }
 
   @test
   async 'tunnel http through https proxy (use handle)'() {
-    let judgeReq = await JV.judge.handleRequest(JV.https_proxy_ip, JV.https_proxy_port, ProtocolType.HTTPS, ProtocolType.HTTP);
-    expect(judgeReq.hasError()).to.be.false
+    const judgeReq = await JV.judge.handleRequest(JV.https_proxy_ip, JV.https_proxy_port, ProtocolType.HTTPS, ProtocolType.HTTP);
+    expect(judgeReq.hasError()).to.be.false;
   }
 
   @test
   async 'tunnel https through https proxy (use handle)'() {
-    let judgeReq = await JV.judge.handleRequest(JV.https_proxy_ip, JV.https_proxy_port, ProtocolType.HTTPS, ProtocolType.HTTPS);
-    expect(judgeReq.hasError()).to.be.false
+    const judgeReq = await JV.judge.handleRequest(JV.https_proxy_ip, JV.https_proxy_port, ProtocolType.HTTPS, ProtocolType.HTTPS);
+    expect(judgeReq.hasError()).to.be.false;
   }
 
   @test.skip()
@@ -166,25 +167,25 @@ class JV {
     Log.enable = true
     EventBus.register(new StdConsole())
     */
-    let proxy_url_https = 'https://' + JV.http_proxy_ip + ':' + JV.http_proxy_port;
-    let judgeReq = JV.judge.createRequest(proxy_url_https, '', {
+    const proxy_url_https = 'https://' + JV.http_proxy_ip + ':' + JV.http_proxy_port;
+    const judgeReq = JV.judge.createRequest(proxy_url_https, '', {
       local_ip: '127.0.0.1',
       socket_timeout: 500,
       connection_timeout: 500
     });
-    let rrm: RequestResponseMonitor = await judgeReq.performRequest();
-    let err = rrm.lastError();
+    const rrm: RequestResponseMonitor = await judgeReq.performRequest();
+    const err = rrm.lastError();
     expect(err instanceof NestedException).to.be.true;
-    //expect(err.code).to.be.eq('SOCKET_TIMEDOUT')
-    expect(err.code).to.be.eq('SOCKET_HANGUP')
+    // expect(err.code).to.be.eq('SOCKET_TIMEDOUT')
+    expect(err.code).to.be.eq('SOCKET_HANGUP');
   }
 
 
   @test
   async validateFailedOnHttpAndHttps() {
-    let results: JudgeResults = await JV.judge.validate(PROXY_LOCAL_HOST, 3130);
+    const results: JudgeResults = await JV.judge.validate(PROXY_LOCAL_HOST, 3130);
 
-    for (let res of results.getVariants()) {
+    for (const res of results.getVariants()) {
       expect(res.hasError()).to.be.true;
     }
   }
@@ -192,12 +193,12 @@ class JV {
 
   @test
   async validateSuccessOnHttpAndFailedOnHttps() {
-    let results: JudgeResults = await JV.judge.validate(PROXY_LOCAL_HOST, JV.http_proxy_port);
+    const results: JudgeResults = await JV.judge.validate(PROXY_LOCAL_HOST, JV.http_proxy_port);
 
-    let http_http = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTP);
-    let http_https = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTPS);
-    let https_http = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
-    let https_https = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
+    const http_http = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTP);
+    const http_https = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTPS);
+    const https_http = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
+    const https_https = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
 
     expect(http_http.hasError()).to.be.false;
     expect(http_https.hasError()).to.be.false;
@@ -212,14 +213,14 @@ class JV {
   @test
   async validateFailedOnHttpAndSuccessOnHttps() {
     // Log.options({enable:true,level:'debug'})
-    let results: JudgeResults = await JV.judge.validate(PROXY_LOCAL_HOST, JV.https_proxy_port/*,{http:true,https:true}*/);
+    const results: JudgeResults = await JV.judge.validate(PROXY_LOCAL_HOST, JV.https_proxy_port/*,{http:true,https:true}*/);
 
     results.getVariants();
 
-    let http_http = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTP);
-    let http_https = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTPS);
-    let https_http = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
-    let https_https = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
+    const http_http = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTP);
+    const http_https = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTPS);
+    const https_http = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
+    const https_https = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
 
     expect(http_http.hasError()).to.be.true;
     expect(http_https.hasError()).to.be.true;
@@ -238,13 +239,13 @@ class JV {
     try {
       results = await JV.judge.validate(PROXY_LOCAL_HOST, JV.proxy_wrapper_port);
     } catch (e) {
-      Log.error(e)
+      Log.error(e);
     }
 
-    let http_http = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTP);
-    let http_https = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTPS);
-    let https_http = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
-    let https_https = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
+    const http_http = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTP);
+    const http_https = results.getVariant(ProtocolType.HTTP, ProtocolType.HTTPS);
+    const https_http = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
+    const https_https = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
 
     expect(http_http.hasError()).to.be.false;
     expect(http_https.hasError()).to.be.false;

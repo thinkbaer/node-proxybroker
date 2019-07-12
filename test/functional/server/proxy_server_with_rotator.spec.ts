@@ -12,7 +12,7 @@ import {ProtocolType} from "../../../src/libs/specific/ProtocolType";
 import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
 import {IpRotate} from "../../../src/entities/IpRotate";
 import {IpRotateLog} from "../../../src/entities/IpRotateLog";
-import {IHttp, HttpGotAdapter,IHttpOptions, isStream,IHttpResponse, IHttpGetOptions, IHttpPromise} from "commons-http";
+import {IHttp, HttpGotAdapter, IHttpOptions, isStream, IHttpResponse, IHttpGetOptions, IHttpPromise, HttpFactory} from 'commons-http';
 
 
 let storage: StorageRef = null;
@@ -49,7 +49,8 @@ class ProxyServerTest {
 
 
   static async before() {
-    http = new HttpGotAdapter();
+    http = HttpFactory.create();
+
     Log.options({enable: false, level: 'debug'});
 
     storage = await TestHelper.getDefaultStorageRef();

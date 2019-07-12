@@ -1,12 +1,12 @@
-import {suite, test} from "mocha-typescript";
-import {expect} from "chai";
-import {Log, StorageRef} from "@typexs/base";
-import {TestHelper} from "../TestHelper";
-import {ProtocolType} from "../../../src/libs/specific/ProtocolType";
-import {IpAddrState} from "../../../src/entities/IpAddrState";
-import {IpAddr} from "../../../src/entities/IpAddr";
-import {ProxyRotator} from "../../../src/libs/proxy/ProxyRotator";
-import {ProxyUsedEvent} from "../../../src/libs/proxy/ProxyUsedEvent";
+import {suite, test} from 'mocha-typescript';
+import {expect} from 'chai';
+import {Log, StorageRef} from '@typexs/base';
+import {TestHelper} from '../TestHelper';
+import {ProtocolType} from '../../../src/libs/specific/ProtocolType';
+import {IpAddrState} from '../../../src/entities/IpAddrState';
+import {IpAddr} from '../../../src/entities/IpAddr';
+import {ProxyRotator} from '../../../src/libs/proxy/ProxyRotator';
+import {ProxyUsedEvent} from '../../../src/libs/proxy/ProxyUsedEvent';
 
 
 let storage: StorageRef = null;
@@ -19,7 +19,7 @@ class ProxyRotatorTest {
     Log.options({enable: false, level: 'debug'});
     storage = await TestHelper.getDefaultStorageRef();
 
-    let c = await storage.connect();
+    const c = await storage.connect();
 
     let ip = new IpAddr();
     ip.ip = '127.0.0.1';
@@ -52,14 +52,14 @@ class ProxyRotatorTest {
 
 
   async after() {
-    await storage.shutdown()
+    await storage.shutdown();
   }
 
 
   @test
   async 'log success'() {
 
-    let e = new ProxyUsedEvent();
+    const e = new ProxyUsedEvent();
     e.statusCode = 201;
     e.duration = 1000;
     e.success = true;
@@ -70,8 +70,8 @@ class ProxyRotatorTest {
     e.hostname = '127.0.0.1';
     e.port = 3128;
 
-    let rotator = new ProxyRotator({}, storage);
-    let rotate = await rotator.log(e);
+    const rotator = new ProxyRotator({}, storage);
+    const rotate = await rotator.log(e);
 
 
     expect(rotate).to.deep.include({
@@ -93,14 +93,14 @@ class ProxyRotatorTest {
       error: null,
       statusCode: 201,
       id: 1, success: true,
-    })
+    });
 
-    //console.log(rotate)
+    // console.log(rotate)
   }
 
   @test
   async 'log error'() {
-    let e = new ProxyUsedEvent();
+    const e = new ProxyUsedEvent();
     e.statusCode = 504;
     e.duration = 1000;
     e.success = false;
@@ -112,8 +112,8 @@ class ProxyRotatorTest {
     e.port = 3128;
     e.error = new Error('Test');
 
-    let rotator = new ProxyRotator({}, storage);
-    let rotate = await rotator.log(e);
+    const rotator = new ProxyRotator({}, storage);
+    const rotate = await rotator.log(e);
 
 
     expect(rotate).to.deep.include({
@@ -135,7 +135,7 @@ class ProxyRotatorTest {
       statusCode: 504,
       id: 1,
       success: false,
-    })
+    });
 
 
   }
@@ -144,11 +144,11 @@ class ProxyRotatorTest {
   async 'rotate'() {
 
 
-    let rotator = new ProxyRotator({}, storage);
-    let next_addr = await rotator.next();
+    const rotator = new ProxyRotator({}, storage);
+    const next_addr = await rotator.next();
     expect(next_addr).to.not.be.empty;
 
-    //console.log(next_addr)
+    // console.log(next_addr)
 
     expect(next_addr).to.deep.include({
       id: 1,
@@ -163,7 +163,7 @@ class ProxyRotatorTest {
       errors_since_at: null,
       count_success: 0,
       success_since_at: null
-    })
+    });
   }
 }
 

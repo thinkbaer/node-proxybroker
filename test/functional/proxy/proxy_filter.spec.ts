@@ -1,14 +1,14 @@
-import {suite, test} from "mocha-typescript";
-import {expect} from "chai";
-import {Log, StorageRef} from "@typexs/base";
-import {EventBus} from "commons-eventbus";
-import subscribe from "commons-eventbus/decorator/subscribe";
-import {TestHelper} from "../TestHelper";
-import {ProxyFilter} from "../../../src/libs/proxy/ProxyFilter";
-import {IpAddr} from "../../../src/entities/IpAddr";
-import {ProxyDataFetched} from "../../../src/libs/proxy/ProxyDataFetched";
-import {ProxyDataValidateEvent} from "../../../src/libs/proxy/ProxyDataValidateEvent";
-import {ProxyDataFetchedEvent} from "../../../src/libs/proxy/ProxyDataFetchedEvent";
+import {suite, test} from 'mocha-typescript';
+import {expect} from 'chai';
+import {Log, StorageRef} from '@typexs/base';
+import {EventBus} from 'commons-eventbus';
+import {subscribe} from 'commons-eventbus/decorator/subscribe';
+import {TestHelper} from '../TestHelper';
+import {ProxyFilter} from '../../../src/libs/proxy/ProxyFilter';
+import {IpAddr} from '../../../src/entities/IpAddr';
+import {ProxyDataFetched} from '../../../src/libs/proxy/ProxyDataFetched';
+import {ProxyDataValidateEvent} from '../../../src/libs/proxy/ProxyDataValidateEvent';
+import {ProxyDataFetchedEvent} from '../../../src/libs/proxy/ProxyDataFetchedEvent';
 
 
 let storage: StorageRef = null;
@@ -17,12 +17,12 @@ let storage: StorageRef = null;
 class ProxyDataSelectorTest {
 
   static before() {
-    Log.options({enable: false})
+    Log.options({enable: false});
   }
 
   async before() {
 
-    storage = await TestHelper.getDefaultStorageRef()
+    storage = await TestHelper.getDefaultStorageRef();
   }
 
   async after() {
@@ -31,7 +31,7 @@ class ProxyDataSelectorTest {
 
   @test
   async 'init'() {
-    let proxy_data_selector = new ProxyFilter(storage);
+    const proxy_data_selector = new ProxyFilter(storage);
     expect(proxy_data_selector).to.exist;
   }
 
@@ -39,8 +39,8 @@ class ProxyDataSelectorTest {
   @test
   async 'verify if validation is necessary'() {
 
-    let proxy_data_selector = new ProxyFilter(storage);
-    let c = await storage.connect();
+    const proxy_data_selector = new ProxyFilter(storage);
+    const c = await storage.connect();
 
     let p = new IpAddr();
     p.ip = '192.0.0.1';
@@ -99,8 +99,8 @@ class ProxyDataSelectorTest {
       }
     }
 
-    let _q: ProxyDataValidateEvent[] = [];
-    let x01 = new X01(function (e: ProxyDataValidateEvent) {
+    const _q: ProxyDataValidateEvent[] = [];
+    const x01 = new X01(function (e: ProxyDataValidateEvent) {
       _q.push(e);
     });
 
@@ -141,18 +141,18 @@ class ProxyDataSelectorTest {
 
   @test
   async 'filter'() {
-    let addr = {ip: '127.0.0.1', port: 3128};
+    const addr = {ip: '127.0.0.1', port: 3128};
 
     class ProxyDataSelectorFilterTest extends ProxyFilter {
       test: Function;
 
       constructor(storage: StorageRef, cb: Function) {
         super(storage);
-        this.test = cb
+        this.test = cb;
       }
 
       async do(workLoad: ProxyDataFetched): Promise<any> {
-        this.test(workLoad)
+        this.test(workLoad);
       }
     }
 

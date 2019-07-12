@@ -1,26 +1,24 @@
-import {suite, test, timeout} from "mocha-typescript";
-import {expect} from "chai";
-import {Config} from "commons-config";
+import {suite, test, timeout} from 'mocha-typescript';
+import {expect} from 'chai';
+import {Config} from 'commons-config';
 
-import {ProtocolType} from "../../src/libs/specific/ProtocolType";
-import {Log} from "@typexs/base";
-import {IProxyServerOptions} from "../../src/libs/server/IProxyServerOptions";
-import {ProxyServer} from "../../src/libs/server/ProxyServer";
-import {ProxyValidateCommand} from '../../src/commands/ProxyValidateCommand';
-
-describe('', () => {
-});
+import {ProtocolType} from '../../../src/libs/specific/ProtocolType';
+import {Log} from '@typexs/base';
+import {IProxyServerOptions} from '../../../src/libs/server/IProxyServerOptions';
+import {ProxyServer} from '../../../src/libs/server/ProxyServer';
+import {ProxyValidateCommand} from '../../../src/commands/ProxyValidateCommand';
+import {HttpFactory} from 'commons-http';
 
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-let stdMocks = require('std-mocks');
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+const stdMocks = require('std-mocks');
 
 const cfg = {
   validator: {
     judge: {
       remote_lookup: false,
       selftest: false,
-      ip: "judge.local",
+      ip: 'judge.local',
       remote_ip: 'judge.local',
       request: {
         local_ip: '127.0.0.1'
@@ -32,16 +30,18 @@ const cfg = {
 @suite('commands/ValidateCommand') @timeout(20000)
 class ValidateCommandTest {
 
-  static before() {
-    Log.options({enable: false, level: 'debug'})
+  static async before() {
+    Log.options({enable: true, level: 'debug'});
+    await HttpFactory.load();
   }
 
-  @test
+
+  @test.skip
   async 'judge file with file'() {
     Config.clear();
     Config.jar().merge(cfg);
 
-    let proxy_options: IProxyServerOptions = <IProxyServerOptions>{
+    const proxy_options: IProxyServerOptions = <IProxyServerOptions>{
       ip: '127.0.0.11',
       port: 3128,
       protocol: 'http',
@@ -49,13 +49,13 @@ class ValidateCommandTest {
       toProxy: false
     };
 
-    let http_proxy_server = new ProxyServer();
+    const http_proxy_server = new ProxyServer();
     http_proxy_server.initialize(proxy_options);
     await http_proxy_server.start();
 
     stdMocks.use();
-    let jfc = new ProxyValidateCommand();
-    let list = await jfc.handler({
+    const proxyValidateCommand = new ProxyValidateCommand();
+    const list = await proxyValidateCommand.handler({
       _resolve: true,
       host_or_file: __dirname + '/../_files/proxylists/list01.csv',
       verbose: false,
@@ -63,24 +63,24 @@ class ValidateCommandTest {
       format: 'json'
     });
     stdMocks.restore();
-    let output = stdMocks.flush();
+    const output = stdMocks.flush();
     await http_proxy_server.stop();
 
 
     expect(output).to.have.keys('stdout', 'stderr');
     expect(output.stdout).has.length(1);
     expect(list).has.length(1);
-    let stdData = JSON.parse(output.stdout[0]);
+    const stdData = JSON.parse(output.stdout[0]);
     expect(stdData[0]).to.deep.eq(JSON.parse(JSON.stringify(list[0].results)));
 
-    let data = list.shift();
+    const data = list.shift();
     expect(data.ip).to.eq('127.0.0.11');
     expect(data.port).to.eq(3128);
 
-    let http_http = data.results.getVariant(ProtocolType.HTTP, ProtocolType.HTTP);
-    let http_https = data.results.getVariant(ProtocolType.HTTP, ProtocolType.HTTPS);
-    let https_http = data.results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
-    let https_https = data.results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
+    const http_http = data.results.getVariant(ProtocolType.HTTP, ProtocolType.HTTP);
+    const http_https = data.results.getVariant(ProtocolType.HTTP, ProtocolType.HTTPS);
+    const https_http = data.results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
+    const https_https = data.results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
 
     expect(http_http.hasError()).to.be.false;
     expect(http_http.level).to.be.eq(3);

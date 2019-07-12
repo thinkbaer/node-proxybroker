@@ -2,25 +2,25 @@
 // process.env.NODE_DEBUG = ' request tunnel node '
 // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-import * as _ from "lodash";
-import {suite, test} from "mocha-typescript";
-import {expect} from "chai";
+import * as _ from 'lodash';
+import {suite, test} from 'mocha-typescript';
+import {expect} from 'chai';
 
-import * as http from 'http'
-import * as https from 'https'
-import {Log} from "@typexs/base";
-import {TestHelper} from "../TestHelper";
-import {Judge} from "../../../src/libs/judge/Judge";
-import {ProxyServer} from "../../../src/libs/server/ProxyServer";
-import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
-import {IJudgeOptions} from "../../../src/libs/judge/IJudgeOptions";
+import * as http from 'http';
+import * as https from 'https';
+import {Log} from '@typexs/base';
+import {TestHelper} from '../TestHelper';
+import {Judge} from '../../../src/libs/judge/Judge';
+import {ProxyServer} from '../../../src/libs/server/ProxyServer';
+import {IProxyServerOptions} from '../../../src/libs/server/IProxyServerOptions';
+import {IJudgeOptions} from '../../../src/libs/judge/IJudgeOptions';
 
 // https://www.proxynova.com/proxy-articles/proxy-anonymity-levels-explained
 
-const JUDGE_LOCAL_HOST: string = 'judge.local';
-const PROXY_LOCAL_HOST: string = 'proxy.local';
+const JUDGE_LOCAL_HOST = 'judge.local';
+const PROXY_LOCAL_HOST = 'proxy.local';
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 /**
  * Test different variations of judge and proxy connections for different transparency levels
@@ -38,22 +38,22 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
  */
 
 
-let debug = false;//true;
+const debug = false; // true;
 
 interface Variation {
-  title: string
+  title: string;
   proxy_options: {
     level: number
     key_file?: string
     cert_file?: string
-  },
-  debug: boolean
+  };
+  debug: boolean;
 
 
 }
 
 suite('Judge proxy variations', () => {
-  let variations: Array<Variation> = [
+  const variations: Array<Variation> = [
     {
       title: 'Client <-> HTTP Proxy L3 <-> HTTP(S) Judge',
       proxy_options: {level: 3},
@@ -124,8 +124,8 @@ suite('Judge proxy variations', () => {
         Log.options({enable: data.debug, level: 'debug'});
 
 
-        let proxy_options:IProxyServerOptions = <IProxyServerOptions>_.assign({},{
-          //url: this.proxy_protocol + '://' + this.proxy_ip + ':' + this.proxy_port,
+        const proxy_options: IProxyServerOptions = <IProxyServerOptions>_.assign({}, {
+          // url: this.proxy_protocol + '://' + this.proxy_ip + ':' + this.proxy_port,
           port: this.proxy_port,
           protocol: this.proxy_protocol,
           ip: this.proxy_ip,
@@ -134,7 +134,7 @@ suite('Judge proxy variations', () => {
         this.proxy_server = new ProxyServer();
         this.proxy_server.initialize(proxy_options);
 
-        let opts: IJudgeOptions = {
+        const opts: IJudgeOptions = {
           selftest: false,
           remote_lookup: false,
           remote_ip: JUDGE_LOCAL_HOST,
@@ -143,7 +143,7 @@ suite('Judge proxy variations', () => {
           https_port: 8181,
           request: {
             local_ip: '127.0.0.1',
-            //timeout: 1000
+            // timeout: 1000
           }
         };
 
@@ -155,7 +155,7 @@ suite('Judge proxy variations', () => {
         erg = await this.judge.wakeup();
         expect(erg).to.equal(true);
 
-        await this.proxy_server.start()
+        await this.proxy_server.start();
       }
 
 
@@ -164,65 +164,65 @@ suite('Judge proxy variations', () => {
         await this.judge.pending();
         Log.enable = true;
         this.proxy_server = null;
-        this.judge = null
+        this.judge = null;
       }
 
 
       @test
       async http_request() {
 
-        let proxy_url = Clazz.proxy_server.url();
-        let judgeReq = Clazz.judge.createRequest('http', proxy_url);
+        const proxy_url = Clazz.proxy_server.url();
+        const judgeReq = Clazz.judge.createRequest('http', proxy_url);
         judgeReq._debug = data.debug;
 
         try {
-          let rrm = await judgeReq.performRequest();
-          let log = rrm.logToString();
+          const rrm = await judgeReq.performRequest();
+          const log = rrm.logToString();
 
           if (judgeReq._debug) {
             console.log('-------->');
             console.log(log);
-            console.log('<--------')
+            console.log('<--------');
           }
 
           expect(judgeReq.level).to.be.equal(data.proxy_options.level);
           expect(log).to.match(/Judge connected/);
-          expect(log).to.match(new RegExp('Proxy is L' + data.proxy_options.level))
+          expect(log).to.match(new RegExp('Proxy is L' + data.proxy_options.level));
         } catch (err) {
           console.error(err);
-          throw err
+          throw err;
         }
       }
 
       @test
       async https_request() {
 
-        let proxy_url = Clazz.proxy_server.url();
-        let judgeReq = Clazz.judge.createRequest('https', proxy_url);
+        const proxy_url = Clazz.proxy_server.url();
+        const judgeReq = Clazz.judge.createRequest('https', proxy_url);
         judgeReq._debug = data.debug;
 
         try {
-          let rrm = await judgeReq.performRequest();
-          let log = rrm.logToString();
+          const rrm = await judgeReq.performRequest();
+          const log = rrm.logToString();
 
           if (judgeReq._debug) {
             console.log('-------->');
             console.log(log);
-            console.log('<--------')
+            console.log('<--------');
           }
 
           // everything is level 1
           expect(judgeReq.level).to.be.equal(1);
           expect(log).to.match(/Judge connected/);
-          expect(log).to.match(new RegExp('Proxy is L1'))
+          expect(log).to.match(new RegExp('Proxy is L1'));
         } catch (err) {
           console.error(err);
-          throw err
+          throw err;
         }
       }
     }
 
-  })
+  });
 
 });
 

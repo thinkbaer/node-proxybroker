@@ -1,29 +1,34 @@
-import {PlatformUtils} from "@typexs/base";
+import {PlatformUtils} from '@typexs/base';
 import * as child_process from 'child_process';
 import Timer = NodeJS.Timer;
 
 export default class SpawnCLI {
 
-  static timeout: number = 10000;
-  args: string[];
-  stderr: string = '';
-  stdout: string = '';
-  cwd: string = PlatformUtils.pathNormalize(__dirname + '/../..');
-
 
   constructor(...args: string[]) {
-    args.unshift('src/cli.ts');
+    args.unshift('node_modules/.bin/typexs');
     if (!process.env.NYC_PARENT_PID) {
       // if not embedded in nyc the register ts
-      args.unshift('--require', 'ts-node/register');
+      // args.unshift('--require', 'ts-node/register');
     }
     this.args = args;
+  }
+
+  static timeout = 10000;
+  args: string[];
+  stderr = '';
+  stdout = '';
+  cwd: string = PlatformUtils.pathNormalize(__dirname + '/../..');
+
+  static run(...args: string[]): Promise<SpawnCLI> {
+    const spawnCLI = new SpawnCLI(...args);
+    return spawnCLI.exec();
   }
 
 
   exec(): Promise<SpawnCLI> {
     let timer: Timer;
-    let self = this;
+    const self = this;
     let cp: child_process.ChildProcess = null;
     return new Promise((resolve, reject) => {
       cp = child_process.spawn('node', this.args, {
@@ -42,8 +47,8 @@ export default class SpawnCLI {
       cp.on('close', function (code) {
         resolve(self);
       });
-      cp.on("error", function (err) {
-        reject(err)
+      cp.on('error', function (err) {
+        reject(err);
       });
       timer = setTimeout(function () {
         if (cp) {
@@ -60,7 +65,7 @@ export default class SpawnCLI {
         cp = null;
       } catch (e) {
       }
-      return self
+      return self;
     }).catch((err) => {
       clearTimeout(timer);
       try {
@@ -69,11 +74,6 @@ export default class SpawnCLI {
       } catch (e) {
       }
       return err;
-    })
-  }
-
-  static run(...args: string[]): Promise<SpawnCLI> {
-    let spawnCLI = new SpawnCLI(...args);
-    return spawnCLI.exec();
+    });
   }
 }

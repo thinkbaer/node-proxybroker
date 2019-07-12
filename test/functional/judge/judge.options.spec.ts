@@ -1,10 +1,10 @@
-import {suite, test} from "mocha-typescript";
-import * as _ from "lodash";
-import {expect} from "chai";
-import {Log} from "@typexs/base";
-import {DEFAULT_JUDGE_OPTIONS} from "../../../src/libs/judge/IJudgeOptions";
-import {Judge} from "../../../src/libs/judge/Judge";
-import {TestHelper} from "../TestHelper";
+import {suite, test} from 'mocha-typescript';
+import * as _ from 'lodash';
+import {expect} from 'chai';
+import {Log} from '@typexs/base';
+import {DEFAULT_JUDGE_OPTIONS} from '../../../src/libs/judge/IJudgeOptions';
+import {Judge} from '../../../src/libs/judge/Judge';
+import {TestHelper} from '../TestHelper';
 
 
 /**
@@ -21,35 +21,35 @@ class JudgeTestSuite1 {
 
   @test
   'default settings'() {
-    let judge = new Judge();
-    let options = judge.options;
+    const judge = new Judge();
+    const options = judge.options;
 
     expect(judge.ip).to.equal('0.0.0.0');
     expect(options.http_port).to.equal(8080);
     expect(options.https_port).to.equal(8181);
     expect(options.selftest).to.equal(true);
-    expect(options.remote_lookup).to.equal(true)
+    expect(options.remote_lookup).to.equal(true);
   }
 
   @test
   'change address settings'() {
-    let options = _.clone(DEFAULT_JUDGE_OPTIONS);
+    const options = _.clone(DEFAULT_JUDGE_OPTIONS);
     options.ip = 'judge.local';
     options.http_port = 8081;
-    let judge = new Judge(options);
+    const judge = new Judge(options);
     expect(judge.url('http')).to.equal('http://judge.local:8081');
-    expect(judge.url('https')).to.equal('https://judge.local:8181')
+    expect(judge.url('https')).to.equal('https://judge.local:8181');
   }
 
   @test
   'change remote address settings'() {
-    let options = _.clone(DEFAULT_JUDGE_OPTIONS);
+    const options = _.clone(DEFAULT_JUDGE_OPTIONS);
     options.remote_ip = 'judge.local';
     options.http_port = 8081;
     // options.remote_url = 'http://judge.local:8081'
-    let judge = new Judge(options);
+    const judge = new Judge(options);
     // expect(judge.judge_url_f).to.equal('http://judge.local:8081/')
-    expect(judge.remote_url('http')).to.equal('http://judge.local:8081')
+    expect(judge.remote_url('http')).to.equal('http://judge.local:8081');
   }
 
   @test
@@ -58,7 +58,7 @@ class JudgeTestSuite1 {
     options.http_port = 8081;
     options.ssl.key_file = TestHelper.sslPath('judge/server-key.pem');
     options.ssl.cert_file = TestHelper.sslPath('judge/server-cert.pem');
-    let judge = new Judge(options);
+    const judge = new Judge(options);
 
     options = judge.options;
 
@@ -67,7 +67,7 @@ class JudgeTestSuite1 {
     expect(options.ssl.key).to.be.not.empty;
     expect(options.ssl.cert).to.be.not.empty;
     expect(options.selftest).to.equal(true);
-    expect(options.remote_lookup).to.equal(true)
+    expect(options.remote_lookup).to.equal(true);
   }
 
 }

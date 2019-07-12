@@ -1,20 +1,20 @@
-import {suite, test} from "mocha-typescript";
-import {expect} from "chai";
+import {suite, test} from 'mocha-typescript';
+import {expect} from 'chai';
 
 
-import {Config} from "commons-config";
+import {Config} from 'commons-config';
 
 
-import {DEFAULT_STORAGE_OPTIONS} from "@typexs/base";
-import {IProviderOptions} from "../../../src/libs/provider/IProviderOptions";
+import {DEFAULT_STORAGE_OPTIONS} from '@typexs/base';
+import {IProviderOptions} from '../../../src/libs/provider/IProviderOptions';
 
 const K_WORKDIR = 'workdir';
 
 /**
  * TODO
  */
-@suite('functional/integration/'+__filename)
-class Commons_configSpec {
+@suite('functional/integration/commons_config')
+class CommonsConfigSpec {
 
 
   @test
@@ -22,14 +22,14 @@ class Commons_configSpec {
     Config['$self'] = null;
     Config.options();
     Config.jar().merge({
-      workdir: "/tmp",
+      workdir: '/tmp',
       storage: DEFAULT_STORAGE_OPTIONS
     });
 
     // console.log(inspect(Config.jarsData))
     expect(Config.get(K_WORKDIR)).to.exist;
     expect(Config.get('storage')).to.exist;
-    expect(Config.get(K_WORKDIR)).to.eq("/tmp")
+    expect(Config.get(K_WORKDIR)).to.eq('/tmp');
 
   }
 
@@ -50,7 +50,7 @@ class Commons_configSpec {
         }
       }]
     });
-    expect(Config.get(K_WORKDIR)).to.eq("/tmp")
+    expect(Config.get(K_WORKDIR)).to.eq('/tmp');
   }
 
   /**
@@ -67,8 +67,9 @@ class Commons_configSpec {
         file: '${argv.configfile}',
       }]
     });
-    expect(Config.get(K_WORKDIR)).to.eq("/tmp")
+    expect(Config.get(K_WORKDIR)).to.eq('/tmp');
   }
+
 
   /**
    * Load from file handing over by command line args
@@ -78,7 +79,7 @@ class Commons_configSpec {
     // Mock command line arg
     process.argv.push('--configfile', './files/config_non.json');
     Config['$self'] = null;
-    let options = Config.options({
+    const options = Config.options({
       configs: [
         {
           type: 'file',
@@ -92,7 +93,7 @@ class Commons_configSpec {
     });
 
     expect(options.configs).to.deep.include({type: 'file', file: './files/config_non.json', state: false});
-    expect(options.configs).to.deep.include({type: 'file', file: './some/file/name.json', state: false})
+    expect(options.configs).to.deep.include({type: 'file', file: './some/file/name.json', state: false});
   }
 
 
@@ -102,8 +103,8 @@ class Commons_configSpec {
   @test
   'Test the parameter for provider options'() {
 
-    let pOptions: IProviderOptions = {
-      //providers: ['/some/dir', '/some/other/dir'],
+    const pOptions: IProviderOptions = {
+      // providers: ['/some/dir', '/some/other/dir'],
       schedule: {
         enable: true
       }
@@ -112,7 +113,7 @@ class Commons_configSpec {
     Config['$self'] = null;
     Config.options();
     Config.jar().merge({provider: pOptions});
-    expect(Config.get('provider')).to.deep.eq(pOptions)
+    expect(Config.get('provider')).to.deep.eq(pOptions);
   }
 
 

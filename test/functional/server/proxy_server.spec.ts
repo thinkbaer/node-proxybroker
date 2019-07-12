@@ -1,16 +1,16 @@
-import {suite, test, timeout} from "mocha-typescript";
+import {suite, test, timeout} from 'mocha-typescript';
 
-import {expect} from "chai";
-import {Log, StorageRef} from "@typexs/base";
-import {ProxyServer} from "../../../src/libs/server/ProxyServer";
-import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
+import {expect} from 'chai';
+import {Log, StorageRef} from '@typexs/base';
+import {ProxyServer} from '../../../src/libs/server/ProxyServer';
+import {IProxyServerOptions} from '../../../src/libs/server/IProxyServerOptions';
 
-import {IHttp, HttpGotAdapter,IHttpOptions, isStream,IHttpResponse, IHttpGetOptions, IHttpPromise} from "commons-http";
+import {HttpFactory, HttpGotAdapter, IHttp, IHttpGetOptions, IHttpResponse} from 'commons-http';
 
-let storage: StorageRef = null;
+const storage: StorageRef = null;
 let server_dest: ProxyServer = null;
 let server_distrib: ProxyServer = null;
-let opts: IHttpGetOptions = {
+const opts: IHttpGetOptions = {
   retry: 0,
   proxy: 'http://localhost:3180',
   headers: {
@@ -26,10 +26,10 @@ opts['proxyHeaderExclusiveList'] = [
   'proxy-select-fallback'
 ];
 
-let http_url = 'http://example.com';
-let http_string = 'This domain is established to be used for illustrative examples in documents.';
-let https_url = 'https://example.com';
-let https_string = http_string;
+const http_url = 'http://example.com';
+const http_string = 'This domain is established to be used for illustrative examples in documents.';
+const https_url = 'https://example.com';
+const https_string = http_string;
 let http: IHttp = null;
 
 @suite('server/ProxyServer') @timeout(20000)
@@ -37,7 +37,8 @@ class ProxyServerTest {
 
 
   async before() {
-    http = new HttpGotAdapter();
+    http = HttpFactory.create();
+
     Log.options({enable: false, level: 'debug'});
     server_dest = new ProxyServer();
     server_dest.initialize(<IProxyServerOptions>{
@@ -58,7 +59,7 @@ class ProxyServerTest {
       toProxy: true,
       target: (header?: any) => {
         Log.debug('headers: ', header);
-        return Promise.resolve({hostname: 'localhost', port: 3128, protocol: 'http'})
+        return Promise.resolve({hostname: 'localhost', port: 3128, protocol: 'http'});
       }
     });
     await server_distrib.start();
@@ -74,14 +75,14 @@ class ProxyServerTest {
 
   @test
   async 'http success'() {
-    let resp1 = <IHttpResponse<any>>await http.get(http_url, opts);
+    const resp1 = <IHttpResponse<any>>await http.get(http_url, opts);
     expect(resp1.body).to.contain(http_string);
   }
 
   @test
   async 'https success'() {
     // Log.options({enable: true, level: 'debug'})
-    let resp1 = <IHttpResponse<any>>await http.get(https_url, opts);
+    const resp1 = <IHttpResponse<any>>await http.get(https_url, opts);
     expect(resp1.body).to.contain(https_string);
   }
 
@@ -90,21 +91,21 @@ class ProxyServerTest {
     // Http request
     let resp1 = null;
     let err = null;
-    Log.debug('http get start')
+    Log.debug('http get start');
     try {
       resp1 = await http.get('http://asd-test-site.org/html', opts);
-      expect(true).to.be.false
+      expect(true).to.be.false;
     } catch (_err) {
       err = _err;
       expect(err).to.exist;
       expect(err.message).to.not.contain('expected true to be false');
-      resp1 = err.response
+      resp1 = err.response;
 
     }
-    Log.debug('http get stop')
+    Log.debug('http get stop');
 
-    let erroredResp = err.gotOptions.agent.erroredResponse;
-    let json = JSON.parse(erroredResp.headers['proxy-broker-error']);
+    const erroredResp = err.gotOptions.agent.erroredResponse;
+    const json = JSON.parse(erroredResp.headers['proxy-broker-error']);
 
     delete json.error._error['message'];
     expect(erroredResp.statusCode).to.be.eq(504);
@@ -112,11 +113,11 @@ class ProxyServerTest {
       _code: 'ADDR_NOT_FOUND',
       _error: {
         code: 'ENOTFOUND',
-        "errno": "ENOTFOUND",
-        "host": "asd-test-site.org",
-        "hostname": "asd-test-site.org",
-        "port": 80,
-        "syscall": "getaddrinfo",
+        'errno': 'ENOTFOUND',
+        'host': 'asd-test-site.org',
+        'hostname': 'asd-test-site.org',
+        'port': 80,
+        'syscall': 'getaddrinfo',
       }
     });
   }
@@ -129,7 +130,7 @@ class ProxyServerTest {
     let err = null;
     try {
       resp1 = await http.get('https://asd-test-site.org/html', opts);
-      expect(true).to.be.false
+      expect(true).to.be.false;
     } catch (_err) {
 
       err = _err;
@@ -140,7 +141,7 @@ class ProxyServerTest {
     }
 
 
-    expect(err.message).to.contain('tunneling socket could not be established, statusCode=504')
+    expect(err.message).to.contain('tunneling socket could not be established, statusCode=504');
 
   }
 

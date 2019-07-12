@@ -1,16 +1,16 @@
-import {suite, test, timeout} from "mocha-typescript";
-import {expect} from "chai";
-import {DateUtils} from "typeorm/util/DateUtils";
-import {Log} from "@typexs/base";
-import {EventBus} from "commons-eventbus";
-import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
-import {IJudgeOptions} from "../../../src/libs/judge/IJudgeOptions";
-import {TestHelper} from "../TestHelper";
-import {IpAddr} from "../../../src/entities/IpAddr";
-import {ProxyServer} from "../../../src/libs/server/ProxyServer";
-import {ProxyValidator} from "../../../src/libs/proxy/ProxyValidator";
+import {suite, test, timeout} from 'mocha-typescript';
+import {expect} from 'chai';
+import {DateUtils} from 'typeorm/util/DateUtils';
+import {Log} from '@typexs/base';
+import {EventBus} from 'commons-eventbus';
+import {IProxyServerOptions} from '../../../src/libs/server/IProxyServerOptions';
+import {IJudgeOptions} from '../../../src/libs/judge/IJudgeOptions';
+import {TestHelper} from '../TestHelper';
+import {IpAddr} from '../../../src/entities/IpAddr';
+import {ProxyServer} from '../../../src/libs/server/ProxyServer';
+import {ProxyValidator} from '../../../src/libs/proxy/ProxyValidator';
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const proxy_options: IProxyServerOptions = <IProxyServerOptions>{
 
@@ -36,13 +36,13 @@ class ProxyValidationControllerTest {
 
   @test
   async 'records selection query'() {
-    let storage =await TestHelper.getDefaultStorageRef();
+    const storage = await TestHelper.getDefaultStorageRef();
 
-    let ip = new IpAddr();
+    const ip = new IpAddr();
     ip.ip = '127.0.0.1';
     ip.port = 3128;
 
-    let c = await storage.connect();
+    const c = await storage.connect();
     await c.manager.save(ip);
     let ips = await c.manager.find(IpAddr);
 
@@ -84,26 +84,26 @@ class ProxyValidationControllerTest {
   @test
   async 'test scheduled task'() {
 
-     //Log.options({enable:true,level:'debug'})
-    let now = new Date();
+     // Log.options({enable:true,level:'debug'})
+    const now = new Date();
 
-    let storage =await TestHelper.getDefaultStorageRef();
+    const storage = await TestHelper.getDefaultStorageRef();
 
-    let ip = new IpAddr();
+    const ip = new IpAddr();
     ip.ip = '127.0.0.1';
     ip.port = 3128;
 
-    let c = await storage.connect();
+    const c = await storage.connect();
     await c.manager.save(ip);
 
 
-    let http_proxy_server = new ProxyServer();
+    const http_proxy_server = new ProxyServer();
     http_proxy_server.initialize(proxy_options);
     await http_proxy_server.start();
 
 
-    let sec = ((new Date()).getSeconds() + 2) % 60;
-    let proxyValidationController = new ProxyValidator({
+    const sec = ((new Date()).getSeconds() + 2) % 60;
+    const proxyValidationController = new ProxyValidator({
       schedule: {enable: true, pattern: sec + ' * * * * *'},
       judge: judge_options
     }, storage);
@@ -121,16 +121,16 @@ class ProxyValidationControllerTest {
 
     await c.close();
 
-    let conn = await storage.connect();
+    const conn = await storage.connect();
 
-    let ip_addr = await conn.manager.findOne(IpAddr);
+    const ip_addr = await conn.manager.findOne(IpAddr);
     // let ip_addr_state = await conn.manager.find(IpAddrState);
 
     await conn.close();
     await storage.shutdown();
 
-    //console.log(ip_addr)
-    //console.log(ip_addr_state)
+    // console.log(ip_addr)
+    // console.log(ip_addr_state)
     expect(ip_addr.last_checked_at.getTime()).to.be.greaterThan(now.getTime());
     expect(ip_addr.count_success).to.be.eq(1);
     expect(ip_addr.protocols_src).to.be.eq(1);
