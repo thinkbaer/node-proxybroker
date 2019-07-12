@@ -3,19 +3,19 @@
  */
 
 // import * as request from "request-promise-native";
-import * as got from "got";
-import * as cookie from "tough-cookie";
-import * as _ from 'lodash'
-import {AbstractProvider} from "../../libs/provider/AbstractProvider";
-import {IProviderVariant} from "../../libs/provider/IProviderVariant";
-import {IProxyData} from "../../libs/proxy/IProxyData";
-import {Log} from "@typexs/base";
-import {RequestHelper} from "../../libs/http/RequestHelper";
+import * as got from 'got';
+import * as cookie from 'tough-cookie';
+import * as _ from 'lodash';
+import {AbstractProvider} from '../../libs/provider/AbstractProvider';
+import {IProviderVariant} from '../../libs/provider/IProviderVariant';
+import {IProxyData} from '../../libs/proxy/IProxyData';
+import {Log} from '@typexs/base';
+import {RequestHelper} from '../../libs/http/RequestHelper';
 
 const NAME = 'proxylistende';
 const BASE_URL = 'https://www.proxy-listen.de';
 const PROXY_LIST_DE = BASE_URL + '/Proxy/Proxyliste.html';
-//const ip_regex = /&gt;(\d+\.\d+\.\d+\.\d+)&lt;\/td&gt;&lt;td&gt;(\d+)&lt;/g;
+// const ip_regex = /&gt;(\d+\.\d+\.\d+\.\d+)&lt;\/td&gt;&lt;td&gt;(\d+)&lt;/g;
 
 const MATCH_IP_PORT_REGEX = />(\d+\.\d+\.\d+\.\d+)[^\d]+(\d+)/g;
 
@@ -40,18 +40,18 @@ export class ProxyListenDe extends AbstractProvider {
 
 
   async get(variant?: IProviderVariant): Promise<IProxyData[]> {
-    let self = this;
+    const self = this;
     if (variant) {
-      this.selectVariant(variant)
+      this.selectVariant(variant);
     }
 
     Log.info('ProxyListenDe: (' + this.url + ') selected variant is ' + this.variant.type);
 
 
-    let cookies = new cookie.CookieJar();
-    //let form_data = new FormData();
+    const cookies = new cookie.CookieJar();
+    // let form_data = new FormData();
 
-    let data = {
+    const data = {
       filter_port: '',
       filter_http_gateway: '',
       filter_http_anon: '',
@@ -68,32 +68,32 @@ export class ProxyListenDe extends AbstractProvider {
           form_data.append(k, data[k]);
         })
     */
-    //let c1 = request.cookie('cookieconsent_dismissed=yes');
-    await RequestHelper.setCookie(cookies,'cookieconsent_dismissed=yes', BASE_URL);
-    //let c2 = request.cookie('_gat=1');
-    await RequestHelper.setCookie(cookies,'_gat=1', BASE_URL);
+    // let c1 = request.cookie('cookieconsent_dismissed=yes');
+    await RequestHelper.setCookie(cookies, 'cookieconsent_dismissed=yes', BASE_URL);
+    // let c2 = request.cookie('_gat=1');
+    await RequestHelper.setCookie(cookies, '_gat=1', BASE_URL);
 
     let resp = await got.get(PROXY_LIST_DE, {cookieJar: cookies, rejectUnauthorized: false});
 
     let html = resp.body;
 
-    let matched = html.match(/(<input[^>]+type=("|')hidden("|')[^>]*>)/g);
-    let hidden_input = matched.shift();
-    let name = hidden_input.match(/name=("|')([^("|')]+)("|')/)[2];
-    let value = hidden_input.match(/value=("|')([^("|')]+)("|')/)[2];
-    //form_data.append(name, value);
+    const matched = html.match(/(<input[^>]+type=("|')hidden("|')[^>]*>)/g);
+    const hidden_input = matched.shift();
+    const name = hidden_input.match(/name=("|')([^("|')]+)("|')/)[2];
+    const value = hidden_input.match(/value=("|')([^("|')]+)("|')/)[2];
+    // form_data.append(name, value);
     data[name] = value;
 
     let inc = 0;
     let skip = false;
     while (inc < 5 && !skip) {
 
-      let size_before = self.proxies.length;
-      let _form_data = _.clone(data);
+      const size_before = self.proxies.length;
+      const _form_data = _.clone(data);
 
       if (inc > 0) {
         delete _form_data['submit'];
-        _form_data['next'] = 'nächste Seite'
+        _form_data['next'] = 'nächste Seite';
       }
 
       resp = await got.post(PROXY_LIST_DE, {
@@ -108,22 +108,22 @@ export class ProxyListenDe extends AbstractProvider {
 
       let matcher = null;
       while ((matcher = MATCH_IP_PORT_REGEX.exec(html)) !== null) {
-        let proxyData: IProxyData = {
+        const proxyData: IProxyData = {
           ip: matcher[1],
-          port: parseInt(matcher[2])
+          port: parseInt(matcher[2], 0)
         };
-        self.push(proxyData)
+        self.push(proxyData);
       }
 
-      let size_after = self.proxies.length;
+      const size_after = self.proxies.length;
       skip = size_before === size_after;
 
-      Log.debug('ProxyListenDe: variant=' + this.variant.type + ' count=' + size_after + ' skipping=' + skip + ' round=' + inc)
+      Log.debug('ProxyListenDe: variant=' + this.variant.type + ' count=' + size_after + ' skipping=' + skip + ' round=' + inc);
 
     }
     Log.info('ProxyListenDe: variant=' + this.variant.type + ' finished');
 
-    return self.proxies
+    return self.proxies;
   }
 
 }

@@ -1,7 +1,7 @@
 import {DEFAULT_ROTATOR_OPTIONS, IProxyRotatorOptions} from "./IProxyRotatorOptions";
 import {ProxyUsedEvent} from "./ProxyUsedEvent";
 import * as _ from 'lodash'
-import subscribe from "commons-eventbus/decorator/subscribe";
+import {subscribe} from "commons-eventbus/decorator/subscribe";
 import {Log, StorageRef} from "@typexs/base";
 import {IpRotate} from "../../entities/IpRotate";
 import {IpAddr} from "../../entities/IpAddr";

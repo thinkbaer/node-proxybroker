@@ -1,19 +1,19 @@
-import * as _ from 'lodash'
-import {IProxyData} from "../libs/proxy/IProxyData";
-import {ProviderManager} from "../libs/provider/ProviderManager";
-import {C_STORAGE_DEFAULT, Inject, StorageRef, ICommand, TodoException, Config, TYPEXS_NAME, Log} from "@typexs/base";
-import {IProviderOptions} from "../libs/provider/IProviderOptions";
-import {C_SERVER} from "@typexs/server";
-import {IProviderVariant} from "../libs/provider/IProviderVariant";
+import * as _ from 'lodash';
+import {IProxyData} from '../libs/proxy/IProxyData';
+import {ProviderManager} from '../libs/provider/ProviderManager';
+import {C_STORAGE_DEFAULT, Config, ICommand, Inject, Log, StorageRef, TodoException, TYPEXS_NAME} from '@typexs/base';
+import {IProviderOptions} from '../libs/provider/IProviderOptions';
+import {C_SERVER} from '@typexs/server';
+import {IProviderVariant} from '../libs/provider/IProviderVariant';
 
 
 export class ProxyFetchCommand implements ICommand {
 
-  command = "proxy-fetch [provider] [variant]";
+  command = 'proxy-fetch [provider] [variant]';
 
-  aliases = "prf";
+  aliases = 'prf';
 
-  describe = "Retrieve proxies from a <provider> and optional [variant].";
+  describe = 'Retrieve proxies from a <provider> and optional [variant].';
 
   @Inject(C_STORAGE_DEFAULT)
   storageRef: StorageRef;
@@ -35,10 +35,10 @@ export class ProxyFetchCommand implements ICommand {
     return yargs
       .option('format', {
         alias: 'f',
-        describe: "Set outputformat (default: json).",
+        describe: 'Set outputformat (default: json).',
         'default': 'json',
         demand: true
-      })
+      });
   }
 
 
@@ -46,14 +46,13 @@ export class ProxyFetchCommand implements ICommand {
 
     let provider = null;
     let variant = null;
-    let variant_found = null;
     let p: IProxyData[] = null;
     let variants: IProviderVariant[] = [];
 
-    let find: any = {};
+    const find: any = {};
     if (argv.provider) {
       provider = argv.provider;
-      if (argv.provider != '*') {
+      if (argv.provider !== '*') {
         find.name = argv.provider;
       }
 
@@ -73,8 +72,8 @@ export class ProxyFetchCommand implements ICommand {
       } else {
         console.log('Proxy provider variants:');
         variants.forEach(_x => {
-          console.log('\t- name: ' + _x.name + ';  variant: ' + _x.type + ' on ' + _x.url)
-        })
+          console.log('\t- name: ' + _x.name + ';  variant: ' + _x.type + ' on ' + _x.url);
+        });
       }
       variants = [];
     } else if (!_.isEmpty(provider) && _.isEmpty(variant)) {
@@ -84,16 +83,16 @@ export class ProxyFetchCommand implements ICommand {
     }
 
 
-    //await this.providerManager.queue.pause();
+    // await this.providerManager.queue.pause();
 
     if (variants.length > 0) {
 
       let list: IProxyData[] = [];
 
-      for (let v of variants) {
+      for (const v of variants) {
         console.log('Variant name: ' + v.name + ';  variant: ' + v.type + ' on ' + v.url);
-        let def = this.providerManager.get(v);
-        let worker = await this.providerManager.createWorker(def.variant);
+        const def = this.providerManager.get(v);
+        const worker = await this.providerManager.createWorker(def.variant);
         p = await worker.fetch();
         list = _.concat(list, p);
       }
@@ -105,13 +104,13 @@ export class ProxyFetchCommand implements ICommand {
         case 'csv':
           let rows: string[] = [];
           p.forEach(_rowData => {
-            rows.push([_rowData.ip, _rowData.port].join(':'))
+            rows.push([_rowData.ip, _rowData.port].join(':'));
           });
           rows = _.uniq(rows);
           console.log(rows.join('\n'));
           break;
         default:
-          throw new TodoException()
+          throw new TodoException();
 
       }
     } else {

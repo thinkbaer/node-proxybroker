@@ -7,7 +7,7 @@ import {ProxyData} from "./ProxyData";
 import {ProxyDataValidateEvent} from "./ProxyDataValidateEvent";
 import {ProxyDataFetched} from "./ProxyDataFetched";
 import {AsyncWorkerQueue, DomainUtils, IQueueProcessor, Log, StorageRef} from "@typexs/base";
-import subscribe from "commons-eventbus/decorator/subscribe";
+import {subscribe} from "commons-eventbus/decorator/subscribe";
 import {IpAddr} from "../../entities/IpAddr";
 import {EventBus} from "commons-eventbus";
 

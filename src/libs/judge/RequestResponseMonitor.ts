@@ -1,51 +1,51 @@
-//import * as mRequest from "request-promise-native";
+// import * as mRequest from "request-promise-native";
 
-import * as net from 'net'
-import * as http from 'http'
+import * as net from 'net';
+import * as http from 'http';
 
-import * as mUrl from 'url'
-import {Url, URL} from 'url'
-import * as tls from 'tls'
-import * as events from 'events'
-import * as _ from 'lodash'
-import {ReqResEvent} from "./ReqResEvent";
+import * as mUrl from 'url';
+import {Url, URL} from 'url';
+import * as tls from 'tls';
+import * as events from 'events';
+import * as _ from 'lodash';
+import {ReqResEvent} from './ReqResEvent';
 
-import {IHttpHeaders, Log, NestedException} from "@typexs/base";
-import {MESSAGE} from "../specific/Messages";
-import Exceptions from "@typexs/server/libs/server/Exceptions";
-import {IHttp, HttpGotAdapter,IHttpOptions, IHttpResponse, IHttpGetOptions, IHttpPromise} from "commons-http";
+import {IHttpHeaders, Log, NestedException} from '@typexs/base';
+import {MESSAGE} from '../specific/Messages';
+import Exceptions from '@typexs/server/libs/server/Exceptions';
+import {IHttpOptions, IHttpPromise, IHttpStream} from 'commons-http';
 
 export class RequestResponseMonitor extends events.EventEmitter {
 
   // _debug: boolean = false
-  inc: number = 0;
+  inc = 0;
   id: string = null;
   log_arr: Array<ReqResEvent> = [];
-  length: number = 0;
+  length = 0;
   errors: NestedException[] = [];
   socket: net.Socket = null;
   // static cache:{[key:string]:RequestResponseMonitor} = {}
 
   // request: mRequest.RequestPromise = null;
 
-  httpPromise: IHttpPromise<any>;
+  stream: IHttpStream<any>;
 
   request: http.ClientRequest;
 
   start: Date = new Date();
   end: Date = null;
-  duration: number = Infinity;
-  secured: boolean = false;
-  connected: boolean = false;
-  has_connected: boolean = false;
-  timeouted: boolean = false;
-  aborted: boolean = false;
-  okay: boolean = false;
-  _finished: boolean = false;
+  duration = Infinity;
+  secured = false;
+  connected = false;
+  has_connected = false;
+  timeouted = false;
+  aborted = false;
+  okay = false;
+  _finished = false;
 
-  sendedHead: string = '';
-  receivedHead: string = '';
-  receivedHeadDone: boolean = false;
+  sendedHead = '';
+  receivedHead = '';
+  receivedHeadDone = false;
 
   headers_request: IHttpHeaders = {};
   headers_response: IHttpHeaders = {};
@@ -53,20 +53,20 @@ export class RequestResponseMonitor extends events.EventEmitter {
   url: string;
   httpOptions: IHttpOptions;
 
-  constructor(url: string, options: IHttpOptions, stream: IHttpPromise<any>, id?: string) {
+  constructor(url: string, options: IHttpOptions, stream: IHttpStream<any>, id?: string) {
     super();
     this.url = url;
     this.httpOptions = options;
     // this.debug('Enable monitor for '+id);
-    //request.on('socket', this.onSocket.bind(this));
+    // request.on('socket', this.onSocket.bind(this));
     stream.on('error', this.onError.bind(this));
-    //request.on('drain', this.onDrain.bind(this));
+    // request.on('drain', this.onDrain.bind(this));
     stream.on('request', this.onRequest.bind(this));
 
 
     this.id = id;
     //  this.request = request
-    this.httpPromise = stream;
+    this.stream = stream;
 
   }
 
@@ -92,12 +92,12 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
   get tunnel(): boolean {
     // TODO detect tunneling
-    return false; //<boolean>this.request['tunnel']
+    return false; // <boolean>this.request['tunnel']
   }
 
 
   hasError() {
-    return this.errors.length > 0
+    return this.errors.length > 0;
   }
 
   /**
@@ -132,22 +132,22 @@ export class RequestResponseMonitor extends events.EventEmitter {
       // this.debug('tunneling enabled')
     }
 
-    //request.on('abort', this.onRequestAbort.bind(this));
-    //request.on('aborted', this.onRequestAborted.bind(this));
-    //request.on('connect', this.onRequestConnect.bind(this));
-    //request.on('continue', this.onRequestContinue.bind(this));
+    // request.on('abort', this.onRequestAbort.bind(this));
+    // request.on('aborted', this.onRequestAborted.bind(this));
+    // request.on('connect', this.onRequestConnect.bind(this));
+    // request.on('continue', this.onRequestContinue.bind(this));
     request.once('response', this.onRequestResponse.bind(this));
-    //request.on('upgrade', this.onRequestUpgrade.bind(this));
+    // request.on('upgrade', this.onRequestUpgrade.bind(this));
 
-    for (let k in request['_headers']) {
-      this.headers_request[k] = <string>request.getHeader(k)
+    for (const k of _.keys(request['_headers'])) {
+      this.headers_request[k] = <string>request.getHeader(k);
     }
   }
 
 
   onRequestResponse(response: http.IncomingMessage) {
-    for (let k in response.headers) {
-      this.headers_response[k] = <string>response.headers[k]
+    for (const k of _.keys(response.headers)) {
+      this.headers_response[k] = <string>response.headers[k];
     }
   }
 
@@ -157,9 +157,9 @@ export class RequestResponseMonitor extends events.EventEmitter {
    * @param {Error} error
    */
   onError(error: Error) {
-    //this.debug('onError');
+    // this.debug('onError');
     this.handleError(error);
-    this.finished()
+    this.finished();
   }
 
   /**
@@ -184,21 +184,21 @@ export class RequestResponseMonitor extends events.EventEmitter {
     if (socket instanceof tls.TLSSocket) {
       // this.debug('IS TLSSocket');
       this.secured = true;
-      socket.on('secureConnect', this.onTLSSocketSecureConnect.bind(this))
+      socket.on('secureConnect', this.onTLSSocketSecureConnect.bind(this));
     } else {
 
 
     }
     if (socket['_pendingData']) {
       this.sendedHead = socket['_pendingData'];
-      this.sendedHead = this.sendedHead.split('\r\n\r\n').shift()
+      this.sendedHead = this.sendedHead.split('\r\n\r\n').shift();
     }
 
   }
 
   onSocketClose(had_error: boolean) {
-    //this.debug('RRM->onSocketClose with error: ' + had_error);
-    this.finished()
+    // this.debug('RRM->onSocketClose with error: ' + had_error);
+    this.finished();
   }
 
 
@@ -208,19 +208,19 @@ export class RequestResponseMonitor extends events.EventEmitter {
     this.connected = true;
 
     if (this.proxy) {
-      this.addLog(MESSAGE.OSC01.k, {uri: mUrl.format(this.proxy)})
+      this.addLog(MESSAGE.OSC01.k, {uri: mUrl.format(this.proxy)});
     } else {
-      this.addLog(MESSAGE.OSC02.k, {addr: this.socket.remoteAddress, port: this.socket.remotePort})
+      this.addLog(MESSAGE.OSC02.k, {addr: this.socket.remoteAddress, port: this.socket.remotePort});
     }
 
     if (this.secured) {
-      this.addLog(MESSAGE.OSC03.k)
+      this.addLog(MESSAGE.OSC03.k);
     }
 
     if (!_.isEmpty(this.sendedHead)) {
       this.sendedHead.split('\n').map((x: string) => {
-        this.addClientLog(MESSAGE.HED01.k, {header: x ? x : '_UNKNOWN_'})
-      })
+        this.addClientLog(MESSAGE.HED01.k, {header: x ? x : '_UNKNOWN_'});
+      });
     }
   }
 
@@ -233,37 +233,37 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
     this.length += data.length;
 
-    if (data[0] == 0x16 || data[0] == 0x80 || data[0] == 0x00) {
+    if (data[0] === 0x16 || data[0] === 0x80 || data[0] === 0x00) {
       this.debug('TLS detected ' + data.length);
       return;
     }
 
 
     if (!this.receivedHeadDone) {
-      let tmp: Buffer = Buffer.allocUnsafe(data.length);
+      const tmp: Buffer = Buffer.allocUnsafe(data.length);
       data.copy(tmp);
 
       this.receivedHead += tmp.toString('utf8');
       if (this.receivedHead.match(/\r\n\r\n/)) {
-        this.receivedHead = this.receivedHead.split("\r\n\r\n").shift(); // "\r\n\r\n"
-        this.receivedHeadDone = true
+        this.receivedHead = this.receivedHead.split('\r\n\r\n').shift(); // "\r\n\r\n"
+        this.receivedHeadDone = true;
       }
 
       if (this.receivedHeadDone) {
-        let headers = _.clone(this.receivedHead.split('\n'));
+        const headers = _.clone(this.receivedHead.split('\n'));
         headers.map((x: string) => {
-          this.addServerLog(MESSAGE.HED01.k, {header: x ? x : '_UNKNOWN_'})
+          this.addServerLog(MESSAGE.HED01.k, {header: x ? x : '_UNKNOWN_'});
         });
 
 
-        let http_head = headers.shift();
-        let http_heads = http_head.split(' ', 3);
+        const http_head = headers.shift();
+        const http_heads = http_head.split(' ', 3);
 
         if (http_heads.length === 3) {
           if (/^\d{3}$/.test(http_heads[1])) {
-            let code = parseInt(http_heads[1]);
+            const code = parseInt(http_heads[1], 0);
             if (!(200 <= code && code < 300)) {
-              this.socket.destroy(new Error(http_head))
+              this.socket.destroy(new Error(http_head));
             }
           }
         }
@@ -276,22 +276,22 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
   onSocketEnd() {
     //  this.debug('RRM->onSocketEnd');
-    this.addClientLog(MESSAGE.OSE01.k)
+    this.addClientLog(MESSAGE.OSE01.k);
   }
 
   onSocketError(error: Error) {
-    //this.debug('onSocketError');
-    this.handleError(error)
+    // this.debug('onSocketError');
+    this.handleError(error);
   }
 
   onSocketLookup(error: Error | null, address: string, family: string | null, host: string) {
-    //this.debug('onSocketLookup');
-    this.handleError(error)
+    // this.debug('onSocketLookup');
+    this.handleError(error);
   }
 
   onSocketTimeout() {
     this.stop();
-    this.addLog(MESSAGE.OST01.k, {duration: this.duration})
+    this.addLog(MESSAGE.OST01.k, {duration: this.duration});
   }
 
   /*
@@ -302,52 +302,52 @@ export class RequestResponseMonitor extends events.EventEmitter {
   onTLSSocketSecureConnect() {
 //    this.debug('onTLSSocketSecureConnect');
     this.stop();
-    this.addLog(MESSAGE.OTS01.k, {duration: this.duration})
+    this.addLog(MESSAGE.OTS01.k, {duration: this.duration});
   }
 
 
   stop() {
     this.end = new Date();
-    this.duration = this.end.getTime() - this.start.getTime()
+    this.duration = this.end.getTime() - this.start.getTime();
   }
 
 
   get logs() {
-    return _.clone(this.log_arr)
+    return _.clone(this.log_arr);
   }
 
 
-  logToString(sep: string = "\n"): string {
-    let msg: Array<string> = [];
+  logToString(sep: string = '\n'): string {
+    const msg: Array<string> = [];
 
     this.log_arr.sort(function (a: ReqResEvent, b: ReqResEvent) {
-      return a.nr < b.nr ? (b.nr > a.nr ? -1 : 0) : 1
+      return a.nr < b.nr ? (b.nr > a.nr ? -1 : 0) : 1;
     });
 
     let ignore_emtpy = false;
-    for (let entry of this.log_arr) {
-      let str = (entry.prefix + ' ' + entry.message()).trim();
-      if (str.length == 0 && ignore_emtpy) {
-        continue
-      } else if (str.length == 0) {
-        ignore_emtpy = true
+    for (const entry of this.log_arr) {
+      const str = (entry.prefix + ' ' + entry.message()).trim();
+      if (str.length === 0 && ignore_emtpy) {
+        continue;
+      } else if (str.length === 0) {
+        ignore_emtpy = true;
       } else {
-        ignore_emtpy = false
+        ignore_emtpy = false;
       }
-      msg.push(str)
+      msg.push(str);
     }
 
-    return msg.join(sep)
+    return msg.join(sep);
   }
 
 
   private handleError(_error: Error): boolean {
     if (_error) {
-      let error = Exceptions.handle(_error);
+      const error = Exceptions.handle(_error);
 
       let exists = false;
       for (let i = 0; i < this.errors.length; i++) {
-        if (this.errors[i].message == error.message) {
+        if (this.errors[i].message === error.message) {
           exists = true;
           break;
         }
@@ -358,29 +358,29 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
         if (error.message.match(/ECONNREFUSED/)) {
           this.connected = false;
-          this.addLog(MESSAGE.ERR03.k, null, '#')
+          this.addLog(MESSAGE.ERR03.k, null, '#');
         } else if (error.message.match(/ESOCKETTIMEDOUT/) || error.message.match(/Timeout awaiting/)) {
           this.timeouted = true;
-          this.addLog(MESSAGE.ERR04.k, null, '#')
+          this.addLog(MESSAGE.ERR04.k, null, '#');
         } else if (error.message.match(/socket hang up/)) {
           this.aborted = true;
-          this.addLog(MESSAGE.ERR05.k, null, '#')
+          this.addLog(MESSAGE.ERR05.k, null, '#');
         }
         this.errors.push(error);
 
 
-        return true
+        return true;
       }
     }
-    return false
+    return false;
 
   }
 
   lastError(): NestedException | null {
     if (this.errors.length > 0) {
-      return this.errors[this.errors.length - 1]
+      return this.errors[this.errors.length - 1];
     }
-    return null
+    return null;
   }
 
   finished() {
@@ -388,10 +388,10 @@ export class RequestResponseMonitor extends events.EventEmitter {
     this.stop();
     // this.debug('RRM->finished');
 
-    let last_error = this.lastError();
+    const last_error = this.lastError();
 
     if (!this.errors.length) {
-      this.addLog(MESSAGE.RCL01.k, {length: this.length})
+      this.addLog(MESSAGE.RCL01.k, {length: this.length});
     }
 
 
@@ -402,32 +402,32 @@ export class RequestResponseMonitor extends events.EventEmitter {
     if (last_error) {
       this.addClientLog(MESSAGE.ERR01.k);
       this.errors.forEach((err: Error) => {
-        this.addClientLog(MESSAGE.ERR02.k, {error: err.message})
-      })
+        this.addClientLog(MESSAGE.ERR02.k, {error: err.message});
+      });
     }
 
     if (!last_error) {
-      this.addLog(MESSAGE.RCC01.k, {uri: mUrl.format(this.uri), duration: this.duration})
+      this.addLog(MESSAGE.RCC01.k, {uri: mUrl.format(this.uri), duration: this.duration});
     } else {
-      this.addLog(MESSAGE.CNE01.k)
+      this.addLog(MESSAGE.CNE01.k);
     }
 
     this._finished = true;
-    this.emit('finished', last_error)
+    this.emit('finished', last_error);
   }
 
   promise(): Promise<RequestResponseMonitor> {
 
-    let self = this;
+    const self = this;
     return new Promise(function (resolve, reject) {
       if (!self._finished) {
         self.once('finished', function () {
           resolve(self);
-        })
+        });
       } else {
         resolve(self);
       }
-    })
+    });
 
   }
 
@@ -438,7 +438,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     } else {
       msg.unshift(this.id);
     }
-    Log.debug.apply(Log, msg)
+    Log.debug.apply(Log, msg);
   }
 
   /**
@@ -449,17 +449,17 @@ export class RequestResponseMonitor extends events.EventEmitter {
    */
 
   addClientLog(msgId: string, parameter?: { [k: string]: any }): void {
-    this.addLog(msgId, parameter, '>')
+    this.addLog(msgId, parameter, '>');
   }
 
   addServerLog(msgId: string, parameter?: { [k: string]: any }): void {
-    this.addLog(msgId, parameter, '<')
+    this.addLog(msgId, parameter, '<');
   }
 
   addLog(msgId: string, parameter: { [k: string]: any } = null, s: string = '*'): void {
-    let _inc = this.inc++;
+    const _inc = this.inc++;
 
-    let rre = new ReqResEvent({
+    const rre = new ReqResEvent({
       nr: _inc,
       connId: this.id,
       msgId: msgId,

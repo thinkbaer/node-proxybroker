@@ -1,32 +1,23 @@
-import * as _ from "lodash";
+import * as _ from 'lodash';
 
-import {clearTimeout, setTimeout} from "timers";
+import {clearTimeout, setTimeout} from 'timers';
+import {AsyncWorkerQueue, ConnectionWrapper, IQueueProcessor, Log, StorageRef} from '@typexs/base';
+import {IProviderVariantId} from './IProviderVariantId';
+import {DEFAULT_PROVIDER_OPTIONS, IProviderOptions} from './IProviderOptions';
+import {IProviderDef} from './IProviderDef';
+import {ProviderRunEvent} from './ProviderRunEvent';
+import {subscribe} from 'commons-eventbus/decorator/subscribe';
+import {IProxyData} from '../proxy/IProxyData';
+import {IProvider} from './IProvider';
+import {ProviderWorker} from './ProviderWorker';
+import Exceptions from '@typexs/server/libs/server/Exceptions';
+import {EventBus} from 'commons-eventbus';
+import {Job} from '../../entities/Job';
+import {JobState} from '../../entities/JobState';
+import {ProxyDataFetchedEvent} from '../proxy/ProxyDataFetchedEvent';
+import {ClassType} from 'commons-http/libs/Constants';
+import {AbstractProvider} from './AbstractProvider';
 import Timer = NodeJS.Timer;
-import {
-  ClassLoader,
-  AsyncWorkerQueue,
-  IQueueProcessor,
-  Log,
-  Inject,
-  StorageRef,
-  ConnectionWrapper
-} from "@typexs/base";
-import {IProviderVariantId} from "./IProviderVariantId";
-import {DEFAULT_PROVIDER_OPTIONS, IProviderOptions} from "./IProviderOptions";
-import {IProviderDef} from "./IProviderDef";
-import {ProviderRunEvent} from "./ProviderRunEvent";
-import subscribe from "commons-eventbus/decorator/subscribe";
-import {IProxyData} from "../proxy/IProxyData";
-import {IProvider} from "./IProvider";
-import {ProviderWorker} from "./ProviderWorker";
-import Exceptions from "@typexs/server/libs/server/Exceptions";
-import {EventBus} from "commons-eventbus";
-import {Job} from "../../entities/Job";
-import {JobState} from "../../entities/JobState";
-import {ProxyDataFetchedEvent} from "../proxy/ProxyDataFetchedEvent";
-import {ClassType} from "commons-http/libs/Constants";
-import {AbstractProvider} from "./AbstractProvider";
-import {Scheduler} from "@typexs/base/libs/schedule/Scheduler";
 
 
 const __ALL__ = '_all_';
@@ -37,7 +28,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
   options: IProviderOptions = {};
 
-  //@Inject("storage.default")
+  // @Inject("storage.default")
   storage: StorageRef;
 
   queue: AsyncWorkerQueue<IProviderVariantId>;
@@ -61,7 +52,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     this.storage = storageRef;
 
     if (override) {
-      this.options = _.clone(options)
+      this.options = _.clone(options);
     } else {
       this.options = _.defaults(options, DEFAULT_PROVIDER_OPTIONS);
     }
@@ -74,37 +65,37 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
     if (this.options.schedule && this.options.schedule.enable) {
       try {
-        this.cron = (await import('cron-parser')).parseExpression(this.options.schedule.pattern)
+        this.cron = (await import('cron-parser')).parseExpression(this.options.schedule.pattern);
       } catch (e) {
         Log.error(e);
       }
     }
 
     await this.initJobs();
-    this.checkSchedule()
+    this.checkSchedule();
   }
 
 
   addProviderClass(clazz: ClassType<AbstractProvider>) {
-    let tmp = this.newProviderFromObject(clazz);
+    const tmp = this.newProviderFromObject(clazz);
     if (tmp.variants) {
       tmp.variants.forEach(_variant => {
-        let proxyDef: IProviderDef = {
+        const proxyDef: IProviderDef = {
           name: tmp.name,
           url: tmp.url,
           clazz: clazz,
           ..._variant
         };
-        this.providers.push(proxyDef)
-      })
+        this.providers.push(proxyDef);
+      });
     } else {
-      let proxyDef: IProviderDef = {
+      const proxyDef: IProviderDef = {
         name: tmp.name,
         url: tmp.url,
         type: 'all',
         clazz: clazz
       };
-      this.providers.push(proxyDef)
+      this.providers.push(proxyDef);
     }
   }
 
@@ -116,12 +107,12 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
       conn = await this.storage.connect();
       // set all jobs inactive
-      await conn.manager.createQueryBuilder<Job>(Job, "job").update({active: false}).execute();
-      jobs = await conn.manager.find(Job)
+      await conn.manager.createQueryBuilder<Job>(Job, 'job').update({active: false}).execute();
+      jobs = await conn.manager.find(Job);
     }
 
 
-    for (let provider of this.providers) {
+    for (const provider of this.providers) {
       let job = _.find(jobs, {name: provider.name, type: provider.type});
       if (!job) {
         // create new one
@@ -129,11 +120,11 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
         // TODO map data
         job.name = provider.name;
         job.type = provider.type;
-        job.enabled = true
+        job.enabled = true;
       }
       job.active = true;
       job.data = <any>_.clone(provider);
-      this.jobs.push(job)
+      this.jobs.push(job);
     }
 
     if (conn) {
@@ -141,18 +132,18 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
       await conn.close();
     }
 
-    return Promise.resolve()
+    return Promise.resolve();
   }
 
   @subscribe(ProviderRunEvent)
   run(c: ProviderRunEvent): void {
     if (c.runAll()) {
-      for (let v of this.providers) {
+      for (const v of this.providers) {
         Log.info(`provider manager: recheck provider ${v.name}:${v.type}`);
-        this.queue.push({name: v.name, type: v.type})
+        this.queue.push({name: v.name, type: v.type});
       }
     } else {
-      for (let v of c.variants) {
+      for (const v of c.variants) {
         Log.info(`provider manager: recheck provider ${v.name}:${v.type}`);
         this.queue.push({name: v.name, type: v.type});
       }
@@ -168,21 +159,21 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
       next_schedule: this.next,
       queue: this.queue.status(),
 
-    }
+    };
   }
 
 
   async list(): Promise<any> {
-    let data: any = [];
+    const data: any = [];
 
-    let c = await this.storage.connect();
-    let q = c.manager.createQueryBuilder(JobState, 'state');
+    const c = await this.storage.connect();
+    const q = c.manager.createQueryBuilder(JobState, 'state');
     q.innerJoin(Job, 'job', 'job.last_state_id = state.id');
-    let list = await q.getMany();
+    const list = await q.getMany();
     await c.close();
 
-    for (let value of this.jobs) {
-      let y: any = _.clone(value);
+    for (const value of this.jobs) {
+      const y: any = _.clone(value);
       y.state = _.find(list, {job_id: y.id});
       data.push(y);
     }
@@ -198,20 +189,25 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
    * @returns {null}
    */
   async do(q: IProviderVariantId): Promise<JobState> {
-    let _defs = this.get(q);
+    const _defs = this.get(q);
     let addrs: IProxyData[] = null;
     let jobState = new JobState();
 
-    let job = _defs.job;
-    let variant = _defs.variant;
+    if (_.isUndefined(_defs.job) || _.isUndefined(_defs.variant)) {
+      throw new Error('no job or variant found');
+    }
 
-    jobState.job_id = job.id;
-    jobState.name = job.name;
-    jobState.type = job.type;
-    jobState.start = new Date();
+    const job = _defs.job;
+    const variant = _defs.variant;
+
 
     try {
-      let worker = await this.createWorker(variant);
+      jobState.job_id = job.id;
+      jobState.name = job.name;
+      jobState.type = job.type;
+      jobState.start = new Date();
+
+      const worker = await this.createWorker(variant);
       addrs = await worker.fetch();
       jobState.count = addrs.length;
     } catch (err) {
@@ -225,7 +221,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     jobState.duration = jobState.stop.getTime() - jobState.start.getTime();
 
     if (this.storage) {
-      let c = await this.storage.connect();
+      const c = await this.storage.connect();
       jobState = await c.manager.save(jobState);
       job.last_state_id = jobState.id;
       await c.manager.save(job);
@@ -233,11 +229,11 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     }
 
     if (addrs && addrs.length > 0) {
-      let event = new ProxyDataFetchedEvent(addrs, jobState);
+      const event = new ProxyDataFetchedEvent(addrs, jobState);
       await EventBus.post(event);
     }
 
-    return Promise.resolve(jobState)
+    return jobState;
   }
 
 
@@ -246,15 +242,15 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
       q.type = __ALL__;
     }
 
-    let variant = <IProviderDef>_.find(this.providers, q);
-    let job = <Job>_.find(this.jobs, q);
+    const variant = <IProviderDef>_.find(this.providers, q);
+    const job = <Job>_.find(this.jobs, q);
 
     return {job: job, variant: variant};
   }
 
 
   private async saveJobs(): Promise<void> {
-    let conn = await this.storage.connect();
+    const conn = await this.storage.connect();
     this.jobs = await conn.manager.save(this.jobs);
     await conn.close();
     return Promise.resolve();
@@ -264,9 +260,9 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
   private checkSchedule(): void {
     if (this.options.schedule && this.options.schedule.enable) {
       this.last = this.next;
-      let now = new Date();
-      let next = this.cron.next();
-      let offset = next.getTime() - now.getTime();
+      const now = new Date();
+      const next = this.cron.next();
+      const offset = next.getTime() - now.getTime();
       this.next = new Date(next.getTime());
       Log.info('provider manager: next scheduled reload on ' + this.next);
       this.timer = setTimeout(this.runScheduled.bind(this), offset);
@@ -288,12 +284,12 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
 
   findAll(query: { [_k: string]: string } = {}): IProviderDef[] {
-    let ret: Array<IProviderDef> = [];
-    for (let value of this.providers) {
-      let _value: boolean = true;
+    const ret: Array<IProviderDef> = [];
+    for (const value of this.providers) {
+      let _value = true;
 
       _.keys(query).forEach(k => {
-        if (value[k] && query[k] && (value[k].localeCompare(query[k]) == 0 || value[k] === __ALL__)) {
+        if (value[k] && query[k] && (value[k].localeCompare(query[k]) === 0 || value[k] === __ALL__)) {
           _value = _value && true;
         } else {
           _value = _value && false;
@@ -310,7 +306,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
 
 
   async createWorker(provider: IProviderDef): Promise<ProviderWorker> {
-    let pw = new ProviderWorker(this, provider);
+    const pw = new ProviderWorker(this, provider);
     await pw.initialize();
     return pw;
   }
@@ -325,7 +321,7 @@ export class ProviderManager implements IQueueProcessor<IProviderVariantId> {
     await EventBus.unregister(this);
     clearTimeout(this.timer);
     await this.await();
-    await this.saveJobs()
+    await this.saveJobs();
 
   }
 

@@ -1,23 +1,20 @@
-import * as http from "http";
-import * as mUrl from 'url'
-import * as net from 'net'
+import * as http from 'http';
+import * as mUrl from 'url';
+import * as net from 'net';
+// import * as _request from "request-promise-native";
+import {RequestResponseMonitor} from './RequestResponseMonitor';
 
-//import * as _request from "request-promise-native";
-import {RequestResponseMonitor} from "./RequestResponseMonitor";
-
-import {Judge} from "./Judge";
-import {IJudgeRequestOptions} from "./IJudgeRequestOptions";
-
-
+import {Judge} from './Judge';
+import {IJudgeRequestOptions} from './IJudgeRequestOptions';
+import {LevelDetection} from './LevelDetection';
+import {JudgeResult} from './JudgeResult';
+import {clearTimeout, setTimeout} from 'timers';
+import {IHttpHeaders, Log} from '@typexs/base';
+import Exceptions from '@typexs/server/libs/server/Exceptions';
+import {ProtocolType} from '../specific/ProtocolType';
+import {MESSAGE} from '../specific/Messages';
+import {HttpFactory, IHttpGetOptions, IHttpPromise} from 'commons-http';
 import Timer = NodeJS.Timer;
-import {LevelDetection} from "./LevelDetection";
-import {JudgeResult} from "./JudgeResult";
-import {clearTimeout, setTimeout} from "timers";
-import {IHttpHeaders, Log} from "@typexs/base";
-import Exceptions from "@typexs/server/libs/server/Exceptions";
-import {ProtocolType} from "../specific/ProtocolType";
-import {MESSAGE} from "../specific/Messages";
-import {IHttp, HttpGotAdapter, IHttpResponse, IHttpGetOptions, IHttpPromise} from "commons-http";
 
 
 // interface JudgeConfig
@@ -43,9 +40,9 @@ const IP_REGEX = /\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}/;
 
 export class JudgeRequest {
 
-  _debug: boolean = false;
-  private connect_timeout: number = 10000;
-  private socket_timeout: number = 10000;
+  _debug = false;
+  private connect_timeout = 10000;
+  private socket_timeout = 10000;
 
   readonly id: string;
   url: string;
@@ -62,12 +59,12 @@ export class JudgeRequest {
 
   httpPromise: IHttpPromise<any>;
 
-  //request: _request.RequestPromise = null;
+  // request: _request.RequestPromise = null;
   request: http.ClientRequest;
 
   monitor: RequestResponseMonitor = null;
 
-  judgeConnected: boolean = false;
+  judgeConnected = false;
   judgeDate: Date = null;
 
   headers_judge: IHttpHeaders = {};
@@ -86,7 +83,7 @@ export class JudgeRequest {
     this.connect_timeout = options.connection_timeout || this.connect_timeout;
     this.socket_timeout = options.socket_timeout || this.socket_timeout;
     this.local_ip = options.local_ip || this.judge.ip;
-    this.proxy_ip = mUrl.parse(this.proxy_url).hostname
+    this.proxy_ip = mUrl.parse(this.proxy_url).hostname;
   }
 
 
@@ -110,14 +107,16 @@ export class JudgeRequest {
     this.request.on('socket', this.onSocket.bind(this));
 */
     this.timer = setTimeout(this.onConnectTimeout.bind(this), this.connect_timeout);
-    let opts: IHttpGetOptions = {
+    const opts: IHttpGetOptions & { stream: boolean } = {
       timeout: this.socket_timeout,
       proxy: this.proxy_url,
-      retry: 0
+      retry: 0,
+      stream: true
     };
 
-    let http = new HttpGotAdapter();
-    let httpPromise = http.get(this.url, opts);
+    // tslint:disable-next-line:no-shadowed-variable
+    const http = HttpFactory.create();
+    const httpPromise = http.get(this.url, opts);
     this.httpPromise = httpPromise;
     this.httpPromise.on('request', (request: http.ClientRequest) => {
       this.request = request;
@@ -128,7 +127,7 @@ export class JudgeRequest {
     try {
       this.response = await this.httpPromise;
     } catch (e) {
-      //Log.error(e);
+      // Log.error(e);
       // Log.error(this.id,e)
       // Will be also in ReqResMonitor
     }
@@ -146,7 +145,7 @@ export class JudgeRequest {
     socket.on('error', this.onSocketError.bind(this));
     socket.on('timeout', this.onSocketTimeout.bind(this));
     socket.on('lookup', this.onSocketLookup.bind(this));
-    socket.on('data', this.onSocketData.bind(this))
+    socket.on('data', this.onSocketData.bind(this));
     socket.on('end', this.onSocketEnd.bind(this));
     socket.on('close', this.onSocketClose.bind(this));
   }
@@ -171,28 +170,28 @@ export class JudgeRequest {
   onSocketLookup(error: Error | null, address: string, family: string | null, host: string) {
     Log.debug('JudgeRequest->onSocketLookup ' + this.id + ' ' + this.handleId());
     if (error) {
-      this.handleError('lookup error', error)
+      this.handleError('lookup error', error);
     }
   }
 
   onSocketTimeout() {
     if (!this.judgeConnected) {
-      this.socket.destroy(Exceptions.newSocketTimeout())
+      this.socket.destroy(Exceptions.newSocketTimeout());
     }
   }
 
   onConnectTimeout() {
     this.monitor.stop();
     Log.error('judge connect timeout [' + this.id + '] after=' + this.duration);
-    this.request.emit('error', Exceptions.newConnectTimeout(this.connect_timeout, this.duration))
+    this.request.emit('error', Exceptions.newConnectTimeout(this.connect_timeout, this.duration));
   }
 
   private onRequestError(error: Error) {
-    this.handleError('request error', error)
+    this.handleError('request error', error);
   }
 
   private onSocketError(error: Error) {
-    this.handleError('socket error', error)
+    this.handleError('socket error', error);
   }
 
   private handleError(type: string, error: Error) {
@@ -226,7 +225,7 @@ export class JudgeRequest {
   }
 
   get duration() {
-    return this.monitor.duration
+    return this.monitor.duration;
   }
 
 
@@ -234,7 +233,7 @@ export class JudgeRequest {
     Log.debug('onJudge ' + this.id);
     this.judgeConnected = true;
     this.judgeDate = new Date();
-    //this.monitor.has_connected = true
+    // this.monitor.has_connected = true
 
     this.monitor.stop();
     this.monitor.addLog(MESSAGE.JDG01.k, {
@@ -264,31 +263,31 @@ export class JudgeRequest {
     this.level_detector.headers.forEach(_h => {
       if (_h.hasProxyIp || _h.hasLocalIp) {
         if (_h.isVia) {
-          this.monitor.addLog(MESSAGE.LVL01.k, _h, '*')
+          this.monitor.addLog(MESSAGE.LVL01.k, _h, '*');
         }
         if (_h.isForward) {
-          this.monitor.addLog(MESSAGE.LVL02.k, _h, '*')
+          this.monitor.addLog(MESSAGE.LVL02.k, _h, '*');
         }
 
       } else {
         if (_h.isVia) {
-          this.monitor.addLog(MESSAGE.LVL03.k, _h, '*')
+          this.monitor.addLog(MESSAGE.LVL03.k, _h, '*');
         }
         if (_h.isForward) {
-          this.monitor.addLog(MESSAGE.LVL04.k, _h, '*')
+          this.monitor.addLog(MESSAGE.LVL04.k, _h, '*');
         }
       }
     });
-    return Promise.resolve()
+    return Promise.resolve();
   }
 
   get level(): number {
-    return this.level_detector ? this.level_detector.level : LevelDetection.DEFAULT_LEVEL
+    return this.level_detector ? this.level_detector.level : LevelDetection.DEFAULT_LEVEL;
   }
 
 
   result(from: ProtocolType, to: ProtocolType): JudgeResult {
-    let result = new JudgeResult(from, to);
+    const result = new JudgeResult(from, to);
     result.id = this.id;
     result.start = this.monitor.start;
     result.stop = this.monitor.end;
