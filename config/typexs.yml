@@ -12,7 +12,7 @@ logging:
 storage:
   default:
     type: sqlite
-    database: /data/database.db
+    database: tmp/database.db
     synchronize: true
 
 
@@ -26,20 +26,20 @@ server:
     repeatLimit: 10
 
 
-proxybroker:
+proxy-broker:
 
   validator:
     parallel: 100
-    schedule:
-      enable: true
+#    schedule:
+#      enable: true
     judge:
       selftest: true
       remote_lookup: true
       remote_ip: 127.0.0.1
       ip: 0.0.0.0
       request:
-        socket_timeout: 10000
-        connection_timeout: 5000
+        timeout: 5000
+
 
   provider:
     startup: true
