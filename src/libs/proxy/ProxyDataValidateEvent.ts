@@ -1,5 +1,6 @@
-import {ProxyData} from "./ProxyData";
-import {JobState} from "../../entities/JobState";
+import {ProxyData} from './ProxyData';
+
+// import {JobState} from '../../entities/JobState';
 
 export class ProxyDataValidateEvent {
 
@@ -9,20 +10,20 @@ export class ProxyDataValidateEvent {
 
   // record: IpAddr = null;
 
-  fired: boolean = false;
+  fired = false;
 
-  jobState: JobState = null;
+  // jobState: JobState = null;
 
 
-  constructor(data: ProxyData, jobState?: JobState) {
+  constructor(data: ProxyData /*, jobState?: JobState*/) {
 
-    this.jobState = jobState;
-    if (!this.jobState) {
-      this.jobState = new JobState()
-    }
+    // this.jobState = jobState;
+    // if (!this.jobState) {
+    //   this.jobState = new JobState();
+    // }
 
     // this.isNew = false;
-    this.data = data
+    this.data = data;
   }
 
   /*

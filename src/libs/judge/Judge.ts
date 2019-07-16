@@ -17,6 +17,7 @@ import {CryptUtils, DomainUtils, Log, Progress, TodoException} from '@typexs/bas
 import {MESSAGE, Messages} from '../specific/Messages';
 import {ProtocolType} from '../specific/ProtocolType';
 import {HttpFactory, IHttp, IHttpResponse} from 'commons-http';
+import {K_JUDGE_REQUEST_TIMEOUT} from '../Constants';
 
 
 const FREEGEOIP = 'http://ip-api.com/json/';
@@ -163,7 +164,11 @@ export class Judge implements IServerApi {
   private async getRemoteAccessibleIp(): Promise<any> {
     // If IP is fixed, it should be configurable ...
     try {
-      const response_data: IHttpResponse<any> = <IHttpResponse<any>>(await this.http.get(IPCHECK_URL));
+      const options = {
+        timeout: _.get(this.options, K_JUDGE_REQUEST_TIMEOUT, 10000)
+      };
+      const response_data: IHttpResponse<any> =
+        <IHttpResponse<any>>(await this.http.get(IPCHECK_URL, options));
       const json = JSON.parse(response_data.body);
       this._options.remote_ip = json.ip;
       return json.ip;
@@ -180,10 +185,12 @@ export class Judge implements IServerApi {
     const start = new Date();
 
     const options = {
-      rejectUnauthorized: false
+      rejectUnauthorized: false,
+      timeout: _.get(this.options, K_JUDGE_REQUEST_TIMEOUT, 10000)
     };
 
-    const response: IHttpResponse<any> = <IHttpResponse<any>>(await this.http.get(ping_url, options));
+    const response: IHttpResponse<any> = <IHttpResponse<any>>
+      (await this.http.get(ping_url, options));
     // let res = await _request.get(ping_url);
     const s = JSON.parse(response.body);
 
@@ -340,7 +347,12 @@ export class Judge implements IServerApi {
     const proto_to = (to === ProtocolType.HTTP ? 'http' : 'https');
     const url = proto_from + '://' + ip + ':' + port;
     const http_request = this.createRequest(proto_to, url);
-    await http_request.performRequest();
+    try {
+      await http_request.performRequest();
+    } catch (e) {
+      Log.error('performRequest', e);
+    }
+
     const result = http_request.result(from, to);
     this.removeFromCache(http_request.id);
     http_request.clear();
@@ -367,18 +379,21 @@ export class Judge implements IServerApi {
 
     // Geo resolve
     results.geo = false;
-    const geo_url = FREEGEOIP + ip;
-    try {
-      const response: IHttpResponse<any> = <IHttpResponse<any>>(await this.http.get(geo_url));
-      // let geodata: string = await _request.get(geo_url);
-      if (response.body) {
-        results.geo = true;
-        // TODO use specific geo ip handler
-        results.geoData = JSON.parse(response.body);
-      }
-    } catch (e) {
-      Log.error(e);
-    }
+
+    // const geo_url = FREEGEOIP + ip;
+    // try {
+    //   const response: IHttpResponse<any> = <IHttpResponse<any>>
+    //     (await this.http.get(geo_url,
+    //       {timeout: _.get(this.options, K_JUDGE_REQUEST_TIMEOUT, 10000)}));
+    //   // let geodata: string = await _request.get(geo_url);
+    //   if (response.body) {
+    //     results.geo = true;
+    //     // TODO use specific geo ip handler
+    //     results.geoData = JSON.parse(response.body);
+    //   }
+    // } catch (e) {
+    //   Log.error(e);
+    // }
 
     const promises: Promise<any>[] = [];
 
@@ -389,12 +404,9 @@ export class Judge implements IServerApi {
       }));
 
       // HTTP => HTTPS
-
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTP, ProtocolType.HTTPS).then(result => {
         results.variants.push(result);
       }));
-
-
     }
 
     if (enable.https) {
@@ -404,11 +416,9 @@ export class Judge implements IServerApi {
       }));
 
       // HTTPS => HTTPS
-
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTPS, ProtocolType.HTTPS).then(result => {
         results.variants.push(result);
       }));
-
     }
 
     return Promise.all(promises).then(_res => {
@@ -416,9 +426,11 @@ export class Judge implements IServerApi {
     });
   }
 
+
   private onSecureConnection(socket: tls.TLSSocket) {
     this.onServerConnection(socket);
   }
+
 
   private onServerConnection(socket: net.Socket) {
     const self = this;
@@ -429,7 +441,6 @@ export class Judge implements IServerApi {
         this.debug('Judge->TLS detected ' + data.length);
         return;
       }
-
 
       const tmp: Buffer = Buffer.allocUnsafe(data.length);
       data.copy(tmp);
@@ -474,15 +485,10 @@ export class Judge implements IServerApi {
 
   async wakeup(force: boolean = false): Promise<boolean> {
     const self = this;
-
-    // this.info('judge wakuping ...')
-
     await this.progress.startWhenReady();
-
     if (this.isEnabled()) {
       return Promise.resolve(true);
     }
-
 
     return Promise.all([
       self.httpServer.start(),
@@ -493,38 +499,7 @@ export class Judge implements IServerApi {
         return true;
       })
 
-
       // TODO check if address and port are bound, on expcetion shutdown connection
-      /*
-      return new Promise<boolean>(function (resolve, reject) {
-          try {
-              if (self.runnable || (!self.runnable && force)) {
-                  self.$connections = {};
-
-                  self.httpsServer = https.createServer(self.options.ssl, self.judge.bind(self));
-                  self.setupTLS(self.httpsServer)
-
-                  self.httpServer = http.createServer(self.judge.bind(self))
-                  self.httpServer.on('error', (err) => {
-                      let nErr = Exceptions.handle(err);
-                      if (nErr.code === Exceptions.EADDRINUSE) {
-                          reject(err)
-                      } else {
-                          Log.error('Judge server error:', err)
-                      }
-                  });
-
-                  self.httpServer.listen(parseInt(self._judge_url.port), self._judge_url.hostname, function () {
-                      self.enable();
-                      resolve(true)
-                  })
-              } else {
-                  throw new Error('This will not work!')
-              }
-          } catch (e) {
-              reject(e)
-          }
-      })*/
       .then(async r => {
         await self.progress.ready();
         return r;

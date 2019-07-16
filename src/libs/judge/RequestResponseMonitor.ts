@@ -13,16 +13,21 @@ import {ReqResEvent} from './ReqResEvent';
 import {IHttpHeaders, Log, NestedException} from '@typexs/base';
 import {MESSAGE} from '../specific/Messages';
 import Exceptions from '@typexs/server/libs/server/Exceptions';
-import {IHttpOptions, IHttpPromise, IHttpStream} from 'commons-http';
+import {IHttpOptions, IHttpStream} from 'commons-http';
 
 export class RequestResponseMonitor extends events.EventEmitter {
 
   // _debug: boolean = false
   inc = 0;
+
   id: string = null;
+
   log_arr: Array<ReqResEvent> = [];
+
   length = 0;
+
   errors: NestedException[] = [];
+
   socket: net.Socket = null;
   // static cache:{[key:string]:RequestResponseMonitor} = {}
 
@@ -53,6 +58,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
   url: string;
   httpOptions: IHttpOptions;
 
+
   constructor(url: string, options: IHttpOptions, stream: IHttpStream<any>, id?: string) {
     super();
     this.url = url;
@@ -62,12 +68,8 @@ export class RequestResponseMonitor extends events.EventEmitter {
     stream.on('error', this.onError.bind(this));
     // request.on('drain', this.onDrain.bind(this));
     stream.on('request', this.onRequest.bind(this));
-
-
     this.id = id;
-    //  this.request = request
     this.stream = stream;
-
   }
 
 
@@ -79,8 +81,10 @@ export class RequestResponseMonitor extends events.EventEmitter {
     if (this.socket) {
       this.socket.removeAllListeners();
     }
-
+    this.socket = null;
+    this.request = null;
   }
+
 
   get uri(): Url {
     return new URL(this.url);
@@ -120,13 +124,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     } else {
       this.addLog(MESSAGE.ORQ02.k, {uri: mUrl.format(this.uri)});
     }
-
-    // this.addLog('disable KEEPALIVE')
-    // request.setSocketKeepAlive(false,0)
-
     this.addLog(MESSAGE.ORQ03.k);
-
-
     if (this.proxy && this.tunnel) {
       this.addLog(MESSAGE.ORQ04.k);
       // this.debug('tunneling enabled')
@@ -255,7 +253,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
           this.addServerLog(MESSAGE.HED01.k, {header: x ? x : '_UNKNOWN_'});
         });
 
-
         const http_head = headers.shift();
         const http_heads = http_head.split(' ', 3);
 
@@ -269,8 +266,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
         }
       }
     }
-
-
   }
 
 
@@ -384,21 +379,11 @@ export class RequestResponseMonitor extends events.EventEmitter {
   }
 
   finished() {
-
     this.stop();
-    // this.debug('RRM->finished');
-
     const last_error = this.lastError();
-
     if (!this.errors.length) {
       this.addLog(MESSAGE.RCL01.k, {length: this.length});
     }
-
-
-    // this.socket.removeAllListeners(this)
-
-    // this.socket = null
-
     if (last_error) {
       this.addClientLog(MESSAGE.ERR01.k);
       this.errors.forEach((err: Error) => {
@@ -416,10 +401,10 @@ export class RequestResponseMonitor extends events.EventEmitter {
     this.emit('finished', last_error);
   }
 
-  promise(): Promise<RequestResponseMonitor> {
 
+  promise(): Promise<RequestResponseMonitor> {
     const self = this;
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
       if (!self._finished) {
         self.once('finished', function () {
           resolve(self);
@@ -428,7 +413,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
         resolve(self);
       }
     });
-
   }
 
 

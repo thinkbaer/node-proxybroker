@@ -1,6 +1,5 @@
 // http://www.freeproxylists.com
 
-import * as got from 'got';
 
 import {Log} from '@typexs/base';
 import {AbstractProvider} from '../../libs/provider/AbstractProvider';
@@ -8,6 +7,7 @@ import {IProviderVariant} from '../../libs/provider/IProviderVariant';
 import {ProxyType} from '../../libs/specific/ProxyType';
 import {IProxyData} from '../../libs/proxy/IProxyData';
 import * as cookie from 'tough-cookie';
+import {HttpFactory} from 'commons-http';
 
 const NAME = 'freeproxylists';
 const BASE_URL = 'http://www.freeproxylists.com';
@@ -91,11 +91,11 @@ export class FreeProxyListsCom extends AbstractProvider {
     if (variant) {
       this.selectVariant(variant);
     }
-
+    const http = HttpFactory.create();
     Log.info('FreeProxyListsCom: (' + this.url + ') selected variant is ' + this.variant.type);
     const cookies = new cookie.CookieJar();
     // let cookies = request.jar();
-    const resp = await got.get(this.url + '/' + this.variant.path, {cookieJar: cookies, rejectUnauthorized: false});
+    const resp = await http.get(this.url + '/' + this.variant.path, <any>{cookieJar: cookies, rejectUnauthorized: false});
     let html = resp.body;
 
     const matched_ids: string[] = [];
@@ -106,7 +106,7 @@ export class FreeProxyListsCom extends AbstractProvider {
 
     for (const id of matched_ids) {
       const url = self.url + '/load_' + self.variant.path_load + '_d' + id + '.html';
-      const r = await got.get(url, {cookieJar: cookies});
+      const r = await http.get(url, <any>{cookieJar: cookies});
       html = r.body;
       Log.debug('FreeProxyListsCom: (' + this.url + ') fetch url = ' + url);
       // tslint:disable-next-line:no-shadowed-variable

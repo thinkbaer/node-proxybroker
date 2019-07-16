@@ -1,22 +1,22 @@
-import {DEFAULT_JUDGE_OPTIONS, IJudgeOptions} from "../judge/IJudgeOptions";
+import {DEFAULT_JUDGE_OPTIONS, IJudgeOptions} from '../judge/IJudgeOptions';
 
 
 export interface IProxyValidatiorOptions {
 
-    parallel?:number
+  parallel?: number;
 
-    schedule: {
+  schedule: {
 
-        enable: boolean
+    enable: boolean
 
-        pattern?: string
+    pattern?: string
 
-        time_distance?: number
+    time_distance?: number
 
-        limit?: number
-    }
+    limit?: number
+  };
 
-    judge?: IJudgeOptions
+  judge?: IJudgeOptions;
 }
 
 export const K_VALIDATOR = 'validator';
@@ -25,20 +25,20 @@ const hours6 = 6 * 60 * 60;
 
 export const DEFAULT_VALIDATOR_OPTIONS: IProxyValidatiorOptions = {
 
-    parallel:100,
+  parallel: 100,
 
-    schedule: {
+  schedule: {
 
-        enable: true,
+    enable: true,
 
-        pattern: '*/10 * * * *',
+    pattern: '*/10 * * * *',
 
-        time_distance: hours6,
+    time_distance: hours6,
 
-        limit: 1000
-    },
+    limit: 1000
+  },
 
-    judge: DEFAULT_JUDGE_OPTIONS
+  judge: DEFAULT_JUDGE_OPTIONS
 
 
 };

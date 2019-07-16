@@ -1,3 +1,5 @@
+import './libs/overrides/https_proxy_agent';
+
 import {Container, IActivator} from '@typexs/base';
 import {ServerFactory} from '@typexs/server/libs/server/ServerFactory';
 import {ProxyServer} from './libs/server/ProxyServer';

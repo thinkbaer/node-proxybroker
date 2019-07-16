@@ -4,7 +4,9 @@ import {ProviderManager} from '../libs/provider/ProviderManager';
 import {C_STORAGE_DEFAULT, Config, ICommand, Inject, Log, StorageRef, TodoException, TYPEXS_NAME} from '@typexs/base';
 import {IProviderOptions} from '../libs/provider/IProviderOptions';
 import {C_SERVER} from '@typexs/server';
-import {IProviderVariant} from '../libs/provider/IProviderVariant';
+import {TasksHelper} from '@typexs/base/libs/tasks/TasksHelper';
+import {TN_PROXY_FETCH} from '../libs/Constants';
+import {ITaskRunnerResult} from '@typexs/base/libs/tasks/ITaskRunnerResult';
 
 
 export class ProxyFetchCommand implements ICommand {
@@ -31,6 +33,7 @@ export class ProxyFetchCommand implements ICommand {
     Config.set('proxybroker.provider', <IProviderOptions>{}, TYPEXS_NAME);
   }
 
+
   builder(yargs: any) {
     return yargs
       .option('format', {
@@ -46,8 +49,6 @@ export class ProxyFetchCommand implements ICommand {
 
     let provider = null;
     let variant = null;
-    let p: IProxyData[] = null;
-    let variants: IProviderVariant[] = [];
 
     const find: any = {};
     if (argv.provider) {
@@ -63,47 +64,56 @@ export class ProxyFetchCommand implements ICommand {
 
     }
 
-    variants = this.providerManager.findAll(find);
-
-
+    const variants = this.providerManager.findAll(find);
     if (_.isEmpty(provider) && _.isEmpty(variant)) {
       if (_.isEmpty(variants)) {
-        console.log('No proxy fetcher found.');
+        console.error('No proxy fetcher found.');
       } else {
-        console.log('Proxy provider variants:');
+        console.error('Proxy provider variants:');
         variants.forEach(_x => {
-          console.log('\t- name: ' + _x.name + ';  variant: ' + _x.type + ' on ' + _x.url);
+          console.error('\t- name: ' + _x.name + ';  variant: ' + _x.type + ' on ' + _x.url);
         });
       }
-      variants = [];
     } else if (!_.isEmpty(provider) && _.isEmpty(variant)) {
-      console.log('No variant ' + variant + ' for provider ' + provider + ' found.');
-      console.log('ProxieseCurrent variant list for ' + provider + ':');
+      console.error('No variant ' + variant + ' for provider ' + provider + ' found.');
+      console.error('Proxy current variant list for ' + provider + ':');
 
     }
 
 
-    // await this.providerManager.queue.pause();
-
+    let list: IProxyData[] = [];
     if (variants.length > 0) {
+      // await this.providerManager.queue.pause();
 
-      let list: IProxyData[] = [];
+      const providerNames = _.uniq(variants.map(x => x.name));
+      const tasks = [];
 
-      for (const v of variants) {
-        console.log('Variant name: ' + v.name + ';  variant: ' + v.type + ' on ' + v.url);
-        const def = this.providerManager.get(v);
-        const worker = await this.providerManager.createWorker(def.variant);
-        p = await worker.fetch();
-        list = _.concat(list, p);
+      for (const providerName of providerNames) {
+        const variantNames = variants.filter(x => x.name === providerName).map(x => x.type);
+        tasks.push({name: TN_PROXY_FETCH, incomings: {provider: providerName, variants: variantNames}});
+      }
+
+      const results = <ITaskRunnerResult>await TasksHelper.exec(tasks, {
+        skipTargetCheck: false,
+        isLocal: true,
+        provider: 'placeholder'
+      });
+
+      if (results && results.results.length > 0) {
+        for (const _result of results.results) {
+          list = list.concat(_result.outgoing.proxies);
+        }
+
+        list = _.uniqBy(list, x => JSON.stringify(x));
       }
 
       switch (argv.format) {
         case 'json':
-          console.log(JSON.stringify(p, null, 2));
+          console.log(JSON.stringify(list, null, 2));
           break;
         case 'csv':
           let rows: string[] = [];
-          p.forEach(_rowData => {
+          list.forEach(_rowData => {
             rows.push([_rowData.ip, _rowData.port].join(':'));
           });
           rows = _.uniq(rows);
@@ -111,11 +121,12 @@ export class ProxyFetchCommand implements ICommand {
           break;
         default:
           throw new TodoException();
-
       }
+
     } else {
-      console.log('No data selected.');
+      console.error('No data selected.');
     }
+    return list;
 
 
   }

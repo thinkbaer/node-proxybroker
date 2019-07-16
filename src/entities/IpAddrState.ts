@@ -1,8 +1,18 @@
-import * as _ from  'lodash';
-import {Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn,BeforeInsert,BeforeUpdate,AfterInsert,AfterUpdate,AfterLoad} from "typeorm";
+import * as _ from 'lodash';
+import {
+  AfterInsert,
+  AfterLoad,
+  AfterUpdate,
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  CreateDateColumn,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn
+} from 'typeorm';
 
-import {ProtocolType} from "../libs/specific/ProtocolType";
-import {Entity} from "typeorm/decorator/entity/Entity";
+import {ProtocolType} from '../libs/specific/ProtocolType';
+import {Entity} from 'typeorm/decorator/entity/Entity';
 
 @Entity()
 export class IpAddrState {
@@ -10,7 +20,7 @@ export class IpAddrState {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({type: "boolean", nullable: false})
+  @Column({type: 'boolean', nullable: false})
   enabled: boolean;
 
   @Column({nullable: false})

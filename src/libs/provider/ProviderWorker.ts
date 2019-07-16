@@ -1,8 +1,8 @@
-import {IProviderDef} from "./IProviderDef";
-import {ProviderManager} from "./ProviderManager";
-import {IProxyData} from "../proxy/IProxyData";
-import {AbstractProvider} from "./AbstractProvider";
-import {CryptUtils, IQueueWorkload, Log} from "@typexs/base";
+import {IProviderDef} from './IProviderDef';
+import {ProviderManager} from './ProviderManager';
+import {IProxyData} from '../proxy/IProxyData';
+import {AbstractProvider} from './AbstractProvider';
+import {CryptUtils, IQueueWorkload, Log} from '@typexs/base';
 
 
 export class ProviderWorker implements IQueueWorkload {
@@ -15,7 +15,7 @@ export class ProviderWorker implements IQueueWorkload {
 
   private _localInstance: AbstractProvider = null;
 
-  private _status: number = 0;
+  private _status = 0;
 
 
   constructor(manager: ProviderManager, provider: IProviderDef) {
@@ -32,18 +32,18 @@ export class ProviderWorker implements IQueueWorkload {
   async initialize(): Promise<void> {
     try {
       if (this._localInstance.prepare) {
-        await this._localInstance.prepare
+        await this._localInstance.prepare();
       }
     } catch (err) {
       Log.error(err);
-      throw err
+      throw err;
     }
-    return Promise.resolve()
+    return Promise.resolve();
   }
 
 
   fetch(): Promise<IProxyData[]> {
-    return this._localInstance.get()
+    return this._localInstance.get();
   }
 
 

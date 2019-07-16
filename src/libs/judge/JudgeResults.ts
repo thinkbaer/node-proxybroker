@@ -1,7 +1,7 @@
-import {JudgeResult} from "./JudgeResult";
+import {JudgeResult} from './JudgeResult';
 
-import * as _ from 'lodash'
-import {ProtocolType} from "../specific/ProtocolType";
+import * as _ from 'lodash';
+import {ProtocolType} from '../specific/ProtocolType';
 
 
 export class JudgeResults {
@@ -38,29 +38,29 @@ export class JudgeResults {
 
     variants: JudgeResult[] = [];
 
-    geoData:any = null;
+    geoData: any = null;
 
-    detectProtocol(){
+    detectProtocol() {
 
     }
 
 
-    getVariant(src:ProtocolType, dest:ProtocolType): JudgeResult {
-        return _.find(this.variants,{protocol_from:src,protocol_to:dest})
+    getVariant(src: ProtocolType, dest: ProtocolType): JudgeResult {
+        return _.find(this.variants, {protocol_from: src, protocol_to: dest});
     }
 
     getVariants(): JudgeResult[] {
         this.variants.sort(function (a: JudgeResult, b: JudgeResult) {
             if (a.protocol_from < b.protocol_from) {
-                return -1
+                return -1;
             } else if (a.protocol_from > b.protocol_from) {
-                return 1
+                return 1;
             } else {
-                return a.protocol_to < b.protocol_to ? -1 : (a.protocol_to > b.protocol_to ? 1 : 0)
+                return a.protocol_to < b.protocol_to ? -1 : (a.protocol_to > b.protocol_to ? 1 : 0);
             }
         });
 
-        return this.variants
+        return this.variants;
     }
 
 

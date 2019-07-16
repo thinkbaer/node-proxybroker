@@ -13,7 +13,7 @@ export class DataAccessController {
 
   @Get('/providers')
   providers(): any {
-    return this.providerManager.list();
+    return this.providerManager.findAll();
   }
 
   @Get('/provider/:name/:type/run')

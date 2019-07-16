@@ -1,10 +1,10 @@
 
-import * as _ from 'lodash'
+import * as _ from 'lodash';
 
 
-import {IHeader} from "./IHeader";
-import {DomainUtils} from "@typexs/base";
-import {Utils} from "commons-config";
+import {IHeader} from './IHeader';
+import {DomainUtils} from '@typexs/base';
+import {Utils} from 'commons-config';
 
 const HTTP_FORWARD_HEADER = [
   'forwarded-for',
@@ -74,7 +74,21 @@ const ignore_headers = ['host'];
 
 export class LevelDetection {
 
-  static DEFAULT_LEVEL: number = -1;
+  constructor(proxy_ip: string, ip: string) {
+    this._level = LevelDetection.DEFAULT_LEVEL;
+    this.proxy_ip = proxy_ip;
+    this.local_ip = ip;
+  }
+
+  get level() {
+    return this._level;
+  }
+
+  get headers(): IHeader[] {
+    return this.recv_headers;
+  }
+
+  static DEFAULT_LEVEL = -1;
 
 
   local_ip: string = null;
@@ -103,27 +117,30 @@ export class LevelDetection {
 
   private _level: number = null;
 
-  constructor(proxy_ip: string, ip: string) {
-    this._level = LevelDetection.DEFAULT_LEVEL;
-    this.proxy_ip = proxy_ip;
-    this.local_ip = ip
-  }
+  private static async createAddrRegex(ip: string): Promise<string> {
 
-  get level() {
-    return this._level
-  }
-
-  get headers(): IHeader[] {
-    return this.recv_headers
+    const l: string[] = [];
+    l.push('(' + Utils.escapeRegExp(ip) + '(\\s|$|:))');
+    const result = await DomainUtils.domainLookup(ip);
+    if (result && result.addr !== ip) {
+      l.push('(' + Utils.escapeRegExp(result.addr) + '(\\s|$|:))');
+    }
+    if (result && result.addr) {
+      const hosts = await DomainUtils.reverse(result.addr);
+      hosts.forEach(_x => {
+        l.push('(' + Utils.escapeRegExp(_x) + '(\\s|$|:))');
+      });
+    }
+    return Promise.resolve(l.join('|'));
   }
 
 
   addRecvHeader(headers: any) {
-    let keys = Object.keys(headers).filter((x) => {
-      return ignore_headers.indexOf(x) == -1
+    const keys = Object.keys(headers).filter((x) => {
+      return ignore_headers.indexOf(x) == -1;
     });
 
-    for (let k of keys) {
+    for (const k of keys) {
       this.recv_headers.push({
         key: k,
         value: headers[k],
@@ -133,25 +150,8 @@ export class LevelDetection {
         isVia: false,
         ip: null,
         host: null
-      })
+      });
     }
-  }
-
-  private static async createAddrRegex(ip: string): Promise<string> {
-
-    let l: string[] = [];
-    l.push('(' + Utils.escapeRegExp(ip) + '(\\s|$|:))');
-    let result = await DomainUtils.domainLookup(ip);
-    if (result && result.addr !== ip) {
-      l.push('(' + Utils.escapeRegExp(result.addr) + '(\\s|$|:))')
-    }
-    if (result && result.addr) {
-      let hosts = await DomainUtils.reverse(result.addr);
-      hosts.forEach(_x => {
-        l.push('(' + Utils.escapeRegExp(_x) + '(\\s|$|:))')
-      })
-    }
-    return Promise.resolve(l.join('|'))
   }
 
 
@@ -165,68 +165,68 @@ export class LevelDetection {
 
 
   async detect(): Promise<void> {
-    let self = this;
-    for (let header of this.recv_headers) {
+    const self = this;
+    for (const header of this.recv_headers) {
 
-      let key = header.key;
-      let value = header.value;
+      const key = header.key;
+      const value = header.value;
 
       if (this.local_regex.test(value)) {
         // this.is_ip_present.push(k)
-        header.hasLocalIp = true
+        header.hasLocalIp = true;
       }
 
       if (this.proxy_regex.test(value)) {
-        header.hasProxyIp = true
+        header.hasProxyIp = true;
       }
 
       if (HTTP_FORWARD_HEADER.indexOf(key.toLocaleLowerCase()) > -1) {
-        header.isForward = true
+        header.isForward = true;
       }
 
       if (HTTP_VIA_HEADER.indexOf(key.toLocaleLowerCase()) > -1) {
-        header.isVia = true
+        header.isVia = true;
       }
 
       _.keys(header).forEach(_k => {
         if (header[_k] === true) {
-          self.stats[_k]++
+          self.stats[_k]++;
         }
-      })
+      });
     }
 
     if (!this.hasLocalIP() && !this.hasProxyIP() && !this.hasViaHeader() && !this.hasForwardHeader()) {
       // Elite
-      this._level = 1
+      this._level = 1;
     } else if (!this.hasLocalIP()) {
       // Anonym
-      this._level = 2
+      this._level = 2;
     } else {
       // Transparent
-      this._level = 3
+      this._level = 3;
     }
 
-    return Promise.resolve()
+    return Promise.resolve();
   }
 
   hasForwardHeader(): boolean {
-    return this.stats.isForward > 0
+    return this.stats.isForward > 0;
   }
 
   hasViaHeader(): boolean {
-    return this.stats.isVia > 0
+    return this.stats.isVia > 0;
   }
 
   hasProxyIP(): boolean {
-    return this.stats.hasProxyIp > 0
+    return this.stats.hasProxyIp > 0;
   }
 
   hasLocalIP(): boolean {
-    return this.stats.hasLocalIp > 0
+    return this.stats.hasLocalIp > 0;
   }
 
   findAll(d: any): any[] {
-    return _.filter(this.recv_headers, d)
+    return _.filter(this.recv_headers, d);
   }
 
 }

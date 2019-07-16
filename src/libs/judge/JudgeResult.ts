@@ -1,6 +1,6 @@
-import {ReqResEvent} from "./ReqResEvent";
-import {ProtocolType} from "../specific/ProtocolType";
-import {NestedException} from "@typexs/base";
+import {ReqResEvent} from './ReqResEvent';
+import {ProtocolType} from '../specific/ProtocolType';
+import {NestedException} from '@typexs/base';
 
 
 export class JudgeResult {
@@ -19,44 +19,45 @@ export class JudgeResult {
 
   stop: Date;
 
-  duration: number = -1;
+  duration = -1;
 
-  level: number = -2;
+  level = -2;
 
   logStr: string;
 
   constructor(from: ProtocolType, to: ProtocolType) {
     this.protocol_from = from;
-    this.protocol_to = to
+    this.protocol_to = to;
   }
+
 
   hasError() {
-    return this.error !== null
+    return this.error !== null;
   }
 
 
-  logToString(sep: string = "\n"): string {
-    let msg: Array<string> = [];
+  logToString(sep: string = '\n'): string {
+    const msg: Array<string> = [];
 
     this.log.sort(function (a: ReqResEvent, b: ReqResEvent) {
-      return a.nr < b.nr ? (b.nr > a.nr ? -1 : 0) : 1
+      return a.nr < b.nr ? (b.nr > a.nr ? -1 : 0) : 1;
     });
 
     let ignore_emtpy = false;
-    for (let entry of this.log) {
+    for (const entry of this.log) {
 
-      let str = (entry.prefix + ' ' + entry.message()).trim();
-      if (str.length == 0 && ignore_emtpy) {
-        continue
-      } else if (str.length == 0) {
-        ignore_emtpy = true
+      const str = (entry.prefix + ' ' + entry.message()).trim();
+      if (str.length === 0 && ignore_emtpy) {
+        continue;
+      } else if (str.length === 0) {
+        ignore_emtpy = true;
       } else {
-        ignore_emtpy = false
+        ignore_emtpy = false;
       }
-      msg.push(str)
+      msg.push(str);
     }
 
-    return msg.join(sep)
+    return msg.join(sep);
   }
 
 }
