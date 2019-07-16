@@ -57,7 +57,7 @@ class ValidateCommandTest {
     const proxyValidateCommand = new ProxyValidateCommand();
     const list = await proxyValidateCommand.handler({
       _resolve: true,
-      host_or_file: __dirname + '/../_files/proxylists/list01.csv',
+      url_or_file: __dirname + '/../_files/proxylists/list01.csv',
       verbose: false,
       // config: cfg, // config can be ignored handler work on cli.ts level, so we previously defined settings directly
       format: 'json'

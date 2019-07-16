@@ -53,8 +53,7 @@ const boot = async function (): Promise<void> {
       ip: '0.0.0.0',
       http_port: 8080,
       request: {
-        socket_timeout: 10000,
-        connection_timeout: 5000
+        timeout: 10000,
       }
     }
   }, storage);
@@ -62,7 +61,7 @@ const boot = async function (): Promise<void> {
   Container.set(ProxyValidator, validator);
 
   const provider = new ProviderManager();
-  await provider.prepare(storage, {
+  await provider.prepare( {
     schedule: {
       enable: false
     }
