@@ -1,0 +1,13 @@
+version: '3'
+services:
+
+  txs_broker_postgres:
+    image: postgres
+    environment:
+      POSTGRES_DATABASES: proxybroker
+      POSTGRES_USER: proxybroker
+      POSTGRES_PASSWORD:
+    ports:
+      - 5432:5432
+
+
