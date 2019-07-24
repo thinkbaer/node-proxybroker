@@ -33,38 +33,25 @@ proxybroker:
 
 ## Usage
 
-from build/package
-```
-node cli.js judge --ip {ip} --port {port}
-```
 
-from .
-```
-node --require ts-node/register src/cli.ts judge --ip {ip} --port {port}
-```
+**Fetch proxies**
 
-Fetch proxy list from provider in csv format
-```
-pb$ node --require ts-node/register src/cli.ts fetch provider freeproxylists anonym -f csv -v  > /tmp/proxies_anonym.csv
-```
+Command: proxy-fetch [provider] [variant] -f json|csv -validate
 
-Test proxies from a csv file and return results as csv
-```
-pb$ node --require ts-node/register src/cli.ts judge-file /tmp/proxies_anonym.csv -f csv -v > /tmp/proxies_anonym_results.csv
-```
+* provider - the name of the defined proxy provider
+* variant - is the possible different proxy
+* -f - output format is default 'json', the other possible value is 'csv'
+* -validate - run validation of grabbed data  
+* -store - store data also in backend
 
+```bash
+# Shows proxy variants
+> typexs proxy-fetch
 
-## Tests
-
-```
-mocha --opts test/mocha.all.opts
-```
-
-
-## Startup
-
-```
-$ node --require ts-node/register src/cli.ts start -c config/proxybroker.yml
+# Scan all proxy variants and return as json (can be piped to json file )
+> typexs proxy-fetch __all__
+> typexs proxy-fetch __all__ > proxies.json
+   
 ```
 
 
