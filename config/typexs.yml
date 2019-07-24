@@ -1,4 +1,3 @@
-
 app:
   name: proxybroker
 
@@ -6,32 +5,43 @@ logging:
   enable: true
   level: debug
   transports:
-  - console: {}
+    - console: {}
+    - file:
+        filename: ./tmp/log/proxybroker.log
+        level: debug
+    - file:
+        name: errors
+        filename: ./tmp/log/proxybroker-errors.log
+        level: error
+  loggers:
+    - name: '*'
+      enable: true
+      level: debug
+      transports:
+        - console: {}
+        - file:
+            filename: ./tmp/log/proxybroker.log
+            level: debug
+        - file:
+            name: error
+            filename: ./tmp/log/proxybroker-errors.log
+            level: error
+
 
 
 storage:
   default:
-    type: sqlite
-    database: tmp/database.db
+    type: postgres
+    database: proxybroker
+    username: proxybroker
+    port: 5432
     synchronize: true
 
 
 
-server:
-  proxyserver:
-    type: proxyserver
-    enable: true
-    timeout: 120000
-    # limit of search repeats if proxy failed
-    repeatLimit: 10
-
-
 proxy-broker:
-
   validator:
-    parallel: 100
-#    schedule:
-#      enable: true
+    parallel: 50
     judge:
       selftest: true
       remote_lookup: true
@@ -39,13 +49,8 @@ proxy-broker:
       ip: 0.0.0.0
       request:
         timeout: 5000
-
-
   provider:
     startup: true
     parallel: 5
-    schedule:
-      enable: true
-
 
 
