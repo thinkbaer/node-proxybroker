@@ -1,12 +1,15 @@
 import * as _ from 'lodash';
-import {Incoming, Inject, ITask, Outgoing} from '@typexs/base';
+import {Incoming, Inject, ITask, ITaskRuntimeContainer, Outgoing, TaskRuntime} from '@typexs/base';
 import {ProviderManager} from '../libs/provider/ProviderManager';
-import {__ALL__, TN_PROXY_FETCH} from '../libs/Constants';
+import {__ALL__, TN_PROXY_FETCH, TN_PROXY_VALIDATE} from '../libs/Constants';
 import {IProxyData} from '../libs/proxy/IProxyData';
 
 export class ProxyFetchTask implements ITask {
 
   name = TN_PROXY_FETCH;
+
+  @TaskRuntime()
+  runtime: ITaskRuntimeContainer;
 
   @Inject(ProviderManager.NAME)
   providerManager: ProviderManager;
@@ -29,6 +32,9 @@ export class ProxyFetchTask implements ITask {
   @Outgoing()
   proxies: IProxyData[] = [];
 
+  @Incoming({optional: true})
+  validate = false;
+
   async exec() {
     const all = this.variants.indexOf(__ALL__) > -1;
     const variants = this.providerManager.findAll({name: this.provider});
@@ -40,9 +46,12 @@ export class ProxyFetchTask implements ITask {
           const variant = this.providerManager.get(v);
           const worker = await this.providerManager.createWorker(variant);
           const p = await worker.fetch();
-          this.proxies = _.concat(this.proxies, p);
+          this.proxies = _.concat(this.proxies, p).filter(x => x && x.ip && x.port);
         }
       }
+    }
+    if (this.validate) {
+      await this.runtime.addTask(TN_PROXY_VALIDATE, {proxies: this.proxies});
     }
     return this.proxies;
   }

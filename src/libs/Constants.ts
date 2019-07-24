@@ -1,6 +1,9 @@
 export const MODUL_TOPIC_PROXY_PROVIDER = 'proxy-providers';
 
-export const K_PROXY_VALIDATOR = 'proxy-broker.validator';
+export const CFG_PROXY_STARTUP = 'proxy-broker.startup';
+export const CFG_PROXY_VALIDATOR = 'proxy-broker.validator';
+export const CFG_PROXY_PROVIDERS_CONFIG_ROOT = 'proxy-broker.provider';
+
 export const K_JUDGE_REQUEST_TIMEOUT = 'request.timeout';
 
 

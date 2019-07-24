@@ -401,11 +401,15 @@ export class Judge implements IServerApi {
       // HTTP => HTTP
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTP, ProtocolType.HTTP).then(result => {
         results.variants.push(result);
+      }).catch((error: Error) => {
+        Log.error('http=>http', error);
       }));
 
       // HTTP => HTTPS
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTP, ProtocolType.HTTPS).then(result => {
         results.variants.push(result);
+      }).catch((error: Error) => {
+        Log.error('http=>https', error);
       }));
     }
 
@@ -413,11 +417,15 @@ export class Judge implements IServerApi {
       // HTTPS => HTTP
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTPS, ProtocolType.HTTP).then(result => {
         results.variants.push(result);
+      }).catch((error: Error) => {
+        Log.error('https=>http', error);
       }));
 
       // HTTPS => HTTPS
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTPS, ProtocolType.HTTPS).then(result => {
         results.variants.push(result);
+      }).catch((error: Error) => {
+        Log.error('https=>https', error);
       }));
     }
 

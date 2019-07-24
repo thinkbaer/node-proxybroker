@@ -3,9 +3,7 @@ import {ProxyData} from './ProxyData';
 import * as _ from 'lodash';
 import {ProxyDataValidateEvent} from './ProxyDataValidateEvent';
 import {JudgeResult} from '../judge/JudgeResult';
-
 import {DEFAULT_VALIDATOR_OPTIONS, IProxyValidatiorOptions} from './IProxyValidatiorOptions';
-
 import {ValidatorRunEvent} from './ValidatorRunEvent';
 import {DateUtils} from 'typeorm/util/DateUtils';
 import {AsyncWorkerQueue, IQueueProcessor, Log, QueueJob, StorageRef} from '@typexs/base';
@@ -20,6 +18,8 @@ const PROXY_VALIDATOR = 'proxy_validator';
 
 export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
+  static NAME = ProxyValidator.name;
+
   options: IProxyValidatiorOptions;
 
   storage: StorageRef;
@@ -27,21 +27,6 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
   queue: AsyncWorkerQueue<ProxyData>;
 
   judge: Judge;
-
-
-  constructor(options: IProxyValidatiorOptions, storage: StorageRef) {
-    this.options = _.defaultsDeep(options, DEFAULT_VALIDATOR_OPTIONS);
-    this.storage = storage;
-    this.queue = new AsyncWorkerQueue<ProxyData>(this, {
-      name: PROXY_VALIDATOR,
-      concurrent: this.options.parallel || 200
-    });
-
-    // if (this.options.schedule && this.options.schedule.enable) {
-    //   this.cron = require('cron-parser').parseExpression(this.options.schedule.pattern);
-    // }
-    // Runtime.$().setConfig('validator', this.options)
-  }
 
 
   static buildState(addr: IpAddr, result: JudgeResult): IpAddrState {
@@ -72,21 +57,20 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     if (state.enabled) {
       addr.addSourceProtocol(result.protocol_from);
       addr.addProtocol(result.protocol_to);
-
-      // if (!addr.supportsProtocol(result.protocol_to) || !addr.supportsSourceProtocol(result.protocol_from)) {}
-
-    } else {
-      // addr.removeSourceProtocol(result.protocol_from)
-      /*
-      if (addr.supportsProtocol(result.protocol_to) && addr.supportsSourceProtocol(result.protocol_from)) {
-          addr.removeSourceProtocol(result.protocol_from)
-          addr.removeProtocol(result.protocol_to)
-
-      }
-      */
     }
-
     return state;
+  }
+
+
+  initialize(options: IProxyValidatiorOptions, storage: StorageRef) {
+    this.options = _.defaultsDeep(options, DEFAULT_VALIDATOR_OPTIONS);
+
+    this.storage = storage;
+    this.queue = new AsyncWorkerQueue<ProxyData>(this, {
+      name: PROXY_VALIDATOR,
+      concurrent: this.options.parallel || 200
+    });
+    this.queue.setMaxListeners(10000);
   }
 
 
@@ -94,40 +78,20 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     await EventBus.register(this);
     this.judge = new Judge(this.options.judge);
     const booted = await this.judge.prepare();
-    // this.checkSchedule();
-    return Promise.resolve(booted);
+
+    /*
+    if (this.options.schedule) {
+      const def = _.clone(this.options.schedule);
+      const scheduler: Scheduler = Container.get(Scheduler.NAME);
+      def.event = {
+        name: _.snakeCase(ValidatorRunEvent.name)
+      };
+      await scheduler.register(def);
+    }
+     */
+
+    return booted;
   }
-
-
-  // private checkSchedule(): void {
-  //   if (this.options.schedule && this.options.schedule.enable) {
-  //     this.last = this.next;
-  //     const now = new Date();
-  //     const next = this.cron.next();
-  //     const offset = next.getTime() - now.getTime();
-  //     this.next = new Date(next.getTime());
-  //     Log.info('Validator scheduled for ' + this.next);
-  //     this.timer = setTimeout(this.runScheduled.bind(this), offset);
-  //   }
-  // }
-
-
-  // async status() {
-  //   return {
-  //     last_scheduled: this.last,
-  //     next_schedule: this.next,
-  //     judge: this.judge.isEnabled(),
-  //     queue: this.queue.status()
-  //   };
-  // }
-  //
-  //
-  // private runScheduled() {
-  //   EventBus.postAndForget(new ValidatorRunEvent());
-  //   // (new ValidatorRunEvent()).fire();
-  //   clearTimeout(this.timer);
-  //   this.checkSchedule();
-  // }
 
 
   @subscribe(ValidatorRunEvent)
@@ -135,17 +99,16 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     const c = await this.storage.connect();
     const q = c.manager.getRepository(IpAddr).createQueryBuilder('ip');
 
-    const td = Date.now() - this.options.schedule.time_distance * 1000;
+    const td = Date.now() - this.options.revalidate.time_distance * 1000;
     q.where('ip.blocked = :blocked and ip.to_delete = :to_delete and ' +
       '(ip.last_checked_at is null OR ip.last_checked_at < :date) ', {
       blocked: false,
       to_delete: false,
       date: DateUtils.mixedDateToDatetimeString(new Date(td))
     })
-      .limit(this.options.schedule.limit);
+      .limit(this.options.revalidate.limit);
 
     try {
-
       const ips: IpAddr[] = await q.getMany();
       Log.info('Validator recheck proxies: ' + ips.length);
       if (ips.length > 0) {
@@ -316,7 +279,11 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     const results = await this.judge.validate(workLoad.ip, workLoad.port);
     workLoad.results = results;
     if (this.storage) {
-      await this.store(workLoad);
+      const hasSuccess = !!_.find(results.getVariants(), x => !x.hasError());
+      if ((this.options.skipFailed && hasSuccess) || !this.options.skipFailed) {
+        await this.store(workLoad);
+      }
+
     }
     return results;
   }

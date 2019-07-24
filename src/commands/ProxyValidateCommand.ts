@@ -1,10 +1,11 @@
 import * as _ from 'lodash';
-import {FileUtils, ICommand, Log, PlatformUtils, System, TodoException} from '@typexs/base';
+import {Config, FileUtils, ICommand, Log, PlatformUtils, System, TodoException, TYPEXS_NAME} from '@typexs/base';
 import {ProxyData} from '../libs/proxy/ProxyData';
 import {JudgeResults} from '../libs/judge/JudgeResults';
 import {ITaskRunnerResult} from '@typexs/base/libs/tasks/ITaskRunnerResult';
 import {TasksHelper} from '@typexs/base/libs/tasks/TasksHelper';
-import {TN_PROXY_VALIDATE} from '../libs/Constants';
+import {CFG_PROXY_STARTUP, CFG_PROXY_VALIDATOR, TN_PROXY_VALIDATE} from '../libs/Constants';
+import {IProxyValidatiorOptions} from '../libs/proxy/IProxyValidatiorOptions';
 
 
 const REGEX = /^((http|https):\/\/)?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):?(\d{1,5})?$/;
@@ -78,9 +79,25 @@ export class ProxyValidateCommand implements ICommand {
     return Array(ProxyValidateCommand.csvHeader.length).fill('');
   }
 
-  beforeStartup() {
+  beforeStorage(): void {
+    Config.set(CFG_PROXY_STARTUP, true, TYPEXS_NAME);
     // Config.set('server', null, TYPEXS_NAME);
     System.enableDistribution(false);
+    const cfg = Config.get(CFG_PROXY_VALIDATOR, null);
+    if (!cfg) {
+      Config.set(CFG_PROXY_VALIDATOR, <IProxyValidatiorOptions>{
+        parallel: 100,
+        judge: {
+          selftest: true,
+          remote_lookup: true,
+          remote_ip: '127.0.0.1',
+          ip: '0.0.0.0',
+          request: {
+            timeout: 5000
+          }
+        }
+      }, TYPEXS_NAME);
+    }
   }
 
   builder(yargs: any) {
@@ -180,72 +197,10 @@ export class ProxyValidateCommand implements ICommand {
         }
         proxyData.push(new ProxyData(ip, port));
       }
-
-      /*
-                  if(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}$/.test(argv.url_to_file)){
-                      argv.url_to_file = 'http://'+argv.url_to_file
-                  }
-
-                  let _url = url.parse(argv.url_to_file)
-
-                  if (!_url.port) {
-                      _url.port = "3128"
-                  }
-      */
-
-      // const judgeCustomOptions = Config.get('validator.judge', {});
-      // const judge = new Judge(judgeCustomOptions);
-      // const booted = await judge.prepare();
-      //
-      // if (booted) {
-      //   try {
-      //     const proxy = new ProxyData(ip, port);
-      //     await judge.wakeup();
-      //     proxy.results = await judge.validate(proxy.ip, proxy.port);
-      //     await judge.pending();
-      //     proxyData.push(proxy);
-      //     // console.log(JSON.stringify(results, null, 2))
-      //   } catch (err) {
-      //     Log.error(err);
-      //     await judge.pending();
-      //   }
-      // } else {
-      //   throw new TodoException();
-      // }
     }
 
 
     if (proxyData.length > 0) {
-
-
-      // const validatorCustomOptions = Config.get('validator', {});
-      // const validator = new ProxyValidator(validatorCustomOptions, null);
-      // let booted = false;
-      // try {
-      //   booted = await validator.prepare();
-      // } catch (err) {
-      //   Log.error(err);
-      //   throw err;
-      // }
-      //
-      // if (booted) {
-      //   try {
-      //     let inc = 0;
-      //     for (const _q of proxyData) {
-      //       inc++;
-      //       validator.push(_q);
-      //     }
-      //     Log.info('Added ' + inc + ' proxies to check');
-      //     await validator.await();
-      //   } catch (err) {
-      //     Log.error(err);
-      //   }
-      //
-      //   await validator.shutdown();
-
-      // } else {
-      //   throw new TodoException();
-
       let _proxyData: ProxyData[] = [];
       const results = <ITaskRunnerResult>await TasksHelper.exec(
         [
@@ -264,7 +219,6 @@ export class ProxyValidateCommand implements ICommand {
         });
 
       if (results && results.results.length > 0) {
-
         for (const _result of results.results) {
           _proxyData = _proxyData.concat(_result.result);
         }

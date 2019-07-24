@@ -1,37 +1,50 @@
-import {Config, Container, IBootstrap, Inject, IShutdown, RuntimeLoader} from '@typexs/base';
-import {MODUL_TOPIC_PROXY_PROVIDER} from './libs/Constants';
+import * as _ from 'lodash';
+import {C_STORAGE_DEFAULT, Config, Container, IBootstrap, Inject, IShutdown, RuntimeLoader, StorageRef} from '@typexs/base';
+import {CFG_PROXY_PROVIDERS_CONFIG_ROOT, CFG_PROXY_VALIDATOR, MODUL_TOPIC_PROXY_PROVIDER} from './libs/Constants';
 import {ClassType} from 'commons-http/libs/Constants';
 import {AbstractProvider} from './libs/provider/AbstractProvider';
 import {StartupHelper} from './libs/StartupHelper';
 import {ProviderManager} from './libs/provider/ProviderManager';
 import {IProviderOptions} from './libs/provider/IProviderOptions';
+import {Scheduler} from '@typexs/base/libs/schedule/Scheduler';
+import {ProxyValidator} from './libs/proxy/ProxyValidator';
+import {IProxyValidatiorOptions} from './libs/proxy/IProxyValidatiorOptions';
 
 
 export class Startup implements IBootstrap, IShutdown {
 
+  @Inject(Scheduler.NAME)
+  scheduler: Scheduler;
 
   @Inject(RuntimeLoader.NAME)
   runtimeLoader: RuntimeLoader;
 
+  @Inject(ProxyValidator.NAME)
+  proxyValidator: ProxyValidator;
+
+  @Inject(C_STORAGE_DEFAULT)
+  storageRef: StorageRef;
+
   async bootstrap() {
-
-
     if (!StartupHelper.isEnabled()) {
       return;
     }
-    // const all = Config.all();
-    const providerOptions: IProviderOptions = Config.get('proxybroker.provider', {});
-
-    // const storageRef: StorageRef = Container.get(C_STORAGE_DEFAULT);
+    const providerOptions: IProviderOptions = Config.get(CFG_PROXY_PROVIDERS_CONFIG_ROOT, {});
     const providerManager: ProviderManager = Container.get(ProviderManager.NAME);
     const proxyProviders = <ClassType<AbstractProvider>[]>this.runtimeLoader.getClasses(MODUL_TOPIC_PROXY_PROVIDER);
     for (const proxyProvider of proxyProviders) {
       providerManager.addProviderClass(proxyProvider);
     }
-
     await providerManager.prepare(providerOptions, true);
 
-
+    /**
+     * ProxyValidator enable
+     */
+    const validatorCustomOptions: IProxyValidatiorOptions = Config.get(CFG_PROXY_VALIDATOR, {});
+    if (!_.isEmpty(validatorCustomOptions)) {
+      this.proxyValidator.initialize(validatorCustomOptions, this.storageRef);
+      await this.proxyValidator.prepare();
+    }
   }
 
 
@@ -41,6 +54,11 @@ export class Startup implements IBootstrap, IShutdown {
     }
     const providerManager: ProviderManager = Container.get(ProviderManager.NAME);
     await providerManager.shutdown();
+
+    if (this.proxyValidator) {
+      await this.proxyValidator.shutdown();
+    }
+
   }
 
 }

@@ -17,7 +17,6 @@ import {IHttpOptions, IHttpStream} from 'commons-http';
 
 export class RequestResponseMonitor extends events.EventEmitter {
 
-  // _debug: boolean = false
   inc = 0;
 
   id: string = null;
@@ -29,33 +28,39 @@ export class RequestResponseMonitor extends events.EventEmitter {
   errors: NestedException[] = [];
 
   socket: net.Socket = null;
-  // static cache:{[key:string]:RequestResponseMonitor} = {}
-
-  // request: mRequest.RequestPromise = null;
 
   stream: IHttpStream<any>;
 
   request: http.ClientRequest;
 
   start: Date = new Date();
+
   end: Date = null;
+
   duration = Infinity;
+
   secured = false;
+
   connected = false;
-  has_connected = false;
+
   timeouted = false;
+
   aborted = false;
-  okay = false;
+
   _finished = false;
 
   sendedHead = '';
+
   receivedHead = '';
+
   receivedHeadDone = false;
 
   headers_request: IHttpHeaders = {};
+
   headers_response: IHttpHeaders = {};
 
   url: string;
+
   httpOptions: IHttpOptions;
 
 
@@ -63,10 +68,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     super();
     this.url = url;
     this.httpOptions = options;
-    // this.debug('Enable monitor for '+id);
-    // request.on('socket', this.onSocket.bind(this));
     stream.on('error', this.onError.bind(this));
-    // request.on('drain', this.onDrain.bind(this));
     stream.on('request', this.onRequest.bind(this));
     this.id = id;
     this.stream = stream;
@@ -75,14 +77,31 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
   clear() {
     this.removeAllListeners();
+
+    if (this.stream) {
+      this.stream.removeListener('error', this.onError.bind(this));
+      this.stream.removeListener('request', this.onRequest.bind(this));
+      this.stream = null;
+    }
+
     if (this.request) {
-      this.request.removeAllListeners();
+      this.request.removeListener('socket', this.onSocket.bind(this));
+      this.request.removeListener('error', this.onError.bind(this));
+      this.request = null;
     }
+
     if (this.socket) {
-      this.socket.removeAllListeners();
+      this.socket.removeListener('close', this.onSocketClose.bind(this));
+      this.socket.removeListener('connect', this.onSocketConnect.bind(this));
+      this.socket.removeListener('end', this.onSocketEnd.bind(this));
+      this.socket.removeListener('error', this.onSocketError.bind(this));
+      this.socket.removeListener('lookup', this.onSocketLookup.bind(this));
+      this.socket.removeListener('timeout', this.onSocketTimeout.bind(this));
+      this.socket.removeListener('data', this.onSocketData.bind(this));
+      this.socket.removeListener('secureConnect', this.onTLSSocketSecureConnect.bind(this));
+      this.socket = null;
     }
-    this.socket = null;
-    this.request = null;
+
   }
 
 
@@ -226,16 +245,13 @@ export class RequestResponseMonitor extends events.EventEmitter {
   // TODO use SocketHandle
   onSocketData(data: Buffer) {
     // this.debug('onSocketData', data.length);
-
     this.socket.removeListener('timeout', this.onSocketTimeout.bind(this));
-
     this.length += data.length;
 
     if (data[0] === 0x16 || data[0] === 0x80 || data[0] === 0x00) {
       this.debug('TLS detected ' + data.length);
       return;
     }
-
 
     if (!this.receivedHeadDone) {
       const tmp: Buffer = Buffer.allocUnsafe(data.length);
@@ -274,26 +290,25 @@ export class RequestResponseMonitor extends events.EventEmitter {
     this.addClientLog(MESSAGE.OSE01.k);
   }
 
+
   onSocketError(error: Error) {
     // this.debug('onSocketError');
     this.handleError(error);
   }
+
 
   onSocketLookup(error: Error | null, address: string, family: string | null, host: string) {
     // this.debug('onSocketLookup');
     this.handleError(error);
   }
 
+
   onSocketTimeout() {
     this.stop();
     this.addLog(MESSAGE.OST01.k, {duration: this.duration});
   }
 
-  /*
-      onTLSSocketOCSPResponse(buffer: Buffer) {
-          this.debug('onTLSSocketOCSPResponse')
-      }
-  */
+
   onTLSSocketSecureConnect() {
 //    this.debug('onTLSSocketSecureConnect');
     this.stop();
@@ -347,7 +362,6 @@ export class RequestResponseMonitor extends events.EventEmitter {
           break;
         }
       }
-
 
       if (!exists) {
 

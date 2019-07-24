@@ -5,40 +5,38 @@ export interface IProxyValidatiorOptions {
 
   parallel?: number;
 
-  schedule: {
 
-    enable: boolean
+  revalidate: {
+    time_distance: number;
 
-    pattern?: string
-
-    time_distance?: number
-
-    limit?: number
+    limit: number;
   };
+
+  /**
+   * Do not save failed proxies
+   */
+  skipFailed?: boolean;
+
+  // schedule: IScheduleDef;
 
   judge?: IJudgeOptions;
 }
 
-export const K_VALIDATOR = 'validator';
 
 const hours6 = 6 * 60 * 60;
 
 export const DEFAULT_VALIDATOR_OPTIONS: IProxyValidatiorOptions = {
 
-  parallel: 100,
+  parallel: 50,
 
-  schedule: {
+  skipFailed: true,
 
-    enable: true,
+  judge: DEFAULT_JUDGE_OPTIONS,
 
-    pattern: '*/10 * * * *',
+  revalidate: {
 
-    time_distance: hours6,
+    time_distance: 24 * 60 * 60,
 
     limit: 1000
-  },
-
-  judge: DEFAULT_JUDGE_OPTIONS
-
-
+  }
 };

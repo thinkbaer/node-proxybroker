@@ -4,7 +4,6 @@ import {DEFAULT_PROVIDER_OPTIONS, IProviderOptions} from './IProviderOptions';
 import {IProviderDef} from './IProviderDef';
 import {IProvider} from './IProvider';
 import {ProviderWorker} from './ProviderWorker';
-// import {EventBus} from 'commons-eventbus';
 import {ClassType} from 'commons-http/libs/Constants';
 import {AbstractProvider} from './AbstractProvider';
 import {__ALL__} from '../Constants';

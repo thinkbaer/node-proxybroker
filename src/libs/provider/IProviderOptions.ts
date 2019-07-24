@@ -9,13 +9,13 @@ export interface IProviderOptions {
   schedule?: {
     enable?: boolean
     pattern?: string
-  }
+  };
 
 
   /**
    * Amount of parallel allowed worker jobs
    */
-  parallel?: number
+  parallel?: number;
 }
 
 /*
@@ -32,6 +32,6 @@ export const DEFAULT_PROVIDER_OPTIONS: IProviderOptions = {
   },
 
 
-  //providers: DEFAULT_PROVIDER
+  // providers: DEFAULT_PROVIDER
 };
 

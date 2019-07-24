@@ -1,8 +1,9 @@
 import * as _ from 'lodash';
-import {C_STORAGE_DEFAULT, Config, Incoming, Inject, ITask, Log, StorageRef, TodoException} from '@typexs/base';
-import {K_PROXY_VALIDATOR, REGEX, TN_PROXY_VALIDATE} from '../libs/Constants';
+import {C_STORAGE_DEFAULT, Incoming, Inject, ITask, Log, StorageRef} from '@typexs/base';
+import {REGEX, TN_PROXY_VALIDATE} from '../libs/Constants';
 import {ProxyData} from '../libs/proxy/ProxyData';
 import {ProxyValidator} from '../libs/proxy/ProxyValidator';
+import {EventEmitter} from 'events';
 
 export class ProxyValidateTask implements ITask {
 
@@ -10,6 +11,9 @@ export class ProxyValidateTask implements ITask {
 
   @Inject(C_STORAGE_DEFAULT)
   storageRef: StorageRef;
+
+  @Inject(ProxyValidator.NAME)
+  validator: ProxyValidator;
 
 
   @Incoming({
@@ -19,6 +23,14 @@ export class ProxyValidateTask implements ITask {
 
   @Incoming({optional: true})
   store = true;
+
+  emitter = new EventEmitter();
+
+  todo: ProxyData[] = [];
+
+  _send = 0;
+
+  _done = 0;
 
   static handle(value: any) {
     if (_.isString(value)) {
@@ -53,41 +65,65 @@ export class ProxyValidateTask implements ITask {
   }
 
 
+  async await() {
+    return new Promise(resolve => {
+      this.emitter.once('finished', resolve);
+    });
+  }
+
+
+  async pause() {
+    if (this._send % 1000 === 0) {
+      return new Promise(resolve => {
+        this.emitter.once('resume', resolve);
+      });
+    } else {
+      return Promise.resolve();
+    }
+  }
+
+
+  done(c: ProxyData) {
+    _.remove(this.todo, x => x.ip === c.ip && x.port === c.port);
+    this._done++;
+    if (this.todo.length === 0) {
+      this.emitter.emit('finished');
+    }
+    Log.debug('validate task: ' + this._send + ' / ' + this._done + ' / ' + this.todo.length);
+    if (this._send - this._done < 1000) {
+      this.emitter.emit('resume');
+    }
+
+  }
+
   async exec() {
     if (this.proxies.length === 0) {
       return [];
     }
-    const validatorCustomOptions = Config.get(K_PROXY_VALIDATOR, {});
 
-    const proxyValidator = new ProxyValidator(validatorCustomOptions, this.store ? this.storageRef : null);
 
-    let booted = false;
+    this.todo = _.clone(this.proxies);
+
     try {
-      booted = await proxyValidator.prepare();
+
+      for (const _q of this.proxies) {
+        this._send++;
+        this.validator.push(_q)
+          .then(value => {
+            return value.done();
+          })
+          .catch(reason => {
+            Log.error(reason);
+          })
+          .finally(() => {
+            this.done(_q);
+          });
+        await this.pause();
+      }
+      await this.await();
     } catch (err) {
       Log.error(err);
-      throw err;
     }
-
-    if (booted) {
-      try {
-        let inc = 0;
-        for (const _q of this.proxies) {
-          inc++;
-          proxyValidator.push(_q);
-        }
-        Log.info('Added ' + inc + ' proxies to check');
-        await proxyValidator.await();
-      } catch (err) {
-        Log.error(err);
-      }
-
-      await proxyValidator.shutdown();
-
-    } else {
-      throw new TodoException();
-    }
-
 
     return this.proxies;
   }
