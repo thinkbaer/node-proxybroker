@@ -1,5 +1,5 @@
-import * as _ from "lodash";
-import * as glob from "glob";
+import * as _ from 'lodash';
+import * as glob from 'glob';
 
 _.concat(
   glob.sync('node_modules/@typexs/base/gulp/*'),
