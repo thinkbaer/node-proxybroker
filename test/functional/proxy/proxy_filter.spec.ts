@@ -7,13 +7,13 @@ import {TestHelper} from '../TestHelper';
 import {ProxyFilter} from '../../../src/libs/proxy/ProxyFilter';
 import {IpAddr} from '../../../src/entities/IpAddr';
 import {ProxyDataFetched} from '../../../src/libs/proxy/ProxyDataFetched';
-import {ProxyDataValidateEvent} from '../../../src/libs/proxy/ProxyDataValidateEvent';
-import {ProxyDataFetchedEvent} from '../../../src/libs/proxy/ProxyDataFetchedEvent';
+import {ProxyDataValidateEvent} from '../../../src/event/ProxyDataValidateEvent';
+import {ProxyDataFetchedEvent} from '../../../src/event/ProxyDataFetchedEvent';
 
 
 let storage: StorageRef = null;
 
-@suite('proxy/ProxyFilter')
+@suite('proxy/proxy_filter')
 class ProxyDataSelectorTest {
 
   static before() {
@@ -58,16 +58,6 @@ class ProxyDataSelectorTest {
     expect(events[0].data.results).to.be.null;
     expect(events[0].data.ip).to.eq('127.0.1.1');
     expect(events[0].data.port).to.eq(3128);
-    expect(events[0].jobState).to.contain({
-      count: 0,
-      selected: 0,
-      added: 1,
-      skipped: 1,
-      blocked: 0,
-      updated: 0,
-      validated: 0,
-      broken: 0
-    });
 
 
     p.last_checked_at = new Date((new Date()).getTime() - 36 * 60 * 60 * 1000);

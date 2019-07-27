@@ -6,7 +6,7 @@ import {ProtocolType} from '../../../src/libs/specific/ProtocolType';
 import {IpAddrState} from '../../../src/entities/IpAddrState';
 import {IpAddr} from '../../../src/entities/IpAddr';
 import {ProxyRotator} from '../../../src/libs/proxy/ProxyRotator';
-import {ProxyUsedEvent} from '../../../src/libs/proxy/ProxyUsedEvent';
+import {ProxyUsedEvent} from '../../../src/event/ProxyUsedEvent';
 
 
 let storage: StorageRef = null;
@@ -70,7 +70,8 @@ class ProxyRotatorTest {
     e.hostname = '127.0.0.1';
     e.port = 3128;
 
-    const rotator = new ProxyRotator({}, storage);
+    const rotator = new ProxyRotator();
+    rotator.initialize({}, storage);
     const rotate = await rotator.log(e);
 
 
@@ -112,7 +113,8 @@ class ProxyRotatorTest {
     e.port = 3128;
     e.error = new Error('Test');
 
-    const rotator = new ProxyRotator({}, storage);
+    const rotator = new ProxyRotator();
+    rotator.initialize({}, storage);
     const rotate = await rotator.log(e);
 
 
@@ -144,7 +146,8 @@ class ProxyRotatorTest {
   async 'rotate'() {
 
 
-    const rotator = new ProxyRotator({}, storage);
+    const rotator = new ProxyRotator();
+    rotator.initialize({}, storage);
     const next_addr = await rotator.next();
     expect(next_addr).to.not.be.empty;
 

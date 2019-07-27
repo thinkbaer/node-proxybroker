@@ -1,14 +1,19 @@
+import * as _ from 'lodash';
 import {suite, test, timeout} from 'mocha-typescript';
 import {expect} from 'chai';
 import {DateUtils} from 'typeorm/util/DateUtils';
 import {Log} from '@typexs/base';
-import {EventBus} from 'commons-eventbus';
 import {IProxyServerOptions} from '../../../src/libs/server/IProxyServerOptions';
 import {IJudgeOptions} from '../../../src/libs/judge/IJudgeOptions';
 import {TestHelper} from '../TestHelper';
 import {IpAddr} from '../../../src/entities/IpAddr';
 import {ProxyServer} from '../../../src/libs/server/ProxyServer';
 import {ProxyValidator} from '../../../src/libs/proxy/ProxyValidator';
+import {Scheduler} from '@typexs/base/libs/schedule/Scheduler';
+import {ValidatorRunEvent} from '../../../src/libs/proxy/ValidatorRunEvent';
+import {IScheduleDef} from '@typexs/base/libs/schedule/IScheduleDef';
+import {DefaultScheduleFactory} from '@typexs/base/adapters/scheduler/DefaultScheduleFactory';
+import {EventScheduleFactory} from '@typexs/base/adapters/scheduler/EventExecuteFactory';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
@@ -27,11 +32,11 @@ const judge_options: IJudgeOptions = {
   ip: '127.0.0.1'
 };
 
-@suite('proxy/ProxyValidator - schedule') @timeout(20000)
+@suite('proxy/proxy_validator_schedule') @timeout(20000)
 class ProxyValidationControllerTest {
 
   static before() {
-    Log.options({enable: false, level: 'debug'});
+    Log.options({enable: false, level: 'debug', loggers: [{enable: false, name: '*'}]});
   }
 
   @test
@@ -84,7 +89,7 @@ class ProxyValidationControllerTest {
   @test
   async 'test scheduled task'() {
 
-     // Log.options({enable:true,level:'debug'})
+    // Log.options({enable:true,level:'debug'})
     const now = new Date();
 
     const storage = await TestHelper.getDefaultStorageRef();
@@ -102,11 +107,23 @@ class ProxyValidationControllerTest {
     await http_proxy_server.start();
 
 
-    const sec = ((new Date()).getSeconds() + 2) % 60;
-    const proxyValidationController = new ProxyValidator({
-      schedule: {enable: true, pattern: sec + ' * * * * *'},
+    // const sec = ((new Date()).getSeconds() + 2) % 60;
+
+
+    const proxyValidationController = new ProxyValidator();
+    proxyValidationController.initialize({
       judge: judge_options
     }, storage);
+
+    const scheduler = new Scheduler();
+    await scheduler.prepare([new DefaultScheduleFactory(), new EventScheduleFactory()]);
+    await scheduler.register(<IScheduleDef>{
+      name: 'test_schedule',
+      offset: '1s',
+      event: {
+        name: _.snakeCase(ValidatorRunEvent.name)
+      }
+    });
 
 
     await proxyValidationController.prepare();
@@ -118,6 +135,7 @@ class ProxyValidationControllerTest {
     await proxyValidationController.shutdown();
     await http_proxy_server.stop();
     await http_proxy_server.shutdown();
+    await scheduler.shutdown();
 
     await c.close();
 

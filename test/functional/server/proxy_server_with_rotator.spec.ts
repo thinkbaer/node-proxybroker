@@ -1,24 +1,24 @@
-import {suite, test, timeout} from "mocha-typescript";
+import {suite, test, timeout} from 'mocha-typescript';
 
-import {expect} from "chai";
-import {EventBus} from "commons-eventbus";
-import {Log, StorageRef} from "@typexs/base";
-import {ProxyServer} from "../../../src/libs/server/ProxyServer";
-import {ProxyRotator} from "../../../src/libs/proxy/ProxyRotator";
-import {TestHelper} from "../TestHelper";
-import {IpAddr} from "../../../src/entities/IpAddr";
-import {IpAddrState} from "../../../src/entities/IpAddrState";
-import {ProtocolType} from "../../../src/libs/specific/ProtocolType";
-import {IProxyServerOptions} from "../../../src/libs/server/IProxyServerOptions";
-import {IpRotate} from "../../../src/entities/IpRotate";
-import {IpRotateLog} from "../../../src/entities/IpRotateLog";
-import {IHttp, HttpGotAdapter, IHttpOptions, isStream, IHttpResponse, IHttpGetOptions, IHttpPromise, HttpFactory} from 'commons-http';
+import {expect} from 'chai';
+import {EventBus} from 'commons-eventbus';
+import {Log, StorageRef} from '@typexs/base';
+import {ProxyServer} from '../../../src/libs/server/ProxyServer';
+import {ProxyRotator} from '../../../src/libs/proxy/ProxyRotator';
+import {TestHelper} from '../TestHelper';
+import {IpAddr} from '../../../src/entities/IpAddr';
+import {IpAddrState} from '../../../src/entities/IpAddrState';
+import {ProtocolType} from '../../../src/libs/specific/ProtocolType';
+import {IProxyServerOptions} from '../../../src/libs/server/IProxyServerOptions';
+import {IpRotate} from '../../../src/entities/IpRotate';
+import {IpRotateLog} from '../../../src/entities/IpRotateLog';
+import {HttpFactory, IHttp, IHttpGetOptions} from 'commons-http';
 
 
 let storage: StorageRef = null;
 let server_dest: ProxyServer = null;
 let server_distrib: ProxyServer = null;
-let opts: IHttpGetOptions = {
+const opts: IHttpGetOptions = {
   retry: 0,
   proxy: 'http://localhost:3180',
   headers: {
@@ -34,10 +34,10 @@ opts['proxyHeaderExclusiveList'] = [
   'proxy-select-fallback'
 ];
 
-let http_url = 'http://example.com';
-//let http_string = 'A good place to start is by skimming';
-let https_url = 'https://example.com';
-//let https_string = 'As an asynchronous event driven JavaScript runtime';
+const http_url = 'http://example.com';
+// let http_string = 'A good place to start is by skimming';
+const https_url = 'https://example.com';
+// let https_string = 'As an asynchronous event driven JavaScript runtime';
 
 
 let rotator: ProxyRotator = null;
@@ -55,7 +55,7 @@ class ProxyServerTest {
 
     storage = await TestHelper.getDefaultStorageRef();
 
-    let c = await storage.connect();
+    const c = await storage.connect();
 
 
     let ip = new IpAddr();
@@ -86,7 +86,8 @@ class ProxyServerTest {
     ips_https = await c.save(ips_https);
 
 
-    rotator = new ProxyRotator({}, storage);
+    rotator = new ProxyRotator();
+    rotator.initialize({}, storage);
     await EventBus.register(rotator);
 
     server_dest = new ProxyServer();
@@ -124,7 +125,7 @@ class ProxyServerTest {
 
   @test
   async 'rotate and log'() {
-    let wait = 400;
+    const wait = 400;
     let resp1 = await http.get(http_url, opts);
 
     await TestHelper.wait(wait);
@@ -255,19 +256,19 @@ class ProxyServerTest {
 
       statusCode: 504,
       success: false
-    })
+    });
 
   }
 
 
 }
-
-
-process.on('unhandledRejection', (reason: any, p: any) => {
-  console.error(reason)
-});
-
-process.on('uncaughtException', (err: any) => {
-  console.error(err, err.stack)
-
-});
+//
+//
+// process.on('unhandledRejection', (reason: any, p: any) => {
+//   console.error(reason);
+// });
+//
+// process.on('uncaughtException', (err: any) => {
+//   console.error(err, err.stack);
+//
+// });

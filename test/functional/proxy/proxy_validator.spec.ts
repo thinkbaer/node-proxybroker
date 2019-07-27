@@ -6,11 +6,11 @@ import {TestHelper} from '../TestHelper';
 import {Log} from '@typexs/base';
 import {ProxyServer} from '../../../src/libs/server/ProxyServer';
 import {ProxyValidator} from '../../../src/libs/proxy/ProxyValidator';
-import {ProxyDataValidateEvent} from '../../../src/libs/proxy/ProxyDataValidateEvent';
 import {ProxyData} from '../../../src/libs/proxy/ProxyData';
 import {IpAddr} from '../../../src/entities/IpAddr';
 import {IpAddrState} from '../../../src/entities/IpAddrState';
 import {ProtocolType} from '../../../src/libs/specific/ProtocolType';
+import {ProxyDataValidateEvent} from '../../../src/event/ProxyDataValidateEvent';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
@@ -35,7 +35,7 @@ const judge_options: IJudgeOptions = {
   }
 };
 
-@suite('proxy/ProxyValidator') @timeout(10000)
+@suite('proxy/proxy_validator')
 class ProxyValidationControllerTest {
 
   static before() {
@@ -48,7 +48,8 @@ class ProxyValidationControllerTest {
 
     const http_proxy_server = new ProxyServer();
     http_proxy_server.initialize(http_proxy_options);
-    const proxyValidationController = new ProxyValidator({schedule: {enable: false}, judge: judge_options}, storage);
+    const proxyValidationController = new ProxyValidator();
+    proxyValidationController.initialize({judge: judge_options}, storage);
     await proxyValidationController.prepare();
     await http_proxy_server.start();
 
@@ -99,7 +100,8 @@ class ProxyValidationControllerTest {
   async 'negativ validation'() {
     const storage = await TestHelper.getDefaultStorageRef();
 
-    const proxyValidationController = new ProxyValidator({schedule: {enable: false}, judge: judge_options}, storage);
+    const proxyValidationController = new ProxyValidator();
+    proxyValidationController.initialize({judge: judge_options}, storage);
     await proxyValidationController.prepare();
 
     const proxyData = new ProxyData({ip: '127.0.0.30', port: 3128});

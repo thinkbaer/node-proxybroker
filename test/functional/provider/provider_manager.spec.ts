@@ -2,13 +2,13 @@ import {suite, test} from 'mocha-typescript';
 import {expect} from 'chai';
 import {subscribe} from 'commons-eventbus/decorator/subscribe';
 import {Log} from '@typexs/base';
-import {ProxyDataFetchedEvent} from '../../../src/libs/proxy/ProxyDataFetchedEvent';
 import {IProviderOptions} from '../../../src/libs/provider/IProviderOptions';
 import {ProviderManager} from '../../../src/libs/provider/ProviderManager';
 import {TestHelper} from '../TestHelper';
 import {MockedProxies01} from './predefined_01/MockedProxies01';
 import {MockedProxies02} from './predefined_01/MockedProxies02';
 import {MockedProxies03} from './predefined_01/MockedProxies03';
+import {ProxyDataFetchedEvent} from '../../../src/event/ProxyDataFetchedEvent';
 
 class X {
   test: Function;

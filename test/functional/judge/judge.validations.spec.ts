@@ -10,13 +10,14 @@ import {ProtocolType} from '../../../src/libs/specific/ProtocolType';
 import {RequestResponseMonitor} from '../../../src/libs/judge/RequestResponseMonitor';
 import {JudgeResults} from '../../../src/libs/judge/JudgeResults';
 import {HttpFactory} from 'commons-http';
+import {IJudgeOptions} from '../../../src/libs/judge/IJudgeOptions';
 
 const JUDGE_LOCAL_HOST = 'judge.local';
 const PROXY_LOCAL_HOST = 'proxy.local';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-@suite('judge/validations') @timeout(10000)
+@suite('judge/validations')
 class JV {
 
   static server_wrapper: net.Server = null;
@@ -36,7 +37,7 @@ class JV {
   static async before() {
     await HttpFactory.load();
     // Log.options({enable: JV._debug, level:'debug'});
-    Log.options({enable: false, level: 'debug'});
+    Log.options({enable: false, level: 'debug', loggers: [{name: '*', enable: false, level: 'debug'}]});
     const proxy_options: IProxyServerOptions = <IProxyServerOptions>{
       // url: 'http://' + JV.http_proxy_ip + ':' + JV.http_proxy_port,
       protocol: 'http',
@@ -61,7 +62,7 @@ class JV {
     JV.https_proxy_server = new ProxyServer();
     JV.https_proxy_server.initialize(proxy_options2);
 
-    const opts = {
+    const opts: IJudgeOptions = {
       selftest: false,
       remote_lookup: false,
       remote_ip: JUDGE_LOCAL_HOST,
@@ -71,7 +72,7 @@ class JV {
       // remote_url: 'http://' + JUDGE_LOCAL_HOST + ':8080',
       // judge_url: 'http://' + JUDGE_LOCAL_HOST + ':8080',
       request: {
-        socket_timeout: 500,
+        timeout: 500,
         local_ip: '127.0.0.1'
       }
     };
@@ -105,7 +106,6 @@ class JV {
 
 
   static async after() {
-
     await JV.http_proxy_server.stop();
     await JV.https_proxy_server.stop();
 
@@ -170,8 +170,7 @@ class JV {
     const proxy_url_https = 'https://' + JV.http_proxy_ip + ':' + JV.http_proxy_port;
     const judgeReq = JV.judge.createRequest(proxy_url_https, '', {
       local_ip: '127.0.0.1',
-      socket_timeout: 500,
-      connection_timeout: 500
+      timeout: 500
     });
     const rrm: RequestResponseMonitor = await judgeReq.performRequest();
     const err = rrm.lastError();

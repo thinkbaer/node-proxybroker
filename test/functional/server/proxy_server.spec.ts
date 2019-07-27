@@ -1,11 +1,11 @@
-import {suite, test, timeout} from 'mocha-typescript';
+import {suite, test} from 'mocha-typescript';
 
 import {expect} from 'chai';
 import {Log, StorageRef} from '@typexs/base';
 import {ProxyServer} from '../../../src/libs/server/ProxyServer';
 import {IProxyServerOptions} from '../../../src/libs/server/IProxyServerOptions';
 
-import {HttpFactory, HttpGotAdapter, IHttp, IHttpGetOptions, IHttpResponse} from 'commons-http';
+import {HttpFactory, IHttp, IHttpGetOptions, IHttpResponse} from 'commons-http';
 
 const storage: StorageRef = null;
 let server_dest: ProxyServer = null;
@@ -13,7 +13,7 @@ let server_distrib: ProxyServer = null;
 const opts: IHttpGetOptions = {
   retry: 0,
   proxy: 'http://localhost:3180',
-  headers: {
+  proxyHeaders: {
     'Proxy-Select-Level': 1
   }
 };
@@ -32,14 +32,14 @@ const https_url = 'https://example.com';
 const https_string = http_string;
 let http: IHttp = null;
 
-@suite('server/ProxyServer') @timeout(20000)
+@suite('server/proxy_server')
 class ProxyServerTest {
 
 
   async before() {
     http = HttpFactory.create();
 
-    Log.options({enable: false, level: 'debug'});
+    Log.options({enable: false, level: 'debug', loggers: [{name: '*', enable: false, level: 'debug'}]});
     server_dest = new ProxyServer();
     server_dest.initialize(<IProxyServerOptions>{
       protocol: 'http',
@@ -93,7 +93,7 @@ class ProxyServerTest {
     let err = null;
     Log.debug('http get start');
     try {
-      resp1 = await http.get('http://asd-test-site.org/html', opts);
+      resp1 = await http.get('http://exa-as-mple.com', opts);
       expect(true).to.be.false;
     } catch (_err) {
       err = _err;
@@ -102,20 +102,20 @@ class ProxyServerTest {
       resp1 = err.response;
 
     }
-    Log.debug('http get stop');
 
-    const erroredResp = err.gotOptions.agent.erroredResponse;
-    const json = JSON.parse(erroredResp.headers['proxy-broker-error']);
+    // const erroredResp = err.gotOptions.agent.erroredResponse;
+    const json = JSON.parse(err.headers['proxy-broker-error']);
 
     delete json.error._error['message'];
-    expect(erroredResp.statusCode).to.be.eq(504);
+    expect(err.statusCode).to.be.eq(504);
+    expect(err.headers['proxy-broker']).to.be.eq('Failed');
     expect(json.error).to.deep.include({
       _code: 'ADDR_NOT_FOUND',
       _error: {
         code: 'ENOTFOUND',
         'errno': 'ENOTFOUND',
-        'host': 'asd-test-site.org',
-        'hostname': 'asd-test-site.org',
+        'host': 'exa-as-mple.com',
+        'hostname': 'exa-as-mple.com',
         'port': 80,
         'syscall': 'getaddrinfo',
       }
@@ -129,7 +129,7 @@ class ProxyServerTest {
     let resp1 = null;
     let err = null;
     try {
-      resp1 = await http.get('https://asd-test-site.org/html', opts);
+      resp1 = await http.get('https://exa-as-mple.com', opts);
       expect(true).to.be.false;
     } catch (_err) {
 
@@ -141,7 +141,23 @@ class ProxyServerTest {
     }
 
 
-    expect(err.message).to.contain('tunneling socket could not be established, statusCode=504');
+    expect(err.message).to.contain('Response code 504 (Gateway Time-out)');
+    const json = JSON.parse(err.headers['proxy-broker-error']);
+
+    delete json.error._error['message'];
+    expect(err.statusCode).to.be.eq(504);
+    expect(err.headers['proxy-broker']).to.be.eq('Failed');
+    expect(json.error).to.deep.include({
+      _code: 'ADDR_NOT_FOUND',
+      _error: {
+        code: 'ENOTFOUND',
+        'errno': 'ENOTFOUND',
+        'host': 'exa-as-mple.com',
+        'hostname': 'exa-as-mple.com',
+        'port': 443,
+        'syscall': 'getaddrinfo',
+      }
+    });
 
   }
 

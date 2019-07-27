@@ -42,10 +42,8 @@ const boot = async function (): Promise<void> {
   const selector = new ProxyFilter(storage);
   await selector.prepare();
 
-  const validator = new ProxyValidator({
-    schedule: {
-      enable: true
-    },
+  const validator = new ProxyValidator();
+  validator.initialize({
     judge: {
       selftest: true,
       remote_lookup: true,
@@ -56,7 +54,7 @@ const boot = async function (): Promise<void> {
         timeout: 10000,
       }
     }
-  }, storage);
+  }, storage)
   await validator.prepare();
   Container.set(ProxyValidator, validator);
 
