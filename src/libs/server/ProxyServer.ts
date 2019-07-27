@@ -8,14 +8,14 @@ import {DEFAULT_PROXY_SERVER_OPTIONS, IProxyServerOptions} from './IProxyServerO
 
 
 import {SocketHandle} from './SocketHandle';
-import {ProxyUsedEvent} from '../proxy/ProxyUsedEvent';
-
-import {EventBus} from 'commons-eventbus';
 import {IRoute, IServer, Server} from '@typexs/server';
 import {IUrlBase, Log, TodoException} from '@typexs/base';
 import {ProtocolType} from '../specific/ProtocolType';
 import {IpAddr} from '../../entities/IpAddr';
 import {HttpHeaderTransform} from './HttpHeaderTransform';
+import {E_EMPTY_SOCKET_HANDLES} from '../Constants';
+import {EventBus} from 'commons-eventbus';
+import {ProxyUsedEvent} from '../../event/ProxyUsedEvent';
 
 
 export class ProxyServer extends Server implements IServer {
@@ -30,9 +30,9 @@ export class ProxyServer extends Server implements IServer {
 
 
   initialize(options: IProxyServerOptions): void {
+    options.logger = _.get(options, 'logger', Log.getLoggerFor(ProxyServer));
     _.defaults(options, DEFAULT_PROXY_SERVER_OPTIONS);
     super.initialize(options);
-
   }
 
 
@@ -107,7 +107,7 @@ export class ProxyServer extends Server implements IServer {
       _url = {
         protocol: __url.protocol.replace(':', ''),
         hostname: __url.hostname,
-        port: parseInt(__url.port)
+        port: parseInt(__url.port, 0)
       };
     } else if (_.isFunction(this._options.target)) {
       const t = await this._options.target(headers);
@@ -136,7 +136,11 @@ export class ProxyServer extends Server implements IServer {
   }
 
 
-  private async handleUpstreamAfterFinishedRequest(reqHandle: SocketHandle, handle: SocketHandle, req: http.IncomingMessage, upstream: net.Socket, head: Buffer) {
+  private async handleUpstreamAfterFinishedRequest(reqHandle: SocketHandle,
+                                                   handle: SocketHandle,
+                                                   req: http.IncomingMessage,
+                                                   upstream: net.Socket,
+                                                   head: Buffer) {
     handle.debug('handleUpstreamAfterFinishedRequest finished=' + reqHandle.finished + ' error=' + handle.hasError());
     if (handle.hasError() && handle.hasSocketError()) {
       // if (!reqHandle.finished && !reqHandle.ended) {
@@ -275,7 +279,8 @@ export class ProxyServer extends Server implements IServer {
     // let rurl: url.Url = url.parse(`http://${req.url}`);
     const req_handle = this.getSocketHandle(req.socket);
     this.onProxyRequest(req_handle, req);
-    this.debug('ProxyServer->onServerConnect [' + (req_handle ? req_handle.id : 'none') + '] ' + this.url() + ' url=' + req.url + ' handle=' + (req_handle ? req_handle.id : 'none'));
+    this.debug('ProxyServer->onServerConnect [' + (req_handle ? req_handle.id : 'none') + '] ' +
+      this.url() + ' url=' + req.url + ' handle=' + (req_handle ? req_handle.id : 'none'));
 
     if (this._options.toProxy && this._options.target && !disable_proxy_to_proxy) {
       await this.connectToExternProxy(true, req_handle, req, null, upstream, head);
@@ -286,7 +291,7 @@ export class ProxyServer extends Server implements IServer {
       const proxy_url: any = {
         // protocol: 'https', //
         hostname: rurl.hostname,
-        port: parseInt(rurl.port)
+        port: parseInt(rurl.port, 0)
       };
 
       const upTransform = new HttpHeaderTransform({headers: req_handle.getHeaders()});
@@ -347,7 +352,7 @@ export class ProxyServer extends Server implements IServer {
 
       this.debug('proxing url ' + this.url() + ' url=' + req.url + ' ssl=' + req_handle.options.ssl);
 
-      const downstream = net.connect(parseInt(_url.port), _url.hostname, () => {
+      const downstream = net.connect(parseInt(_url.port, 0), _url.hostname, () => {
         const req_buf = req_handle.build();
         if (req_buf) {
           downstream.write(req_buf, err => {
@@ -374,32 +379,37 @@ export class ProxyServer extends Server implements IServer {
   onServerConnection(socket: net.Socket | tls.TLSSocket, secured: boolean = false) {
     super.onServerConnection(socket);
     this.debug('ProxyServer->onServerConnection(' + secured + ') ' + this.url());
-    this.createSocketHandle(socket, {ssl: secured, timeout: 30000});
+    this.createSocketHandle(socket, {ssl: secured, timeout: 10000});
   }
 
 
   private createSocketHandle(socket: net.Socket, opts: { ssl?: boolean, timeout?: number } = {}): SocketHandle {
     opts = _.defaults(opts, {
       ssl: false,
-      timeout: 30000
+      timeout: 10000
     });
     const handle = new SocketHandle(socket, opts);
     handle.meta.repeat = 0;
 
     this.handles.push(handle);
-    this.debug('ProxyServer->createSocketHandle ' + handle.id);
-    const self = this;
-    handle.onFinish().then(handle => {
-      _.remove(self.handles, (x: SocketHandle) => {
-        return x.id === handle.id;
-      });
-
-      if (self.handles.length === 0) {
-        self.server.emit('empty handles');
-      }
+    this.debug('createSocketHandle ' + handle.id);
+    handle.onFinish().then((handle: SocketHandle) => {
+      this.debug('onFinished ' + handle.id);
+      this.removeHandle(handle);
     });
 
     return handle;
+  }
+
+  removeHandle(handle: SocketHandle) {
+    _.remove(this.handles, (x: SocketHandle) => {
+      return x.id === handle.id;
+    });
+
+    if (this.handles.length === 0) {
+      this.server.emit(E_EMPTY_SOCKET_HANDLES);
+    }
+
   }
 
 
@@ -411,17 +421,26 @@ export class ProxyServer extends Server implements IServer {
   onProxyToProxy(base: IUrlBase, handle: SocketHandle): Promise<any> {
     this.debug('ProxyServer->onProxyToProxy ' + base.protocol + '://' + base.hostname + ':' + base.port);
     const e = new ProxyUsedEvent(base, handle);
-    return EventBus.postAndForget(e).catch(e => {
-      Log.error(e);
+    return EventBus.postAndForget(e).catch(() => {
     });
   }
 
 
   preFinalize(): Promise<void> {
+    Log.debug('proxyserver-preFinalize: handles ' + this.handles.length);
     if (this.handles.length > 0) {
-      const self = this;
+      const timer = setTimeout(() => {
+        while (this.handles.length > 0) {
+          const handle = this.handles.shift();
+          handle.finish();
+        }
+        this.server.emit(E_EMPTY_SOCKET_HANDLES);
+      }, 500);
       return new Promise(resolve => {
-        self.server.once('empty handles', resolve);
+        this.server.once(E_EMPTY_SOCKET_HANDLES, () => {
+          clearTimeout(timer);
+          resolve();
+        });
       });
     }
     return Promise.resolve();

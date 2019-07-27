@@ -13,11 +13,12 @@ import {DEFAULT_JUDGE_OPTIONS, IJudgeOptions} from './IJudgeOptions';
 import {JudgeResults} from './JudgeResults';
 import {JudgeResult} from './JudgeResult';
 import {IServerApi, Server} from '@typexs/server';
-import {CryptUtils, DomainUtils, Log, Progress, TodoException} from '@typexs/base';
+import {CryptUtils, DomainUtils, Log, TodoException} from '@typexs/base';
 import {MESSAGE, Messages} from '../specific/Messages';
 import {ProtocolType} from '../specific/ProtocolType';
 import {HttpFactory, IHttp, IHttpResponse} from 'commons-http';
 import {K_JUDGE_REQUEST_TIMEOUT} from '../Constants';
+import {LockFactory} from '@typexs/base/libs/LockFactory';
 
 
 const FREEGEOIP = 'http://ip-api.com/json/';
@@ -36,7 +37,9 @@ export class Judge implements IServerApi {
 
   private enabled = false;
 
-  private progress: Progress = new Progress();
+  // private progress: Progress = new Progress();
+
+  private lock = LockFactory.$().semaphore(1);
 
   private runnable = false;
 
@@ -241,7 +244,7 @@ export class Judge implements IServerApi {
 
 
   createRequest(protocol: string, proxy_url: string, options:
-    { local_ip?: string, socket_timeout?: number, connection_timeout?: number } = {}): JudgeRequest {
+    { local_ip?: string, timeout?: any } = {}): JudgeRequest {
     const inc = this.inc++;
 
     let judge_url = this.remote_url(protocol);
@@ -487,60 +490,62 @@ export class Judge implements IServerApi {
     socket.once('data', onData);
   }
 
-  async progressing(): Promise<any> {
-    return this.progress.waitTillDone();
+  progressing() {
+    return this.lock.await();
   }
 
   async wakeup(force: boolean = false): Promise<boolean> {
-    const self = this;
-    await this.progress.startWhenReady();
     if (this.isEnabled()) {
       return Promise.resolve(true);
     }
 
-    return Promise.all([
-      self.httpServer.start(),
-      self.httpsServer.start()
-    ])
-      .then(_x => {
-        self.enable();
-        return true;
-      })
-
-      // TODO check if address and port are bound, on expcetion shutdown connection
-      .then(async r => {
-        await self.progress.ready();
-        return r;
-      })
-      .catch(err => {
-        Log.error(err);
-        throw err;
-      });
+    await this.lock.acquire();
+    let res = false;
+    try {
+      this.enable();
+      await Promise.all([
+        this.httpServer.start(),
+        this.httpsServer.start()
+      ]);
+      res = true;
+    } catch (e) {
+      Log.error('judge-wakeup:', e);
+      // throw e;
+    } finally {
+      this.lock.release(); // progress.ready();
+    }
+    return res;
   }
 
 
   async pending(): Promise<any> {
-    const self = this;
-
-    // this.info('judge pending ...')
-    await this.progress.startWhenReady();
-
     if (!this.isEnabled()) {
       return Promise.resolve(true);
     }
 
+    const cacheKeys = _.keys(this.cache);
+    Log.debug('judge-pending: clear cache (entries: ' + cacheKeys.length + ')');
+    cacheKeys.map(x => {
+      this.cache[x].clear();
+      this.removeFromCache(x);
+    });
+
+    await this.lock.acquire(); // progress.startWhenReady();
+    let ret = false;
     try {
+      this.disable();
       await Promise.all([
-        self.httpServer.stop(),
-        self.httpsServer.stop()
+        this.httpServer.stop(),
+        this.httpsServer.stop()
       ]);
-      self.disable();
-      await self.progress.ready();
-      this.progress.removeAllListeners();
+      ret = true;
+      Log.debug('judge-pending: finished');
     } catch (e) {
-      return false;
+      Log.error('judge-pending:', e);
+    } finally {
+      this.lock.release();
     }
-    return true;
+    return ret;
 
   }
 

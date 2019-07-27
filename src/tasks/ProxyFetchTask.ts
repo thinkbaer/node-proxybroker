@@ -4,6 +4,7 @@ import {ProviderManager} from '../libs/provider/ProviderManager';
 import {__ALL__, TN_PROXY_FETCH, TN_PROXY_VALIDATE} from '../libs/Constants';
 import {IProxyData} from '../libs/proxy/IProxyData';
 
+
 export class ProxyFetchTask implements ITask {
 
   name = TN_PROXY_FETCH;
@@ -35,6 +36,9 @@ export class ProxyFetchTask implements ITask {
   @Incoming({optional: true})
   validate = false;
 
+  @Incoming({optional: true})
+  store = true;
+
   async exec() {
     const all = this.variants.indexOf(__ALL__) > -1;
     const variants = this.providerManager.findAll({name: this.provider});
@@ -51,7 +55,7 @@ export class ProxyFetchTask implements ITask {
       }
     }
     if (this.validate) {
-      await this.runtime.addTask(TN_PROXY_VALIDATE, {proxies: this.proxies});
+      await this.runtime.addTask(TN_PROXY_VALIDATE, {proxies: this.proxies, store: this.store});
     }
     return this.proxies;
   }

@@ -1,15 +1,12 @@
 import * as _ from 'lodash';
-
-import {ProxyDataFetchedEvent} from './ProxyDataFetchedEvent';
-
 import {ProxyData} from './ProxyData';
-
-import {ProxyDataValidateEvent} from './ProxyDataValidateEvent';
 import {ProxyDataFetched} from './ProxyDataFetched';
 import {AsyncWorkerQueue, DomainUtils, IQueueProcessor, Log, StorageRef} from '@typexs/base';
 import {subscribe} from 'commons-eventbus/decorator/subscribe';
 import {IpAddr} from '../../entities/IpAddr';
 import {EventBus} from 'commons-eventbus';
+import {ProxyDataFetchedEvent} from '../../event/ProxyDataFetchedEvent';
+import {ProxyDataValidateEvent} from '../../event/ProxyDataValidateEvent';
 
 
 const PROXY_FILTER_NAME = 'proxy_filter';

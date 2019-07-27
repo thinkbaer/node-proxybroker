@@ -6,6 +6,7 @@ import {ITaskRunnerResult} from '@typexs/base/libs/tasks/ITaskRunnerResult';
 import {TasksHelper} from '@typexs/base/libs/tasks/TasksHelper';
 import {CFG_PROXY_STARTUP, CFG_PROXY_VALIDATOR, TN_PROXY_VALIDATE} from '../libs/Constants';
 import {IProxyValidatiorOptions} from '../libs/proxy/IProxyValidatiorOptions';
+import {OutputHelper} from '../libs/OutputHelper';
 
 
 const REGEX = /^((http|https):\/\/)?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):?(\d{1,5})?$/;
@@ -80,6 +81,7 @@ export class ProxyValidateCommand implements ICommand {
   }
 
   beforeStorage(): void {
+    // Log.options({enable: false, transports: [{console:}], loggers: [{name: '*', enable: false}]}, false);
     Config.set(CFG_PROXY_STARTUP, true, TYPEXS_NAME);
     // Config.set('server', null, TYPEXS_NAME);
     System.enableDistribution(false);
@@ -230,20 +232,7 @@ export class ProxyValidateCommand implements ICommand {
 
     switch (argv.format) {
       case 'json':
-        const data: JudgeResults[] = [];
-        proxyData.forEach(_x => {
-          if (_x.results) {
-            const copy: ProxyData = _.clone(_x);
-            for (const res of copy.results.getVariants()) {
-              res.logStr = res.logToString();
-              if (res.hasError()) {
-                res.error = <any>{message: res.error.message, code: res.error.code};
-              }
-              delete res.log;
-            }
-            data.push(copy.results);
-          }
-        });
+        const data = OutputHelper.toJson(proxyData);
         console.log(JSON.stringify(data, null, 2));
         break;
       case 'csv':

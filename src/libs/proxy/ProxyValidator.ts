@@ -1,7 +1,6 @@
 import {Judge} from '../judge/Judge';
 import {ProxyData} from './ProxyData';
 import * as _ from 'lodash';
-import {ProxyDataValidateEvent} from './ProxyDataValidateEvent';
 import {JudgeResult} from '../judge/JudgeResult';
 import {DEFAULT_VALIDATOR_OPTIONS, IProxyValidatiorOptions} from './IProxyValidatiorOptions';
 import {ValidatorRunEvent} from './ValidatorRunEvent';
@@ -12,6 +11,8 @@ import {IpAddr} from '../../entities/IpAddr';
 import {EventBus} from 'commons-eventbus';
 import {IpAddrState} from '../../entities/IpAddrState';
 import {IpLoc} from '../../entities/IpLoc';
+import {E_EMPTY_FINISHED} from '../Constants';
+import {ProxyDataValidateEvent} from '../../event/ProxyDataValidateEvent';
 
 
 const PROXY_VALIDATOR = 'proxy_validator';
@@ -27,6 +28,8 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
   queue: AsyncWorkerQueue<ProxyData>;
 
   judge: Judge;
+
+  _isEmpty = true;
 
 
   static buildState(addr: IpAddr, result: JudgeResult): IpAddrState {
@@ -145,13 +148,10 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
     let http_state: IpAddrState = null;
 
-
     if (proxyData.results) {
 
       // check if IpLoc exists then update it else create a new entry
       let ip_loc = await conn.manager.findOne(IpLoc, {where: {ip: proxyData.ip}});
-
-
       if (!ip_loc) {
         ip_loc = new IpLoc();
       }
@@ -239,6 +239,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
 
   async push(o: ProxyData): Promise<QueueJob<ProxyData>> {
+    this._isEmpty = false;
     return this.queue.push(o);
   }
 
@@ -253,6 +254,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
 
   async shutdown() {
+    Log.debug('proxy_validator:  pre-shutdown');
     if (this.judge.isEnabled()) {
       await this.judge.pending();
     }
@@ -290,9 +292,23 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
 
   async onEmpty(): Promise<void> {
-    Log.info('queue[' + this.queue.options.name + '] is empty stop judge');
-    await this.judge.pending();
-    // return Promise.resolve();
+    if (this.judge.isEnabled()) {
+      await this.judge.pending();
+    }
+    this.queue.emit(E_EMPTY_FINISHED);
+    this._isEmpty = true;
+  }
+
+
+  async isEmpty() {
+    if (this._isEmpty) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      this.queue.once(E_EMPTY_FINISHED, () => {
+        resolve();
+      });
+    });
   }
 
 }

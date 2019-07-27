@@ -3,7 +3,7 @@ import {C_STORAGE_DEFAULT, Incoming, Inject, ITask, Log, StorageRef} from '@type
 import {REGEX, TN_PROXY_VALIDATE} from '../libs/Constants';
 import {ProxyData} from '../libs/proxy/ProxyData';
 import {ProxyValidator} from '../libs/proxy/ProxyValidator';
-import {EventEmitter} from 'events';
+import {LockFactory} from '@typexs/base/libs/LockFactory';
 
 export class ProxyValidateTask implements ITask {
 
@@ -24,13 +24,15 @@ export class ProxyValidateTask implements ITask {
   @Incoming({optional: true})
   store = true;
 
-  emitter = new EventEmitter();
+  semaphore = LockFactory.$().semaphore(10000);
 
-  todo: ProxyData[] = [];
+  // emitter = new EventEmitter();
 
-  _send = 0;
+  // todo: ProxyData[] = [];
 
-  _done = 0;
+  // _send = 0;
+
+  // _done = 0;
 
   static handle(value: any) {
     if (_.isString(value)) {
@@ -65,36 +67,36 @@ export class ProxyValidateTask implements ITask {
   }
 
 
-  async await() {
-    return new Promise(resolve => {
-      this.emitter.once('finished', resolve);
-    });
-  }
-
-
-  async pause() {
-    if (this._send % 1000 === 0) {
-      return new Promise(resolve => {
-        this.emitter.once('resume', resolve);
-      });
-    } else {
-      return Promise.resolve();
-    }
-  }
-
-
-  done(c: ProxyData) {
-    _.remove(this.todo, x => x.ip === c.ip && x.port === c.port);
-    this._done++;
-    if (this.todo.length === 0) {
-      this.emitter.emit('finished');
-    }
-    Log.debug('validate task: ' + this._send + ' / ' + this._done + ' / ' + this.todo.length);
-    if (this._send - this._done < 1000) {
-      this.emitter.emit('resume');
-    }
-
-  }
+  // async await() {
+  //   return new Promise(resolve => {
+  //     this.emitter.once('finished', resolve);
+  //   });
+  // }
+  //
+  //
+  // async pause() {
+  //   if (this._send % 1000 === 0) {
+  //     return new Promise(resolve => {
+  //       this.emitter.once('resume', resolve);
+  //     });
+  //   } else {
+  //     return Promise.resolve();
+  //   }
+  // }
+  //
+  //
+  // done(c: ProxyData) {
+  //   _.remove(this.todo, x => x.ip === c.ip && x.port === c.port);
+  //   this._done++;
+  //   if (this.todo.length === 0) {
+  //     this.emitter.emit('finished');
+  //   }
+  //   Log.debug('validate task: ' + this._send + ' / ' + this._done + ' / ' + this.todo.length);
+  //   if (this._send - this._done < 1000) {
+  //     this.emitter.emit('resume');
+  //   }
+  //
+  // }
 
   async exec() {
     if (this.proxies.length === 0) {
@@ -102,12 +104,13 @@ export class ProxyValidateTask implements ITask {
     }
 
 
-    this.todo = _.clone(this.proxies);
+//    this.todo = _.clone(this.proxies);
 
     try {
 
       for (const _q of this.proxies) {
-        this._send++;
+        //      this._send++;
+        await this.semaphore.acquire();
         this.validator.push(_q)
           .then(value => {
             return value.done();
@@ -116,11 +119,11 @@ export class ProxyValidateTask implements ITask {
             Log.error(reason);
           })
           .finally(() => {
-            this.done(_q);
+            this.semaphore.release();
           });
-        await this.pause();
+        // await this.pause();
       }
-      await this.await();
+      await this.validator.isEmpty();
     } catch (err) {
       Log.error(err);
     }

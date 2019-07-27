@@ -1,7 +1,9 @@
-import {SocketHandle} from "../server/SocketHandle";
-import {ProtocolType} from "../specific/ProtocolType";
-import {IUrlBase} from "@typexs/base";
+import {Event} from 'commons-eventbus/decorator/Event';
+import {IUrlBase} from '@typexs/base/libs/IUrlBase';
+import {ProtocolType} from '../libs/specific/ProtocolType';
+import {SocketHandle} from '../libs/server/SocketHandle';
 
+@Event()
 export class ProxyUsedEvent {
 
   protocol: ProtocolType;
@@ -12,13 +14,13 @@ export class ProxyUsedEvent {
 
   port: number;
 
-  duration: number = 0;
+  duration = 0;
 
-  success: boolean = false;
+  success = false;
 
   error: Error = null;
 
-  fired: boolean = false;
+  fired = false;
 
   start: Date;
 
@@ -29,14 +31,12 @@ export class ProxyUsedEvent {
 
   constructor(options?: IUrlBase, handle?: SocketHandle) {
     if (options) {
-      this.assignFrom(options)
+      this.assignFrom(options);
     }
 
     if (handle) {
-      this.assignFrom(handle)
+      this.assignFrom(handle);
     }
-
-    // _.assign(this, options)
   }
 
   assignFrom(options: IUrlBase | SocketHandle) {
@@ -47,20 +47,12 @@ export class ProxyUsedEvent {
       this.statusCode = options.statusCode;
       this.error = options.error;
       this.success = !options.hasError();
-      this.protocol_dest = options.ssl ? ProtocolType.HTTPS : ProtocolType.HTTP
+      this.protocol_dest = options.ssl ? ProtocolType.HTTPS : ProtocolType.HTTP;
     } else {
       this.protocol = options.protocol === 'https' ? ProtocolType.HTTPS : ProtocolType.HTTP;
       this.hostname = options.hostname;
-      this.port = options.port
+      this.port = options.port;
     }
   }
-
-  /*
-  fire() {
-      this.fired = true;
-      EventBus.post(this)
-  }
-
-   */
 
 }

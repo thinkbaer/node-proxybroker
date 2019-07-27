@@ -16,6 +16,7 @@ import {ITaskRunnerResult} from '@typexs/base/libs/tasks/ITaskRunnerResult';
 import {IProxyValidatiorOptions} from '../libs/proxy/IProxyValidatiorOptions';
 import {JudgeResults} from '../libs/judge/JudgeResults';
 import {ProxyData} from '../libs/proxy/ProxyData';
+import {OutputHelper} from '../libs/OutputHelper';
 
 
 export class ProxyFetchCommand implements ICommand {
@@ -35,10 +36,8 @@ export class ProxyFetchCommand implements ICommand {
 
   beforeStorage(): void {
     // reset settings
-    Log.enable = false;
+    // Log.options({enable: false, transports: [], loggers: [{name: '*', enable: false}]}, false);
     System.enableDistribution(false);
-    Config.set('logging.enable', false, TYPEXS_NAME);
-    Config.set('logging.loggers', {name: '*', enable: false}, TYPEXS_NAME);
     Config.set(C_SERVER, null, TYPEXS_NAME);
     Config.set(CFG_PROXY_STARTUP, true, TYPEXS_NAME);
     Config.set(CFG_PROXY_PROVIDERS_CONFIG_ROOT, <IProviderOptions>{}, TYPEXS_NAME);
@@ -71,8 +70,15 @@ export class ProxyFetchCommand implements ICommand {
         demand: true
       })
       .option('validate', {
-        alias: 'v',
+        alias: 'vd',
         describe: 'Enable validate',
+        default: false,
+        type: 'boolean',
+        demand: true
+      })
+      .option('store', {
+        alias: 's',
+        describe: 'Enable storing',
         default: false,
         type: 'boolean',
         demand: true
@@ -143,6 +149,12 @@ export class ProxyFetchCommand implements ICommand {
         params.validate = false;
       }
 
+      if (argv.store) {
+        params.store = true;
+      } else {
+        params.store = false;
+      }
+
       const results = <ITaskRunnerResult>await TasksHelper.exec(tasks, params);
       if (results && results.results.length > 0) {
         const r = <TaskState[]>_.filter(results.results, x => x.name === (params.validate ? TN_PROXY_VALIDATE : TN_PROXY_FETCH));
@@ -154,22 +166,22 @@ export class ProxyFetchCommand implements ICommand {
 
       switch (argv.format) {
         case 'json':
-          const data: JudgeResults[] = [];
-          list.forEach((_x: any) => {
-            if (_x.results) {
-              const copy: ProxyData = _.clone(_x);
-              for (const res of copy.results.variants) {
-                res.logStr = res.logToString();
-                if (res.hasError()) {
-                  res.error = <any>{message: res.error.message, code: res.error.code};
-                }
-                delete res.log;
-              }
-              data.push(copy.results);
-            } else {
-              data.push(_x);
-            }
-          });
+          const  data = OutputHelper.toJson(list);
+          // list.forEach((_x: any) => {
+          //   if (_x.results) {
+          //     const copy: ProxyData = _.clone(_x);
+          //     for (const res of copy.results.variants) {
+          //       res.logStr = res.logToString();
+          //       if (res.hasError()) {
+          //         res.error = <any>{message: res.error.message, code: res.error.code};
+          //       }
+          //       delete res.log;
+          //     }
+          //     data.push(copy.results);
+          //   } else {
+          //     data.push(_x);
+          //   }
+          // });
           console.log(JSON.stringify(data, null, 2));
           break;
         case 'csv':

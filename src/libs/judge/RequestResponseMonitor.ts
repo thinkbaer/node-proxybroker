@@ -10,7 +10,7 @@ import * as events from 'events';
 import * as _ from 'lodash';
 import {ReqResEvent} from './ReqResEvent';
 
-import {IHttpHeaders, Log, NestedException} from '@typexs/base';
+import {IHttpHeaders, ILoggerApi, Log, NestedException} from '@typexs/base';
 import {MESSAGE} from '../specific/Messages';
 import Exceptions from '@typexs/server/libs/server/Exceptions';
 import {IHttpOptions, IHttpStream} from 'commons-http';
@@ -63,6 +63,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
 
   httpOptions: IHttpOptions;
 
+  logger: ILoggerApi;
 
   constructor(url: string, options: IHttpOptions, stream: IHttpStream<any>, id?: string) {
     super();
@@ -72,6 +73,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     stream.on('request', this.onRequest.bind(this));
     this.id = id;
     this.stream = stream;
+    this.logger = Log.getLoggerFor(RequestResponseMonitor);
   }
 
 
@@ -436,7 +438,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     } else {
       msg.unshift(this.id);
     }
-    Log.debug.apply(Log, msg);
+    this.logger.debug.apply(Log, msg);
   }
 
   /**
@@ -467,7 +469,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     });
 
     this.log_arr.push(rre);
-    Log.debug(rre.logMsg());
+    this.logger.debug(rre.logMsg());
   }
 
 }

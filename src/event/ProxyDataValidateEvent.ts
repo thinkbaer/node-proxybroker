@@ -1,7 +1,8 @@
-import {ProxyData} from './ProxyData';
+import {Event} from 'commons-eventbus/decorator/Event';
+import {ProxyData} from '../libs/proxy/ProxyData';
 
-// import {JobState} from '../../entities/JobState';
 
+@Event()
 export class ProxyDataValidateEvent {
 
   data: ProxyData;
@@ -15,7 +16,7 @@ export class ProxyDataValidateEvent {
   // jobState: JobState = null;
 
 
-  constructor(data: ProxyData /*, jobState?: JobState*/) {
+  constructor(data?: ProxyData /*, jobState?: JobState*/) {
 
     // this.jobState = jobState;
     // if (!this.jobState) {

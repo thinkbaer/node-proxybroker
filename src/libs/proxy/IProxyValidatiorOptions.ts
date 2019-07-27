@@ -6,7 +6,8 @@ export interface IProxyValidatiorOptions {
   parallel?: number;
 
 
-  revalidate: {
+  revalidate?: {
+
     time_distance: number;
 
     limit: number;
@@ -35,7 +36,7 @@ export const DEFAULT_VALIDATOR_OPTIONS: IProxyValidatiorOptions = {
 
   revalidate: {
 
-    time_distance: 24 * 60 * 60,
+    time_distance: 4 * 60 * 60,
 
     limit: 1000
   }
