@@ -5,7 +5,13 @@ logging:
   enable: true
   level: debug
   transports:
-    - console: {}
+    - console:
+        stderrLevels:
+          - info
+          - debug
+          - warn
+          - error
+          - trace
     - file:
         filename: ./tmp/log/proxybroker.log
         level: debug
@@ -18,7 +24,13 @@ logging:
       enable: true
       level: debug
       transports:
-        - console: {}
+        - console:
+            stderrLevels:
+              - info
+              - debug
+              - warn
+              - error
+              - trace
         - file:
             filename: ./tmp/log/proxybroker.log
             level: debug
