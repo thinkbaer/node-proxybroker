@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "lib": [
-      "dom",
-      "es2015",
-      "es5"
+      "es5",
+      "es6",
+      "dom"
     ],
     "outDir": "./build/compiled",
     "target": "es6",
@@ -22,14 +22,16 @@
     "noImplicitAny": true,
     "suppressImplicitAnyIndexErrors": true,
     "typeRoots": [
-      // "./typings/modules",
       "./node_modules/@types"
     ]
   },
   "exclude": [
-    "node_modules",
+    "**/files/*.ts",
+    "archive",
     "build",
     "dist",
+    "node_modules",
+    "*/node_modules",
     "tmp"
   ],
   "compileOnSave": true

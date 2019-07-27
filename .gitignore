@@ -54,9 +54,17 @@ build/
 
 # Typings
 typings/
+archive/
+
+# Typexs configs
+config/secrets.yml
+config/secrets--*.yml
+config/typexs--*.yml
+
 
 # Docker
 docker/local
+docker/*/local
 
 # Hidden
 *.hidden.*
@@ -64,3 +72,6 @@ docker/local
 # R
 .RData
 .Rhistory
+
+# npm
+package-lock.json

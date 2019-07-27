@@ -1,0 +1,68 @@
+app:
+  name: proxybroker
+
+logging:
+  enable: true
+  level: debug
+  transports:
+    - console:
+        stderrLevels:
+          - info
+          - debug
+          - warn
+          - error
+          - trace
+    - file:
+        filename: ./tmp/log/proxybroker.log
+        level: debug
+    - file:
+        name: errors
+        filename: ./tmp/log/proxybroker-errors.log
+        level: error
+  loggers:
+    - name: '*'
+      enable: true
+      level: debug
+      transports:
+        - console:
+            stderrLevels:
+              - info
+              - debug
+              - warn
+              - error
+              - trace
+        - file:
+            filename: ./tmp/log/proxybroker.log
+            level: debug
+        - file:
+            name: error
+            filename: ./tmp/log/proxybroker-errors.log
+            level: error
+
+
+
+storage:
+  default:
+    type: postgres
+    database: proxybroker
+    username: proxybroker
+    port: 5432
+    synchronize: true
+
+
+
+proxy-broker:
+  validator:
+    parallel: 50
+    judge:
+      selftest: true
+      remote_lookup: true
+      remote_ip: 127.0.0.1
+      ip: 0.0.0.0
+      request:
+        timeout: 5000
+  provider:
+    startup: true
+    parallel: 5
+
+

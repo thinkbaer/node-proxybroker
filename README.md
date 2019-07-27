@@ -4,45 +4,54 @@
 
 [![Build Status](https://travis-ci.org/thinkbaer/node-proxybroker.svg?branch=master)](https://travis-ci.org/thinkbaer/node-proxybroker)
 [![codecov](https://codecov.io/gh/thinkbaer/node-proxybroker/branch/master/graph/badge.svg)](https://codecov.io/gh/thinkbaer/node-proxybroker)
-[![Dependency Status](https://www.versioneye.com/user/projects/596932d5368b080056357b50/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/596932d5368b080056357b50)
-
-Under deveploment.
+[![Dependency Status](https://david-dm.org/thinkbaer/node-proxybroker.svg)](https://david-dm.org/thinkbaer/node-proxybroker)
 
 
-## CLI
+## Install
 
-from build/package
-```
-node cli.js judge --ip {ip} --port {port}
+```js
+npm install -g typexs
+npm install proxybroker
 ```
 
-from .
-```
-node --require ts-node/register src/cli.ts judge --ip {ip} --port {port}
-```
+## Configuration
 
-Fetch proxy list from provider in csv format
-```
-pb$ node --require ts-node/register src/cli.ts fetch provider freeproxylists anonym -f csv -v  > /tmp/proxies_anonym.csv
-```
+config/typexs.yml
 
-Test proxies from a csv file and return results as csv
-```
-pb$ node --require ts-node/register src/cli.ts judge-file /tmp/proxies_anonym.csv -f csv -v > /tmp/proxies_anonym_results.csv
-```
+```yaml
+
+proxybroker:
+  # enable on startup
+  startup: true | false 
+  # provider options
+  providerOptions:
+    
 
 
-## Tests
-
-```
-mocha --opts test/mocha.all.opts
 ```
 
 
-## Startup
+## Usage
 
-```
-$ node --require ts-node/register src/cli.ts start -c config/proxybroker.yml
+
+**Fetch proxies**
+
+Command: proxy-fetch [provider] [variant] -f json|csv -validate
+
+* provider - the name of the defined proxy provider
+* variant - is the possible different proxy
+* -f - output format is default 'json', the other possible value is 'csv'
+* -validate - run validation of grabbed data  
+* -store - store data also in backend
+
+```bash
+# Shows proxy variants
+> typexs proxy-fetch
+
+# Scan all proxy variants and return as json (can be piped to json file )
+> typexs proxy-fetch __all__
+> typexs proxy-fetch __all__ > proxies.json
+   
 ```
 
 
@@ -50,3 +59,9 @@ $ node --require ts-node/register src/cli.ts start -c config/proxybroker.yml
 ```
 $ curl -x http://localhost:3128 -L http://httpbin.org/headers
 ```
+
+
+## Notes
+
+* If you running proxybroker locally or behind a NAT enviroment, you must expose the ports 
+of the judge instance.
