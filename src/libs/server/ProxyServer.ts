@@ -5,8 +5,6 @@ import * as net from 'net';
 import * as url from 'url';
 
 import {DEFAULT_PROXY_SERVER_OPTIONS, IProxyServerOptions} from './IProxyServerOptions';
-
-
 import {SocketHandle} from './SocketHandle';
 import {IRoute, IServer, Server} from '@typexs/server';
 import {IUrlBase, Log, TodoException} from '@typexs/base';
