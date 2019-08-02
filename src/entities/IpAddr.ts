@@ -1,14 +1,14 @@
-import {BeforeInsert, BeforeUpdate, Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
+import {BeforeInsert, BeforeUpdate, Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn} from 'typeorm';
 
-import {Index} from "typeorm/decorator/Index";
-import {ProtocolType} from "../libs/specific/ProtocolType";
+import {Index} from 'typeorm/decorator/Index';
+import {ProtocolType} from '../libs/specific/ProtocolType';
 
-import {Entity} from "typeorm/decorator/entity/Entity";
+import {Entity} from 'typeorm/decorator/entity/Entity';
 
 
 @Entity()
-@Index("unique_key_with_combination_of_ip_port", (ipAddr: IpAddr) => [ipAddr.key], {unique: true})
-@Index("unique_ip_and_port", (ipaddr: IpAddr) => [ipaddr.ip, ipaddr.port], {unique: true})
+@Index('unique_key_with_combination_of_ip_port', (ipAddr: IpAddr) => [ipAddr.key], {unique: true})
+@Index('unique_ip_and_port', (ipaddr: IpAddr) => [ipaddr.ip, ipaddr.port], {unique: true})
 export class IpAddr {
 
   @PrimaryGeneratedColumn()
@@ -37,7 +37,7 @@ export class IpAddr {
   blocked: boolean = false;
 
   @Column({type: 'boolean'})
-  to_delete: boolean = false;
+  to_delete = false;
 
   @Column({nullable: true})
   last_checked_at: Date;
@@ -69,48 +69,48 @@ export class IpAddr {
   @BeforeUpdate()
   _prepare() {
     if (!this.key) {
-      this.key = [this.ip, this.port].join(':')
+      this.key = [this.ip, this.port].join(':');
     }
   }
 
   addSourceProtocol(pt: ProtocolType) {
-    this.protocols_src = this.protocols_src | pt
+    this.protocols_src = this.protocols_src | pt;
   }
 
   removeSourceProtocol(pt: ProtocolType) {
     if ((this.protocols_src & pt) == pt) {
-      this.protocols_src = this.protocols_src & ~pt
+      this.protocols_src = this.protocols_src & ~pt;
     }
   }
 
 
   addProtocol(pt: ProtocolType) {
-    this.protocols_dest = this.protocols_dest | pt
+    this.protocols_dest = this.protocols_dest | pt;
   }
 
   removeProtocol(pt: ProtocolType) {
-    this.protocols_dest = this.protocols_dest & ~pt
+    this.protocols_dest = this.protocols_dest & ~pt;
   }
 
 
   supportsProtocol(p: ProtocolType): boolean {
-    return (this.protocols_dest & p) == p
+    return (this.protocols_dest & p) == p;
   }
 
   supportsSourceProtocol(p: ProtocolType): boolean {
-    return (this.protocols_src & p) == p
+    return (this.protocols_src & p) == p;
   }
 
   supportsHttp(): boolean {
-    return this.supportsProtocol(ProtocolType.HTTP)
+    return this.supportsProtocol(ProtocolType.HTTP);
   }
 
   supportsHttps(): boolean {
-    return this.supportsProtocol(ProtocolType.HTTPS)
+    return this.supportsProtocol(ProtocolType.HTTPS);
   }
 
   supportsBoth() {
-    return this.supportsHttp() && this.supportsHttps()
+    return this.supportsHttp() && this.supportsHttps();
   }
 
 

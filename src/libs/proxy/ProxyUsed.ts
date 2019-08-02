@@ -1,16 +1,15 @@
-import {Event} from 'commons-eventbus/decorator/Event';
 import {IUrlBase} from '@typexs/base/libs/IUrlBase';
-import {ProtocolType} from '../libs/specific/ProtocolType';
-import {SocketHandle} from '../libs/server/SocketHandle';
+import {ProtocolType} from '../specific/ProtocolType';
+import {SocketHandle} from '../server/SocketHandle';
 
-@Event()
-export class ProxyUsedEvent {
+
+export class ProxyUsed {
 
   protocol: ProtocolType;
 
   protocol_dest: ProtocolType;
 
-  hostname: string;
+  ip: string;
 
   port: number;
 
@@ -50,7 +49,7 @@ export class ProxyUsedEvent {
       this.protocol_dest = options.ssl ? ProtocolType.HTTPS : ProtocolType.HTTP;
     } else {
       this.protocol = options.protocol === 'https' ? ProtocolType.HTTPS : ProtocolType.HTTP;
-      this.hostname = options.hostname;
+      this.ip = options.hostname;
       this.port = options.port;
     }
   }

@@ -6,7 +6,7 @@ export interface IProxyRotatorOptions {
 
 }
 
-export const DEFAULT_ROTATOR_OPTIONS : IProxyRotatorOptions = {
+export const DEFAULT_ROTATOR_OPTIONS: IProxyRotatorOptions = {
 
 };
 

@@ -7,32 +7,48 @@ import * as url from 'url';
 import {DEFAULT_PROXY_SERVER_OPTIONS, IProxyServerOptions} from './IProxyServerOptions';
 import {SocketHandle} from './SocketHandle';
 import {IRoute, IServer, Server} from '@typexs/server';
-import {IUrlBase, Log, TodoException} from '@typexs/base';
+import {Container, IUrlBase, Log, TodoException} from '@typexs/base';
 import {ProtocolType} from '../specific/ProtocolType';
 import {IpAddr} from '../../entities/IpAddr';
 import {HttpHeaderTransform} from './HttpHeaderTransform';
 import {E_EMPTY_SOCKET_HANDLES} from '../Constants';
-import {EventBus} from 'commons-eventbus';
-import {ProxyUsedEvent} from '../../event/ProxyUsedEvent';
+import {PROXY_ROTATOR_SERVICE} from '../proxy/IProxyRotator';
+import {ProxyUsed} from '../proxy/ProxyUsed';
+import {IProxySelector} from '../proxy/IProxySelector';
 
 
 export class ProxyServer extends Server implements IServer {
-  name: string;
 
+
+  name: string;
 
   _options: IProxyServerOptions;
 
   handles: SocketHandle[] = [];
 
-  // proxy: HttpProxy = null;
-
 
   initialize(options: IProxyServerOptions): void {
+    _.defaultsDeep(options, DEFAULT_PROXY_SERVER_OPTIONS);
     options.logger = _.get(options, 'logger', Log.getLoggerFor(ProxyServer));
-    _.defaults(options, DEFAULT_PROXY_SERVER_OPTIONS);
+
+    if (options.toProxy && !options.target) {
+      try {
+        const rotator = Container.get(PROXY_ROTATOR_SERVICE);
+        options.target = rotator.next.bind(rotator);
+        options.proxyLog = rotator.log.bind(rotator);
+      } catch (e) {
+        options.logger.error('Downgrade to direct proxy cause rotator can\'t be initialized.');
+        // disable
+        options.toProxy = false;
+      }
+    }
     super.initialize(options);
   }
 
+
+  getLogger() {
+    return this.options().logger;
+  }
 
   get level(): number {
     return this._options.level;
@@ -73,27 +89,15 @@ export class ProxyServer extends Server implements IServer {
     handle.removeHeader('Proxy-Select-Country');
 
     if (this.level === 3) {
-
       const sender_ip = req.socket.remoteAddress;
       const proxy_ip = req.socket.localAddress;
       const proxy_port = req.socket.localPort;
-
       handle.setHeader('X-Forwarded-For', sender_ip);
       handle.setHeader('Via', 'ProxyBroker on ' + proxy_ip + ':' + proxy_port);
-      // proxyReq.setHeader('X-Via', 'ProxyBroker on ' + proxy_ip + ':' + proxy_port);
-      // proxyReq.setHeader('X-Cache', 'Loader3');
-      // proxyReq.setHeader('X-Cache-Lookup', 'MISSED');
-      // proxyReq.setHeader('X-Client-IP', sender_ip);
-
     } else if (this.level === 2) {
-
       const proxy_ip = req.socket.localAddress;
       const proxy_port = req.socket.localPort;
-
       handle.setHeader('Via', 'ProxyBroker on ' + proxy_ip + ':' + proxy_port);
-      // proxyReq.setHeader('X-Cache', 'Loader2');
-      // proxyReq.setHeader('X-Cache-Lookup', 'MISSED');
-
     }
   }
 
@@ -108,7 +112,8 @@ export class ProxyServer extends Server implements IServer {
         port: parseInt(__url.port, 0)
       };
     } else if (_.isFunction(this._options.target)) {
-      const t = await this._options.target(headers);
+      const selector: IProxySelector = _.clone(headers);
+      const t = await this._options.target(selector);
       if (t instanceof IpAddr) {
         // IpAddr
         _url = {
@@ -160,23 +165,21 @@ export class ProxyServer extends Server implements IServer {
               reqHandle.debug(err);
             }
             upstream.end();
-            /*
-            if (!upstream.destroyed) {
-              upstream.destroy();
-            }*/
           });
       }
 
     } else {
       if (upstream && !upstream.destroyed) {
         upstream.end();
-        // upstream.destroy();
       }
     }
   }
 
 
-  private async handleResponseAfterFinishedRequest(reqHandle: SocketHandle, handle: SocketHandle, req: http.IncomingMessage, res: http.ServerResponse) {
+  private async handleResponseAfterFinishedRequest(reqHandle: SocketHandle,
+                                                   handle: SocketHandle,
+                                                   req: http.IncomingMessage,
+                                                   res: http.ServerResponse) {
     handle.debug('handleResponseAfterFinishedRequest finished=' + reqHandle.finished + ' error=' + handle.hasError());
 
     if (handle.hasError()) {
@@ -204,63 +207,99 @@ export class ProxyServer extends Server implements IServer {
   }
 
 
-  async connectToExternProxy(ssl: boolean, reqHandle: SocketHandle, req: http.IncomingMessage, res?: http.ServerResponse, upstream?: net.Socket, head?: Buffer) {
-    const self = this;
+  async connectToExternProxy(ssl: boolean,
+                             requestHandle: SocketHandle,
+                             request: http.IncomingMessage,
+                             response?: http.ServerResponse,
+                             upstream?: net.Socket,
+                             head?: Buffer) {
+    const selector = _.clone(request.headers) as IProxySelector;
+    selector.ssl = ssl;
 
-    const proxy_url = await this.getTarget(req.headers);
-    if (proxy_url) {
-      const _str = proxy_url.protocol + '://' + proxy_url.hostname + ':' + proxy_url.port;
-      this.debug('proxing over proxy ' + _str + ' for url ' + req.url + ' (' + reqHandle.meta.repeat + ')');
-
+    const proxyUrl = await this.getTarget(selector);
+    if (proxyUrl) {
+      const proxyUrlStr = proxyUrl.protocol + '://' + proxyUrl.hostname + ':' + proxyUrl.port;
+      this.debug('proxing over proxy ' + proxyUrlStr + ' for url ' + request.url + ' (' + requestHandle.meta.repeat + ')');
+      ssl = ssl || proxyUrl.protocol === 'https';
       let downstream: net.Socket = null;
       if (ssl) {
-        downstream = net.connect(proxy_url.port, proxy_url.hostname, function () {
-          self.debug('downstream over proxy connected to ' + req.url);
-          const conn_string = '' +
-            'CONNECT ' + req.url + ' HTTP/' + req.httpVersion + '\r\n' +
-            'Host: ' + req.url + '\r\n' +
+        downstream = net.connect(proxyUrl.port, proxyUrl.hostname, () => {
+          this.debug('downstream (tunneling) over proxy connected to ' + request.url);
+          const connectStr = '' +
+            'CONNECT ' + request.url + ' HTTP/' + request.httpVersion + '\r\n' +
+            'Host: ' + request.url + '\r\n' +
             '\r\n';
-          downstream.write(conn_string, err => {
+          downstream.write(connectStr, err => {
             if (err) {
-              Log.error(err);
+              this.getLogger().error(err);
             }
           });
+
           if (head) {
             downstream.write(head, err => {
               if (err) {
-                Log.error(err);
+                this.getLogger().error(err);
               }
             });
           }
 
-          downstream.pipe(upstream);
-          upstream.pipe(downstream);
+          downstream
+            // .pipe(new Transform({
+            //   transform(chunk: any, encoding: string, callback: (error?: (Error | null), data?: any) => void): void {
+            //     console.log(chunk.toString());
+            //     callback(null, chunk);
+            //   }
+            // }))
+            .pipe(upstream);
+          upstream
+            // .pipe(new Transform({
+            //   transform(chunk: any, encoding: string, callback: (error?: (Error | null), data?: any) => void): void {
+            //     console.log(chunk.toString());
+            //     callback(null, chunk);
+            //   }
+            // }))
+            .pipe(downstream);
         });
       } else {
-        downstream = net.connect(proxy_url.port, proxy_url.hostname, function () {
-          downstream.write(reqHandle.build(), err => {
+        downstream = net.connect(proxyUrl.port, proxyUrl.hostname, () => {
+          this.debug('downstream over proxy connected to ' + request.url);
+          downstream.write(requestHandle.build(), err => {
             if (err) {
-              Log.error(err);
+              this.getLogger().error(err);
             }
           });
-          downstream.pipe(req.socket);
-          req.socket.pipe(downstream);
+          downstream
+          // .pipe(new Transform({
+          //   transform(chunk: any, encoding: string, callback: (error?: (Error | null), data?: any) => void): void {
+          //     console.log(chunk.toString());
+          //     callback(null, chunk);
+          //   }
+          // }))
+            .pipe(request.socket);
+          request.socket
+          // .pipe(new Transform({
+          //   transform(chunk: any, encoding: string, callback: (error?: (Error | null), data?: any) => void): void {
+          //     console.log(chunk.toString());
+          //     callback(null, chunk);
+          //   }
+          // }))
+            .pipe(downstream);
         });
 
       }
 
-      const handle = self.createSocketHandle(downstream, {timeout: 10000});
+      const handle = this.createSocketHandle(downstream, {timeout: this.options().broker.timeouts.forward});
 
       await handle.onFinish();
       try {
         if (ssl) {
-          await self.handleUpstreamAfterFinishedRequest(reqHandle, handle, req, upstream, head);
+          await this.handleUpstreamAfterFinishedRequest(requestHandle, handle, request, upstream, head);
         } else {
-          await self.handleResponseAfterFinishedRequest(reqHandle, handle, req, res);
+          await this.handleResponseAfterFinishedRequest(requestHandle, handle, request, response);
         }
-        await this.onProxyToProxy(proxy_url, handle);
+        await this.onProxyToProxy(proxyUrl, handle);
       } catch (err) {
-        Log.error(err);
+        this.getLogger().error(err);
       }
     } else {
       throw new TodoException('What should happen if no url is given? Define a fallback');
@@ -271,50 +310,47 @@ export class ProxyServer extends Server implements IServer {
     return super.url();
   }
 
-  async onServerConnect(req: http.IncomingMessage, upstream: net.Socket, head: Buffer, disable_proxy_to_proxy: boolean = false) {
+  async onServerConnect(req: http.IncomingMessage,
+                        upstream: net.Socket, head: Buffer, disable_proxy_to_proxy: boolean = false) {
     const self = this;
 
     // let rurl: url.Url = url.parse(`http://${req.url}`);
     const req_handle = this.getSocketHandle(req.socket);
     this.onProxyRequest(req_handle, req);
-    this.debug('ProxyServer->onServerConnect [' + (req_handle ? req_handle.id : 'none') + '] ' +
+    this.debug('onServerConnect [' + (req_handle ? req_handle.id : 'none') + '] ' +
       this.url() + ' url=' + req.url + ' handle=' + (req_handle ? req_handle.id : 'none'));
 
     if (this._options.toProxy && this._options.target && !disable_proxy_to_proxy) {
       await this.connectToExternProxy(true, req_handle, req, null, upstream, head);
     } else {
-
       const rurl: url.Url = url.parse(`http://${req.url}`);
-
       const proxy_url: any = {
-        // protocol: 'https', //
         hostname: rurl.hostname,
         port: parseInt(rurl.port, 0)
       };
-
       const upTransform = new HttpHeaderTransform({headers: req_handle.getHeaders()});
       const downstream = net.connect(proxy_url.port, proxy_url.hostname, function () {
-        self.debug('ProxyServer->onServerConnect [' + req_handle.id + ']: downstream connected to ' + req.url);
+        self.debug('onServerConnect [' + req_handle.id + ']: downstream connected to ' + req.url);
         upstream.write(
           'HTTP/' + req.httpVersion + ' 200 Connection Established\r\n' +
           'Proxy-agent: Proxybroker\r\n' +
           '\r\n', err => {
             if (err) {
-              Log.error(err);
+              this.getLogger().error(err);
             }
           });
-
         upstream.pipe(upTransform).pipe(downstream);
         downstream.pipe(upstream);
-
       });
 
+      // TODO add timeout if proxyserver is not a used as broker
       const handle = this.createSocketHandle(downstream);
-      handle.onFinish()
-        .then(handle => {
-          return self.handleUpstreamAfterFinishedRequest(req_handle, handle, req, upstream, head);
-        })
-        .catch(err => Log.error(err));
+      try {
+        await handle.onFinish();
+        await self.handleUpstreamAfterFinishedRequest(req_handle, handle, req, upstream, head);
+      } catch (err) {
+        this.getLogger().error(err);
+      }
     }
   }
 
@@ -349,35 +385,34 @@ export class ProxyServer extends Server implements IServer {
       }
 
       this.debug('proxing url ' + this.url() + ' url=' + req.url + ' ssl=' + req_handle.options.ssl);
-
       const downstream = net.connect(parseInt(_url.port, 0), _url.hostname, () => {
         const req_buf = req_handle.build();
         if (req_buf) {
           downstream.write(req_buf, err => {
             if (err) {
-              Log.error(err);
+              this.getLogger().error(err);
             }
           });
         }
-
         downstream.pipe(req.socket);
         req.socket.pipe(downstream);
       });
 
-      const handle = this.createSocketHandle(downstream);
-      handle.onFinish()
-        .then(handle => {
-          return self.handleResponseAfterFinishedRequest(req_handle, handle, req, res);
-        })
-        .catch(err => Log.error(err));
+      const handle = this.createSocketHandle(downstream, {timeout: this.options().broker.timeouts.incoming});
+      try {
+        await handle.onFinish();
+        await self.handleResponseAfterFinishedRequest(req_handle, handle, req, res);
+      } catch (err) {
+        this.getLogger().error(err);
+      }
     }
   }
 
 
   onServerConnection(socket: net.Socket | tls.TLSSocket, secured: boolean = false) {
     super.onServerConnection(socket);
-    this.debug('ProxyServer->onServerConnection(' + secured + ') ' + this.url());
-    this.createSocketHandle(socket, {ssl: secured, timeout: 10000});
+    this.debug('onServerConnection(' + secured + ') ' + this.url());
+    this.createSocketHandle(socket, {ssl: secured, timeout: this.options().broker.timeouts.incoming});
   }
 
 
@@ -390,24 +425,23 @@ export class ProxyServer extends Server implements IServer {
     handle.meta.repeat = 0;
 
     this.handles.push(handle);
-    this.debug('createSocketHandle ' + handle.id);
+    this.debug('create SocketHandle id=' + handle.id);
+    // tslint:disable-next-line:no-shadowed-variable
     handle.onFinish().then((handle: SocketHandle) => {
-      this.debug('onFinished ' + handle.id);
+      this.debug('onFinished socketHandle.id = ' + handle.id);
       this.removeHandle(handle);
     });
-
     return handle;
   }
+
 
   removeHandle(handle: SocketHandle) {
     _.remove(this.handles, (x: SocketHandle) => {
       return x.id === handle.id;
     });
-
     if (this.handles.length === 0) {
       this.server.emit(E_EMPTY_SOCKET_HANDLES);
     }
-
   }
 
 
@@ -417,15 +451,17 @@ export class ProxyServer extends Server implements IServer {
 
 
   onProxyToProxy(base: IUrlBase, handle: SocketHandle): Promise<any> {
-    this.debug('ProxyServer->onProxyToProxy ' + base.protocol + '://' + base.hostname + ':' + base.port);
-    const e = new ProxyUsedEvent(base, handle);
-    return EventBus.postAndForget(e).catch(() => {
-    });
+    this.debug('onProxyToProxy ' + base.protocol + '://' + base.hostname + ':' + base.port);
+    if (this._options.proxyLog) {
+      const e = new ProxyUsed(base, handle);
+      return this._options.proxyLog(e);
+    }
+    return Promise.resolve();
   }
 
 
   preFinalize(): Promise<void> {
-    Log.debug('proxyserver-preFinalize: handles ' + this.handles.length);
+    this.debug('preFinalize: handles ' + this.handles.length);
     if (this.handles.length > 0) {
       const timer = setTimeout(() => {
         while (this.handles.length > 0) {
@@ -465,4 +501,7 @@ export class ProxyServer extends Server implements IServer {
     return super.stop();
   }
 
+  debug(...msg: any[]): void {
+    this.getLogger().debug(...msg);
+  }
 }

@@ -226,7 +226,6 @@ export class Judge implements IServerApi {
         this.selftestByProtocol('https'),
       ]);
 
-      this.info('Selftest results:\n' + JSON.stringify(results, null, 2));
 
       /*
       this.info('Selftest results for request to ' + ping_url + '\n' +

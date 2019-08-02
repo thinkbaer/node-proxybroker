@@ -1,6 +1,11 @@
 import * as _ from 'lodash';
-import {C_STORAGE_DEFAULT, Config, Container, IBootstrap, Inject, IShutdown, RuntimeLoader, StorageRef} from '@typexs/base';
-import {CFG_PROXY_PROVIDERS_CONFIG_ROOT, CFG_PROXY_VALIDATOR, MODUL_TOPIC_PROXY_PROVIDER} from './libs/Constants';
+import {C_STORAGE_DEFAULT, Config, Container, IBootstrap, Inject, IPermissions, IShutdown, RuntimeLoader, StorageRef} from '@typexs/base';
+import {
+  CFG_PROXY_PROVIDERS_CONFIG_ROOT,
+  CFG_PROXY_VALIDATOR,
+  MODUL_TOPIC_PROXY_PROVIDER,
+  PERMISSION_ACCESS_PROXY_BROKER_CONTENT
+} from './libs/Constants';
 import {ClassType} from 'commons-http/libs/Constants';
 import {AbstractProvider} from './libs/provider/AbstractProvider';
 import {StartupHelper} from './libs/StartupHelper';
@@ -9,9 +14,10 @@ import {IProviderOptions} from './libs/provider/IProviderOptions';
 import {Scheduler} from '@typexs/base/libs/schedule/Scheduler';
 import {ProxyValidator} from './libs/proxy/ProxyValidator';
 import {IProxyValidatiorOptions} from './libs/proxy/IProxyValidatiorOptions';
+import {EventBus} from 'commons-eventbus';
 
 
-export class Startup implements IBootstrap, IShutdown {
+export class Startup implements IBootstrap, IShutdown, IPermissions {
 
   @Inject(Scheduler.NAME)
   scheduler: Scheduler;
@@ -59,6 +65,11 @@ export class Startup implements IBootstrap, IShutdown {
       await this.proxyValidator.shutdown();
     }
 
+  }
+
+
+  permissions(): Promise<string[]> | string[] {
+    return [PERMISSION_ACCESS_PROXY_BROKER_CONTENT];
   }
 
 }

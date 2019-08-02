@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {Incoming, Inject, ITask, ITaskRuntimeContainer, Outgoing, TaskRuntime} from '@typexs/base';
+import {DomainUtils, Incoming, Inject, ITask, ITaskRuntimeContainer, Outgoing, TaskRuntime} from '@typexs/base';
 import {ProviderManager} from '../libs/provider/ProviderManager';
 import {__ALL__, TN_PROXY_FETCH, TN_PROXY_VALIDATE} from '../libs/Constants';
 import {IProxyData} from '../libs/proxy/IProxyData';
@@ -50,10 +50,16 @@ export class ProxyFetchTask implements ITask {
           const variant = this.providerManager.get(v);
           const worker = await this.providerManager.createWorker(variant);
           const p = await worker.fetch();
-          this.proxies = _.concat(this.proxies, p).filter(x => x && x.ip && x.port);
+          const pp = p.filter(x => x && x.ip && x.port && DomainUtils.IP_REGEX.test(x.ip) && 0 < x.port && x.port <= 65536);
+          this.proxies = _.concat(this.proxies, pp);
         }
       }
     }
+
+    if (this.store) {
+
+    }
+
     if (this.validate) {
       await this.runtime.addTask(TN_PROXY_VALIDATE, {proxies: this.proxies, store: this.store});
     }

@@ -1,6 +1,8 @@
-import {IUrlBase} from "@typexs/base";
-import {IpAddr} from "../../entities/IpAddr";
-import {IServerInstanceOptions, IServerOptions} from "@typexs/server";
+import {IUrlBase} from '@typexs/base';
+import {IpAddr} from '../../entities/IpAddr';
+import {IServerInstanceOptions, IServerOptions} from '@typexs/server';
+import {IProxySelector} from '../proxy/IProxySelector';
+import {ProxyUsed} from '../proxy/ProxyUsed';
 
 export const K_PROXYSERVER = 'proxyserver';
 
@@ -23,17 +25,30 @@ export const DEFAULT_SERVER_OPTIONS: IServerOptions = {
 
 export interface IProxyServerOptions extends IServerOptions, IServerInstanceOptions {
 
-  enable?: boolean
+  enable?: boolean;
 
-  level: number
+  level: number;
 
-  toProxy: boolean
+  toProxy: boolean;
 
-  target?: ((select?: any) => Promise<IUrlBase | IpAddr>) | string
+  target?: ((select?: IProxySelector) => Promise<IUrlBase | IpAddr>) | string;
 
-  repeatLimit?: number
+  proxyLog?: (ip?: ProxyUsed) => Promise<IpAddr>;
 
+  repeatLimit?: number;
 
+  broker?: {
+
+    enable?: boolean,
+
+    timeouts?: {
+
+      forward?: number,
+
+      incoming?: number
+
+    }
+  }
 }
 
 
@@ -49,6 +64,17 @@ export const DEFAULT_PROXY_SERVER_OPTIONS: IProxyServerOptions = {
 
   enable: true,
 
-  repeatLimit: 0
+  repeatLimit: 3,
 
+  broker: {
+
+    enable: false,
+
+    timeouts: {
+
+      forward: 1000,
+
+      incoming: 30000
+    }
+  }
 };

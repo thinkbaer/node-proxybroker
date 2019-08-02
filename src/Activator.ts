@@ -9,6 +9,8 @@ import {ProxyValidator} from './libs/proxy/ProxyValidator';
 import {IProxyValidatiorOptions} from './libs/proxy/IProxyValidatiorOptions';
 import {CFG_PROXY_VALIDATOR} from './libs/Constants';
 import * as _ from 'lodash';
+import {ProxyRotator} from './libs/proxy/ProxyRotator';
+import {PROXY_ROTATOR_SERVICE} from './libs/proxy/IProxyRotator';
 
 
 export class Activator implements IActivator {
@@ -32,5 +34,15 @@ export class Activator implements IActivator {
     } else {
       Container.set(ProxyValidator.NAME, null);
     }
+
+    /**
+     * If proxy server then add default rotator
+     */
+    const proxyServerConfig = StartupHelper.getProxyServerConfigs();
+    if (!_.isEmpty(proxyServerConfig)) {
+      const rotator = Container.get(ProxyRotator);
+      Container.set(PROXY_ROTATOR_SERVICE, rotator);
+    }
+
   }
 }

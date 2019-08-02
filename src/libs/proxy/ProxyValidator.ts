@@ -5,7 +5,7 @@ import {JudgeResult} from '../judge/JudgeResult';
 import {DEFAULT_VALIDATOR_OPTIONS, IProxyValidatiorOptions} from './IProxyValidatiorOptions';
 import {ValidatorRunEvent} from './ValidatorRunEvent';
 import {DateUtils} from 'typeorm/util/DateUtils';
-import {AsyncWorkerQueue, IQueueProcessor, Log, QueueJob, StorageRef} from '@typexs/base';
+import {AsyncWorkerQueue, ConnectionWrapper, IQueueProcessor, Log, QueueJob, StorageRef} from '@typexs/base';
 import {subscribe} from 'commons-eventbus/decorator/subscribe';
 import {IpAddr} from '../../entities/IpAddr';
 import {EventBus} from 'commons-eventbus';
@@ -24,6 +24,8 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
   options: IProxyValidatiorOptions;
 
   storage: StorageRef;
+
+  connection: ConnectionWrapper;
 
   queue: AsyncWorkerQueue<ProxyData>;
 
@@ -127,9 +129,10 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
 
   async store(proxyData: ProxyData) {
-    const storage = this.storage;
+    // const storage = this.storage;
     // results are present
-    const conn = await storage.connect();
+    // const conn = await storage.connect();
+    const conn = this.connection;
     const now = new Date();
 
     let ip_addr = await conn.manager.findOne(IpAddr, {ip: proxyData.ip, port: proxyData.port});
@@ -225,7 +228,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
       await conn.save(ip_addr);
 
     }
-    await conn.close();
+    // await conn.close();
 
   }
 
@@ -270,6 +273,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     if (!this.judge.isEnabled()) {
       try {
         await this.judge.wakeup();
+        this.connection = await this.storage.connect();
       } catch (err) {
         Log.error(err);
         throw err;
@@ -292,6 +296,10 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
 
   async onEmpty(): Promise<void> {
+    if (this.connection) {
+      await this.connection.close();
+      this.connection = null;
+    }
     if (this.judge.isEnabled()) {
       await this.judge.pending();
     }

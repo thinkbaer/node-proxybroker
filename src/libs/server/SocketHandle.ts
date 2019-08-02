@@ -3,7 +3,6 @@ import * as net from 'net';
 import Exceptions from '@typexs/server/libs/server/Exceptions';
 import {IHttpHeaders, Log} from '@typexs/base';
 import {E_SOCKET_FINISHED} from '../Constants';
-import Timer = NodeJS.Timer;
 
 
 export class SocketHandle {
@@ -77,7 +76,6 @@ export class SocketHandle {
     }
 
     if (this.ssl || data[0] === 0x16 || data[0] === 0x80 || data[0] === 0x00) {
-      this.debug('TLS detected ' + data.length);
       this.ssl = true;
       return;
     }
@@ -206,6 +204,10 @@ export class SocketHandle {
 
 
   onClose(had_error: boolean) {
+    if (!this.duration) {
+      this.stop = new Date();
+      this.duration = this.stop.getTime() - this.start.getTime();
+    }
     this.debug('socket close error=' + had_error + ' duration=' + this.duration);
     this.finish();
   }
