@@ -48,10 +48,13 @@ storage:
     username: proxybroker
     port: 5432
     synchronize: true
+#    logger: simple-console
+#    logging: all
 
 
 
 proxy-broker:
+  startup: true
   validator:
     parallel: 50
     judge:
