@@ -12,7 +12,7 @@ if [ "$1" = 'renew' ]; then
         docker rm $NAME
     fi
 
-    docker run --hostname $NAME \
+    docker run --ip $NAME \
            --name $NAME \
            -v $(pwd)/..:/opt/$NAME \
            -v $(pwd)/local:/data \
