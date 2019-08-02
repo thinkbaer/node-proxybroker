@@ -1,3 +1,6 @@
+
+process.env.SQL_LOG = '1';
+
 import {suite, test} from 'mocha-typescript';
 import {expect} from 'chai';
 import {Log, StorageRef} from '@typexs/base';
@@ -6,46 +9,64 @@ import {ProtocolType} from '../../../src/libs/specific/ProtocolType';
 import {IpAddrState} from '../../../src/entities/IpAddrState';
 import {IpAddr} from '../../../src/entities/IpAddr';
 import {ProxyRotator} from '../../../src/libs/proxy/ProxyRotator';
-import {ProxyUsedEvent} from '../../../src/event/ProxyUsedEvent';
-
+import {ProxyUsed} from '../../../src/libs/proxy/ProxyUsed';
 
 let storage: StorageRef = null;
+let vid = 1;
+
+function createIp(_ip: string, port: number) {
+  const ip = new IpAddr();
+  ip.ip = _ip;
+  ip.port = port;
+  ip.validation_id = vid++;
+  return ip;
+}
+
+function createIpState(ip: IpAddr, src: number, dest: number, level: 1, duration: number) {
+  const ips_http = new IpAddrState();
+  ips_http.validation_id = ip.validation_id;
+  ips_http.protocol_src = src;
+  ips_http.protocol_dest = dest;
+  ips_http.addr_id = ip.id;
+  ips_http.level = level;
+  ips_http.enabled = true;
+  ips_http.duration = duration;
+  return ips_http;
+}
 
 @suite('proxy/ProxyRotator')
 class ProxyRotatorTest {
 
 
   async before() {
-    Log.options({enable: false, level: 'debug'});
+    Log.options({enable: true, level: 'debug'});
     storage = await TestHelper.getDefaultStorageRef();
 
     const c = await storage.connect();
 
-    let ip = new IpAddr();
-    ip.ip = '127.0.0.1';
-    ip.port = 3128;
-    ip.validation_id = 1;
+    let ip = createIp('127.0.0.1', 3128);
     ip = await c.save(ip);
 
-    let ips_http = new IpAddrState();
-    ips_http.validation_id = ip.validation_id;
-    ips_http.protocol_src = ProtocolType.HTTP;
-    ips_http.protocol_dest = ProtocolType.HTTP;
-    ips_http.addr_id = ip.id;
-    ips_http.level = 1;
-    ips_http.enabled = true;
-    ips_http.duration = 100;
+    let ips_http = createIpState(ip, ProtocolType.HTTP, ProtocolType.HTTP, 1, 100);
     ips_http = await c.save(ips_http);
 
-    let ips_https = new IpAddrState();
-    ips_https.validation_id = ip.validation_id;
-    ips_https.protocol_src = ProtocolType.HTTP;
-    ips_https.protocol_dest = ProtocolType.HTTPS;
-    ips_https.addr_id = ip.id;
+    let ips_https = createIpState(ip, ProtocolType.HTTP, ProtocolType.HTTPS, 1, 5000);
     ips_https.enabled = false;
-
-    ips_https.duration = 5000;
     ips_https = await c.save(ips_https);
+
+
+    ip = createIp('127.0.0.2', 3128);
+    ip = await c.save(ip);
+
+    ips_http = createIpState(ip, ProtocolType.HTTP, ProtocolType.HTTP, 1, 200);
+    ips_http = await c.save(ips_http);
+
+    ip = createIp('127.0.0.3', 3128);
+    ip = await c.save(ip);
+
+    ips_http = createIpState(ip, ProtocolType.HTTP, ProtocolType.HTTP, 1, 400);
+    ips_http = await c.save(ips_http);
+
 
     await c.close();
   }
@@ -59,7 +80,7 @@ class ProxyRotatorTest {
   @test
   async 'log success'() {
 
-    const e = new ProxyUsedEvent();
+    const e = new ProxyUsed();
     e.statusCode = 201;
     e.duration = 1000;
     e.success = true;
@@ -67,11 +88,13 @@ class ProxyRotatorTest {
     e.protocol_dest = ProtocolType.HTTP;
     e.start = new Date();
     e.stop = new Date();
-    e.hostname = '127.0.0.1';
+    e.ip = '127.0.0.1';
     e.port = 3128;
 
     const rotator = new ProxyRotator();
-    rotator.initialize({}, storage);
+    rotator.storageRef = storage;
+    await rotator.prepare({});
+
     const rotate = await rotator.log(e);
 
 
@@ -101,7 +124,7 @@ class ProxyRotatorTest {
 
   @test
   async 'log error'() {
-    const e = new ProxyUsedEvent();
+    const e = new ProxyUsed();
     e.statusCode = 504;
     e.duration = 1000;
     e.success = false;
@@ -109,12 +132,14 @@ class ProxyRotatorTest {
     e.protocol_dest = ProtocolType.HTTP;
     e.start = new Date();
     e.stop = new Date();
-    e.hostname = '127.0.0.1';
+    e.ip = '127.0.0.1';
     e.port = 3128;
     e.error = new Error('Test');
 
     const rotator = new ProxyRotator();
-    rotator.initialize({}, storage);
+    rotator.storageRef = storage;
+    await rotator.prepare({});
+
     const rotate = await rotator.log(e);
 
 
@@ -147,7 +172,8 @@ class ProxyRotatorTest {
 
 
     const rotator = new ProxyRotator();
-    rotator.initialize({}, storage);
+    rotator.storageRef = storage;
+    await rotator.prepare({});
     const next_addr = await rotator.next();
     expect(next_addr).to.not.be.empty;
 
@@ -168,6 +194,35 @@ class ProxyRotatorTest {
       success_since_at: null
     });
   }
+
+
+  @test
+  async 'rotate used'() {
+
+    const rotator = new ProxyRotator();
+    rotator.storageRef = storage;
+    await rotator.prepare({});
+
+    let next_addr = await rotator.next();
+    expect(next_addr).to.be.deep.include({ip: '127.0.0.1', port: 3128});
+
+    next_addr = await rotator.next();
+    expect(next_addr).to.be.deep.include({ip: '127.0.0.2', port: 3128});
+
+    next_addr = await rotator.next();
+    expect(next_addr).to.be.deep.include({ip: '127.0.0.3', port: 3128});
+
+    next_addr = await rotator.next();
+    expect(next_addr).to.be.deep.include({ip: '127.0.0.1', port: 3128});
+
+    next_addr = await rotator.next();
+    expect(next_addr).to.be.deep.include({ip: '127.0.0.2', port: 3128});
+
+    next_addr = await rotator.next();
+    expect(next_addr).to.be.deep.include({ip: '127.0.0.3', port: 3128});
+  }
+
+
 }
 
 

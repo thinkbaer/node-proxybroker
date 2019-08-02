@@ -1,11 +1,11 @@
-import {suite, test} from "mocha-typescript";
-import {expect} from "chai";
-import {Log} from "@typexs/base";
-import {IJudgeOptions} from "../../../src/libs/judge/IJudgeOptions";
-import {Judge} from "../../../src/libs/judge/Judge";
-import {TestHelper} from "../TestHelper";
+import {suite, test} from 'mocha-typescript';
+import {expect} from 'chai';
+import {Log} from '@typexs/base';
+import {IJudgeOptions} from '../../../src/libs/judge/IJudgeOptions';
+import {Judge} from '../../../src/libs/judge/Judge';
+import {TestHelper} from '../TestHelper';
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 /**
  * Testing internal functionality and remote access to judge server
  *
@@ -13,14 +13,14 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
  */
 
 
-let initial_remote_ip = 'http://127.0.0.1:8081';
+const initial_remote_ip = 'http://127.0.0.1:8081';
 
 @suite('judge/Judge - lifecycle operations')
 class JudgeTestSuite1 {
 
 
   static before() {
-    Log.options({enable: false, level: 'debug'})
+    Log.options({enable: false, level: 'debug'});
   }
 
   /**
@@ -28,7 +28,7 @@ class JudgeTestSuite1 {
    */
   @test
   async 'positive selftest with modified options'() {
-    let options: IJudgeOptions = {ssl: {}};
+    const options: IJudgeOptions = {ssl: {}};
     options.remote_ip = 'judge.local';
     options.ip = 'judge.local';
     options.http_port = 8081;
@@ -37,28 +37,28 @@ class JudgeTestSuite1 {
     options.ssl.cert_file = TestHelper.sslPath('judge/server-cert.pem');
     options.remote_lookup = false;
 
-    let judge = new Judge(options);
+    const judge = new Judge(options);
     // expect(judge.isSecured).to.be.equal(true);
 
-    let r_wakedup = await judge.wakeup(true);
-    let r_selftest = await judge['selftest']();
-    let r_pended = await judge.pending();
+    const r_wakedup = await judge.wakeup(true);
+    const r_selftest = await judge['selftest']();
+    const r_pended = await judge.pending();
 
     expect(r_wakedup).to.equal(true);
     expect(r_selftest).to.equal(true);
-    expect(r_pended).to.equal(true)
+    expect(r_pended).to.equal(true);
   }
 
 
   @test.skip()
   async 'negative selftest'() {
-    let judge = new Judge();
+    const judge = new Judge();
 
     await judge['getRemoteAccessibleIp']();
     expect(judge.remote_url('http')).to.not.equal(initial_remote_ip);
 
-    let r_selftest = await judge['selftest']();
-    expect(r_selftest).to.equal(false)
+    const r_selftest = await judge['selftest']();
+    expect(r_selftest).to.equal(false);
   }
 
 

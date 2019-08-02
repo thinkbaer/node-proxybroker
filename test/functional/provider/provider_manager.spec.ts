@@ -88,7 +88,7 @@ class ProviderManagerTest {
   }
 
   // @test
-  // async 'initialize with storage'() {
+  // async 'prepare with storage'() {
   //
   //   const storage = await TestHelper.getDefaultStorageRef();
   //

@@ -41,7 +41,6 @@ const https_url = 'https://example.com';
 
 
 let rotator: ProxyRotator = null;
-
 let http: IHttp = null;
 
 @suite('functional/server/' + __filename.replace(__dirname + '/', '')) @timeout(20000)
@@ -87,8 +86,8 @@ class ProxyServerTest {
 
 
     rotator = new ProxyRotator();
-    rotator.initialize({}, storage);
-    await EventBus.register(rotator);
+    rotator.storageRef = storage;
+
 
     server_dest = new ProxyServer();
     server_dest.initialize(<IProxyServerOptions>{
@@ -115,7 +114,6 @@ class ProxyServerTest {
 
 
   static async after() {
-    await EventBus.unregister(rotator);
     await server_distrib.stop();
     await server_dest.stop();
     await storage.shutdown();
@@ -262,6 +260,7 @@ class ProxyServerTest {
 
 
 }
+
 //
 //
 // process.on('unhandledRejection', (reason: any, p: any) => {
