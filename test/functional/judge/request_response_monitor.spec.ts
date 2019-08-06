@@ -11,7 +11,7 @@ import {IHttpStreamOptions} from 'commons-http/libs/http/IHttpStreamOptions';
 
 // https.globalAgent.options.rejectUnauthorized = false;
 const PROXY_LOCAL_HOST = 'proxy.local';
-// const SSL_PATH = '../_files/ssl';
+// const SSL_PATH = '../_files/sslDetect';
 const DEBUG = false;
 
 // Log.options({enable:true,level:'debug'})

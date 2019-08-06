@@ -82,12 +82,12 @@ class ValidateCommandTest {
     const https_http = data.results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
     const https_https = data.results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
 
-    expect(http_http.hasError()).to.be.false;
+    expect(http_http.hasError).to.be.false;
     expect(http_http.level).to.be.eq(3);
-    expect(http_https.hasError()).to.be.false;
+    expect(http_https.hasError).to.be.false;
     expect(http_https.level).to.be.eq(1);
-    expect(https_http.hasError()).to.be.true;
-    expect(https_https.hasError()).to.be.true;
+    expect(https_http.hasError).to.be.true;
+    expect(https_https.hasError).to.be.true;
 
   }
 

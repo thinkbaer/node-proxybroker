@@ -139,25 +139,25 @@ class JV {
   @test
   async 'tunnel https through http proxy (use handle)'() {
     const judgeReq = await JV.judge.handleRequest(JV.http_proxy_ip, JV.http_proxy_port, ProtocolType.HTTP, ProtocolType.HTTPS);
-    expect(judgeReq.hasError()).to.be.false;
+    expect(judgeReq.hasError).to.be.false;
   }
 
   @test
   async 'tunnel http through http proxy (use handle)'() {
     const judgeReq = await JV.judge.handleRequest(JV.http_proxy_ip, JV.http_proxy_port, ProtocolType.HTTP, ProtocolType.HTTP);
-    expect(judgeReq.hasError()).to.be.false;
+    expect(judgeReq.hasError).to.be.false;
   }
 
   @test
   async 'tunnel http through https proxy (use handle)'() {
     const judgeReq = await JV.judge.handleRequest(JV.https_proxy_ip, JV.https_proxy_port, ProtocolType.HTTPS, ProtocolType.HTTP);
-    expect(judgeReq.hasError()).to.be.false;
+    expect(judgeReq.hasError).to.be.false;
   }
 
   @test
   async 'tunnel https through https proxy (use handle)'() {
     const judgeReq = await JV.judge.handleRequest(JV.https_proxy_ip, JV.https_proxy_port, ProtocolType.HTTPS, ProtocolType.HTTPS);
-    expect(judgeReq.hasError()).to.be.false;
+    expect(judgeReq.hasError).to.be.false;
   }
 
   @test.skip()
@@ -185,7 +185,7 @@ class JV {
     const results: JudgeResults = await JV.judge.validate(PROXY_LOCAL_HOST, 3130);
 
     for (const res of results.getVariants()) {
-      expect(res.hasError()).to.be.true;
+      expect(res.hasError).to.be.true;
     }
   }
 
@@ -199,10 +199,10 @@ class JV {
     const https_http = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
     const https_https = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
 
-    expect(http_http.hasError()).to.be.false;
-    expect(http_https.hasError()).to.be.false;
-    expect(https_http.hasError()).to.be.true;
-    expect(https_https.hasError()).to.be.true;
+    expect(http_http.hasError).to.be.false;
+    expect(http_https.hasError).to.be.false;
+    expect(https_http.hasError).to.be.true;
+    expect(https_https.hasError).to.be.true;
 
     expect(http_http.level).to.eq(3);
     expect(http_https.level).to.eq(1);
@@ -221,10 +221,10 @@ class JV {
     const https_http = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
     const https_https = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
 
-    expect(http_http.hasError()).to.be.true;
-    expect(http_https.hasError()).to.be.true;
-    expect(https_http.hasError()).to.be.false;
-    expect(https_https.hasError()).to.be.false;
+    expect(http_http.hasError).to.be.true;
+    expect(http_https.hasError).to.be.true;
+    expect(https_http.hasError).to.be.false;
+    expect(https_https.hasError).to.be.false;
 
     expect(https_http.level).to.eq(3);
     expect(https_https.level).to.eq(1);
@@ -246,10 +246,10 @@ class JV {
     const https_http = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
     const https_https = results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
 
-    expect(http_http.hasError()).to.be.false;
-    expect(http_https.hasError()).to.be.false;
-    expect(https_http.hasError()).to.be.false;
-    expect(https_https.hasError()).to.be.false;
+    expect(http_http.hasError).to.be.false;
+    expect(http_https.hasError).to.be.false;
+    expect(https_http.hasError).to.be.false;
+    expect(https_https.hasError).to.be.false;
 
     expect(http_http.level).to.eq(3);
     expect(http_https.level).to.eq(1);

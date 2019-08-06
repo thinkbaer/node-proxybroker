@@ -21,7 +21,7 @@ const opts: IHttpGetOptions = {
 opts['proxyHeaderExclusiveList'] = [
   'proxy-select-level',
   'proxy-select-speed-limit',
-  'proxy-select-ssl',
+  'proxy-select-sslDetect',
   'proxy-select-country',
   'proxy-select-fallback'
 ];
