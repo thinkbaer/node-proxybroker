@@ -47,7 +47,7 @@ tmp/
 dist/
 
 # Dist directory
-build/
+/build/
 
 # AsciiDoc
 .asciidoctor/
