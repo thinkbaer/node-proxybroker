@@ -14,7 +14,7 @@ import {Log} from '@typexs/base';
 import Exceptions from '@typexs/server/libs/server/Exceptions';
 import {ProtocolType} from '../specific/ProtocolType';
 import {MESSAGE} from '../specific/Messages';
-import {HttpFactory, IHttpGetOptions, IHttpStream, isStream} from 'commons-http';
+import {HttpFactory, IHttp, IHttpGetOptions, IHttpStream, isStream} from 'commons-http';
 import Timer = NodeJS.Timer;
 
 
@@ -25,6 +25,7 @@ import Timer = NodeJS.Timer;
  * TODO: Search in header data for domains which must be resolve to check them against proxy and local ip
  */
 const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
+
 const IP_REGEX = /\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}/;
 
 
@@ -40,6 +41,8 @@ const IP_REGEX = /\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}/;
  * */
 
 export class JudgeRequest {
+
+  static HTTP: IHttp;
 
   _debug = false;
 
@@ -98,6 +101,22 @@ export class JudgeRequest {
   }
 
 
+  get duration() {
+    return this.monitor.duration;
+  }
+
+
+  get level(): number {
+    return this.level_detector ? this.level_detector.level : LevelDetection.DEFAULT_LEVEL;
+  }
+
+  httpClient() {
+    if (!JudgeRequest.HTTP) {
+      JudgeRequest.HTTP = HttpFactory.create();
+    }
+    return JudgeRequest.HTTP;
+  }
+
   async performRequest(): Promise<RequestResponseMonitor> {
     this.active = true;
     this.level_detector = new LevelDetection(this.proxy_ip, this.local_ip);
@@ -112,25 +131,18 @@ export class JudgeRequest {
     };
 
     // tslint:disable-next-line:no-shadowed-variable
-    const http = HttpFactory.create();
+
     // try {
 //    this.timer = setTimeout(this.onConnectTimeout.bind(this), this.timeout);
-    const stream = http.get(this.url, opts);
+    const stream = this.httpClient().get(this.url, opts);
     if (!isStream(stream)) {
       throw new Error('is not a stream');
     }
     this.stream = stream;
     this.stream.on('request', this.onRequest.bind(this));
 
-    this.monitor = new RequestResponseMonitor(this.url, opts, this.stream, this.id/*, {debug: this._debug}*/);
-    // try {
-    //   // this.response = await this.stream.asPromise();
-    //   await this.stream.asPromise();
-    // } catch (e) {
-    //   // Log.error(e);
-    //   // Log.error(this.id,e)
-    //   // Will be also in ReqResMonitor
-    // }
+    this.monitor = new RequestResponseMonitor(this.url, opts, this.stream, this.id);
+
     return this.monitor.promise();
   }
 
@@ -246,11 +258,6 @@ export class JudgeRequest {
   }
 
 
-  get duration() {
-    return this.monitor.duration;
-  }
-
-
   async onJudge(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     Log.debug('onJudge ' + this.id);
     this.judgeConnected = true;
@@ -302,11 +309,6 @@ export class JudgeRequest {
   }
 
 
-  get level(): number {
-    return this.level_detector ? this.level_detector.level : LevelDetection.DEFAULT_LEVEL;
-  }
-
-
   result(from: ProtocolType, to: ProtocolType): JudgeResult {
     const result = new JudgeResult(from, to);
     result.id = this.id;
@@ -314,7 +316,7 @@ export class JudgeRequest {
     result.stop = this.monitor.end;
     result.duration = this.monitor.duration;
     result.log = this.monitor.logs;
-    result.error = this.monitor.lastError();
+    result.setError(this.monitor.lastError());
     result.level = this.level;
     return result;
   }

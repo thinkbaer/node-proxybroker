@@ -1,6 +1,16 @@
 import * as _ from 'lodash';
 import {DEFAULT_ROTATOR_OPTIONS, IProxyRotatorOptions} from './IProxyRotatorOptions';
-import {C_STORAGE_DEFAULT, ConnectionWrapper, Inject, Log, StorageRef} from '@typexs/base';
+import {
+  AsyncWorkerQueue,
+  C_STORAGE_DEFAULT,
+  ConnectionWrapper,
+  CryptUtils,
+  ILoggerApi,
+  Inject,
+  IQueueProcessor,
+  Log,
+  StorageRef
+} from '@typexs/base';
 import {IpRotate} from '../../entities/IpRotate';
 import {IpAddr} from '../../entities/IpAddr';
 import {IpAddrState} from '../../entities/IpAddrState';
@@ -10,6 +20,7 @@ import {IProxyRotator} from './IProxyRotator';
 import {IProxySelector} from './IProxySelector';
 import {IpRotateLog} from '../../entities/IpRotateLog';
 import {ProxyUsed} from './ProxyUsed';
+import {HttpFactory, IHttp} from 'commons-http';
 
 /**
  * create and keep a fifo queue with proxy references
@@ -23,9 +34,24 @@ import {ProxyUsed} from './ProxyUsed';
  *
  *
  */
+//
+// interface IProxy {
+//   ip: string;
+//   port: number;
+//   secured: boolean;
+//   level: number;
+//   used?: Date;
+// }
+//
+// interface IFetch {
+//   limit: number;
+// }
 
 
-export class ProxyRotator implements IProxyRotator {
+const BASEURL = 'httpbin.org/get';
+const E_FETCH_DONE = 'fetch_done';
+
+export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IProxySelector | ProxyUsed> {
 
   static NAME = ProxyRotator.name;
 
@@ -36,16 +62,232 @@ export class ProxyRotator implements IProxyRotator {
 
   connection: ConnectionWrapper;
 
+  queue: AsyncWorkerQueue<any>;
+
+  activeList: IpAddr[] = [];
+
+  http: IHttp;
+
+  logger: ILoggerApi;
+
+  // fetching = false;
+
+  // semaphore = new Semaphore(1);
+
+
   async prepare(opts: IProxyRotatorOptions) {
     this.options = _.defaultsDeep(opts, DEFAULT_ROTATOR_OPTIONS);
-
+    this.http = HttpFactory.create();
+    this.logger = Log.getLoggerFor(ProxyRotator);
+    this.queue = new AsyncWorkerQueue<any>(this, {name: 'proxy_rotator_queue', concurrent: 100, logger: this.logger});
   }
 
 
-  parseProxyHeader(headers: any) {
-    const _headers: any = {};
+  async do(workLoad: IpAddr | IProxySelector | ProxyUsed): Promise<any> {
+    // fetch next entry try query
+    if (_.has(workLoad, 'limit')) {
+      // this.fetching = true;
+      const proxyList = await this.fetch({limit: _.get(workLoad, 'limit', 100)});
+      const rotates = this.attachRotateEntriesToIpAddr(proxyList);
+      const connection = await this.connect();
+      await connection.manager.save(rotates);
+      for (const c of proxyList) {
+        if (_.has(workLoad, 'reqId')) {
+          _.set(c, 'reqId', workLoad['reqId']);
+        }
+        this.queue.push(c);
+      }
+    } else if (workLoad instanceof IpAddr) {
+      const protocl = workLoad.protocols_src ? 'http' : 'https';
+      const protocol_dest = workLoad.protocols_src ? 'http' : 'https';
+      const proxyUrlStr = protocl + '://' + workLoad.ip + ':' + workLoad.port;
+      const baseUrlStr = protocol_dest + '://' + BASEURL;
+      this.logger.debug('try request to ' + baseUrlStr + ' over ' + proxyUrlStr);
+      const used = new ProxyUsed();
+      used.ip = workLoad.ip;
+      used.port = workLoad.port;
+      used.protocol = workLoad.protocols_src;
+      used.protocol_dest = ProtocolType.HTTPS;
+      used.start = new Date();
+      try {
+        const response = await this.http.get(baseUrlStr, {timeout: 2000, proxy: proxyUrlStr, json: true});
+        if (response.statusCode < 200 || response.statusCode >= 400) {
+          const err = new Error('wrong status code ' + response.statusCode + ' ' + response.statusMessage);
+          _.set(err, 'statusCode', response.statusCode);
+          throw err;
+        }
+        this.activeList.push(workLoad);
+        this.logger.debug('request succeed to ' + baseUrlStr + ' over ' + proxyUrlStr + ' active.length=' + this.activeList.length);
+        if (workLoad['reqId']) {
+          this.queue.emit('success_request_' + workLoad['reqId'], workLoad);
+        }
+      } catch (e) {
+        this.logger.debug('request errored to ' + baseUrlStr + ' over ' + proxyUrlStr + ' ' + e.message
+          + ' active.length=' + this.activeList.length);
+        used.error = e;
+        used.statusCode = _.get(e, 'statusCode', null);
+      }
+      used.stop = new Date();
+      used.duration = used.stop.getTime() - used.start.getTime();
+
+      this.log(used, true);
+    }
+    return null;
+  }
+
+
+  orderActiveList() {
+    this.activeList = _.orderBy(this.activeList, ['success', 'used', 'duration_avg'], ['desc', 'asc', 'asc']);
+  }
+
+
+  async onEmpty() {
+    this.cleanupList();
+    this.orderActiveList();
+    this.printList();
+  }
+
+
+  async doLog(ip: ProxyUsed, test: boolean = false): Promise<IpRotate> {
+    this.logger.debug('log ' + ip.ip + ':' + ip.port + ' in ' + ip.duration + 'ms '
+      + ' active.length=' + this.activeList.length
+      + (ip.error ? ' [Error: ' + ip.error.message + ']' : '')
+      + ' src: ' + ip.protocol + ' dest: ' + ip.protocol_dest
+    );
+
+    let ipRotate: IpRotate = null;
+    const addr = !test ? this.activeList.find(x =>
+      x.ip === ip.ip &&
+      x.port === ip.port &&
+      x['state'].protocol_dest === ip.protocol_dest
+    ) : null;
+
+    try {
+      const c = await this.connect(); // storageRef.connect();
+      const ipAddr = await c.manager.findOne(IpAddr, {ip: ip.ip, port: ip.port});
+      if (ipAddr) {
+        await c.manager.transaction(async em => {
+          const log = new IpRotateLog();
+          log.addr_id = ipAddr.id;
+          log.protocol = ip.protocol;
+          log.protocol_dest = ip.protocol_dest;
+          log.duration = Math.ceil(ip.duration);
+          log.success = ip.success;
+          log.start = ip.start;
+          log.stop = ip.stop;
+
+          // TODO maybe cleanup filename references in paths
+          log.error = ip.error ? ip.error.stack : null;
+          log.statusCode = ip.statusCode;
+          await em.save(log);
+          ipRotate = await em.findOne(IpRotate, {addr_id: ipAddr.id, protocol_src: ip.protocol});
+          if (!ipRotate) {
+            ipRotate = new IpRotate();
+            ipRotate.addr_id = ipAddr.id;
+            ipRotate.protocol_src = ip.protocol;
+          }
+          if (ip.success) {
+            ipRotate.duration += ip.duration;
+            ipRotate.successes += 1;
+            if (ipRotate.duration > 0 && ipRotate.successes > 0) {
+              ipRotate.duration_average = Math.ceil(ipRotate.duration / ipRotate.successes);
+            }
+          } else {
+            ipRotate.errors += 1;
+          }
+
+          await em.save(ipRotate);
+          ipRotate['_log'] = log;
+        });
+
+        if (addr) {
+          if (ip.success) {
+            addr.success++;
+            addr.duration_avg = ipRotate.duration_average;
+          } else {
+            addr.errors++;
+          }
+        } else {
+          this.logger.debug('addr not found ' + ipAddr.key);
+        }
+      }
+    } catch (e) {
+      this.logger.error(e);
+    }
+    return ipRotate;
+  }
+
+
+  next(select?: IProxySelector): Promise<IpAddr> {
+    const proxyFilter = this.parseProxyHeader(select);
+    this.logger.debug('next', select, proxyFilter);
+    return this.take(proxyFilter);
+  }
+
+
+  async take(selector: IProxySelector): Promise<IpAddr> {
+    const addr = this.activeList.find((_addr) => {
+      if (_addr.odd % 5 !== 0 && _addr.odd > 0) {
+        _addr.odd++;
+        return false;
+      }
+      _addr.odd = 0;
+
+      let match = true;
+      if (selector) {
+        const state = (<IpAddrState>_addr['state']);
+        if (selector['speed-limit']) {
+          match = match && state.duration <= selector['speed-limit'];
+        }
+        if (selector.level) {
+          match = match && state.level <= selector.level;
+        }
+        if (selector.ssl) {
+          match = match && state.protocol_dest === ProtocolType.HTTPS;
+        }
+      }
+
+      // this.logger.debug(`detect u=${_addr.used} s=${_addr.success}
+      // e=${_addr.errors} o=${_addr.odd} d=${_addr.duration_avg} => ${match}`);
+      if (match) {
+        _addr.odd++;
+      }
+      return match;
+    });
+
+    this.printList();
+
+    this.logger.debug('take address ' + (addr ? addr.key + ' (' +
+      addr.used + ',' + addr.success + ',' + addr.errors + ',' +
+      addr.duration_avg + ')' : '') + ' amount=' + this.activeList.length
+    );
+
+    if (addr) {
+      addr.used++;
+      this.orderActiveList();
+      return Promise.resolve(addr);
+    } else {
+      const reqId = CryptUtils.shorthash(JSON.stringify(selector));
+      this.queue.push({...selector, limit: 50, reqId});
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          reject(new Error('cant find proxy address!'));
+        }, 5000);
+        this.queue.once('success_request_' + reqId, (ipaddr: IpAddr) => {
+          this.logger.debug('got success request for proxy url ' + ipaddr.key);
+          clearTimeout(timer);
+          ipaddr.used++;
+          resolve(ipaddr);
+        });
+      });
+    }
+  }
+
+
+  private parseProxyHeader(headers: any) {
+    const _headers: IProxySelector = {};
     if (headers) {
-      const keys = Object.keys(headers);
+      const keys = _.keys(headers);
       keys.forEach(_k => {
 
         if (/^proxy\\-select/.test(_k)) {
@@ -57,11 +299,14 @@ export class ProxyRotator implements IProxyRotator {
           } else {
             _headers[kn] = headers[_k];
           }
+        } else if (_k === 'ssl') {
+          _headers[_k] = headers[_k];
         }
       });
     }
     return _headers;
   }
+
 
   async connect() {
     if (!this.connection) {
@@ -71,17 +316,43 @@ export class ProxyRotator implements IProxyRotator {
   }
 
 
-  async next(select?: IProxySelector): Promise<IpAddr> {
-    Log.debug('ProxyRotator->next ', select);
-    select = this.parseProxyHeader(select);
+  attachRotateEntriesToIpAddr(entries: IpAddr[]) {
+    const rotates = [];
+    for (const ipaddr of entries) {
+      const state = <IpAddrState>ipaddr['state'];
+      let iprotate: IpRotate = null;
+      if (ipaddr['rotate']) {
+        iprotate = ipaddr['rotate'];
+      } else {
+        iprotate = new IpRotate();
+        iprotate.addr_id = ipaddr.id;
+        iprotate.protocol_src = state.protocol_src;
+      }
+
+      // ipaddr.success = iprotate.successes;
+      iprotate.inc++;
+      if (iprotate.inc % 10 === 0) {
+        iprotate.used = 0;
+      } else {
+        iprotate.used++;
+      }
+
+      rotates.push(iprotate);
+      ipaddr['rotate'] = iprotate;
+    }
+    return rotates;
+  }
+
+
+  async fetch(select?: IProxySelector) {
     const c = await this.connect();
     let q = c.manager.createQueryBuilder(IpAddr, 'ip');
 
     q = q.innerJoinAndMapOne('ip.state', IpAddrState, 'state', 'state.validation_id = ip.validation_id and state.addr_id = ip.id');
     q = q.leftJoinAndMapOne('ip.rotate', IpRotate, 'rotate', 'rotate.addr_id = ip.id and rotate.protocol_src = state.protocol_src');
+
     if (this.storageRef.dbType === 'postgres') {
       q = q.addOrderBy('rotate.used', 'ASC', 'NULLS FIRST');
-      // q = q.addOrderBy('ip.count_success', 'DESC', 'NULLS LAST');
       q = q.addOrderBy('state.duration', 'ASC', 'NULLS FIRST');
     } else {
       q = q.addOrderBy('rotate.used', 'ASC');
@@ -91,10 +362,8 @@ export class ProxyRotator implements IProxyRotator {
 
     q = q.where('state.enabled = :enable', {enable: true});
     q = q.andWhere('state.level > :level', {level: 0});
-    // q = q.andWhere('(rotate.errors < rotate.successes) or (rotate.errors is null and rotate.successes is null)');
 
     if (select) {
-
       if (select.level && select.level > 0) {
         q = q.andWhere('state.level = :level', {level: select.level});
       }
@@ -109,79 +378,39 @@ export class ProxyRotator implements IProxyRotator {
         q = q.andWhere('state.protocol_dest = :protocol', {protocol: ProtocolType.HTTPS});
       }
     }
-
-    let ipaddr: IpAddr = null;
-    const list = await q.getMany();
-    if (list.length > 0) {
-      ipaddr = list.shift();
-      let iprotate: IpRotate = null;
-      if (ipaddr['rotate']) {
-        iprotate = ipaddr['rotate'];
-      } else {
-        iprotate = new IpRotate();
-        iprotate.addr_id = ipaddr.id;
-        iprotate.protocol_src = ipaddr['state'].protocol_src;
-      }
-
-      iprotate.inc++;
-      if (iprotate.inc % 10 === 0) {
-        iprotate.used = 0;
-      } else {
-        iprotate.used++;
-      }
-
-      ipaddr['rotate'] = await c.save(iprotate);
-    }
-    // await c.close();
-    return ipaddr;
-
+    return await q.getMany();
   }
 
-  async log(ip: ProxyUsed): Promise<IpRotate> {
-    Log.debug('ProxyRotator->log ', ip);
-    let ipRotate: IpRotate = null;
-    // add to log
-    try {
-      const c = await this.connect(); // storageRef.connect();
 
-      const ipAddr = await c.manager.findOne(IpAddr, {ip: ip.ip, port: ip.port});
-      if (ipAddr) {
-        const log = new IpRotateLog();
-        log.addr_id = ipAddr.id;
-        log.protocol = ip.protocol;
-        log.protocol_dest = ip.protocol_dest;
-        log.duration = Math.ceil(ip.duration);
-        log.success = ip.success;
-        log.start = ip.start;
-        log.stop = ip.stop;
-        // TODO maybe cleanup filename references in paths
-        log.error = ip.error ? ip.error.stack : null;
-        log.statusCode = ip.statusCode;
-        await c.manager.save(log);
-        ipRotate = await c.manager.findOne(IpRotate, {addr_id: ipAddr.id, protocol_src: ip.protocol});
-        if (!ipRotate) {
-          ipRotate = new IpRotate();
-          ipRotate.addr_id = ipAddr.id;
-          ipRotate.protocol_src = ip.protocol;
-        }
-        if (ip.success) {
-          ipRotate.duration += ip.duration;
-          ipRotate.successes += 1;
-          if (ipRotate.duration > 0 && ipRotate.successes > 0) {
-            ipRotate.duration_average = Math.ceil(ipRotate.duration / ipRotate.successes);
-          }
-        } else {
-          ipRotate.errors += 1;
-        }
-        await c.manager.save(ipRotate);
-        ipRotate['_log'] = log;
-      }
-    } catch (e) {
-      Log.error(e);
+  log(ip: ProxyUsed, test: boolean = false): Promise<IpRotate> {
+    return this.doLog(ip, test);
+  }
+
+
+  async shutdown() {
+    this.queue.removeAllListeners();
+    if (this.connection) {
+      await this.connection.close();
     }
-    Log.debug('ProxyRotator->log: done');
-    return ipRotate;
+  }
 
+
+  private printList() {
+    const output: string[] = [];
+    this.activeList.map((_addr) => {
+      output.push(
+        `${_addr.key}${' '.repeat(22 - _addr.key.length)}\tu=${_addr.used} ` +
+        `s=${_addr.success} e=${_addr.errors} o=${_addr.odd} d=${_addr.duration_avg}`);
+    });
+    this.logger.debug('\n' + output.join('\n'));
+  }
+
+
+  private cleanupList() {
+    const removed = _.remove(this.activeList, (r) => r.used > 2 && r.success < r.errors && r.success + r.errors >= r.used);
+    if (removed.length > 0) {
+      this.logger.debug('cleanup active list ' + this.activeList.length + '; removed ' + removed.length);
+    }
   }
 
 }

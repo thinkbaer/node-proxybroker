@@ -46,7 +46,7 @@ export class ProxyUsed {
       this.statusCode = options.statusCode;
       this.error = options.error;
       this.success = !options.hasError();
-      this.protocol_dest = options.ssl ? ProtocolType.HTTPS : ProtocolType.HTTP;
+      this.protocol_dest = options.sslTarget ? ProtocolType.HTTPS : ProtocolType.HTTP;
     } else {
       this.protocol = options.protocol === 'https' ? ProtocolType.HTTPS : ProtocolType.HTTP;
       this.ip = options.hostname;

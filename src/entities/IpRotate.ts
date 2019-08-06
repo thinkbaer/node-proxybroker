@@ -1,14 +1,14 @@
-import {Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
+import {Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn} from 'typeorm';
 
 
-import {Index} from "typeorm/decorator/Index";
-import {ProtocolType} from "../libs/specific/ProtocolType";
+import {Index} from 'typeorm/decorator/Index';
+import {ProtocolType} from '../libs/specific/ProtocolType';
 
-import {Entity} from "typeorm/decorator/entity/Entity";
+import {Entity} from 'typeorm/decorator/entity/Entity';
 
 
 @Entity()
-@Index("unique_addr_proto", (ipaddr: IpRotate) => [ipaddr.protocol_src, ipaddr.addr_id], {unique: true})
+@Index('unique_addr_proto', (ipaddr: IpRotate) => [ipaddr.protocol_src, ipaddr.addr_id], {unique: true})
 export class IpRotate {
 
   @PrimaryGeneratedColumn()

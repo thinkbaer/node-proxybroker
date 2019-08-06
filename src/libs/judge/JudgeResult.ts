@@ -7,6 +7,8 @@ export class JudgeResult {
 
   error: NestedException = null;
 
+  hasError = false;
+
   protocol_from: ProtocolType;
 
   protocol_to: ProtocolType;
@@ -30,9 +32,9 @@ export class JudgeResult {
     this.protocol_to = to;
   }
 
-
-  hasError() {
-    return this.error !== null;
+  setError(e: NestedException) {
+    this.error = e;
+    this.hasError = true;
   }
 
 

@@ -14,7 +14,7 @@ import {IProviderOptions} from './libs/provider/IProviderOptions';
 import {Scheduler} from '@typexs/base/libs/schedule/Scheduler';
 import {ProxyValidator} from './libs/proxy/ProxyValidator';
 import {IProxyValidatiorOptions} from './libs/proxy/IProxyValidatiorOptions';
-import {EventBus} from 'commons-eventbus';
+import {ProxyRotator} from './libs/proxy/ProxyRotator';
 
 
 export class Startup implements IBootstrap, IShutdown, IPermissions {
@@ -51,6 +51,18 @@ export class Startup implements IBootstrap, IShutdown, IPermissions {
       this.proxyValidator.initialize(validatorCustomOptions, this.storageRef);
       await this.proxyValidator.prepare();
     }
+
+    /**
+     * If proxy server then add default rotator
+     */
+    const proxyServerConfig = StartupHelper.getProxyServerConfigs();
+    if (!_.isEmpty(proxyServerConfig)) {
+      const cfg = _.get(proxyServerConfig, 'rotator', {});
+      const rotator = Container.get(ProxyRotator);
+      await rotator.prepare(cfg);
+
+    }
+
   }
 
 
@@ -58,12 +70,21 @@ export class Startup implements IBootstrap, IShutdown, IPermissions {
     if (!StartupHelper.isEnabled()) {
       return;
     }
+
+    try {
+      const rotator = Container.get(ProxyRotator);
+      await rotator.shutdown();
+    } catch (e) {
+
+    }
+
     const providerManager: ProviderManager = Container.get(ProviderManager.NAME);
     await providerManager.shutdown();
 
     if (this.proxyValidator) {
       await this.proxyValidator.shutdown();
     }
+
 
   }
 

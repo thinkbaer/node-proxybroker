@@ -65,8 +65,8 @@ export class ProxyValidateCommand implements ICommand {
 
     for (const res of results.getVariants()) {
       data.push(
-        res.hasError() ? '"' + (res.error.toString()).replace('"', '""') + '"' : '',
-        res.hasError() ? '"' + (res.error.code).replace('"', '""') + '"' : '',
+        res.hasError ? '"' + (res.error.toString()).replace('"', '""') + '"' : '',
+        res.hasError ? '"' + (res.error.code).replace('"', '""') + '"' : '',
         res.level,
         res.duration,
         '"' + res.logToString().replace('"', '""') + '"',

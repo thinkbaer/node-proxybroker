@@ -103,17 +103,16 @@ export class ProxyValidateTask implements ITask {
       return [];
     }
 
-
-//    this.todo = _.clone(this.proxies);
-
     try {
-
       for (const _q of this.proxies) {
         //      this._send++;
         await this.semaphore.acquire();
-        this.validator.push(_q)
+        this.validator.push(_.clone(_q))
           .then(value => {
             return value.done();
+          })
+          .then(value => {
+            const workload = value.workload();
           })
           .catch(reason => {
             Log.error(reason);

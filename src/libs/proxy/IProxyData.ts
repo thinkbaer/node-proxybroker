@@ -1,10 +1,10 @@
 export interface IProxyData {
 
 
-    ip: string
+    ip: string;
 
-    port: number
+    port: number;
 
-    job_state_id?: number
+    // job_state_id?: number
 
 }

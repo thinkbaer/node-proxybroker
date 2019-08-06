@@ -62,6 +62,19 @@ export class IpAddr {
   updated_at: Date;
 
 
+  used: number = 0;
+
+  success: number = 0;
+
+  errors:number = 0;
+
+  duration_sum: number = 0;
+
+  duration_avg: number = 0;
+
+  odd: number = 0;
+
+
   constructor() {
   }
 

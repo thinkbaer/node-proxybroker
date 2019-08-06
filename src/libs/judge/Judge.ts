@@ -361,7 +361,7 @@ export class Judge implements IServerApi {
 
     this.debug('judge: finished request (' + proto_from + '=>' + proto_to + ') ' + http_request.id +
       ' from ' + url + ' t=' + result.duration +
-      ' error=' + result.hasError() + ' (cached: ' + this.cache_sum + ')');
+      ' error=' + result.hasError + ' (cached: ' + this.cache_sum + ')');
     return result;
   }
 

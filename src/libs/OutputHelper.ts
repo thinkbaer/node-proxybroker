@@ -10,7 +10,7 @@ export class OutputHelper {
       if (_x.results) {
         const copy: ProxyData = _.clone(_x);
         for (const res of copy.results.getVariants()) {
-          if (res.hasError()) {
+          if (res.hasError) {
             continue;
           }
           const entry = {

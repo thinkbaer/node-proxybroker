@@ -15,8 +15,6 @@ export class SocketHandle {
 
   meta: any = {};
 
-  // repeat: number = 0;
-
   stop: Date;
 
   duration: number;
@@ -24,8 +22,6 @@ export class SocketHandle {
   socket: net.Socket;
 
   finished = false;
-
-  // ended: boolean = true;
 
   data: Buffer;
 
@@ -35,7 +31,7 @@ export class SocketHandle {
 
   statusCode: number;
 
-  ssl = false;
+  sslDetect = false;
 
   query: Buffer;
 
@@ -47,9 +43,7 @@ export class SocketHandle {
 
   options: { ssl?: boolean, timeout?: number };
 
-  // timer: Timer;
-
-  constructor(socket: net.Socket, opts: { ssl?: boolean, timeout?: number } = {}) {
+  constructor(socket: net.Socket, opts: { ssl?: boolean, timeout?: number, url?: string } = {}) {
     this.options = _.defaults(opts, {ssl: false, timeout: 10000});
 
     this.socket = socket;
@@ -59,7 +53,6 @@ export class SocketHandle {
     this.socket.setTimeout(this.options.timeout);
 
     this.socket.on('data', this.onData.bind(this));
-//    this.socket.on('end', this.onEnd.bind(this));
     this.socket.on('close', this.onClose.bind(this));
     this.socket.on('timeout', this.onTimeout.bind(this));
     this.socket.on('error', this.onError.bind(this));
@@ -68,15 +61,24 @@ export class SocketHandle {
     this.socket['handle_id'] = this.id;
   }
 
+
+  url() {
+    const url = _.get(this.options, 'url', 'unknown');
+    return (this.sslTarget ? 'https' : 'http') + '://' + url;
+  }
+
+  get sslTarget() {
+    return _.get(this.options, 'ssl', false);
+  }
+
+
   onData(data: Buffer) {
-    // this.ended = false;
-    // this.debug('socket data ' + data.length)
     if (!data) {
       return;
     }
 
-    if (this.ssl || data[0] === 0x16 || data[0] === 0x80 || data[0] === 0x00) {
-      this.ssl = true;
+    if (this.sslDetect || data[0] === 0x16 || data[0] === 0x80 || data[0] === 0x00) {
+      this.sslDetect = true;
       return;
     }
 
@@ -91,7 +93,6 @@ export class SocketHandle {
       const headerEnd = data.indexOf('\r\n');
       const headersEnd = data.indexOf('\r\n\r\n');
 
-
       if (headerEnd < headersEnd && headersEnd > 0) {
         this.query = Buffer.allocUnsafe(headerEnd);
         this.headers = Buffer.allocUnsafe(headersEnd - headerEnd - 2);
@@ -100,7 +101,6 @@ export class SocketHandle {
         data.copy(this.query, 0, 0, headerEnd);
         data.copy(this.headers, 0, headerEnd + 2, headersEnd);
         data.copy(this.body, 0, headersEnd + 4);
-
 
         for (const _x of this.headers.toString().split('\r\n')) {
           const split = _x.split(':', 2);
@@ -146,7 +146,7 @@ export class SocketHandle {
   }
 
   build(): Buffer {
-    if (!this.query || this.ssl) {
+    if (!this.query || this.sslDetect) {
       if (this.data) {
         return this.data;
       } else {
@@ -170,13 +170,16 @@ export class SocketHandle {
     return Buffer.concat(list);
   }
 
+
   hasError() {
     return this.error !== null;
   }
 
+
   hasSocketError() {
     return this.socketError === true;
   }
+
 
   onError(err: Error) {
     this.debug('ERROR', err);
@@ -187,12 +190,14 @@ export class SocketHandle {
 
 
   onTimeout() {
-    this.debug('socket timeout after ' + this.duration);
+
     if (!this.socket.destroyed) {
       this.socket.destroy(new Error('ESOCKETTIMEDOUT'));
     }
     this.finish();
+    this.debug('timeout after ' + this.duration);
   }
+
 
   close() {
     if (this.finished) {
@@ -222,6 +227,7 @@ export class SocketHandle {
     });
   }
 
+
   finish() {
     if (this.finished) {
       return;
@@ -234,7 +240,6 @@ export class SocketHandle {
     if (this.socket) {
       this.socket.unref();
       this.socket.removeListener('data', this.onData.bind(this));
-//      this.socket.removeListener('end', this.onEnd.bind(this));
       this.socket.removeListener('close', this.onClose.bind(this));
       this.socket.removeListener('timeout', this.onTimeout.bind(this));
       this.socket.removeListener('error', this.onError.bind(this));
@@ -253,9 +258,9 @@ export class SocketHandle {
 
   debug(...args: any[]) {
     if (args.length >= 1 && typeof args[0] === 'string') {
-      args[0] = 'SID_' + this.id + ' ' + args[0];
+      args[0] = 'socketHandle.id=' + this.id + ' ' + args[0];
     } else {
-      args.unshift('SID_' + this.id);
+      args.unshift('socketHandle.id=' + this.id);
     }
 
     Log.debug(...args);

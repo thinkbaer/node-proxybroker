@@ -41,11 +41,11 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     state.level = result.level;
     state.protocol_src = result.protocol_from;
     state.protocol_dest = result.protocol_to;
+    state.enabled = false;
 
-    if (result.hasError()) {
+    if (result.hasError) {
       state.error_code = result.error.code;
       state.error_message = result.error.message;
-      state.enabled = false;
     } else {
       state.error_code = null;
       state.error_message = null;
@@ -83,18 +83,6 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     await EventBus.register(this);
     this.judge = new Judge(this.options.judge);
     const booted = await this.judge.prepare();
-
-    /*
-    if (this.options.schedule) {
-      const def = _.clone(this.options.schedule);
-      const scheduler: Scheduler = Container.get(Scheduler.NAME);
-      def.event = {
-        name: _.snakeCase(ValidatorRunEvent.name)
-      };
-      await scheduler.register(def);
-    }
-     */
-
     return booted;
   }
 
@@ -285,7 +273,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     const results = await this.judge.validate(workLoad.ip, workLoad.port);
     workLoad.results = results;
     if (this.storage) {
-      const hasSuccess = !!_.find(results.getVariants(), x => !x.hasError());
+      const hasSuccess = !!_.find(results.getVariants(), x => !x.hasError);
       if ((this.options.skipFailed && hasSuccess) || !this.options.skipFailed) {
         await this.store(workLoad);
       }

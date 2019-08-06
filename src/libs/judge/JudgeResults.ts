@@ -40,9 +40,6 @@ export class JudgeResults {
 
     geoData: any = null;
 
-    detectProtocol() {
-
-    }
 
 
     getVariant(src: ProtocolType, dest: ProtocolType): JudgeResult {
