@@ -48,6 +48,8 @@ storage:
     username: proxybroker
     port: 5432
     synchronize: true
+    extra:
+      max: 100
 #    logger: simple-console
 #    logging: all
 
