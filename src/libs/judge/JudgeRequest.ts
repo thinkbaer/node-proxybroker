@@ -44,8 +44,6 @@ export class JudgeRequest {
 
   static HTTP: IHttp;
 
-  _debug = false;
-
   private active = false;
 
   private aborted = false;
@@ -82,7 +80,6 @@ export class JudgeRequest {
 
   socketStack: net.Socket[] = [];
 
-  // proxy_hostname:string = null
   options: IJudgeRequestOptions;
 
   errors: Error[] = [];
@@ -229,7 +226,6 @@ export class JudgeRequest {
     if (!this.active) {
       return;
     }
-    Log.debug('judge request: clear ' + this.id);
     this.active = false;
 
     clearTimeout(this.timer);
@@ -260,10 +256,8 @@ export class JudgeRequest {
 
 
   async onJudge(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
-    Log.debug('onJudge ' + this.id);
     this.judgeConnected = true;
     this.judgeDate = new Date();
-    // this.monitor.has_connected = true
 
     this.monitor.stop();
     this.monitor.addLog(MESSAGE.JDG01.k, {

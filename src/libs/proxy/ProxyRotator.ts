@@ -363,7 +363,6 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
   async fetch(select?: IProxySelector) {
     const c = await this.connect();
     let q = c.manager.createQueryBuilder(IpAddr, 'ip');
-
     q = q.innerJoinAndMapOne('ip.state', IpAddrState, 'state', 'state.validation_id = ip.validation_id and state.addr_id = ip.id');
     q = q.leftJoinAndMapOne('ip.rotate', IpRotate, 'rotate', 'rotate.addr_id = ip.id and rotate.protocol_src = state.protocol_src');
 

@@ -224,7 +224,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
   async validate(event: ProxyDataValidateEvent): Promise<any> {
     const queueJob = await this.push(event.data);
     await queueJob.done();
-    queueJob.workload();
+    // queueJob.workload();
     return event;
   }
 

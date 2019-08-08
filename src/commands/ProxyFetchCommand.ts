@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import {IProxyData} from '../libs/proxy/IProxyData';
 import {ProviderManager} from '../libs/provider/ProviderManager';
-import {C_STORAGE_DEFAULT, Config, ICommand, Inject, Log, StorageRef, System, TaskState, TodoException, TYPEXS_NAME} from '@typexs/base';
+import {C_STORAGE_DEFAULT, Config, ICommand, Inject, K_LOGGING, Log, StorageRef, System, TaskState, TYPEXS_NAME} from '@typexs/base';
 import {IProviderOptions} from '../libs/provider/IProviderOptions';
 import {C_SERVER} from '@typexs/server';
 import {TasksHelper} from '@typexs/base/libs/tasks/TasksHelper';
@@ -14,9 +14,9 @@ import {
 } from '../libs/Constants';
 import {ITaskRunnerResult} from '@typexs/base/libs/tasks/ITaskRunnerResult';
 import {IProxyValidatiorOptions} from '../libs/proxy/IProxyValidatiorOptions';
-import {JudgeResults} from '../libs/judge/JudgeResults';
-import {ProxyData} from '../libs/proxy/ProxyData';
+import {IProxyResult} from '../libs/proxy/IProxyResult';
 import {OutputHelper} from '../libs/OutputHelper';
+import {inspect} from 'util';
 
 
 export class ProxyFetchCommand implements ICommand {
@@ -36,7 +36,6 @@ export class ProxyFetchCommand implements ICommand {
 
   beforeStorage(): void {
     // reset settings
-    // Log.options({enable: false, transports: [], loggers: [{name: '*', enable: false}]}, false);
     System.enableDistribution(false);
     Config.set(C_SERVER, null, TYPEXS_NAME);
     Config.set(CFG_PROXY_STARTUP, true, TYPEXS_NAME);
@@ -102,7 +101,6 @@ export class ProxyFetchCommand implements ICommand {
         variant = argv.variant;
         find.type = argv.variant;
       }
-
     }
 
     let variants = this.providerManager.findAll(find);
@@ -155,46 +153,18 @@ export class ProxyFetchCommand implements ICommand {
         params.store = false;
       }
 
-      const results = <ITaskRunnerResult>await TasksHelper.exec(tasks, params);
-      if (results && results.results.length > 0) {
-        const r = <TaskState[]>_.filter(results.results, x => x.name === (params.validate ? TN_PROXY_VALIDATE : TN_PROXY_FETCH));
+      const taskResults = <ITaskRunnerResult>await TasksHelper.exec(tasks, params);
+      if (taskResults && taskResults.results.length > 0) {
+        const r = <TaskState[]>_.filter(taskResults.results, x => x.name === (params.validate ? TN_PROXY_VALIDATE : TN_PROXY_FETCH));
         for (const _result of r) {
           list = list.concat(_result.result);
         }
         list = _.uniqBy(list, x => JSON.stringify(x));
       }
 
-      switch (argv.format) {
-        case 'json':
-          const  data = OutputHelper.toJson(list);
-          // list.forEach((_x: any) => {
-          //   if (_x.results) {
-          //     const copy: ProxyData = _.clone(_x);
-          //     for (const res of copy.results.variants) {
-          //       res.logStr = res.logToString();
-          //       if (res.hasError()) {
-          //         res.error = <any>{message: res.error.message, code: res.error.code};
-          //       }
-          //       delete res.log;
-          //     }
-          //     data.push(copy.results);
-          //   } else {
-          //     data.push(_x);
-          //   }
-          // });
-          console.log(JSON.stringify(data, null, 2));
-          break;
-        case 'csv':
-          let rows: string[] = [];
-          list.forEach(_rowData => {
-            rows.push([_rowData.ip, _rowData.port].join(':'));
-          });
-          rows = _.uniq(rows);
-          console.log(rows.join('\n'));
-          break;
-        default:
-          throw new TodoException();
-      }
+      const results: IProxyData[] | IProxyResult[] = list;
+
+      OutputHelper.printResults(results, argv.format);
     } else {
       console.error('No data selected.');
     }

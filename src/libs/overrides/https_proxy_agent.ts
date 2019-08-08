@@ -23,7 +23,7 @@ HttpsProxyAgent.prototype['callback'] = function (req: ClientRequest, opts: any,
   }
 
   // Hack to make abort possible
-  req.once('abort', function (err) {
+  req.once('abort', (err: Error) => {
     socket.setTimeout(0);
     socket.destroy();
     cleanup();
@@ -64,7 +64,6 @@ HttpsProxyAgent.prototype['callback'] = function (req: ClientRequest, opts: any,
   }
 
   function onerror(err: Error) {
-    console.log('===> ' + err.message);
     cleanup();
     fn(err);
   }

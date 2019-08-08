@@ -251,7 +251,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     this.length += data.length;
 
     if (data[0] === 0x16 || data[0] === 0x80 || data[0] === 0x00) {
-      this.debug('TLS detected ' + data.length);
+      this.trace('TLS detected ' + data.length);
       return;
     }
 
@@ -432,13 +432,13 @@ export class RequestResponseMonitor extends events.EventEmitter {
   }
 
 
-  debug(...msg: any[]) {
+  trace(...msg: any[]) {
     if (msg.length > 0 && typeof msg[0] === 'string') {
       msg[0] = this.id + ' ' + msg[0];
     } else {
       msg.unshift(this.id);
     }
-    this.logger.debug.apply(Log, msg);
+    this.logger.trace.apply(Log, msg);
   }
 
   /**
@@ -469,7 +469,7 @@ export class RequestResponseMonitor extends events.EventEmitter {
     });
 
     this.log_arr.push(rre);
-    this.logger.debug(rre.logMsg());
+    this.logger.trace(rre.logMsg());
   }
 
 }

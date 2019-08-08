@@ -4,6 +4,9 @@ import {REGEX, TN_PROXY_VALIDATE} from '../libs/Constants';
 import {ProxyData} from '../libs/proxy/ProxyData';
 import {ProxyValidator} from '../libs/proxy/ProxyValidator';
 import {LockFactory} from '@typexs/base/libs/LockFactory';
+import {IProxyResult} from '../libs/proxy/IProxyResult';
+import {JudgeResults} from '../libs/judge/JudgeResults';
+import {ProtocolType} from '../libs/specific/ProtocolType';
 
 export class ProxyValidateTask implements ITask {
 
@@ -99,6 +102,7 @@ export class ProxyValidateTask implements ITask {
   // }
 
   async exec() {
+    const results: IProxyResult[] = [];
     if (this.proxies.length === 0) {
       return [];
     }
@@ -110,6 +114,20 @@ export class ProxyValidateTask implements ITask {
         this.validator.push(_.clone(_q))
           .then(value => {
             return value.done();
+          })
+          .then(job => {
+            const jobResults = job.getResult() as JudgeResults;
+            jobResults.getVariants().forEach(x => {
+              results.push({
+                protocol: jobResults.protocol === ProtocolType.HTTP ? 'http' : 'https',
+                ip: jobResults.ip,
+                port: jobResults.port,
+                enabled: !x.hasError,
+                level: x.level,
+                duration: x.duration
+              });
+            });
+            return jobResults;
           })
           .catch(reason => {
             Log.error(reason);
@@ -124,7 +142,7 @@ export class ProxyValidateTask implements ITask {
       Log.error(err);
     }
 
-    return this.proxies;
+    return results;
   }
 
 }

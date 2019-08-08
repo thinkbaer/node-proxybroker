@@ -290,7 +290,7 @@ export class Judge implements IServerApi {
 
       const self = this;
       const req_id = paths.shift();
-      this.debug('judge call ' + req_id);
+      this.trace('judge call ' + req_id);
 
       if (this.cache[req_id]) {
         cached_req = this.cache[req_id];
@@ -444,11 +444,9 @@ export class Judge implements IServerApi {
 
   private onServerConnection(socket: net.Socket) {
     const self = this;
-    this.debug('Judge->onServerConnection');
 
     function onData(data: Buffer) {
       if (data[0] === 0x16 || data[0] === 0x80 || data[0] === 0x00) {
-        this.debug('Judge->TLS detected ' + data.length);
         return;
       }
 
@@ -563,5 +561,10 @@ export class Judge implements IServerApi {
   private debug(...msg: any[]) {
     Log.debug.apply(Log, msg);
 
+  }
+
+
+  private trace(...msg: any[]) {
+    Log.trace.apply(Log, msg);
   }
 }
