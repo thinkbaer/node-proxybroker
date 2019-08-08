@@ -83,12 +83,12 @@ class ProxyValidationControllerTest {
     const https_http = event.data.results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTP);
     const https_https = event.data.results.getVariant(ProtocolType.HTTPS, ProtocolType.HTTPS);
 
-    expect(http_http.hasError()).to.be.false;
+    expect(http_http.hasError).to.be.false;
     expect(http_http.level).to.eq(3);
-    expect(http_https.hasError()).to.be.false;
+    expect(http_https.hasError).to.be.false;
     expect(http_https.level).to.eq(1);
-    expect(https_http.hasError()).to.be.true;
-    expect(https_https.hasError()).to.be.true;
+    expect(https_http.hasError).to.be.true;
+    expect(https_https.hasError).to.be.true;
 
   }
 

@@ -25,7 +25,7 @@ export class TestHelper {
 
 
   static sslPath(dir: string) {
-    return PlatformUtils.join(__dirname, '_files/sslDetect', dir);
+    return PlatformUtils.join(__dirname, '_files/ssl', dir);
   }
 
 

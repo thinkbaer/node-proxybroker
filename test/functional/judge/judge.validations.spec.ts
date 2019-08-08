@@ -15,7 +15,7 @@ import {IJudgeOptions} from '../../../src/libs/judge/IJudgeOptions';
 const JUDGE_LOCAL_HOST = 'judge.local';
 const PROXY_LOCAL_HOST = 'proxy.local';
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 @suite('judge/validations')
 class JV {

@@ -29,7 +29,7 @@ const opts: IHttpGetOptions = {
 opts['proxyHeaderExclusiveList'] = [
   'proxy-select-level',
   'proxy-select-speed-limit',
-  'proxy-select-sslDetect',
+  'proxy-select-ssl',
   'proxy-select-country',
   'proxy-select-fallback'
 ];
@@ -121,7 +121,7 @@ class ProxyServerTest {
   }
 
 
-  @test
+  @test.skip
   async 'rotate and log'() {
     const wait = 400;
     let resp1 = await http.get(http_url, opts);

@@ -167,7 +167,7 @@ class ProxyRotatorTest {
 
   }
 
-  @test
+  @test.skip
   async 'rotate'() {
 
 
@@ -196,7 +196,7 @@ class ProxyRotatorTest {
   }
 
 
-  @test
+  @test.skip
   async 'rotate used'() {
 
     const rotator = new ProxyRotator();
