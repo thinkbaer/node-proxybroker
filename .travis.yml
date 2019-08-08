@@ -7,10 +7,28 @@ node_js:
   - 10
   - 11
 
+env:
+  - DOCKER_COMPOSE_VERSION=1.23.1
+
+services:
+  - docker
+
+before_script:
+  - sudo /etc/init.d/mysql stop
+  - sudo /etc/init.d/postgresql stop
+
 before_install:
   - sudo /bin/sh -c 'echo "\n127.0.0.10 judge.local\n" >> /etc/hosts'
   - sudo /bin/sh -c 'echo "127.0.0.11 proxy.local\n" >> /etc/hosts'
   - export CI_CONTAINER=1
   - npm install -g nyc
   - npm install -g codecov
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+  - cd docker/testing
+  - docker-compose up &
+  - cd ../..
+  - sleep 60
 
