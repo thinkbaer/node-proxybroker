@@ -111,9 +111,6 @@ export class ProxyValidateTask implements ITask {
           .then(value => {
             return value.done();
           })
-          .then(value => {
-            const workload = value.workload();
-          })
           .catch(reason => {
             Log.error(reason);
           })

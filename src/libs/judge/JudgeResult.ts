@@ -33,8 +33,10 @@ export class JudgeResult {
   }
 
   setError(e: NestedException) {
-    this.error = e;
-    this.hasError = true;
+    if (e) {
+      this.error = e;
+      this.hasError = true;
+    }
   }
 
 

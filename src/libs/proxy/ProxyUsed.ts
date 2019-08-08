@@ -19,8 +19,6 @@ export class ProxyUsed {
 
   error: Error = null;
 
-  fired = false;
-
   start: Date;
 
   stop: Date;

@@ -137,7 +137,7 @@ export class LevelDetection {
 
   addRecvHeader(headers: any) {
     const keys = Object.keys(headers).filter((x) => {
-      return ignore_headers.indexOf(x) == -1;
+      return ignore_headers.indexOf(x) === -1;
     });
 
     for (const k of keys) {

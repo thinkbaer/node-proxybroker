@@ -107,7 +107,8 @@ export class JudgeRequest {
 
 
   get level(): number {
-    return this.level_detector ? this.level_detector.level : LevelDetection.DEFAULT_LEVEL;
+    return this.level_detector ?
+      this.level_detector.level : LevelDetection.DEFAULT_LEVEL;
   }
 
   httpClient() {
