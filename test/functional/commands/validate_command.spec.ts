@@ -66,7 +66,6 @@ class ValidateCommandTest {
     const output = stdMocks.flush();
     await http_proxy_server.stop();
 
-
     expect(output).to.have.keys('stdout', 'stderr');
     expect(output.stdout).has.length(1);
     expect(list).has.length(1);

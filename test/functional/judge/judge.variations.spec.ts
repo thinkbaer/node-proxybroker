@@ -173,13 +173,13 @@ suite('Judge proxy variations', () => {
 
         const proxy_url = Clazz.proxy_server.url();
         const judgeReq = Clazz.judge.createRequest('http', proxy_url);
-        judgeReq._debug = data.debug;
+        const _debug = data.debug;
 
         try {
           const rrm = await judgeReq.performRequest();
           const log = rrm.logToString();
 
-          if (judgeReq._debug) {
+          if (_debug) {
             console.log('-------->');
             console.log(log);
             console.log('<--------');
@@ -199,13 +199,13 @@ suite('Judge proxy variations', () => {
 
         const proxy_url = Clazz.proxy_server.url();
         const judgeReq = Clazz.judge.createRequest('https', proxy_url);
-        judgeReq._debug = data.debug;
+        const _debug = data.debug;
 
         try {
           const rrm = await judgeReq.performRequest();
           const log = rrm.logToString();
 
-          if (judgeReq._debug) {
+          if (_debug) {
             console.log('-------->');
             console.log(log);
             console.log('<--------');
