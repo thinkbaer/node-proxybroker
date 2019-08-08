@@ -16,6 +16,7 @@ npm install proxybroker
 
 ## Configuration
 
+The configuration file in directory where module is installed
 config/typexs.yml
 
 ```yaml
@@ -34,6 +35,9 @@ proxybroker:
 ## Usage
 
 
+**start server**
+
+
 **Fetch proxies**
 
 Command: proxy-fetch [provider] [variant] -f json|csv -validate
@@ -50,12 +54,36 @@ Command: proxy-fetch [provider] [variant] -f json|csv -validate
 
 # Scan all proxy variants and return as json (can be piped to json file )
 > typexs proxy-fetch __all__
+
+> typexs proxy-fetch __all__ --validate --store
+
+
 > typexs proxy-fetch __all__ > proxies.json
    
 ```
 
+**Validate only**
 
-### curl over proxy
+
+```bash
+# Shows proxy variants
+> typexs proxy-validate '127.0.0.1:3128'
+> typexs proxy-validate '127.0.0.1:3128'
+   
+```
+
+
+
+## Server-mode
+
+
+
+
+
+
+### Testing 
+
+ curl over proxy
 ```
 $ curl -x http://localhost:3128 -L http://httpbin.org/headers
 ```
