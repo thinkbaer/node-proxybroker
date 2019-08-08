@@ -1,0 +1,20 @@
+version: '3'
+services:
+
+  txs_broker_test_postgres:
+    image: postgres
+    environment:
+      POSTGRES_DATABASES: proxybroker
+      POSTGRES_USER: proxybroker
+      POSTGRES_PASSWORD:
+    ports:
+      - 5432:5432
+    command: postgres -c 'max_connections=200'
+    volumes:
+      - ./local/postgres/data:/var/lib/postgresql/data
+    networks:
+      - txs_broker_test_net
+
+
+networks:
+  txs_broker_test_net: {}
