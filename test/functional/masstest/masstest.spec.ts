@@ -1,5 +1,6 @@
+// import {expect} from 'chai';
 // import * as _ from 'lodash';
-// import {skip, suite, test, timeout} from 'mocha-typescript';
+// import {suite, test, timeout} from 'mocha-typescript';
 // import {Config} from 'commons-config';
 // import {TestHelper} from '../TestHelper';
 // import {AsyncWorkerQueue, Bootstrap, C_STORAGE_DEFAULT, Container, ITypexsOptions, Log, StorageRef} from '@typexs/base';
@@ -94,7 +95,13 @@
 //     const registry = Container.get(ServerRegistry);
 //     await registry.get('proxyserver').start();
 //
+//     const storageRef: StorageRef = Container.get(C_STORAGE_DEFAULT);
+//     const c = await storageRef.connect();
+//     await c.manager.getRepository(IpAddrState).delete({});
+//     await c.close();
 //   }
+//
+//
 //
 //   async after() {
 //     if (bootstrap) {
@@ -105,23 +112,21 @@
 //   }
 //
 //
-//   @test.skip
+//   @test
 //   async 'masstest'() {
 //
-//     const storageRef: StorageRef = Container.get(C_STORAGE_DEFAULT);
-//     const c = await storageRef.connect();
-//     const count = await c.manager.getRepository(IpAddrState).count({where: {enabled: true}});
-//     await c.close();
+//     // const storageRef: StorageRef = Container.get(C_STORAGE_DEFAULT);
+//     // const c = await storageRef.connect();
+//     // const count = await c.manager.getRepository(IpAddrState).count({where: {enabled: true}});
+//     // await c.close();
+//     //
 //
-//     if (count === 0) {
-//       const resultss = await TasksHelper.exec([TN_PROXY_FETCH], {
-//         skipTargetCheck: false,
-//         provider: 'proxylistende',
-//         validate: true,
-//         store: true
-//       });
-//       console.log(resultss);
-//     }
+//     const resultss = await TasksHelper.exec([TN_PROXY_FETCH], {
+//       skipTargetCheck: false,
+//       provider: 'proxylistende',
+//       validate: true,
+//       store: true
+//     });
 //
 //     const stats = {
 //       success: 0,
@@ -157,7 +162,7 @@
 //       }
 //     }, {concurrent: 50, name: ''});
 //
-//     _.range(0, 2000).map(() => {
+//     _.range(0, 200).map(() => {
 //       q.push({});
 //     });
 //
@@ -165,6 +170,7 @@
 //     await q.await();
 //
 //     Log.debug('stats', stats);
+//     expect(stats.count).to.be.eq(200);
 //
 //
 //   }
