@@ -20,7 +20,8 @@ $ mkdir proxy-project && cd proxy-project
 ## Initialize npm project
 $ npm init -y
 
-## Mark project as typexs project 
+## Mark project as typexs project, 
+## you need to set this key to enable the typexs functionality
 $ node -p "JSON.stringify({...require('./package.json'), typexs: {name:'proxy-project'}}, null, 2)" > package.mod.json && \ 
   mv package.mod.json package.json
 
@@ -92,80 +93,27 @@ workers:
 
 ## Configuration
 
-The configuration file in directory where module is installed
-config/typexs.yml
+The configuration file must be under config/typexs.yml in the 
+project directory.
 
-```yaml
+**TODO**
 
-    
-
-proxy-broker:
-  startup: true
-  validator:
-    parallel: 50
-    judge:
-      selftest: true
-      remote_lookup: true
-      remote_ip: 127.0.0.1
-      ip: 0.0.0.0
-      request:
-        timeout: 5000
-  provider:
-    startup: true
-    parallel: 5
-
-server:
-  proxyserver:
-    type: proxyserver
-    port: 3128
-    enable: true
-    timeout: 30000
-    # limit of search repeats if proxy failed
-    repeatLimit: 10
-    broker:
-      enable: true
-      timeouts:
-        incoming: 30000
-        forward: 2000
-    toProxy: true # default rotator will be used
-
-
-schedules:
-  - name: fetch_proxies
-    offset: 4h
-    # startup: true
-    task:
-      name:
-        - proxy_fetch
-      validate: true
-      provider: __all__
-  - name: revalidate
-    offset: 30m
-    event:
-      name: validator_run_event
-
-
-workers:
-  access:
-    - name: TaskQueueWorker
-      access: allow
-
-
-
-```
+* *proxy-broker*
+  * *startup*
+  
 
 
 ## Usage
 
-
 ### Proxyserver
 
-
-
-Command: 
+Start the server with command:
 ```
 typexs server
 ```
+
+This command starts all instances of servers defined under the root key *server*
+in the configuration file.
 
 
 
@@ -179,8 +127,8 @@ typexs proxy-fetch [provider] [variant] -f json|csv -validate
 * provider - the name of the defined proxy provider
 * variant - is the possible different proxy
 * -f - output format is default 'json', the other possible value is 'csv'
-* -validate - run validation of grabbed data  
-* -store - store data also in backend
+* --validate - run validation of grabbed data  
+* --store - store data also in backend
 
 ```bash
 # Shows proxy variants
@@ -190,7 +138,6 @@ typexs proxy-fetch [provider] [variant] -f json|csv -validate
 > typexs proxy-fetch __all__
 
 > typexs proxy-fetch __all__ --validate --store
-
 
 > typexs proxy-fetch __all__ > proxies.json
    
@@ -219,10 +166,11 @@ Examples:
 
 ## Server-mode
 
+**TODO**
 
 ## Docker
 
-
+**TODO**
 
 
 ### Testing 
