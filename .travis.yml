@@ -18,6 +18,8 @@ before_script:
   - sudo /etc/init.d/postgresql stop
 
 before_install:
+  - sudo apt purge mysql-* -y
+  - sudo apt purge postgresql-* -y
   - sudo /bin/sh -c 'echo "\n127.0.0.10 judge.local\n" >> /etc/hosts'
   - sudo /bin/sh -c 'echo "127.0.0.11 proxy.local\n" >> /etc/hosts'
   - export CI_CONTAINER=1
