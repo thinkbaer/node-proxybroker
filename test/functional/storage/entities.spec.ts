@@ -1,25 +1,25 @@
-import {suite, test} from "mocha-typescript";
-import {expect} from "chai";
+import {suite, test} from 'mocha-typescript';
+import {expect} from 'chai';
 
-import {Container, Invoker, StorageRef} from "@typexs/base";
-import {TEST_STORAGE_OPTIONS} from "../config";
-import {IpLoc} from "../../../src/entities/IpLoc";
-import {IpRotate} from "../../../src/entities/IpRotate";
-import {IpRotateLog} from "../../../src/entities/IpRotateLog";
-import {IpAddrState} from "../../../src/entities/IpAddrState";
-import {IpAddr} from "../../../src/entities/IpAddr";
-import {ProtocolType} from "../../../src/libs/specific/ProtocolType";
-import * as _ from "lodash";
+import {Container, Invoker, StorageRef} from '@typexs/base';
+import {TEST_STORAGE_OPTIONS} from '../config';
+import {IpLoc} from '../../../src/entities/IpLoc';
+import {IpRotate} from '../../../src/entities/IpRotate';
+import {IpRotateLog} from '../../../src/entities/IpRotateLog';
+import {IpAddrState} from '../../../src/entities/IpAddrState';
+import {IpAddr} from '../../../src/entities/IpAddr';
+import {ProtocolType} from '../../../src/libs/specific/ProtocolType';
+import * as _ from 'lodash';
 
 let storage: StorageRef = null;
 
-@suite('storage/entity/'+__filename)
+@suite('storage/entity/' + __filename)
 class EntitiesTest {
 
   static async before() {
-    let invoker = new Invoker();
+    const invoker = new Invoker();
     Container.set(Invoker.NAME, invoker);
-    let opts = _.clone(TEST_STORAGE_OPTIONS);
+    const opts = _.clone(TEST_STORAGE_OPTIONS);
     (<any>opts).entities = [
       IpAddr
     ];
@@ -28,7 +28,7 @@ class EntitiesTest {
   }
 
   static async after() {
-    if(storage){
+    if (storage) {
       await storage.shutdown();
     }
 
@@ -37,22 +37,22 @@ class EntitiesTest {
 
   @test.skip()
   'TODO: entity: IpLoc'() {
-    let e = new IpLoc()
+    const e = new IpLoc();
   }
 
   @test.skip()
   'TODO: entity: IpRotate'() {
-    let e = new IpRotate()
+    const e = new IpRotate();
   }
 
   @test.skip()
   'TODO: entity: IpRotateLog'() {
-    let e = new IpRotateLog()
+    const e = new IpRotateLog();
   }
 
   @test.skip()
   async 'TODO: entity: IpAddrStatus'() {
-    let e = new IpAddrState()
+    const e = new IpAddrState();
   }
 
   @test
@@ -73,7 +73,7 @@ class EntitiesTest {
     c = await storage.connect();
     ne = await c.manager.findOne(IpAddr, ne.id);
     await c.close();
-    //e.flattenDates();
+    // e.flattenDates();
     expect(ne).to.deep.eq(e);
 
     e = new IpAddr();
@@ -102,7 +102,7 @@ class EntitiesTest {
     e.removeProtocol(ProtocolType.HTTPS);
     expect(e.supportsHttp()).to.be.false;
     expect(e.supportsHttps()).to.be.false;
-    expect(e.supportsBoth()).to.be.false
+    expect(e.supportsBoth()).to.be.false;
   }
 
   /*
