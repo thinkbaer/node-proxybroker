@@ -7,12 +7,88 @@
 [![Dependency Status](https://david-dm.org/thinkbaer/node-proxybroker.svg)](https://david-dm.org/thinkbaer/node-proxybroker)
 
 
-## Install
+## Local installation
 
-```js
-npm install -g typexs
-npm install proxybroker
+The proxybroker is implemented as [typexs](https://github.com/typexs/typexs-base) module. 
+It's a framework for dynamic module invocation and integration.
+To use this implementation create a new directory and install the npm packages.  
+
+```bash
+## Create the project directory and change to it
+$ mkdir proxy-project && cd proxy-project 
+
+## Initialize npm project
+$ npm init -y
+
+## Mark project as typexs project 
+$ node -p "JSON.stringify({...require('./package.json'), typexs: {name:'proxy-project'}}, null, 2)" > package.mod.json && \ 
+  mv package.mod.json package.json
+
+## Install proxybroker
+$ npm install proxybroker
+
+## Create the configuration directory and file
+$ mkdir config
+$ touch config/typexs.yml
 ```
+
+Add following content to the config/typexs.yml file:
+```yaml
+# Configuration 
+proxy-broker:
+  startup: true
+  validator:
+    parallel: 50
+    judge:
+      selftest: true
+      remote_lookup: true
+      remote_ip: 127.0.0.1
+      ip: 0.0.0.0
+      request:
+        timeout: 5000
+  provider:
+    startup: true
+    parallel: 5
+
+server:
+  proxyserver:
+    type: proxyserver
+    port: 3128
+    enable: true
+    timeout: 30000
+    # limit of search repeats if proxy failed
+    repeatLimit: 10
+    broker:
+      enable: true
+      timeouts:
+        incoming: 30000
+        forward: 2000
+    toProxy: true # default rotator will be used
+
+
+
+schedules:
+  - name: fetch_proxies
+    offset: 4h
+    # startup: true
+    task:
+      name:
+        - proxy_fetch
+      validate: true
+      provider: __all__
+  - name: revalidate
+    offset: 30m
+    event:
+      name: validator_run_event
+
+
+workers:
+  access:
+    - name: TaskQueueWorker
+      access: allow
+
+```
+
 
 ## Configuration
 
@@ -21,12 +97,59 @@ config/typexs.yml
 
 ```yaml
 
-proxybroker:
-  # enable on startup
-  startup: true | false 
-  # provider options
-  providerOptions:
     
+
+proxy-broker:
+  startup: true
+  validator:
+    parallel: 50
+    judge:
+      selftest: true
+      remote_lookup: true
+      remote_ip: 127.0.0.1
+      ip: 0.0.0.0
+      request:
+        timeout: 5000
+  provider:
+    startup: true
+    parallel: 5
+
+server:
+  proxyserver:
+    type: proxyserver
+    port: 3128
+    enable: true
+    timeout: 30000
+    # limit of search repeats if proxy failed
+    repeatLimit: 10
+    broker:
+      enable: true
+      timeouts:
+        incoming: 30000
+        forward: 2000
+    toProxy: true # default rotator will be used
+
+
+schedules:
+  - name: fetch_proxies
+    offset: 4h
+    # startup: true
+    task:
+      name:
+        - proxy_fetch
+      validate: true
+      provider: __all__
+  - name: revalidate
+    offset: 30m
+    event:
+      name: validator_run_event
+
+
+workers:
+  access:
+    - name: TaskQueueWorker
+      access: allow
+
 
 
 ```
@@ -35,12 +158,23 @@ proxybroker:
 ## Usage
 
 
-**start server**
+### Proxyserver
 
 
-**Fetch proxies**
 
-Command: proxy-fetch [provider] [variant] -f json|csv -validate
+Command: 
+```
+typexs server
+```
+
+
+
+### Fetch proxies
+
+Command: 
+```
+typexs proxy-fetch [provider] [variant] -f json|csv -validate
+```
 
 * provider - the name of the defined proxy provider
 * variant - is the possible different proxy
@@ -62,12 +196,21 @@ Command: proxy-fetch [provider] [variant] -f json|csv -validate
    
 ```
 
-**Validate only**
+### Validate only
 
 
+Command: 
+```
+typexs proxy-validate [string or filename] [-f json|csv] [--store]
+```
+
+
+Examples:
 ```bash
 # Shows proxy variants
 > typexs proxy-validate '127.0.0.1:3128'
+
+
 > typexs proxy-validate '127.0.0.1:3128'
    
 ```
@@ -77,6 +220,7 @@ Command: proxy-fetch [provider] [variant] -f json|csv -validate
 ## Server-mode
 
 
+## Docker
 
 
 
