@@ -38,3 +38,5 @@ EXPOSE 5432
 COPY ./docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
+
+CMD ["server"]
