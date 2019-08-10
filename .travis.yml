@@ -13,10 +13,6 @@ env:
 services:
   - docker
 
-before_script:
-  - sudo /etc/init.d/mysql stop
-  - sudo /etc/init.d/postgresql stop
-
 before_install:
   - sudo apt purge mysql-* -y
   - sudo apt purge postgresql-* -y
