@@ -1,5 +1,6 @@
 FROM node:10
 
+
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
 RUN apt-get update && \
@@ -13,27 +14,25 @@ RUN apt-get update && \
       git \
       postgresql && \
     cd /tmp && \
-    git clone https://github.com/thinkbaer/node-proxybroker.git && \
-    npm i -g typescript \
-      @typexs/base \
-      gulp && \
-    cd /tmp/node-proxybroker && \
-    npm i && \
-    gulp package && \
-    mv build/package /proxybroker && \
-    cd /proxybroker  && \
-    npm i && \
-    mkdir config
-
-
-
+    mkdir -p /proxybroker/config && \
+    mkdir -p /proxybroker/log && \
+    cd /proxybroker && \
+    npm init -y && \
+    node -p "JSON.stringify({...require('./package.json'), typexs: {name:'proxy-project'}}, null, 2)" > package.mod.json && \
+    mv package.mod.json package.json && \
+    npm i proxybroker pg pg-native
 
 
 VOLUME /proxybroker/config
 COPY config /proxyproker/config
 
+# ProxyServer
 EXPOSE 3128
-EXPOSE 80
+
+# UI (later)
+EXPOSE 8080
+
+# POSTGRESQL DB
 EXPOSE 5432
 
 COPY ./docker-entrypoint.sh /

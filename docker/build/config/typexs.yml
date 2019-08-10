@@ -1,0 +1,101 @@
+app:
+  name: proxybroker
+
+logging:
+  enable: true
+  level: debug
+  transports:
+    - console:
+        stderrLevels:
+          - info
+          - debug
+          - warn
+          - error
+          - trace
+    - file:
+        filename: /proxybroker/log/proxybroker.log
+        level: info
+  loggers:
+    - name: '*'
+      enable: true
+      level: debug
+      transports:
+        - console:
+            stderrLevels:
+              - info
+              - debug
+              - warn
+              - error
+              - trace
+        - file:
+            filename: /proxybroker/log/proxybroker.log
+            level: info
+
+
+
+storage:
+  default:
+    type: postgres
+    database: proxybroker
+    username: proxybroker
+    port: 5432
+    synchronize: true
+    extra:
+      max: 200
+#    logger: simple-console
+#    logging: all
+
+
+
+proxy-broker:
+  startup: true
+  validator:
+    parallel: 50
+    judge:
+      selftest: true
+      remote_lookup: true
+      remote_ip: 127.0.0.1
+      ip: 0.0.0.0
+      request:
+        timeout: 5000
+  provider:
+    startup: true
+    parallel: 5
+
+
+server:
+  proxyserver:
+    type: proxyserver
+    port: 3128
+    enable: true
+    timeout: 30000
+    # limit of search repeats if proxy failed
+    repeatLimit: 10
+    broker:
+      enable: true
+      timeouts:
+        incoming: 30000
+        forward: 2000
+    toProxy: true # default rotator will be used
+
+
+schedules:
+  - name: fetch_proxies
+    offset: 4h
+    # startup: true
+    task:
+      name:
+        - proxy_fetch
+      validate: true
+      provider: __all__
+  - name: revalidate
+    offset: 30m
+    event:
+      name: validator_run_event
+
+
+workers:
+  access:
+    - name: TaskQueueWorker
+      access: allow
+
