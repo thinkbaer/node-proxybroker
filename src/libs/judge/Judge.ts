@@ -17,7 +17,7 @@ import {CryptUtils, DomainUtils, Log, TodoException} from '@typexs/base';
 import {MESSAGE, Messages} from '../specific/Messages';
 import {ProtocolType} from '../specific/ProtocolType';
 import {HttpFactory, IHttp, IHttpResponse} from 'commons-http';
-import {K_JUDGE_REQUEST_TIMEOUT} from '../Constants';
+import {DEFAULT_USER_AGENT, K_JUDGE_REQUEST_TIMEOUT} from '../Constants';
 import {LockFactory} from '@typexs/base/libs/LockFactory';
 
 
@@ -189,7 +189,10 @@ export class Judge implements IServerApi {
 
     const options = {
       rejectUnauthorized: false,
-      timeout: _.get(this.options, K_JUDGE_REQUEST_TIMEOUT, 10000)
+      timeout: _.get(this.options, K_JUDGE_REQUEST_TIMEOUT, 10000),
+      headers: {
+        'user-agent': DEFAULT_USER_AGENT
+      }
     };
 
     const response: IHttpResponse<any> = <IHttpResponse<any>>

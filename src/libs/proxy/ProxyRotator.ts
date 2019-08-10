@@ -21,6 +21,7 @@ import {IProxySelector} from './IProxySelector';
 import {IpRotateLog} from '../../entities/IpRotateLog';
 import {ProxyUsed} from './ProxyUsed';
 import {HttpFactory, IHttp} from 'commons-http';
+import {DEFAULT_USER_AGENT} from '../Constants';
 
 /**
  * create and keep a fifo queue with proxy references
@@ -34,22 +35,9 @@ import {HttpFactory, IHttp} from 'commons-http';
  *
  *
  */
-//
-// interface IProxy {
-//   ip: string;
-//   port: number;
-//   secured: boolean;
-//   level: number;
-//   used?: Date;
-// }
-//
-// interface IFetch {
-//   limit: number;
-// }
 
 
 const BASEURL = 'httpbin.org/get';
-const E_FETCH_DONE = 'fetch_done';
 
 export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IProxySelector | ProxyUsed> {
 
@@ -141,7 +129,12 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
   }
 
   async doRequest(baseUrlStr: string, proxyUrlStr: string) {
-    const response = await this.http.get(baseUrlStr, {timeout: this.options.request.timeout, proxy: proxyUrlStr, json: true});
+    const response = await this.http.get(baseUrlStr, {
+      timeout: this.options.request.timeout,
+      proxy: proxyUrlStr,
+      json: true,
+      headers: {'user-agent': DEFAULT_USER_AGENT}
+    });
     if (response.statusCode < 200 || response.statusCode >= 400) {
       const err = new Error('wrong status code ' + response.statusCode + ' ' + response.statusMessage);
       _.set(err, 'statusCode', response.statusCode);
@@ -227,12 +220,12 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
       // }
     }
 
-      ipRotate.inc++;
-      if (ipRotate.inc % 10 === 0) {
-        ipRotate.used = 0;
-      } else {
-        ipRotate.used++;
-      }
+    ipRotate.inc++;
+    if (ipRotate.inc % 10 === 0) {
+      ipRotate.used = 0;
+    } else {
+      ipRotate.used++;
+    }
 
     if (ip.success) {
       ipRotate.duration += ip.duration;

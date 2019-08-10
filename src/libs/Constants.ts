@@ -18,7 +18,7 @@ export const E_EMPTY_SOCKET_HANDLES = 'empty handles';
 export const E_SOCKET_FINISHED = 'socket_finished';
 export const E_EMPTY_FINISHED = 'empty_finished';
 
-
+export const DEFAULT_USER_AGENT: string = null;
 export const API_URL_PROXYBROKER = '/proxy-broker';
 
 export const PERMISSION_ACCESS_PROXY_BROKER_CONTENT = 'access proxy broker content';

@@ -16,18 +16,17 @@ import {ProtocolType} from '../specific/ProtocolType';
 import {MESSAGE} from '../specific/Messages';
 import {HttpFactory, IHttp, IHttpGetOptions, IHttpStream, isStream} from 'commons-http';
 import Timer = NodeJS.Timer;
+import {DEFAULT_USER_AGENT} from '../Constants';
 
 
-// interface JudgeConfig
 
-
-/*
- * TODO: Search in header data for domains which must be resolve to check them against proxy and local ip
- */
-const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
-
-const IP_REGEX = /\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}/;
-
+// /*
+//  * TODO: Search in header data for domains which must be resolve to check them against proxy and local ip
+//  */
+// const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
+//
+// const IP_REGEX = /\d{0,3}\.\d{0,3}\.\d{0,3}\.\d{0,3}/;
+//
 
 /*
  * TODO: Lookup IP Location
@@ -125,7 +124,8 @@ export class JudgeRequest {
       proxy: this.proxy_url,
       retry: _.get(this.options, 'retry', 0),
       stream: true,
-      rejectUnauthorized: _.get(this.options, 'rejectUnauthorized', false)
+      rejectUnauthorized: _.get(this.options, 'rejectUnauthorized', false),
+      headers: {'user-agent': DEFAULT_USER_AGENT}
     };
 
     // tslint:disable-next-line:no-shadowed-variable

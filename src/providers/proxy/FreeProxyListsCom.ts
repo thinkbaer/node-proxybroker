@@ -8,6 +8,7 @@ import {ProxyType} from '../../libs/specific/ProxyType';
 import {IProxyData} from '../../libs/proxy/IProxyData';
 import * as cookie from 'tough-cookie';
 import {HttpFactory} from 'commons-http';
+import {DEFAULT_USER_AGENT} from '../../libs/Constants';
 
 const NAME = 'freeproxylists';
 const BASE_URL = 'http://www.freeproxylists.com';
@@ -95,7 +96,11 @@ export class FreeProxyListsCom extends AbstractProvider {
     Log.info('FreeProxyListsCom: (' + this.url + ') selected variant is ' + this.variant.type);
     const cookies = new cookie.CookieJar();
     // let cookies = request.jar();
-    const resp = await http.get(this.url + '/' + this.variant.path, <any>{cookieJar: cookies, rejectUnauthorized: false});
+    const resp = await http.get(this.url + '/' + this.variant.path, <any>{
+      cookieJar: cookies,
+      rejectUnauthorized: false,
+      headers: {'user-agent': DEFAULT_USER_AGENT}
+    });
     let html = resp.body;
 
     const matched_ids: string[] = [];
