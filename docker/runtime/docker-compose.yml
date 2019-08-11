@@ -10,7 +10,7 @@ services:
       - 127.0.0.1:5432:5432
     volumes:
       - ./config:/proxy-broker/config
-      - ./local/postgres/data:/proxy-broker/data
+      - ./local/proxybroker/data:/proxy-broker/data
       - ./local/proxybroker/log:/proxy-broker/log
     networks:
       - txs_broker_pg_net

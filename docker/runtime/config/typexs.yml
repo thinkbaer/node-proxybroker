@@ -83,7 +83,7 @@ server:
 schedules:
   - name: fetch_proxies
     offset: 6h
-    startup: true
+#    startup: true
     task:
       name:
         - proxy_fetch
