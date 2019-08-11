@@ -12,9 +12,9 @@ logging:
           - warn
           - error
           - trace
-    - file:
-        filename: /proxy-broker/log/proxybroker.log
-        level: debug
+#    - file:
+#        filename: /proxy-broker/log/proxybroker.log
+#        level: debug
   loggers:
     - name: '*'
       enable: true
@@ -27,9 +27,9 @@ logging:
               - warn
               - error
               - trace
-        - file:
-            filename: /proxy-broker/log/proxybroker.log
-            level: debug
+#        - file:
+#            filename: /proxy-broker/log/proxybroker.log
+#            level: debug
 
 
 
