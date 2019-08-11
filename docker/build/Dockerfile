@@ -5,6 +5,7 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 #RUN groupadd --gid 1000 node \
 #  && useradd --uid 1000 --gid node --shell /bin/bash --create-home node
 
+ENV PROXYBROKER_VERSION 0.11.2
 ENV NODE_VERSION 10.16.2
 ENV ARCH x64
 
@@ -85,7 +86,7 @@ RUN for key in \
     npm init -y && \
     node -p "JSON.stringify({...require('./package.json'), typexs: {name:'proxy-project'}}, null, 2)" > package.mod.json && \
     mv package.mod.json package.json && \
-    npm i proxybroker pg pg-native
+    npm i proxybroker@$PROXYBROKER_VERSION pg pg-native
 
 
 VOLUME /proxy-broker/config
