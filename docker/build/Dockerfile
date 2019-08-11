@@ -5,7 +5,7 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 #RUN groupadd --gid 1000 node \
 #  && useradd --uid 1000 --gid node --shell /bin/bash --create-home node
 
-ENV PROXYBROKER_VERSION 0.11.2
+ENV PROXYBROKER_VERSION 0.11.3
 ENV NODE_VERSION 10.16.2
 ENV ARCH x64
 
