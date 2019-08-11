@@ -50,6 +50,7 @@ storage:
 proxy-broker:
   startup: true
   validator:
+    logDirectory: /proxy-broker/log/states
     parallel: 50
     judge:
       selftest: true
