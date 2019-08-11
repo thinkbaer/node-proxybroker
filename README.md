@@ -172,6 +172,9 @@ Examples:
 
 **TODO**
 
+```
+docker run -p 8080:8080 -p 8181:8181 -it proxybroker-pg
+```
 
 ### Testing 
 
