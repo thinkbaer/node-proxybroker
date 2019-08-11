@@ -1,9 +1,9 @@
 app:
-  name: proxybroker
+  name: proxybroker-pg
 
 logging:
   enable: true
-  level: debug
+  level: info
   transports:
     - console:
         stderrLevels:
@@ -13,12 +13,12 @@ logging:
           - error
           - trace
     - file:
-        filename: /proxybroker/log/proxybroker.log
-        level: info
+        filename: /proxy-broker/log/proxybroker.log
+        level: debug
   loggers:
     - name: '*'
       enable: true
-      level: debug
+      level: info
       transports:
         - console:
             stderrLevels:
@@ -28,8 +28,8 @@ logging:
               - error
               - trace
         - file:
-            filename: /proxybroker/log/proxybroker.log
-            level: info
+            filename: /proxy-broker/log/proxybroker.log
+            level: debug
 
 
 
@@ -81,8 +81,8 @@ server:
 
 schedules:
   - name: fetch_proxies
-    offset: 4h
-    # startup: true
+    offset: 6h
+    startup: true
     task:
       name:
         - proxy_fetch
