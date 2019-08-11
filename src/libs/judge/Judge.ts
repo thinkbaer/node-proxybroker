@@ -439,9 +439,6 @@ export class Judge implements IServerApi {
 
 
     return Promise.all(promises).then(_res => {
-      this.logger.info('validated ' + ip + ':' + port + ' [\n\t' +
-        results.variants.map(x => '(' + [x.protocol_to, x.protocol_to, x.hasError, x.level, x.duration].join(',') + ')')
-          .join('\n\t') + '\n]');
       return results;
     });
   }

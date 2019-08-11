@@ -7,7 +7,17 @@ import {JudgeResult} from '../judge/JudgeResult';
 import {DEFAULT_VALIDATOR_OPTIONS, IProxyValidatiorOptions} from './IProxyValidatiorOptions';
 import {ValidatorRunEvent} from './ValidatorRunEvent';
 import {DateUtils} from 'typeorm/util/DateUtils';
-import {AsyncWorkerQueue, ConnectionWrapper, FileUtils, IQueueProcessor, Log, PlatformUtils, QueueJob, StorageRef} from '@typexs/base';
+import {
+  AsyncWorkerQueue,
+  ConnectionWrapper,
+  FileUtils,
+  ILoggerApi,
+  IQueueProcessor,
+  Log,
+  PlatformUtils,
+  QueueJob,
+  StorageRef
+} from '@typexs/base';
 import {subscribe} from 'commons-eventbus/decorator/subscribe';
 import {IpAddr} from '../../entities/IpAddr';
 import {EventBus} from 'commons-eventbus';
@@ -35,6 +45,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
   _isEmpty = true;
 
+  logger: ILoggerApi;
 
   static buildState(addr: IpAddr, result: JudgeResult): IpAddrState {
     const state = new IpAddrState();
@@ -85,6 +96,8 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
     if (path && !PlatformUtils.fileExist(path)) {
       PlatformUtils.mkdir(path);
     }
+
+    this.logger = _.get(options, 'logger', Log.getLoggerFor(ProxyValidator));
   }
 
 
@@ -112,14 +125,14 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
     try {
       const ips: IpAddr[] = await q.getMany();
-      Log.info('Validator recheck proxies: ' + ips.length);
+      this.logger.info('Validator recheck proxies: ' + ips.length);
       if (ips.length > 0) {
         for (const ip of ips) {
           this.validate(new ProxyDataValidateEvent(new ProxyData(ip)));
         }
       }
     } catch (e) {
-      Log.error(e);
+      this.logger.error(e);
     }
     await c.close();
   }
@@ -171,10 +184,10 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
           try {
             await conn.save(ip_loc);
           } catch (err) {
-            Log.error(err);
+            this.logger.error(err);
           }
         } else {
-          Log.warn('proxy_validator: no geodata found');
+          this.logger.warn('proxy_validator: no geodata found');
         }
       }
       // if we have no positive results for http and https then
@@ -231,7 +244,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         }
       }
 
-      Log.debug('proxy_validator: validated ' + ip_addr.ip);
+      this.logger.debug('proxy_validator: validated ' + ip_addr.ip);
       await conn.save(ip_addr);
 
     }
@@ -264,13 +277,13 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
 
   async shutdown() {
-    Log.debug('proxy_validator:  pre-shutdown');
+    this.logger.debug('proxy_validator:  pre-shutdown');
     if (this.judge.isEnabled()) {
       await this.judge.pending();
     }
     this.queue.removeAllListeners();
     await EventBus.unregister(this);
-    Log.debug('proxy_validator:  shutdown');
+    this.logger.debug('proxy_validator:  shutdown');
   }
 
 
@@ -282,15 +295,23 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         await this.judge.wakeup();
         this.connection = await this.storage.connect();
       } catch (err) {
-        Log.error(err);
+        this.logger.error(err);
         throw err;
       }
     }
 
-    Log.debug('ProxyValidator->do ' + workLoad.ip + ':' + workLoad.port);
+    this.logger.debug('ProxyValidator->do ' + workLoad.ip + ':' + workLoad.port);
 
     const results = await this.judge.validate(workLoad.ip, workLoad.port);
     workLoad.results = results;
+
+
+    const status = this.queue.status();
+    const out = ['enq=' + status.enqueued, 'run=' + status.running, 'act=' + status.active].join(', ');
+    this.logger.info('validated ' + workLoad.ip + ':' + workLoad.port + ' [' + out + '] [\n\t' +
+      results.variants.map(x => '(' + [x.protocol_to, x.protocol_to, x.hasError, x.level, x.duration].join(',') + ')')
+        .join('\n\t') + '\n]');
+
     if (this.storage) {
       const hasSuccess = !!_.find(results.getVariants(), x => !x.hasError);
       if ((this.options.skipFailed && hasSuccess) || !this.options.skipFailed) {
