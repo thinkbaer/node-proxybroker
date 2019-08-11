@@ -1,0 +1,19 @@
+version: '3'
+services:
+
+  txs_proxybroker_pg:
+    image: cezaryrk/proxybroker-pg:0.11.4
+    ports:
+      - 8080:8080
+      - 8181:8181
+      - 127.0.0.1:3128:3128
+      - 127.0.0.1:5432:5432
+    volumes:
+      - ./local/postgres/data:/proxy-broker/data
+      - ./local/proxybroker/log:/proxy-broker/log
+    networks:
+      - txs_broker_pg_net
+
+
+networks:
+  txs_broker_pg_net: {}

@@ -72,15 +72,8 @@ RUN for key in \
     && rm "node-v$NODE_VERSION-linux-$ARCH.tar.xz" SHASUMS256.txt.asc SHASUMS256.txt \
     && apt-get purge -y --auto-remove $buildDeps \
     && ln -s /usr/local/bin/node /usr/local/bin/nodejs \
-    && /etc/init.d/postgresql stop \
-    && echo "" > /etc/postgresql/9.6/main/pg_hba.conf \
-    && echo "local all all  trust" >> /etc/postgresql/9.6/main/pg_hba.conf \
-    && echo "host all all 127.0.0.1/32 trust" >> /etc/postgresql/9.6/main/pg_hba.conf \
-    && /etc/init.d/postgresql start \
-    && su - postgres -c 'createuser proxybroker' \
-    && su - postgres -c 'createdb proxybroker' \
-    && su - postgres -c "psql -c 'grant all privileges on database proxybroker to proxybroker;'" \
     && mkdir -p /proxy-broker/config && \
+    mkdir -p /proxy-broker/data && \
     mkdir -p /proxy-broker/log && \
     cd /proxy-broker && \
     npm init -y && \
@@ -91,7 +84,14 @@ RUN for key in \
 
 VOLUME /proxy-broker/config
 VOLUME /proxy-broker/log
-VOLUME /var/lib/postgresql/9.6/main
+
+RUN	chown -R postgres:postgres /proxy-broker/data && \
+	chmod 777 /proxy-broker/data
+
+VOLUME /proxy-broker/data
+
+
+
 
 COPY config /proxy-broker/config
 
