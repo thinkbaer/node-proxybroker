@@ -6,6 +6,7 @@ logging:
   level: debug
   transports:
     - console:
+        level: info
         stderrLevels:
           - info
           - debug
@@ -25,6 +26,7 @@ logging:
       level: debug
       transports:
         - console:
+            level: info
             stderrLevels:
               - info
               - debug
@@ -58,6 +60,7 @@ storage:
 proxy-broker:
   startup: true
   validator:
+    logDirectory: ./tmp/log-states
     parallel: 50
     judge:
       selftest: true
