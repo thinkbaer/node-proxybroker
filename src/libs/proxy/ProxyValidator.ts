@@ -1,3 +1,5 @@
+import * as moment from 'moment';
+
 import {Judge} from '../judge/Judge';
 import {ProxyData} from './ProxyData';
 import * as _ from 'lodash';
@@ -5,7 +7,7 @@ import {JudgeResult} from '../judge/JudgeResult';
 import {DEFAULT_VALIDATOR_OPTIONS, IProxyValidatiorOptions} from './IProxyValidatiorOptions';
 import {ValidatorRunEvent} from './ValidatorRunEvent';
 import {DateUtils} from 'typeorm/util/DateUtils';
-import {AsyncWorkerQueue, ConnectionWrapper, IQueueProcessor, Log, QueueJob, StorageRef} from '@typexs/base';
+import {AsyncWorkerQueue, ConnectionWrapper, FileUtils, IQueueProcessor, Log, PlatformUtils, QueueJob, StorageRef} from '@typexs/base';
 import {subscribe} from 'commons-eventbus/decorator/subscribe';
 import {IpAddr} from '../../entities/IpAddr';
 import {EventBus} from 'commons-eventbus';
@@ -54,7 +56,7 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
       }
     }
 
-    state.log = <any>result.log;
+    // state.log = <any>result.log;
     state.duration = result.duration;
     state.start = result.start;
     state.stop = result.stop;
@@ -63,6 +65,8 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
       addr.addSourceProtocol(result.protocol_from);
       addr.addProtocol(result.protocol_to);
     }
+
+    state['result'] = result;
     return state;
   }
 
@@ -76,6 +80,11 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
       concurrent: this.options.parallel || 200
     });
     this.queue.setMaxListeners(10000);
+
+    const path = _.get(this.options, 'logDirectory', null);
+    if (path && !PlatformUtils.fileExist(path)) {
+      PlatformUtils.mkdir(path);
+    }
   }
 
 
@@ -117,9 +126,6 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
 
 
   async store(proxyData: ProxyData) {
-    // const storage = this.storage;
-    // results are present
-    // const conn = await storage.connect();
     const conn = this.connection;
     const now = new Date();
 
@@ -190,7 +196,20 @@ export class ProxyValidator implements IQueueProcessor<ProxyData> {
         promises.push(conn.save(http_state));
       }
 
-      await Promise.all(promises);
+      await Promise.all(promises).then((results: IpAddrState[]): any => {
+        const path = _.get(this.options, 'logDirectory', null);
+        if (path) {
+          return Promise.all(results.map(x => {
+            const judgeResult = x['result'] as JudgeResult;
+            const content = judgeResult.logToString();
+            const filepath = PlatformUtils.join(path,
+              'pb-state-' + moment(x.created_at).format('YYYYMMDD-HHmmss') + '-' + x.id + '.log');
+            return FileUtils.writeFile(filepath, content);
+          }));
+        } else {
+          return Promise.resolve();
+        }
+      });
 
       if (enabled) {
         // event.jobState.validated++;

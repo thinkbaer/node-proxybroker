@@ -5,6 +5,7 @@ export interface IProxyValidatiorOptions {
 
   parallel?: number;
 
+  logDirectory?: string;
 
   revalidate?: {
 
@@ -40,4 +41,6 @@ export const DEFAULT_VALIDATOR_OPTIONS: IProxyValidatiorOptions = {
 
     limit: 1000
   }
+
+
 };

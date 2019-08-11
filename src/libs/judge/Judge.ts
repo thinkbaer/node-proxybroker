@@ -13,7 +13,7 @@ import {DEFAULT_JUDGE_OPTIONS, IJudgeOptions} from './IJudgeOptions';
 import {JudgeResults} from './JudgeResults';
 import {JudgeResult} from './JudgeResult';
 import {IServerApi, Server} from '@typexs/server';
-import {CryptUtils, DomainUtils, Log, TodoException} from '@typexs/base';
+import {CryptUtils, DomainUtils, ILoggerApi, Log, TodoException} from '@typexs/base';
 import {MESSAGE, Messages} from '../specific/Messages';
 import {ProtocolType} from '../specific/ProtocolType';
 import {HttpFactory, IHttp, IHttpResponse} from 'commons-http';
@@ -49,10 +49,13 @@ export class Judge implements IServerApi {
 
   private http: IHttp;
 
+  private logger: ILoggerApi;
+
   constructor(options: IJudgeOptions = {}) {
     this._options = _.defaultsDeep(options, DEFAULT_JUDGE_OPTIONS);
 
     this.http = HttpFactory.create();
+    this.logger = _.get(options, 'logger', Log.getLoggerFor(Judge));
 
     this.httpServer = new Server();
     this.httpServer.initialize({
@@ -105,11 +108,11 @@ export class Judge implements IServerApi {
       infos.runnable = this.runnable;
       infos.selftest = this._options.selftest;
 
-      Log.info(Messages.get(MESSAGE.JDG02.k, infos));
+      this.logger.info(Messages.get(MESSAGE.JDG02.k, infos));
 
       return Promise.resolve(this.runnable);
     } catch (err) {
-      Log.error(err);
+      this.logger.error(err);
       throw err;
     }
   }
@@ -176,7 +179,7 @@ export class Judge implements IServerApi {
       this._options.remote_ip = json.ip;
       return json.ip;
     } catch (err) {
-      Log.error(err);
+      this.logger.error(err);
       throw err;
     }
   }
@@ -184,7 +187,7 @@ export class Judge implements IServerApi {
 
   private async selftestByProtocol(protocol: string = 'http'): Promise<any> {
     const ping_url = this.remote_url(protocol) + '/ping';
-    this.debug('ping url ' + ping_url);
+    this.logger.debug('ping url ' + ping_url);
     const start = new Date();
 
     const options = {
@@ -252,7 +255,7 @@ export class Judge implements IServerApi {
     let judge_url = this.remote_url(protocol);
     const req_id = CryptUtils.shorthash(judge_url + '-' + proxy_url + '-' + (new Date().getTime()) + '-' + inc);
     judge_url += '/judge/' + req_id;
-    this.debug('judge: create request ' + req_id + ' to ' + judge_url + ' over ' + proxy_url + ' (cached: ' + this.cache_sum + ')');
+    this.logger.debug('judge: create request ' + req_id + ' to ' + judge_url + ' over ' + proxy_url + ' (cached: ' + this.cache_sum + ')');
 
     const req_options = _.assign(this._options.request, options);
     const judgeReq = new JudgeRequest(this, req_id, judge_url, proxy_url, req_options);
@@ -293,7 +296,7 @@ export class Judge implements IServerApi {
 
       const self = this;
       const req_id = paths.shift();
-      this.trace('judge call ' + req_id);
+      this.logger.trace('judge call ' + req_id);
 
       if (this.cache[req_id]) {
         cached_req = this.cache[req_id];
@@ -311,7 +314,7 @@ export class Judge implements IServerApi {
         const json = JSON.stringify({time: (new Date()).getTime(), headers: req.headers});
         res.end(json);
       } else {
-        Log.error('judge: no cache id for incoming request with ' + req_id + ' from ' + req.url);
+        this.logger.debug('judge: no cache id for incoming request with ' + req_id + ' from ' + req.url);
         res.writeHead(400, {'Content-Type': 'application/json'});
         const json = JSON.stringify({'error': '400'});
         res.end(json);
@@ -322,7 +325,7 @@ export class Judge implements IServerApi {
       const json = JSON.stringify({time: (new Date()).getTime(), ping: true});
       res.end(json);
     } else {
-      Log.error('judge: unknown request from ' + req.url);
+      this.logger.error('judge: unknown request from ' + req.url);
       res.writeHead(404, {'Content-Type': 'application/json'});
       const json = JSON.stringify({'error': '404'});
       res.end(json);
@@ -337,13 +340,13 @@ export class Judge implements IServerApi {
 
   private enable() {
     this.enabled = true;
-    this.info('Judge services started up:\n\t- ' + this.httpServer.url() + '\n\t- ' + this.httpsServer.url());
+    this.logger.info('Judge services started up:\n\t- ' + this.httpServer.url() + '\n\t- ' + this.httpsServer.url());
   }
 
 
   private disable() {
     this.enabled = false;
-    this.info('Judge services shutting down on:\n\t- ' + this.httpServer.url() + '\n\t- ' + this.httpsServer.url());
+    this.logger.info('Judge services shutting down on:\n\t- ' + this.httpServer.url() + '\n\t- ' + this.httpsServer.url());
   }
 
 
@@ -355,14 +358,14 @@ export class Judge implements IServerApi {
     try {
       await http_request.performRequest();
     } catch (e) {
-      Log.error('performRequest', e);
+      this.logger.error('performRequest', e);
     }
 
     const result = http_request.result(from, to);
     this.removeFromCache(http_request.id);
     http_request.clear();
 
-    this.debug('judge: finished request (' + proto_from + '=>' + proto_to + ') ' + http_request.id +
+    this.logger.debug('judge: finished request (' + proto_from + '=>' + proto_to + ') ' + http_request.id +
       ' from ' + url + ' t=' + result.duration +
       ' error=' + result.hasError + ' (cached: ' + this.cache_sum + ')');
     return result;
@@ -397,7 +400,7 @@ export class Judge implements IServerApi {
     //     results.geoData = JSON.parse(response.body);
     //   }
     // } catch (e) {
-    //   Log.error(e);
+    //   this.logger.error(e);
     // }
 
     const promises: Promise<any>[] = [];
@@ -407,14 +410,14 @@ export class Judge implements IServerApi {
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTP, ProtocolType.HTTP).then(result => {
         results.variants.push(result);
       }).catch((error: Error) => {
-        Log.error('http=>http', error);
+        this.logger.error('http=>http', error);
       }));
 
       // HTTP => HTTPS
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTP, ProtocolType.HTTPS).then(result => {
         results.variants.push(result);
       }).catch((error: Error) => {
-        Log.error('http=>https', error);
+        this.logger.error('http=>https', error);
       }));
     }
 
@@ -423,18 +426,22 @@ export class Judge implements IServerApi {
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTPS, ProtocolType.HTTP).then(result => {
         results.variants.push(result);
       }).catch((error: Error) => {
-        Log.error('https=>http', error);
+        this.logger.error('https=>http', error);
       }));
 
       // HTTPS => HTTPS
       promises.push(this.handleRequest(ip, port, ProtocolType.HTTPS, ProtocolType.HTTPS).then(result => {
         results.variants.push(result);
       }).catch((error: Error) => {
-        Log.error('https=>https', error);
+        this.logger.error('https=>https', error);
       }));
     }
 
+
     return Promise.all(promises).then(_res => {
+      this.logger.info('validated ' + ip + ':' + port + ' [\n\t' +
+        results.variants.map(x => '(' + [x.protocol_to, x.protocol_to, x.hasError, x.level, x.duration].join(',') + ')')
+          .join('\n\t') + '\n]');
       return results;
     });
   }
@@ -509,7 +516,7 @@ export class Judge implements IServerApi {
       ]);
       res = true;
     } catch (e) {
-      Log.error('judge-wakeup:', e);
+      this.logger.error('judge-wakeup:', e);
       // throw e;
     } finally {
       this.lock.release(); // progress.ready();
@@ -524,7 +531,7 @@ export class Judge implements IServerApi {
     }
 
     const cacheKeys = _.keys(this.cache);
-    Log.debug('judge-pending: clear cache (entries: ' + cacheKeys.length + ')');
+    this.logger.debug('judge-pending: clear cache (entries: ' + cacheKeys.length + ')');
     cacheKeys.map(x => {
       this.cache[x].clear();
       this.removeFromCache(x);
@@ -539,9 +546,9 @@ export class Judge implements IServerApi {
         this.httpsServer.stop()
       ]);
       ret = true;
-      Log.debug('judge-pending: finished');
+      this.logger.debug('judge-pending: finished');
     } catch (e) {
-      Log.error('judge-pending:', e);
+      this.logger.error('judge-pending:', e);
     } finally {
       this.lock.release();
     }
@@ -549,25 +556,25 @@ export class Judge implements IServerApi {
 
   }
 
-
-  private info(...msg: any[]) {
-    Log.info.apply(Log, msg);
-  }
-
-
   private throwedError(err: Error, ret?: any): any {
-    Log.error(err);
+    this.logger.error(err);
     return ret;
   }
 
 
-  private debug(...msg: any[]) {
-    Log.debug.apply(Log, msg);
-
-  }
-
-
-  private trace(...msg: any[]) {
-    Log.trace.apply(Log, msg);
-  }
+  // private info(...msg: any[]) {
+  //   this.logger.info.apply(Log, msg);
+  // }
+  //
+  //
+  //
+  //
+  // private debug(...msg: any[]) {
+  //   this.logger.debug.apply(Log, msg);
+  // }
+  //
+  //
+  // private trace(...msg: any[]) {
+  //   this.logger.trace.apply(Log, msg);
+  // }
 }

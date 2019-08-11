@@ -26,10 +26,8 @@ export class IpAddrState {
   @Column({nullable: false})
   protocol_src: ProtocolType = ProtocolType.HTTP;
 
-
   @Column({nullable: false})
   protocol_dest: ProtocolType;
-
 
   @Column({nullable: false})
   addr_id: number;
@@ -58,8 +56,8 @@ export class IpAddrState {
   @Column({nullable: true})
   error_message: string;
 
-  @Column({nullable: true})
-  log: string;
+  // @Column({nullable: true})
+  // log: string;
 
   @CreateDateColumn()
   created_at: Date;
@@ -68,42 +66,42 @@ export class IpAddrState {
   updated_at: Date;
 
 
-  @BeforeInsert()
-  bi() {
-    if (this.log) {
-      this.log = JSON.stringify(this.log);
-    }
-  }
-
-
-  @BeforeUpdate()
-  bu() {
-    if (this.log) {
-      this.log = JSON.stringify(this.log);
-    }
-  }
-
-
-  @AfterInsert()
-  ai() {
-    if (_.isString(this.log)) {
-      this.log = JSON.parse(this.log);
-    }
-  }
-
-
-  @AfterUpdate()
-  au() {
-    if (_.isString(this.log)) {
-      this.log = JSON.parse(this.log);
-    }
-  }
-
-
-  @AfterLoad()
-  al() {
-    if (_.isString(this.log)) {
-      this.log = JSON.parse(this.log);
-    }
-  }
+  // @BeforeInsert()
+  // bi() {
+  //   if (this.log) {
+  //     this.log = JSON.stringify(this.log);
+  //   }
+  // }
+  //
+  //
+  // @BeforeUpdate()
+  // bu() {
+  //   if (this.log) {
+  //     this.log = JSON.stringify(this.log);
+  //   }
+  // }
+  //
+  //
+  // @AfterInsert()
+  // ai() {
+  //   if (_.isString(this.log)) {
+  //     this.log = JSON.parse(this.log);
+  //   }
+  // }
+  //
+  //
+  // @AfterUpdate()
+  // au() {
+  //   if (_.isString(this.log)) {
+  //     this.log = JSON.parse(this.log);
+  //   }
+  // }
+  //
+  //
+  // @AfterLoad()
+  // al() {
+  //   if (_.isString(this.log)) {
+  //     this.log = JSON.parse(this.log);
+  //   }
+  // }
 }

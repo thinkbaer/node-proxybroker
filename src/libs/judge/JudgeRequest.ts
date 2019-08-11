@@ -211,7 +211,7 @@ export class JudgeRequest {
     }
     this.errors.push(error);
     this.abort();
-    Log.error('judge request [' + this.id + '] type=' + type, error);
+    Log.debug('judge request [' + this.id + '] type=' + type, error);
   }
 
   abort() {
