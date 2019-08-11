@@ -3,7 +3,7 @@ app:
 
 logging:
   enable: true
-  level: info
+  level: debug
   transports:
     - console:
         stderrLevels:
@@ -18,7 +18,7 @@ logging:
   loggers:
     - name: '*'
       enable: true
-      level: info
+      level: debug
       transports:
         - console:
             stderrLevels:
