@@ -9,6 +9,7 @@ import {
   Inject,
   IQueueProcessor,
   Log,
+  Semaphore,
   StorageRef
 } from '@typexs/base';
 import {IpRotate} from '../../entities/IpRotate';
@@ -61,6 +62,8 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
 
   fetchRequests = {};
 
+  semaphore = new Semaphore(1);
+
   async prepare(opts: IProxyRotatorOptions) {
     this.options = _.defaultsDeep(opts, DEFAULT_ROTATOR_OPTIONS);
     this.http = HttpFactory.create();
@@ -72,32 +75,54 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     });
 
     if (this.options.fillAtStartup) {
-      this.queue.push({limit: this.options.fetchSize, ssl: true});
-      this.queue.push({limit: this.options.fetchSize, ssl: false});
+      this.doEnqueue({limit: this.options.fetchSize, ssl: true});
+      this.doEnqueue({limit: this.options.fetchSize, ssl: false});
     }
 
+
+  }
+
+  async doEnqueue(workLoad: any) {
+    // this.fetching = true;
+    const reqId = workLoad['reqId'];
+    if (reqId && this.fetchRequests[reqId] && this.fetchRequests[reqId] > 0) {
+      return;
+    }
+
+    if (_.isUndefined(this.fetchRequests[reqId])) {
+      this.fetchRequests[reqId] = 0;
+    }
+
+    // await this.semaphore.acquire();
+    // const promises = [];
+    try {
+      const proxyList = await this.fetch({limit: _.get(workLoad, 'limit', this.options.fetchSize)});
+      const rotates = this.attachRotateEntriesToIpAddr(proxyList);
+      const connection = await this.connect();
+      await connection.manager.save(rotates);
+
+      for (const c of proxyList) {
+        if (reqId) {
+          _.set(c, 'reqId', reqId);
+        }
+        this.fetchRequests[reqId]++;
+        this.queue.push(c);
+      }
+    } catch (e) {
+      throw e;
+    } finally {
+      // await Promise.all(promises);
+      // this.semaphore.release();
+
+    }
 
   }
 
 
   async do(workLoad: IpAddr | IProxySelector | ProxyUsed): Promise<any> {
     // fetch next entry try query
-    if (_.has(workLoad, 'limit')) {
-      // this.fetching = true;
-      const proxyList = await this.fetch({limit: _.get(workLoad, 'limit', this.options.fetchSize)});
-      const rotates = this.attachRotateEntriesToIpAddr(proxyList);
-      const connection = await this.connect();
-      await connection.manager.save(rotates);
-      for (const c of proxyList) {
-        if (_.has(workLoad, 'reqId')) {
-          _.set(c, 'reqId', workLoad['reqId']);
-        }
-        this.queue.push(c);
-      }
-      if (workLoad['reqId']) {
-        delete this.fetchRequests[workLoad['reqId']];
-      }
-    } else if (workLoad instanceof IpAddr) {
+    if (workLoad instanceof IpAddr) {
+
       const state = workLoad['state'] as IpAddrState;
       const protocl = state.protocol_src === ProtocolType.HTTP ? 'http' : 'https';
       const protocol_dest = state.protocol_dest === ProtocolType.HTTP ? 'http' : 'https';
@@ -131,6 +156,14 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
       used.stop = new Date();
       used.duration = used.stop.getTime() - used.start.getTime();
 
+      const reqId = workLoad['reqId'];
+      if (reqId && this.fetchRequests[reqId]) {
+        this.fetchRequests[reqId]--;
+        if (this.fetchRequests[reqId]) {
+          delete this.fetchRequests[reqId];
+        }
+      }
+
       this.log(used, true);
     }
 
@@ -158,9 +191,9 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     // this.orderActiveList();
     this.printList('on fetch finished');
 
-    if (this.activeList.length === 0) {
-      this.queue.push({limit: this.options.fetchSize});
-    }
+    // if (this.activeList.length === 0) {
+    //   this.doEnqueue({limit: this.options.fetchSize});
+    // }
   }
 
   findActiveEntry(ip: ProxyUsed) {
@@ -370,11 +403,8 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
       // this.orderActiveList();
       return Promise.resolve(addr);
     } else {
-      if (!this.fetchRequests[reqId]) {
-        this.fetchRequests[reqId] = true;
-        this.queue.push({...selector, limit: 50, reqId});
-      }
       return new Promise((resolve, reject) => {
+        this.doEnqueue({...selector, limit: this.options.fetchSize, reqId});
         const listener = (ipaddr: IpAddr) => {
           this.logger.debug('got success request for proxy url ' + ipaddr.key);
           clearTimeout(timer);
@@ -389,7 +419,6 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
         this.queue.once('success_request_' + reqId, listener);
       });
     }
-    return null;
   }
 
 
@@ -459,18 +488,19 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     q = q.innerJoinAndMapOne('ip.state', IpAddrState, 'state', 'state.validation_id = ip.validation_id and state.addr_id = ip.id');
     q = q.leftJoinAndMapOne('ip.rotate', IpRotate, 'rotate', 'rotate.addr_id = ip.id and rotate.protocol_src = state.protocol_src');
 
+
     if (this.storageRef.dbType === 'postgres') {
       q = q.addOrderBy('rotate.updated_at', 'ASC', 'NULLS FIRST');
-      q = q.addOrderBy('rotate.used', 'ASC', 'NULLS FIRST');
-      q = q.addOrderBy('rotate.duration_average', 'ASC', 'NULLS FIRST');
-      q = q.addOrderBy('state.duration', 'ASC', 'NULLS FIRST');
+      // q = q.addOrderBy('rotate.used', 'ASC', 'NULLS FIRST');
+      // q = q.addOrderBy('rotate.duration_average', 'ASC', 'NULLS FIRST');
+      // q = q.addOrderBy('state.duration', 'ASC', 'NULLS FIRST');
     } else {
       q = q.addOrderBy('rotate.updated_at', 'ASC');
-      q = q.addOrderBy('rotate.used', 'ASC');
-      q = q.addOrderBy('rotate.duration_average', 'ASC');
-      q = q.addOrderBy('state.duration', 'ASC');
+      // q = q.addOrderBy('rotate.used', 'ASC');
+      // q = q.addOrderBy('rotate.duration_average', 'ASC');
+      // q = q.addOrderBy('state.duration', 'ASC');
     }
-    q = q.limit(_.get(select, 'limit', 1));
+
 
     q = q.where('state.enabled = :enable', {enable: true});
 
@@ -497,6 +527,16 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
         q = q.andWhere('state.protocol_dest = :protocol', {protocol: ProtocolType.HTTPS});
       }
     }
+
+    const count = await q.getCount();
+    const limit = _.get(select, 'limit', 1);
+    if ((count - limit - 1) > 0) {
+      const range = _.random(0, count - limit - 1, false);
+      q.offset(range);
+    }
+
+    q = q.limit(_.get(select, 'limit', 1));
+
     return await q.getMany();
   }
 
