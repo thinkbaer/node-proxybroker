@@ -54,6 +54,7 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
 
   activeList: IpAddr[] = [];
 
+
   http: IHttp;
 
   logger: ILoggerApi;
@@ -273,6 +274,17 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
   useAddr(addr: IpAddr) {
     addr.odd = 1;
     addr.used++;
+    this.updateList();
+  }
+
+  updateList() {
+    this.activeList.forEach(_addr => {
+      if (_addr.odd % this.options.reuse !== 0 && _addr.used > 0) {
+        _addr.odd++;
+      } else {
+        _addr.odd = 0;
+      }
+    });
   }
 
 
@@ -318,6 +330,9 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     // }
 
     const addrIndex = this.activeList.findIndex((value, index) => {
+      if (value.odd !== 0) {
+        return false;
+      }
       if (selector) {
         let match = true;
         const state = (<IpAddrState>value['state']);
