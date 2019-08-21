@@ -145,7 +145,7 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
 
   async onEmpty() {
     this.cleanupList();
-    this.orderActiveList();
+    // this.orderActiveList();
     this.printList('on fetch finished');
   }
 
@@ -272,23 +272,45 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     const reqId = CryptUtils.shorthash(JSON.stringify(selector));
     let addr: IpAddr = null;
 
-    for (const _addr of this.activeList) {
-      // if (_addr.odd % this.options.reuse !== 0 && _addr.odd > 0) {
-      //   _addr.odd++;
-      //   return false;
-      // }
-      // _addr.odd = 0;
 
-      if (!this.calcOdd(_addr)) {
-        continue;
-      }
-      if (addr) {
-        continue;
-      }
+    // for (let i = 0; i < this.activeList.length; i++) {
+    //   // if (_addr.odd % this.options.reuse !== 0 && _addr.odd > 0) {
+    //   //   _addr.odd++;
+    //   //   return false;
+    //   // }
+    //   // _addr.odd = 0;
+    //   const _addr = this.activeList[i];
+    //
+    //   if (!this.calcOdd(_addr)) {
+    //     continue;
+    //   }
+    //   if (addr) {
+    //     continue;
+    //   }
+    //
+    //   let match = true;
+    //   if (selector) {
+    //     const state = (<IpAddrState>_addr['state']);
+    //     if (selector['speed-limit']) {
+    //       match = match && state.duration <= selector['speed-limit'];
+    //     }
+    //     if (selector.level) {
+    //       match = match && state.level <= selector.level;
+    //     }
+    //     if (selector.ssl) {
+    //       match = match && state.protocol_dest === ProtocolType.HTTPS;
+    //     }
+    //   }
+    //   if (match) {
+    //     addr = _addr;
+    //     break;
+    //   }
+    // }
 
-      let match = true;
+    const addrIndex = this.activeList.findIndex((value, index) => {
       if (selector) {
-        const state = (<IpAddrState>_addr['state']);
+        let match = true;
+        const state = (<IpAddrState>value['state']);
         if (selector['speed-limit']) {
           match = match && state.duration <= selector['speed-limit'];
         }
@@ -298,9 +320,16 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
         if (selector.ssl) {
           match = match && state.protocol_dest === ProtocolType.HTTPS;
         }
+        return match;
+      } else {
+        return true;
       }
-      if (match) {
-        addr = _addr;
+    });
+
+    if (addrIndex >= 0) {
+      addr = this.activeList.splice(addrIndex, 1).shift();
+      if (addr) {
+        this.activeList.push(addr);
       }
     }
 
@@ -313,7 +342,7 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
 
     if (addr) {
       this.useAddr(addr);
-      this.orderActiveList();
+      // this.orderActiveList();
       return Promise.resolve(addr);
     } else {
       if (!this.fetchRequests[reqId]) {
@@ -321,15 +350,18 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
         this.queue.push({...selector, limit: 50, reqId});
       }
       return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-          reject(new Error('cant find proxy address!'));
-        }, 5000);
-        this.queue.once('success_request_' + reqId, (ipaddr: IpAddr) => {
+        const listener = (ipaddr: IpAddr) => {
           this.logger.debug('got success request for proxy url ' + ipaddr.key);
           clearTimeout(timer);
           this.useAddr(ipaddr);
           resolve(ipaddr);
-        });
+        };
+        const timer = setTimeout(() => {
+          reject(new Error('cant find proxy address!'));
+          // TODO kill listener!
+          this.queue.removeListener('success_request_' + reqId, listener);
+        }, 5000);
+        this.queue.once('success_request_' + reqId, listener);
       });
     }
     return null;
@@ -403,16 +435,24 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     q = q.leftJoinAndMapOne('ip.rotate', IpRotate, 'rotate', 'rotate.addr_id = ip.id and rotate.protocol_src = state.protocol_src');
 
     if (this.storageRef.dbType === 'postgres') {
+      q = q.addOrderBy('rotate.updated_at', 'ASC', 'NULLS FIRST');
       q = q.addOrderBy('rotate.used', 'ASC', 'NULLS FIRST');
+      q = q.addOrderBy('rotate.duration_average', 'ASC', 'NULLS FIRST');
       q = q.addOrderBy('state.duration', 'ASC', 'NULLS FIRST');
     } else {
+      q = q.addOrderBy('rotate.updated_at', 'ASC');
       q = q.addOrderBy('rotate.used', 'ASC');
+      q = q.addOrderBy('rotate.duration_average', 'ASC');
       q = q.addOrderBy('state.duration', 'ASC');
     }
     q = q.limit(_.get(select, 'limit', 1));
 
     q = q.where('state.enabled = :enable', {enable: true});
     q = q.andWhere('state.level > :level', {level: 0});
+
+    // filter faling!
+    q.andWhere('(rotate.inc >= 10 AND (rotate.successes * 100 / rotate.inc) > 33) OR (rotate.inc < 10 ) OR rotate.inc is null');
+
 
     if (select) {
       if (select.level && select.level > 0) {
@@ -467,7 +507,7 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
 
 
   private cleanupList() {
-    const removed = _.remove(this.activeList, (r) => r.used > 2 && r.success < r.errors);
+    const removed = _.remove(this.activeList, (r) => r.used > 2 && r.success / r.used <= .33);
     if (removed.length > 0) {
       this.logger.debug('cleanup active list ' + this.activeList.length + '; removed ' + removed.length);
     }
