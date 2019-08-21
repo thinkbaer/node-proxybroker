@@ -5,7 +5,6 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 #RUN groupadd --gid 1000 node \
 #  && useradd --uid 1000 --gid node --shell /bin/bash --create-home node
 
-ENV PROXYBROKER_VERSION 0.11.4
 ENV NODE_VERSION 10.16.2
 ENV ARCH x64
 
@@ -71,8 +70,11 @@ RUN for key in \
     && tar -xJf "node-v$NODE_VERSION-linux-$ARCH.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
     && rm "node-v$NODE_VERSION-linux-$ARCH.tar.xz" SHASUMS256.txt.asc SHASUMS256.txt \
     && apt-get purge -y --auto-remove $buildDeps \
-    && ln -s /usr/local/bin/node /usr/local/bin/nodejs \
-    && mkdir -p /proxy-broker/config && \
+    && ln -s /usr/local/bin/node /usr/local/bin/nodejs
+
+ENV PROXYBROKER_VERSION 0.11.5
+
+RUN mkdir -p /proxy-broker/config && \
     mkdir -p /proxy-broker/data && \
     mkdir -p /proxy-broker/log && \
     cd /proxy-broker && \
