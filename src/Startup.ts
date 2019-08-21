@@ -57,10 +57,11 @@ export class Startup implements IBootstrap, IShutdown, IPermissions {
      */
     const proxyServerConfig = StartupHelper.getProxyServerConfigs();
     if (!_.isEmpty(proxyServerConfig)) {
-      const cfg = _.get(proxyServerConfig, 'rotator', {});
-      const rotator = Container.get(ProxyRotator);
-      await rotator.prepare(cfg);
-
+      for (const proxyCfg of proxyServerConfig) {
+        const cfg = _.get(proxyCfg, 'rotator', {});
+        const rotator = Container.get(ProxyRotator);
+        await rotator.prepare(cfg);
+      }
     }
 
   }

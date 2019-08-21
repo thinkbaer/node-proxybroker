@@ -69,6 +69,13 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
       concurrent: opts.parallel,
       logger: this.logger
     });
+
+    if (this.options.fillAtStartup) {
+      this.queue.push({limit: this.options.fetchSize, ssl: true});
+      this.queue.push({limit: this.options.fetchSize, ssl: false});
+    }
+
+
   }
 
 
@@ -125,6 +132,8 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
 
       this.log(used, true);
     }
+
+
     return null;
   }
 
@@ -147,6 +156,10 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     this.cleanupList();
     // this.orderActiveList();
     this.printList('on fetch finished');
+
+    if (this.activeList.length === 0) {
+      this.queue.push({limit: this.options.fetchSize});
+    }
   }
 
   findActiveEntry(ip: ProxyUsed) {
@@ -172,6 +185,9 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
       if (ipAddr) {
         await c.manager.transaction(async em => {
           ipRotate = await this._doLog(c.manager, ip, ipAddr);
+          // if (ipRotate.inc > 100 && ipRotate.successes === 0) {
+          //   ipAddr.to_delete = true;
+          // }
         });
 
         if (addr) {
@@ -212,12 +228,6 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
       ipRotate = new IpRotate();
       ipRotate.addr_id = ipAddr.id;
       ipRotate.protocol_src = ip.protocol;
-      // ipRotate.inc++;
-      // if (ipRotate.inc % 10 === 0) {
-      //   ipRotate.used = 0;
-      // } else {
-      //   ipRotate.used++;
-      // }
     }
 
     ipRotate.inc++;
@@ -448,10 +458,13 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     q = q.limit(_.get(select, 'limit', 1));
 
     q = q.where('state.enabled = :enable', {enable: true});
+
     q = q.andWhere('state.level > :level', {level: 0});
+    q = q.andWhere('ip.to_delete = :toDelete', {toDelete: false});
+    q = q.andWhere('ip.blocked = :blocked', {blocked: false});
 
     // filter faling!
-    q.andWhere('(rotate.inc >= 10 AND (rotate.successes * 100 / rotate.inc) > 33) OR (rotate.inc < 10 ) OR rotate.inc is null');
+    // q.andWhere('(rotate.inc >= 10 AND (rotate.successes * 100 / rotate.inc) > 33) OR rotate.inc < 10 OR rotate.inc is null');
 
 
     if (select) {

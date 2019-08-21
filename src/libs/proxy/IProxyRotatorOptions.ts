@@ -39,10 +39,15 @@ export interface IProxyRotatorOptions {
     activeList?: boolean;
 
   };
+
+  /**
+   * fetch proxies on startup
+   */
+  fillAtStartup: boolean;
 }
 
 export const DEFAULT_ROTATOR_OPTIONS: IProxyRotatorOptions = {
-  fetchSize: 50,
+  fetchSize: 100,
   parallel: 100,
   reuse: 10,
   request: {
@@ -50,7 +55,9 @@ export const DEFAULT_ROTATOR_OPTIONS: IProxyRotatorOptions = {
   },
   debug: {
     activeList: false
-  }
-};
+  },
+  fillAtStartup: false
+}
+;
 
 export const K_ROTATOR = 'rotator';
