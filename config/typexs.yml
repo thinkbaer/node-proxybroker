@@ -48,7 +48,7 @@ storage:
     type: postgres
     database: proxybroker
     username: proxybroker
-    port: 5432
+    port: 5445
     synchronize: true
     extra:
       max: 100
