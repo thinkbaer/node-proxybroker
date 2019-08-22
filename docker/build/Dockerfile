@@ -72,7 +72,7 @@ RUN for key in \
     && apt-get purge -y --auto-remove $buildDeps \
     && ln -s /usr/local/bin/node /usr/local/bin/nodejs
 
-ENV PROXYBROKER_VERSION 0.11.9
+ENV PROXYBROKER_VERSION 0.11.10
 
 RUN mkdir -p /proxy-broker/config && \
     mkdir -p /proxy-broker/data && \
