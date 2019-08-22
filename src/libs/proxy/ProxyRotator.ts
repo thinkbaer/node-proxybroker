@@ -200,7 +200,7 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
 
   async onEmpty() {
     this.cleanupList();
-    // this.orderActiveList();
+    this.orderActiveList();
     this.printList('on fetch finished');
 
     // if (this.activeList.length === 0) {
@@ -350,6 +350,8 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
         _addr.odd = 0;
       }
     });
+
+    this.orderActiveList();
   }
 
 
@@ -609,8 +611,8 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
 
   orderActiveList() {
     this.activeList = _.orderBy(this.activeList,
-      ['odd', 'used', 'success', 'duration_avg'],
-      ['desc', 'asc', 'desc', 'asc']);
+      ['odd', 'success', 'duration_avg'],
+      ['asc', 'desc', 'asc']);
   }
 
 
