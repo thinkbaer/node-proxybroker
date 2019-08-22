@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD:
     ports:
       - 5445:5432
-    command: postgres -c 'max_connections=200'
+    command: postgres -c 'max_connections=300'
     volumes:
       - ./local/postgres/data:/var/lib/postgresql/data
     networks:

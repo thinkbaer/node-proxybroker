@@ -6,6 +6,8 @@ if [ ! -f "/proxy-broker/installed" ]; then
     chmod 700 /proxy-broker/data
     sed -i "s+'/var/lib/postgresql/9.6/main'+'/proxy-broker/data'+g" /etc/postgresql/9.6/main/postgresql.conf
     sed -i "s+#listen_addresses = 'localhost'+listen_addresses = '*'+g" /etc/postgresql/9.6/main/postgresql.conf
+    sed -i "s+max_connections = 100+max_connections = 300+g" /etc/postgresql/9.6/main/postgresql.conf
+
 
     echo "" > /etc/postgresql/9.6/main/pg_hba.conf
     echo "local all all  trust" >> /etc/postgresql/9.6/main/pg_hba.conf
@@ -29,7 +31,7 @@ fi
 
 if [ "$1" = 'server' ]; then
     /etc/init.d/postgresql start
-    cd /proxy-broker && ./node_modules/.bin/typexs server
+    cd /proxy-broker && ./node_modules/.bin/typexs server --nodeId proxyserver
 fi
 
 exec "$@"
