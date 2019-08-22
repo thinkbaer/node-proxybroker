@@ -546,31 +546,43 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     }
 
 
-    if (this.storageRef.dbType === 'postgres') {
-      q = q.addOrderBy('rotate.updated_at', 'ASC', 'NULLS FIRST');
-      // q = q.addOrderBy('rotate.used', 'ASC', 'NULLS FIRST');
-      // q = q.addOrderBy('rotate.duration_average', 'ASC', 'NULLS FIRST');
-      // q = q.addOrderBy('state.duration', 'ASC', 'NULLS FIRST');
-    } else {
-      q = q.addOrderBy('rotate.updated_at', 'ASC');
-      // q = q.addOrderBy('rotate.used', 'ASC');
-      // q = q.addOrderBy('rotate.duration_average', 'ASC');
-      // q = q.addOrderBy('state.duration', 'ASC');
+    const orderBy = [];
+    const rotation = select.repeat % 4;
+    switch (rotation) {
+      case 0:
+        orderBy.push('rotate.updated_at', 'ASC');
+        break;
+      case 1:
+        orderBy.push('rotate.used', 'ASC');
+        break;
+      case 2:
+        orderBy.push('rotate.duration_average', 'ASC');
+        break;
+      case 3:
+        orderBy.push('rotate.inc', 'ASC');
+        break;
     }
 
+    if (this.storageRef.dbType === 'postgres') {
+      orderBy.push('NULLS FIRST');
+    }
+
+    if (orderBy.length > 0) {
+      q.orderBy.apply(q, orderBy);
+    }
 
     const limit = _.get(select, 'limit', 1);
-    let count = limit + 1;
-    try {
-      count = await q.clone().getCount();
-    } catch (e) {
-      Log.error(e);
-    }
-
-    if ((count - limit - 1) > 0) {
-      const range = _.random(0, count - limit - 1, false);
-      q.offset(range);
-    }
+    // let count = limit + 1;
+    // try {
+    //   count = await q.clone().getCount();
+    // } catch (e) {
+    //   Log.error(e);
+    // }
+    //
+    // if ((count - limit - 1) > 0) {
+    //   const range = _.random(0, count - limit - 1, false);
+    //   q.offset(range);
+    // }
 
     // q.offset(this.offset);
     q = q.limit(limit);
