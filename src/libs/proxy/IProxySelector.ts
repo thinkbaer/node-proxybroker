@@ -1,5 +1,5 @@
 export interface IProxySelector {
-  ssl?: boolean;
+  targetSSL?: boolean;
 
   country?: string;
 
@@ -8,4 +8,6 @@ export interface IProxySelector {
   'speed-limit'?: number;
 
   limit?: number;
+
+  repeat?: number;
 }

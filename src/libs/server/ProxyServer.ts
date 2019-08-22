@@ -240,7 +240,7 @@ export class ProxyServer extends Server implements IServer {
                              upstream?: net.Socket, head?: Buffer) {
 
     const selector = _.clone(request.headers) as IProxySelector;
-    selector.ssl = ssl;
+    selector.targetSSL = ssl;
 
     let proxyUrl = null;
     try {
