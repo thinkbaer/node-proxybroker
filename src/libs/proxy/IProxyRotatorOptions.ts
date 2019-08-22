@@ -43,13 +43,13 @@ export interface IProxyRotatorOptions {
   /**
    * fetch proxies on startup
    */
-  fillAtStartup: boolean;
+  fillAtStartup?: boolean;
 }
 
 export const DEFAULT_ROTATOR_OPTIONS: IProxyRotatorOptions = {
   fetchSize: 100,
   parallel: 100,
-  reuse: 10,
+  reuse: 5,
   request: {
     timeout: 2000
   },
