@@ -7,11 +7,25 @@ import * as url from 'url';
 import {DEFAULT_PROXY_SERVER_OPTIONS, IProxyServerOptions} from './IProxyServerOptions';
 import {SocketHandle} from './SocketHandle';
 import {IRoute, IServer, Server} from '@typexs/server';
-import {Container, IUrlBase, Log, TodoException} from '@typexs/base';
+import {Container, IHttpHeaders, IUrlBase, Log, TodoException} from '@typexs/base';
 import {ProtocolType} from '../specific/ProtocolType';
 import {IpAddr} from '../../entities/IpAddr';
 import {HttpHeaderTransform} from './HttpHeaderTransform';
-import {E_EMPTY_SOCKET_HANDLES} from '../Constants';
+import {
+  E_EMPTY_SOCKET_HANDLES,
+  HEADER_KEY_PROXY_AGENT,
+  HEADER_KEY_PROXY_BROKER,
+  HEADER_KEY_PROXY_BROKER_ERROR,
+  HEADER_KEY_PROXY_SELECT_COUNTRY,
+  HEADER_KEY_PROXY_SELECT_FALLBACK,
+  HEADER_KEY_PROXY_SELECT_LEVEL,
+  HEADER_KEY_PROXY_SELECT_PROXY,
+  HEADER_KEY_PROXY_SELECT_SPEED_LIMIT,
+  HEADER_KEY_PROXY_SELECT_SSL,
+  HEADER_KEY_PROXY_VIA,
+  HEADER_KEY_PROXY_X_FORWARDED_FOR,
+  REGEX
+} from '../Constants';
 import {PROXY_ROTATOR_SERVICE} from '../proxy/IProxyRotator';
 import {ProxyUsed} from '../proxy/ProxyUsed';
 import {IProxySelector} from '../proxy/IProxySelector';
@@ -53,13 +67,11 @@ export class ProxyServer extends Server implements IServer {
   }
 
   static errorResponse(error: Error, res: http.ServerResponse) {
-    const data = this.packErrorMessage(error);
-    res.writeHead(504, 'Gateway Time-out',
-      {
-        'Proxy-Broker-Error': data,
-        'Proxy-Broker': 'Failed',
-        'Proxy-agent': 'Proxy-Broker'
-      });
+    const headers: IHttpHeaders = {};
+    headers[HEADER_KEY_PROXY_BROKER] = 'Failed';
+    headers[HEADER_KEY_PROXY_BROKER_ERROR] = this.packErrorMessage(error);
+    headers[HEADER_KEY_PROXY_AGENT] = 'Proxy-Broker';
+    res.writeHead(504, 'Gateway Time-out', headers);
     res.end();
   }
 
@@ -67,10 +79,14 @@ export class ProxyServer extends Server implements IServer {
                        upstream: net.Socket,
                        request: http.IncomingMessage, requestHandle: SocketHandle) {
     const data = this.packErrorMessage(error);
+    const headers: IHttpHeaders = {};
+    headers[HEADER_KEY_PROXY_BROKER] = 'Failed';
+    headers[HEADER_KEY_PROXY_BROKER_ERROR] = this.packErrorMessage(error);
+    headers[HEADER_KEY_PROXY_AGENT] = 'Proxy-Broker';
+
+    const output = _.keys(headers).map(k => k + ': ' + headers[k]).join('\r\n');
     upstream.write('HTTP/' + request.httpVersion + ' 504 Gateway Time-out\r\n' +
-      'Proxy-Broker-Error: ' + data + '\r\n' +
-      'Proxy-agent: Proxy-Broker' + '\r\n' +
-      'Proxy-Broker: Failed' + '\r\n' +
+      output + '\r\n' +
       '\r\n',
       (err: Error) => {
         if (err) {
@@ -127,33 +143,44 @@ export class ProxyServer extends Server implements IServer {
 
 
   onProxyRequest(handle: SocketHandle, req: http.IncomingMessage): void {
-    this.debug('onProxyRequest ' + handle.id + ' ' + this.url() + ' for ' + req.url + ' (Level: ' + this.level + ')');
+    const targetProxy = _.get(req.headers, HEADER_KEY_PROXY_SELECT_PROXY.toLowerCase(), null);
+    this.debug('onProxyRequest ' + handle.id + ' ' + this.url() + ' for ' + req.url +
+      ' (Level: ' + this.level + ')' + (targetProxy ? ' targetProxy=' + targetProxy : ''));
 
-    handle.removeHeader('Proxy-Select-Level');
-    handle.removeHeader('Proxy-Select-Speed-Limit');
-    handle.removeHeader('Proxy-Select-SSL');
-    handle.removeHeader('Proxy-Select-Fallback');
-    handle.removeHeader('Proxy-Select-Country');
+    handle.removeHeader(HEADER_KEY_PROXY_SELECT_LEVEL);
+    handle.removeHeader(HEADER_KEY_PROXY_SELECT_SPEED_LIMIT);
+    handle.removeHeader(HEADER_KEY_PROXY_SELECT_SSL);
+    handle.removeHeader(HEADER_KEY_PROXY_SELECT_FALLBACK);
+    handle.removeHeader(HEADER_KEY_PROXY_SELECT_COUNTRY);
+    handle.removeHeader(HEADER_KEY_PROXY_SELECT_PROXY);
 
     if (this.level === 3) {
       const sender_ip = req.socket.remoteAddress;
       const proxy_ip = req.socket.localAddress;
       const proxy_port = req.socket.localPort;
-      handle.setHeader('X-Forwarded-For', sender_ip);
-      handle.setHeader('Via', 'ProxyBroker on ' + proxy_ip + ':' + proxy_port);
+      handle.setHeader(HEADER_KEY_PROXY_X_FORWARDED_FOR, sender_ip);
+      handle.setHeader(HEADER_KEY_PROXY_VIA, 'ProxyBroker on ' + proxy_ip + ':' + proxy_port);
     } else if (this.level === 2) {
       const proxy_ip = req.socket.localAddress;
       const proxy_port = req.socket.localPort;
-      handle.setHeader('Via', 'ProxyBroker on ' + proxy_ip + ':' + proxy_port);
+      handle.setHeader(HEADER_KEY_PROXY_VIA, 'ProxyBroker on ' + proxy_ip + ':' + proxy_port);
     }
   }
 
 
   async getTarget(headers?: any): Promise<IUrlBase> {
-    let _url: IUrlBase = null;
-    if (_.isString(this._options.target)) {
+    let proxyUrl: IUrlBase = null;
+    const header_key = HEADER_KEY_PROXY_SELECT_PROXY.toLowerCase();
+    if (_.has(headers, header_key) && REGEX.test(headers[header_key])) {
+      const __url = url.parse(headers[header_key]);
+      proxyUrl = {
+        protocol: __url.protocol.replace(':', ''),
+        hostname: __url.hostname,
+        port: parseInt(__url.port, 0)
+      };
+    } else if (_.isString(this._options.target)) {
       const __url = url.parse(this._options.target);
-      _url = {
+      proxyUrl = {
         protocol: __url.protocol.replace(':', ''),
         hostname: __url.hostname,
         port: parseInt(__url.port, 0)
@@ -163,22 +190,22 @@ export class ProxyServer extends Server implements IServer {
       const t = await this._options.target(selector);
       if (t instanceof IpAddr) {
         // IpAddr
-        _url = {
+        proxyUrl = {
           protocol: t['state'].protocol_src === ProtocolType.HTTP ? 'http' : 'https',
           hostname: t.ip,
           port: t.port
         };
       } else if (t['hostname'] && t['port'] && t['protocol']) {
         // UrlBase
-        _url = <IUrlBase>t;
+        proxyUrl = <IUrlBase>t;
       }
     }
-    return Promise.resolve(_url);
+    return Promise.resolve(proxyUrl);
   }
 
 
   private hasFallbackHeader(reqHandle: SocketHandle): boolean {
-    const res = _.find(reqHandle.headersList, {key: 'proxy-select-fallback'});
+    const res = _.find(reqHandle.headersList, {key: HEADER_KEY_PROXY_SELECT_FALLBACK.toLowerCase()});
     if (res && res.value) {
       return true;
     }
@@ -192,11 +219,13 @@ export class ProxyServer extends Server implements IServer {
                                              upstream: net.Socket,
                                              head: Buffer) {
     // handle.debug('handleUpstreamAfterFinishedRequest finished=' + requestHandle.finished + ' error=' + handle.hasError());
+
     if (handle.hasError() && handle.hasSocketError()) {
-      if (requestHandle.meta.repeat < this.maxRepeats && this._options.toProxy) {
+      const checkRepeats = this._options.toProxy && !this.hasSelectedProxy(request);
+      if (requestHandle.meta.repeat < this.maxRepeats && checkRepeats) {
         requestHandle.meta.repeat++;
         return this.connectToExternProxy(true, requestHandle, request, null, upstream, head);
-      } else if (requestHandle.meta.repeat >= this.maxRepeats && this._options.toProxy && this.hasFallbackHeader(requestHandle)) {
+      } else if (requestHandle.meta.repeat >= this.maxRepeats && checkRepeats && this.hasFallbackHeader(requestHandle)) {
         return this.onServerConnect(request, upstream, head, true);
       } else {
         ProxyServer.errorUpstream(handle.error, upstream, request, requestHandle);
@@ -210,6 +239,10 @@ export class ProxyServer extends Server implements IServer {
     return null;
   }
 
+  private hasSelectedProxy(request: http.IncomingMessage) {
+    return _.has(request.headers, HEADER_KEY_PROXY_SELECT_PROXY.toLowerCase());
+  }
+
 
   private async handleResponseAfterFinishedRequest(reqHandle: SocketHandle,
                                                    handle: SocketHandle,
@@ -218,11 +251,12 @@ export class ProxyServer extends Server implements IServer {
     // handle.debug('handleResponseAfterFinishedRequest finished=' + reqHandle.finished + ' error=' + handle.hasError());
     if (handle.hasError()) {
       // Todo make this configurable
-      if (reqHandle.meta.repeat < this.maxRepeats && this._options.toProxy) {
+      const checkRepeats = this._options.toProxy && !this.hasSelectedProxy(req);
+      if (reqHandle.meta.repeat < this.maxRepeats && checkRepeats) {
         reqHandle.meta.repeat++;
         await this.connectToExternProxy(false, reqHandle, req, res);
       } else if (reqHandle.meta.repeat >= this.maxRepeats &&
-        this._options.toProxy && this.hasFallbackHeader(reqHandle)) {
+        checkRepeats && this.hasFallbackHeader(reqHandle)) {
         await this.root(req, res, true);
       } else {
         ProxyServer.errorResponse(handle.error, res);
@@ -241,7 +275,6 @@ export class ProxyServer extends Server implements IServer {
 
     const selector = _.clone(request.headers) as IProxySelector;
     selector.targetSSL = ssl;
-
     let proxyUrl = null;
     try {
       proxyUrl = await this.getTarget(selector);
@@ -292,7 +325,14 @@ export class ProxyServer extends Server implements IServer {
     return super.url();
   }
 
-
+  /**
+   * Getting CONNECT request from client
+   *
+   * @param request
+   * @param upstream
+   * @param head
+   * @param disable_proxy_to_proxy
+   */
   async onServerConnect(request: http.IncomingMessage,
                         upstream: net.Socket,
                         head: Buffer,
@@ -316,7 +356,7 @@ export class ProxyServer extends Server implements IServer {
         this.debug('onServerConnect [' + requestHandle.id + ']: downstream connected to ' + request.url);
         upstream.write(
           'HTTP/' + request.httpVersion + ' 200 Connection Established\r\n' +
-          'Proxy-agent: Proxybroker\r\n' +
+          HEADER_KEY_PROXY_AGENT + ': Proxybroker\r\n' +
           '\r\n', err => {
             if (err) {
               this.getLogger().error(err);

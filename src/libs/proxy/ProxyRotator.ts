@@ -4,6 +4,7 @@ import {
   AsyncWorkerQueue,
   C_STORAGE_DEFAULT,
   ConnectionWrapper,
+  Container,
   CryptUtils,
   ILoggerApi,
   Inject,
@@ -19,8 +20,10 @@ import {ProtocolType} from '../specific/ProtocolType';
 import {IProxyRotator} from './IProxyRotator';
 import {IProxySelector} from './IProxySelector';
 import {ProxyUsed} from './ProxyUsed';
-import {HttpFactory, IHttp} from 'commons-http';
-import {DEFAULT_USER_AGENT} from '../Constants';
+import {HttpFactory, IHttp, IHttpGetOptions} from 'commons-http';
+import {DEFAULT_USER_AGENT, HEADER_KEY_PROXY_SELECT_PROXY, HEADER_KEY_USER_AGENT} from '../Constants';
+import {IProxyServerOptions} from '../server/IProxyServerOptions';
+import {ServerRegistry} from '@typexs/server/libs/server/ServerRegistry';
 
 /**
  * create and keep a fifo queue with proxy references
@@ -59,9 +62,11 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
 
   fetchRequests: any = {};
 
+  proxyServerUri: string = null;
+
   // offset: number = 0;
 
-  async prepare(opts: IProxyRotatorOptions) {
+  async prepare(opts: IProxyRotatorOptions, serverOpts?: IProxyServerOptions) {
     this.options = _.defaultsDeep(opts, DEFAULT_ROTATOR_OPTIONS);
     this.http = HttpFactory.create();
     this.logger = Log.getLoggerFor(ProxyRotator);
@@ -75,6 +80,11 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
       this.doEnqueue({limit: this.options.fetchSize, targetSSL: true});
       this.doEnqueue({limit: this.options.fetchSize, targetSSL: false});
     }
+
+    if (this.options.request.overProxyServer) {
+      this.proxyServerUri = (Container.get(ServerRegistry.NAME) as ServerRegistry).get(serverOpts['name']).getUri();
+    }
+
   }
 
   async doEnqueue(workLoad: IProxySelector & { reqId?: string }) {
@@ -143,9 +153,9 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     if (workLoad instanceof IpAddr) {
 
       const state = workLoad['state'] as IpAddrState;
-      const protocl = state.protocol_src === ProtocolType.HTTP ? 'http' : 'https';
+      const protocol_src = state.protocol_src === ProtocolType.HTTP ? 'http' : 'https';
       const protocol_dest = state.protocol_dest === ProtocolType.HTTP ? 'http' : 'https';
-      const proxyUrlStr = protocl + '://' + workLoad.ip + ':' + workLoad.port;
+      const proxyUrlStr = protocol_src + '://' + workLoad.ip + ':' + workLoad.port;
       const baseUrlStr = protocol_dest + '://' + BASEURL;
       this.logger.debug('try request to ' + baseUrlStr + ' over ' + proxyUrlStr);
       const used = new ProxyUsed();
@@ -178,20 +188,36 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
       }
       used.stop = new Date();
       used.duration = used.stop.getTime() - used.start.getTime();
-
-      this.log(used, true);
+      // this.log(used, true);
     }
     return null;
   }
 
 
   async doRequest(baseUrlStr: string, proxyUrlStr: string) {
-    const response = await this.http.get(baseUrlStr, {
+
+    const headers = {};
+    headers[HEADER_KEY_USER_AGENT] = DEFAULT_USER_AGENT;
+    const reqOptions: IHttpGetOptions = {
       timeout: this.options.request.timeout,
       proxy: proxyUrlStr,
+      retry: 0,
       json: true,
-      headers: {'user-agent': DEFAULT_USER_AGENT}
-    });
+      headers: headers
+    };
+
+    if (this.proxyServerUri) {
+      reqOptions.proxy = this.proxyServerUri;
+      reqOptions.proxyHeaders = {};
+      reqOptions.proxyHeaders[HEADER_KEY_PROXY_SELECT_PROXY] = proxyUrlStr;
+      this.logger.debug('execute http get to ' + baseUrlStr + ' over ' + reqOptions.proxy +
+        ' (target: ' + reqOptions.proxyHeaders['Proxy-Select-Proxy'] + ')');
+    } else {
+      this.logger.debug('execute http get to ' + baseUrlStr + ' over ' + reqOptions.proxy);
+    }
+
+
+    const response = await this.http.get(baseUrlStr, reqOptions);
     if (response.statusCode < 200 || response.statusCode >= 400) {
       const err = new Error('wrong status code ' + response.statusCode + ' ' + response.statusMessage);
       _.set(err, 'statusCode', response.statusCode);
@@ -386,6 +412,8 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
         }
         if (selector.targetSSL) {
           match = match && state.protocol_dest === ProtocolType.HTTPS;
+        } else {
+          match = match && state.protocol_dest === ProtocolType.HTTP;
         }
         return match;
       } else {
@@ -542,6 +570,8 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
       }
       if (select.targetSSL) {
         q = q.andWhere('state.protocol_dest = :protocol', {protocol: ProtocolType.HTTPS});
+      } else {
+        q = q.andWhere('state.protocol_dest = :protocol', {protocol: ProtocolType.HTTP});
       }
     }
 

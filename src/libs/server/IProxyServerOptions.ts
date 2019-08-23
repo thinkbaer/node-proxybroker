@@ -25,6 +25,11 @@ export const DEFAULT_SERVER_OPTIONS: IServerOptions = {
 
 export interface IProxyServerOptions extends IServerOptions, IServerInstanceOptions {
 
+  /**
+   * Free name for the proxyserver (used for further instance access)
+   */
+  name?: string;
+
   enable?: boolean;
 
   level: number;

@@ -1,4 +1,4 @@
-import * as HttpsProxyAgent from 'https-proxy-agent';
+const HttpsProxyAgent = require('https-proxy-agent');
 import * as  net from 'net';
 import * as tls from 'tls';
 import {ClientRequest} from 'http';
@@ -11,11 +11,14 @@ const debug = require('debug')('https-proxy-agent');
  * @api public
  */
 
-HttpsProxyAgent.prototype['callback'] = function (req: ClientRequest, opts: any, fn: Function) {
+HttpsProxyAgent.prototype.callback = function connect(req: ClientRequest, opts: any, fn: Function) {
   const proxy: any = this.proxy;
 
+
   // create a socket connection to the proxy server
+
   let socket: net.Socket;
+
   if (this.secureProxy) {
     socket = tls.connect(proxy);
   } else {
@@ -161,7 +164,10 @@ HttpsProxyAgent.prototype['callback'] = function (req: ClientRequest, opts: any,
   const hostname = opts.host + ':' + opts.port;
   let msg = 'CONNECT ' + hostname + ' HTTP/1.1\r\n';
 
-  const headers = Object.assign({}, proxy.headers);
+  let headers = Object.assign({}, proxy.headers);
+  if (opts.proxyHeaders) {
+    headers = Object.assign(headers, opts.proxyHeaders);
+  }
   if (proxy.auth) {
     headers['Proxy-Authorization'] =
       'Basic ' + Buffer.from(proxy.auth).toString('base64');
