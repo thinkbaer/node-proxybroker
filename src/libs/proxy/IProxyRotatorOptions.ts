@@ -50,6 +50,21 @@ export interface IProxyRotatorOptions {
    */
   fillAtStartup?: boolean;
 
+  /**
+   * Remove entries from active list after an period of time with a special offset
+   */
+  cleanup: {
+
+    /**
+     * Inactivity time offset in s
+     */
+    timeOffset: number;
+
+    /**
+     * Repetation time in s
+     */
+    interval: number;
+  }
 
 }
 
@@ -64,7 +79,11 @@ export const DEFAULT_ROTATOR_OPTIONS: IProxyRotatorOptions = {
     debug: {
       activeList: false
     },
-    fillAtStartup: false
+    fillAtStartup: false,
+    cleanup: {
+      timeOffset: 3600,
+      interval: 600
+    }
   }
 ;
 

@@ -3,7 +3,6 @@ import {DEFAULT_ROTATOR_OPTIONS, IProxyRotatorOptions} from './IProxyRotatorOpti
 import {
   AsyncWorkerQueue,
   C_STORAGE_DEFAULT,
-  ConnectionWrapper,
   Container,
   CryptUtils,
   ILoggerApi,
@@ -24,6 +23,7 @@ import {HttpFactory, IHttp, IHttpGetOptions} from 'commons-http';
 import {DEFAULT_USER_AGENT, HEADER_KEY_PROXY_SELECT_PROXY, HEADER_KEY_USER_AGENT} from '../Constants';
 import {IProxyServerOptions} from '../server/IProxyServerOptions';
 import {ServerRegistry} from '@typexs/server/libs/server/ServerRegistry';
+import Timeout = NodeJS.Timeout;
 
 /**
  * create and keep a fifo queue with proxy references
@@ -50,7 +50,7 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
   @Inject(C_STORAGE_DEFAULT)
   storageRef: StorageRef;
 
-  connection: ConnectionWrapper;
+  // connection: ConnectionWrapper;
 
   queue: AsyncWorkerQueue<any>;
 
@@ -63,6 +63,8 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
   fetchRequests: any = {};
 
   proxyServerUri: string = null;
+
+  cleanup: Timeout;
 
   // offset: number = 0;
 
@@ -85,6 +87,17 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
       this.proxyServerUri = (Container.get(ServerRegistry.NAME) as ServerRegistry).get(serverOpts['name']).getUri();
     }
 
+    if (this.options.cleanup) {
+      setTimeout(this.removeUnusedProxies.bind(this), this.options.cleanup.interval * 1000);
+    }
+
+  }
+
+
+  removeUnusedProxies() {
+    const now = Date.now();
+    _.remove(this.activeList, x => now - x.updated_at.getTime() > this.options.cleanup.timeOffset * 1000);
+    setTimeout(this.removeUnusedProxies.bind(this), this.options.cleanup.interval * 1000);
   }
 
   async doEnqueue(workLoad: IProxySelector & { reqId?: string }) {
@@ -636,9 +649,10 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
 
   async shutdown() {
     this.queue.removeAllListeners();
-    if (this.connection) {
-      await this.connection.close();
-    }
+    clearTimeout(this.cleanup);
+    // if (this.connection) {
+    //   await this.connection.close();
+    // }
   }
 
 
