@@ -17,4 +17,4 @@ services:
 
 
 networks:
-  txs_broker_net: {}
+  txs_broker_net:
