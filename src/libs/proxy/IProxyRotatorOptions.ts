@@ -64,14 +64,19 @@ export interface IProxyRotatorOptions {
      * Repetation time in s
      */
     interval: number;
-  }
+  };
 
+
+  /**
+   * Minimun active list
+   */
+  minActive: number;
 }
 
 export const DEFAULT_ROTATOR_OPTIONS: IProxyRotatorOptions = {
     fetchSize: 100,
     parallel: 100,
-    reuse: 5,
+    reuse: 10,
     request: {
       timeout: 2000,
       overProxyServer: true
@@ -83,7 +88,8 @@ export const DEFAULT_ROTATOR_OPTIONS: IProxyRotatorOptions = {
     cleanup: {
       timeOffset: 3600,
       interval: 600
-    }
+    },
+    minActive: 50
   }
 ;
 

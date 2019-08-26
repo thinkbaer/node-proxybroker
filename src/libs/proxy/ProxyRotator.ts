@@ -41,6 +41,14 @@ import Timeout = NodeJS.Timeout;
 
 const BASEURL = 'httpbin.org/get';
 
+export interface IFetchQuery {
+  inc: number;
+  selector: IProxySelector;
+  updated: Date;
+  size: number;
+  offset: number;
+}
+
 export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IProxySelector | ProxyUsed> {
 
   static NAME = ProxyRotator.name;
@@ -60,7 +68,7 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
 
   logger: ILoggerApi;
 
-  fetchRequests: any = {};
+  fetchRequests: { [reqId: string]: IFetchQuery } = {};
 
   proxyServerUri: string = null;
 
@@ -104,22 +112,22 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     // this.fetching = true;
     const reqId = workLoad.reqId;
 
-    if (reqId && _.isNumber(this.fetchRequests[reqId])) {
-      if (this.fetchRequests[reqId] >= 0) {
+    if (reqId && this.fetchRequests[reqId]) {
+      if (this.fetchRequests[reqId].inc >= 0) {
         // this.semaphore.release();
         return;
       }
-      this.fetchRequests[reqId] = 0;
+      this.fetchRequests[reqId].inc = 0;
     }
 
-    if (reqId && _.isUndefined(this.fetchRequests[reqId])) {
-      this.fetchRequests[reqId] = 0;
-    }
+    // if (reqId && _.isUndefined(this.fetchRequests[reqId])) {
+    //   this.fetchRequests[reqId].inc = 0;
+    // }
 
 
     let proxyList: any[] = [];
     try {
-      proxyList = await this.fetch({...workLoad, limit: _.get(workLoad, 'limit', this.options.fetchSize)});
+      proxyList = await this.fetch({...workLoad, reqId, limit: _.get(workLoad, 'limit', this.options.fetchSize)});
       const rotates = this.attachRotateEntriesToIpAddr(proxyList);
       const connection = await this.storageRef.connect();
       await connection.manager.transaction((em) => {
@@ -137,23 +145,30 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
       for (const c of proxyList) {
         if (reqId) {
           _.set(c, 'reqId', reqId);
-          this.fetchRequests[reqId] += 1;
+          this.fetchRequests[reqId].inc += 1;
         }
 
         this.queue.push(c).done().finally(() => {
           if (reqId) {
-            this.fetchRequests[reqId] -= 1;
-            if (this.fetchRequests[reqId] <= 0) {
-              this.fetchRequests[reqId] = -1;
+            this.fetchRequests[reqId].inc -= 1;
+            if (this.fetchRequests[reqId].inc <= 0) {
+              this.fetchRequests[reqId].inc = -1;
+              // if (this.activeList.length < this.options.minActive) {
+              //   const selector = this.fetchRequests[reqId].selector;
+              //   selector.repeat++;
+              //   const newReqId = this.cacheQuery(selector);
+              //   this.doEnqueue({...selector, reqId: newReqId});
+              // }
+
             }
           }
         });
       }
-      if (reqId && (proxyList.length === 0 || this.fetchRequests[reqId] === 0)) {
-        this.fetchRequests[reqId] = -1;
+      if (reqId && (proxyList.length === 0 || this.fetchRequests[reqId].inc === 0)) {
+        this.fetchRequests[reqId].inc = -1;
       }
     } else {
-      this.fetchRequests[reqId] = -1;
+      this.fetchRequests[reqId].inc = -1;
     }
 
     // this.semaphore.release();
@@ -396,13 +411,30 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     this.orderActiveList();
   }
 
-
-  async take(selector: IProxySelector = {}): Promise<IpAddr> {
-    this.printList('before iteration');
+  cacheQuery(selector: IProxySelector = {}) {
     if (!selector.repeat) {
       selector.repeat = 0;
     }
     const reqId = CryptUtils.shorthash(JSON.stringify(selector));
+    if (!this.fetchRequests[reqId]) {
+      this.fetchRequests[reqId] = {
+        selector: selector,
+        updated: new Date(),
+        inc: -1,
+        size: 0,
+        offset: 0
+      };
+    } else {
+      this.fetchRequests[reqId].updated = new Date();
+    }
+    return reqId;
+  }
+
+
+  async take(selector: IProxySelector = {}): Promise<IpAddr> {
+    this.printList('before iteration');
+    const reqId = this.cacheQuery(selector);
+
     let addr: IpAddr = null;
     const now = Date.now();
     const addrIndex = this.activeList.findIndex((value, index) => {
@@ -457,7 +489,7 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
         selector.repeat = 0;
       }
       try {
-        await this.doEnqueue({...selector, limit: this.options.fetchSize, reqId});
+        await this.doEnqueue({...selector, reqId});
       } catch (e) {
         Log.error(e);
       }
@@ -550,7 +582,13 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
 
   }
 
-  async fetch(select?: IProxySelector) {
+  async fetch(select?: IProxySelector & { reqId?: string }) {
+    let fetchQuery: IFetchQuery = null;
+    let offset = 0;
+    if (select.reqId) {
+      fetchQuery = this.fetchRequests[select.reqId];
+      offset = fetchQuery.offset + fetchQuery.size;
+    }
     const c = await this.storageRef.connect();
     let q = c.manager.createQueryBuilder(IpAddr, 'ip');
     q = q.innerJoinAndMapOne('ip.state', IpAddrState, 'state', 'state.validation_id = ip.validation_id and state.addr_id = ip.id');
@@ -627,10 +665,19 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     //   q.offset(range);
     // }
 
-    // q.offset(this.offset);
+    q.offset(offset);
     q = q.limit(limit);
 
     const res = await q.getMany();
+    if (fetchQuery) {
+      if (res.length > 0) {
+        fetchQuery.size = res.length;
+        fetchQuery.offset = offset;
+      } else {
+        fetchQuery.offset = 0;
+        fetchQuery.size = 0;
+      }
+    }
     // if (res.length === 0) {
     //   this.offset = 0;
     // } else {
