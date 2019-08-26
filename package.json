@@ -1,6 +1,6 @@
 {
   "name": "proxybroker",
-  "version": "0.11.12",
+  "version": "0.11.13",
   "description": "Broker for anonymus proxies",
   "main": "dist/main.js",
   "scripts": {
