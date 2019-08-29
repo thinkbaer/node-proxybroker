@@ -238,6 +238,7 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
       reqOptions.proxy = this.proxyServerUri;
       reqOptions.proxyHeaders = {};
       reqOptions.proxyHeaders[HEADER_KEY_PROXY_SELECT_PROXY] = proxyUrlStr;
+      reqOptions.headers[HEADER_KEY_PROXY_SELECT_PROXY] = proxyUrlStr;
       this.logger.debug('execute http get to ' + baseUrlStr + ' over ' + reqOptions.proxy +
         ' (target: ' + reqOptions.proxyHeaders['Proxy-Select-Proxy'] + ')');
     } else {
@@ -595,17 +596,17 @@ export class ProxyRotator implements IProxyRotator, IQueueProcessor<IpAddr | IPr
     q = q.leftJoinAndMapOne('ip.rotate', IpRotate, 'rotate', 'rotate.addr_id = ip.id and rotate.protocol_src = state.protocol_src');
 
 
-    q = q.where('state.enabled = :enable', {enable: true});
+    q = q.andWhere('state.enabled = :enable', {enable: true});
 
     q = q.andWhere('state.level > :level', {level: 0});
     q = q.andWhere('ip.to_delete = :toDelete', {toDelete: false});
     q = q.andWhere('ip.blocked = :blocked', {blocked: false});
 
     // filter faling!
-    q = q.andWhere('(rotate.inc >= 100 AND (rotate.successes * 100 / rotate.inc) > 33) OR ' +
+    q = q.andWhere('((rotate.inc >= 100 AND (rotate.successes * 100 / rotate.inc) > 33) OR ' +
       '(rotate.inc > 10 AND rotate.inc < 100 AND (rotate.successes * 100 / rotate.inc) > 15) OR ' +
       'rotate.inc is null OR ' +
-      'rotate.inc <= 10');
+      'rotate.inc <= 10)');
 
 
     if (select) {

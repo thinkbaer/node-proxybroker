@@ -269,9 +269,12 @@ export class ProxyServer extends Server implements IServer {
   }
 
 
-  async connectToExternProxy(ssl: boolean, requestHandle: SocketHandle,
-                             request: http.IncomingMessage, response?: http.ServerResponse,
-                             upstream?: net.Socket, head?: Buffer) {
+  async connectToExternProxy(ssl: boolean,
+                             requestHandle: SocketHandle,
+                             request: http.IncomingMessage,
+                             response?: http.ServerResponse,
+                             upstream?: net.Socket,
+                             head?: Buffer) {
 
     const selector = _.clone(request.headers) as IProxySelector;
     selector.targetSSL = ssl;
@@ -300,7 +303,8 @@ export class ProxyServer extends Server implements IServer {
           '\r\n';
         downstream = NetworkHelper.pipeConnection(proxyUrl, upstream, connectStr, {logger: this.getLogger()});
       } else {
-        downstream = NetworkHelper.pipeConnection(proxyUrl, request.socket, requestHandle.build(), {logger: this.getLogger()});
+        const buffer = requestHandle.build();
+        downstream = NetworkHelper.pipeConnection(proxyUrl, request.socket, buffer, {logger: this.getLogger()});
       }
 
       const handle = this.createSocketHandle(downstream, {timeout: this.options().broker.timeouts.forward, ssl: ssl, url: request.url});
