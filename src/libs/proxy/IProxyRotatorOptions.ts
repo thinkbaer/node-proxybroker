@@ -53,24 +53,24 @@ export interface IProxyRotatorOptions {
   /**
    * Remove entries from active list after an period of time with a special offset
    */
-  cleanup: {
+  cleanup?: {
 
     /**
      * Inactivity time offset in s
      */
-    timeOffset: number;
+    timeOffset?: number;
 
     /**
      * Repetation time in s
      */
-    interval: number;
+    interval?: number;
   };
 
 
   /**
    * Minimun active list
    */
-  minActive: number;
+  minActive?: number;
 }
 
 export const DEFAULT_ROTATOR_OPTIONS: IProxyRotatorOptions = {
