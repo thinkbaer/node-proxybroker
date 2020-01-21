@@ -59,8 +59,8 @@
     "pg-native": "^3.0.0"
   },
   "dependencies": {
-    "@typexs/base": "^0.9.43",
-    "@typexs/server": "^0.4.15",
+    "@typexs/base": "0.x",
+    "@typexs/server": "0.x",
     "commons-config": "^0.4.19",
     "commons-eventbus": "^0.11.2",
     "commons-http": "^1.0.7",
